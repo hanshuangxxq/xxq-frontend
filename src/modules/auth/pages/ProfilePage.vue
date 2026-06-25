@@ -41,6 +41,8 @@ const form = ref({
   description: '',
 })
 
+const avatarSrc = computed(() => avatarUrl(profile.value?.avatar))
+
 const isStudent = computed(() => profile.value?.userType === 'student')
 const isTeacher = computed(() => profile.value?.userType === 'teacher')
 const isDean = computed(() => profile.value?.userType === 'dean')
@@ -157,11 +159,12 @@ onMounted(loadProfile)
         >
           <NAvatar
             :size="80"
-            :src="avatarUrl(profile?.avatar)"
+            :src="avatarSrc"
             round
             :style="{ opacity: uploading ? 0.5 : 1 }"
           >
-            {{ profile?.name?.charAt(0) }}
+            <template v-if="!avatarSrc">{{ profile?.name?.charAt(0) }}</template>
+            <template #fallback>{{ profile?.name?.charAt(0) }}</template>
           </NAvatar>
           <div
             style="
