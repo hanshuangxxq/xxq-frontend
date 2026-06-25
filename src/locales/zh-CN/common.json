@@ -1,0 +1,9 @@
+{
+  "app": {
+    "title": "XXQ 前端",
+    "welcome": "欢迎使用 XXQ 前端应用"
+  },
+  "nav": {
+    "home": "首页"
+  }
+}
