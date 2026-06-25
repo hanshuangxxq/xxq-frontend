@@ -40,7 +40,10 @@ __screenshots__/
 
 ### codegraph ###
 .codegraph/
-.codegraph/.gitignore
+*.gitignore
 
 # CLAUDE
 CLAUDE.md
+
+# gitkeep
+**/*.gitkeep
