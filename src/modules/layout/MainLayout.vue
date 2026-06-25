@@ -12,6 +12,8 @@ const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 
+const avatarSrc = computed(() => avatarUrl(authStore.user?.avatar))
+
 const menuOptions = computed(() => [
   { label: t('profile.title'), key: '/profile' },
 ])
@@ -43,10 +45,11 @@ async function handleLogout() {
           <NSpace vertical align="center" :size="8">
             <NAvatar
               :size="56"
-              :src="avatarUrl(authStore.user?.avatar)"
+              :src="avatarSrc"
               round
             >
-              {{ authStore.user?.name?.charAt(0) }}
+              <template v-if="!avatarSrc">{{ authStore.user?.name?.charAt(0) }}</template>
+              <template #fallback>{{ authStore.user?.name?.charAt(0) }}</template>
             </NAvatar>
             <span style="font-size: 14px; font-weight: 500">{{ authStore.user?.name }}</span>
           </NSpace>
@@ -59,8 +62,16 @@ async function handleLogout() {
           @update:value="handleMenuClick"
         />
 
-        <div style="margin-top: auto; padding: 0 16px 16px">
+        <div
+          style="
+            margin-top: auto;
+            padding: 12px 0;
+            background: #f0eaea;
+            border-top: 1px solid #e0d4d4;
+          "
+        >
           <NMenu
+            :root-indent="20"
             :options="[
               {
                 label: t('auth.logout'),
