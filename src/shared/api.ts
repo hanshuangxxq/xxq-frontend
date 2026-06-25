@@ -19,17 +19,17 @@ export const api = {
     return request<T>(url)
   },
 
-  post<T>(url: string, data: unknown): Promise<T> {
+  post<T>(url: string, data?: unknown): Promise<T> {
     return request<T>(url, {
       method: 'POST',
-      body: JSON.stringify(data),
+      ...(data !== undefined && { body: JSON.stringify(data) }),
     })
   },
 
-  put<T>(url: string, data: unknown): Promise<T> {
+  put<T>(url: string, data?: unknown): Promise<T> {
     return request<T>(url, {
       method: 'PUT',
-      body: JSON.stringify(data),
+      ...(data !== undefined && { body: JSON.stringify(data) }),
     })
   },
 
