@@ -1,0 +1,9 @@
+{
+  "app": {
+    "title": "XXQ Frontend",
+    "welcome": "Welcome to XXQ Frontend"
+  },
+  "nav": {
+    "home": "Home"
+  }
+}
