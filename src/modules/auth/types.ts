@@ -37,8 +37,17 @@ export interface UserSession {
   account: string
   avatar: string | null
   role: string | null
-  tokenId: string
+  accessToken: string
+  refreshToken: string
   loginTime: string
+  lastLoginTime: string | null
+}
+
+/** Token 刷新响应 */
+export interface RefreshResult {
+  userId: number
+  accessToken: string
+  refreshToken: string
 }
 
 /** 用户完整信息 */
