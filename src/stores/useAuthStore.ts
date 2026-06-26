@@ -2,34 +2,51 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { authApi } from '@/modules/auth/api'
 import type { UserSession, LoginParams, RegisterParams } from '@/modules/auth/types'
-
-const SESSION_KEY = 'xxq-session'
-
-function loadSession(): UserSession | null {
-  try {
-    const raw = localStorage.getItem(SESSION_KEY)
-    return raw ? (JSON.parse(raw) as UserSession) : null
-  } catch {
-    return null
-  }
-}
-
-function saveSession(session: UserSession | null) {
-  if (session) {
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session))
-  } else {
-    localStorage.removeItem(SESSION_KEY)
-  }
-}
+import {
+  refreshToken,
+  currentUserId,
+  setTokens,
+  clearTokens,
+  setPerformRefresh,
+} from '@/shared/tokenManager'
 
 export const useAuthStore = defineStore('auth', () => {
-  const user = ref<UserSession | null>(loadSession())
+  const user = ref<UserSession | null>(null)
+
+  if (currentUserId.value !== null) {
+    user.value = { userId: currentUserId.value } as UserSession
+  }
 
   const isLoggedIn = computed(() => user.value !== null)
 
+  async function doRefresh(): Promise<boolean> {
+    const rt = refreshToken.value
+    if (!rt) return false
+    try {
+      const result = await authApi.refresh(rt)
+      setTokens(result.accessToken, result.refreshToken, result.userId)
+      if (user.value) {
+        user.value = {
+          ...user.value,
+          userId: result.userId,
+          accessToken: result.accessToken,
+          refreshToken: result.refreshToken,
+        }
+      }
+      return true
+    } catch {
+      user.value = null
+      clearTokens()
+      return false
+    }
+  }
+
+  setPerformRefresh(doRefresh)
+
   async function login(params: LoginParams) {
-    user.value = await authApi.login(params)
-    saveSession(user.value)
+    const session = await authApi.login(params)
+    user.value = session
+    setTokens(session.accessToken, session.refreshToken, session.userId)
   }
 
   async function register(params: RegisterParams) {
@@ -37,13 +54,11 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function logout() {
-    if (user.value) {
-      try {
-        await authApi.logout(user.value.tokenId)
-      } finally {
-        user.value = null
-        saveSession(null)
-      }
+    try {
+      await authApi.logout()
+    } finally {
+      user.value = null
+      clearTokens()
     }
   }
 
