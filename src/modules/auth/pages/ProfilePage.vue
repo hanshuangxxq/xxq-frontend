@@ -29,11 +29,18 @@ const editing = ref(false)
 const saving = ref(false)
 const uploading = ref(false)
 
-const genderOptions = [
+const genderOptions = computed(() => [
   { label: t('profile.notSet'), value: '' },
-  { label: '男', value: 'male' },
-  { label: '女', value: 'female' },
-]
+  { label: t('profile.genderMale'), value: 'MALE' },
+  { label: t('profile.genderFemale'), value: 'FEMALE' },
+])
+
+const genderLabel = computed(() => {
+  const g = profile.value?.gender
+  if (g === 'MALE') return t('profile.genderMale')
+  if (g === 'FEMALE') return t('profile.genderFemale')
+  return t('profile.notSet')
+})
 
 const form = ref({
   email: '',
@@ -240,7 +247,7 @@ onMounted(loadProfile)
                 v-model:value="form.gender"
                 :options="genderOptions"
               />
-              <span v-else>{{ displayValue(profile.gender) }}</span>
+              <span v-else>{{ genderLabel }}</span>
             </NFormItem>
           </NGi>
 
