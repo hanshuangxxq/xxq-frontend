@@ -20,6 +20,11 @@ const routes: RouteRecordRaw[] = [
         name: 'Profile',
         component: () => import('@/modules/auth/pages/ProfilePage.vue'),
       },
+      {
+        path: 'course',
+        name: 'CourseSelection',
+        component: () => import('@/modules/course/pages/CourseSelectionPage.vue'),
+      },
     ],
   },
   ...authRoutes,
