@@ -1,7 +1,8 @@
 import { API_BASE_URL } from '@/config'
 import { api } from '@/shared/api'
 import type { Result } from '@/shared/types'
-import type { LoginParams, RegisterParams, UpdateProfileParams, UserProfile, UserSession } from './types'
+import { accessToken } from '@/shared/tokenManager'
+import type { LoginParams, RefreshResult, RegisterParams, UpdateProfileParams, UserProfile, UserSession } from './types'
 
 export const authApi = {
   async login(params: LoginParams): Promise<UserSession> {
@@ -16,21 +17,31 @@ export const authApi = {
     return result.data
   },
 
-  async logout(tokenId: string): Promise<boolean> {
-    const result = await api.post<Result<boolean>>(
-      `/login/logout?tokenId=${encodeURIComponent(tokenId)}`,
+  async logout(): Promise<boolean> {
+    const result = await api.post<Result<boolean>>('/login/logout')
+    if (result.code !== 200) throw new Error(result.message)
+    return result.data
+  },
+
+  async refresh(refreshToken: string): Promise<RefreshResult> {
+    const result = await api.post<Result<RefreshResult>>(
+      `/login/refresh?refreshToken=${encodeURIComponent(refreshToken)}`,
     )
     if (result.code !== 200) throw new Error(result.message)
     return result.data
   },
 
-  async refresh(refreshToken: string): Promise<void> {
-    await api.post(`/login/refresh?refreshToken=${encodeURIComponent(refreshToken)}`)
-  },
-
   async getProfile(userId: number): Promise<UserProfile> {
     const result = await api.get<Result<UserProfile>>(
       `/user/profile?userId=${encodeURIComponent(userId)}`,
+    )
+    if (result.code !== 200) throw new Error(result.message)
+    return result.data
+  },
+
+  async getProfileWithToken(userId: number, tokenId: string): Promise<UserProfile> {
+    const result = await api.get<Result<UserProfile>>(
+      `/user/profile?userId=${encodeURIComponent(userId)}&tokenId=${encodeURIComponent(tokenId)}`,
     )
     if (result.code !== 200) throw new Error(result.message)
     return result.data
@@ -49,9 +60,14 @@ export const authApi = {
     const formData = new FormData()
     formData.append('file', file)
 
+    const headers: Record<string, string> = {}
+    if (accessToken.value) {
+      headers['Authorization'] = `Bearer ${accessToken.value}`
+    }
+
     const res = await fetch(
       `${API_BASE_URL}/user/avatar/upload?userId=${encodeURIComponent(userId)}`,
-      { method: 'POST', body: formData },
+      { method: 'POST', body: formData, headers },
     )
 
     if (!res.ok) {
