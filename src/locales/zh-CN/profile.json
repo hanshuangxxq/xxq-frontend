@@ -32,5 +32,7 @@
   "dean": "教务主任",
   "statusActive": "正常",
   "statusInactive": "禁用",
-  "notSet": "未设置"
+  "notSet": "未设置",
+  "genderMale": "男",
+  "genderFemale": "女"
 }
