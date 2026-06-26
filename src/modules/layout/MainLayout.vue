@@ -5,7 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { NLayout, NLayoutSider, NLayoutContent, NMenu, NAvatar, NSpace, NSelect } from 'naive-ui'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useLocaleStore } from '@/stores/useLocaleStore'
-import { avatarUrl } from '@/shared/utils/avatar'
+import { useAvatar } from '@/shared/composables/useAvatar'
 import type { SupportedLocale } from '@/i18n'
 import logoutSvg from '@/icons/logout.svg'
 import selectSvg from '@/icons/select.svg'
@@ -26,7 +26,7 @@ const currentLocale = computed({
   set: (v) => localeStore.setLocale(v as SupportedLocale),
 })
 
-const avatarSrc = computed(() => avatarUrl(authStore.user?.avatar))
+const avatarSrc = useAvatar(computed(() => authStore.user?.avatar ?? null))
 
 const menuOptions = computed(() => {
   const items = [{ label: t('profile.title'), key: '/profile' }]
