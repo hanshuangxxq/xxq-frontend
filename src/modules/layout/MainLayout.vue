@@ -1,22 +1,40 @@
 <script setup lang="ts">
-import { computed, h } from 'vue'
+import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { NLayout, NLayoutSider, NLayoutContent, NMenu, NAvatar, NSpace } from 'naive-ui'
+import { NLayout, NLayoutSider, NLayoutContent, NMenu, NAvatar, NSpace, NSelect } from 'naive-ui'
 import { useAuthStore } from '@/stores/useAuthStore'
+import { useLocaleStore } from '@/stores/useLocaleStore'
 import { avatarUrl } from '@/shared/utils/avatar'
+import type { SupportedLocale } from '@/i18n'
 import logoutSvg from '@/icons/logout.svg'
+import selectSvg from '@/icons/select.svg'
 
 const { t } = useI18n()
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+const localeStore = useLocaleStore()
+
+const localeOptions = [
+  { label: '中文', value: 'zh-CN' },
+  { label: 'English', value: 'en' },
+]
+
+const currentLocale = computed({
+  get: () => localeStore.current,
+  set: (v) => localeStore.setLocale(v as SupportedLocale),
+})
 
 const avatarSrc = computed(() => avatarUrl(authStore.user?.avatar))
 
-const menuOptions = computed(() => [
-  { label: t('profile.title'), key: '/profile' },
-])
+const menuOptions = computed(() => {
+  const items = [{ label: t('profile.title'), key: '/profile' }]
+  if (authStore.user?.userType === 'student') {
+    items.push({ label: t('course.title'), key: '/course' })
+  }
+  return items
+})
 
 const activeKey = computed(() => route.path)
 
@@ -65,26 +83,29 @@ async function handleLogout() {
         <div
           style="
             margin-top: auto;
-            padding: 12px 0;
+            padding: 8px 0;
             background: #f0eaea;
             border-top: 1px solid #e0d4d4;
           "
         >
-          <NMenu
-            :root-indent="20"
-            :options="[
-              {
-                label: t('auth.logout'),
-                key: 'logout',
-                icon: () =>
-                  h('img', {
-                    src: logoutSvg,
-                    style: { width: '18px', height: '18px' },
-                  }),
-              },
-            ]"
-            @update:value="handleLogout"
-          />
+          <div style="padding: 0 12px; margin-bottom: 6px">
+            <NSelect
+              v-model:value="currentLocale"
+              :options="localeOptions"
+              size="tiny"
+              :consistent-menu-width="false"
+              style="width: 100%"
+              :theme-overrides="{ peers: { InternalSelection: { color: '#faf0f0' } } }"
+            >
+              <template #arrow>
+                <img :src="selectSvg" style="width: 14px; height: 14px" />
+              </template>
+            </NSelect>
+          </div>
+          <div class="logout-btn" @click="handleLogout">
+            <img :src="logoutSvg" style="width: 18px; height: 18px" />
+            <span>{{ t('auth.logout') }}</span>
+          </div>
         </div>
       </div>
     </NLayoutSider>
@@ -94,3 +115,20 @@ async function handleLogout() {
     </NLayoutContent>
   </NLayout>
 </template>
+
+<style scoped>
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  cursor: pointer;
+  color: #777;
+  font-size: 14px;
+  transition: background 0.15s, color 0.15s;
+}
+.logout-btn:hover {
+  background: #e8d0d0;
+  color: #333;
+}
+</style>
