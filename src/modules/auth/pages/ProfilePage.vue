@@ -15,7 +15,8 @@ import {
   useMessage,
 } from 'naive-ui'
 import { useAuthStore } from '@/stores/useAuthStore'
-import { avatarUrl } from '@/shared/utils/avatar'
+import { useAvatar } from '@/shared/composables/useAvatar'
+import { refreshToken } from '@/shared/tokenManager'
 import { authApi } from '../api'
 import type { UserProfile } from '../types'
 
@@ -41,7 +42,7 @@ const form = ref({
   description: '',
 })
 
-const avatarSrc = computed(() => avatarUrl(profile.value?.avatar))
+const avatarSrc = useAvatar(computed(() => profile.value?.avatar ?? null))
 
 const isStudent = computed(() => profile.value?.userType === 'student')
 const isTeacher = computed(() => profile.value?.userType === 'teacher')
@@ -62,7 +63,10 @@ const statusLabel = computed(() =>
 async function loadProfile() {
   try {
     const userId = authStore.user!.userId
-    profile.value = await authApi.getProfile(userId)
+    const tokenId = refreshToken.value
+    profile.value = tokenId
+      ? await authApi.getProfileWithToken(userId, tokenId)
+      : await authApi.getProfile(userId)
   } catch (e) {
     message.error((e as Error).message || t('profile.loadFail'))
   }
