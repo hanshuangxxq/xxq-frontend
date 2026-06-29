@@ -121,6 +121,7 @@ async function handleAvatarUpload(file: File) {
     const filename = await authApi.uploadAvatar(userId, file)
     if (authStore.user) {
       authStore.user.avatar = filename
+      authStore.persistUser()
     }
     await loadProfile()
     message.success(t('profile.saveSuccess'))
@@ -153,9 +154,9 @@ onMounted(loadProfile)
 </script>
 
 <template>
-  <div style="max-width: 720px; margin: 24px auto; padding: 0 16px">
-    <NSpace justify="space-between" align="center" style="margin-bottom: 16px">
-      <h2 style="margin: 0">{{ $t('profile.title') }}</h2>
+  <div class="profile-page">
+    <NSpace justify="space-between" align="center" class="profile-header">
+      <h2 class="profile-title">{{ $t('profile.title') }}</h2>
       <NButton v-if="!editing" type="primary" @click="startEdit">
         {{ $t('profile.editProfile') }}
       </NButton>
@@ -163,45 +164,27 @@ onMounted(loadProfile)
 
     <NCard>
       <!-- Avatar section -->
-      <div style="text-align: center; margin-bottom: 24px">
+      <div class="profile-avatar-section">
         <div
-          style="cursor: pointer; display: inline-block; position: relative"
+          class="profile-avatar-wrapper"
           @click="triggerUpload"
         >
           <NAvatar
             :size="80"
             :src="avatarSrc"
             round
-            :style="{ opacity: uploading ? 0.5 : 1 }"
+            :class="{ 'avatar-uploading': uploading }"
           >
             <template v-if="!avatarSrc">{{ profile?.name?.charAt(0) }}</template>
             <template #fallback>{{ profile?.name?.charAt(0) }}</template>
           </NAvatar>
-          <div
-            style="
-              position: absolute;
-              bottom: 0;
-              right: 0;
-              background: #2080f0;
-              color: #fff;
-              border-radius: 50%;
-              width: 24px;
-              height: 24px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-size: 14px;
-              line-height: 1;
-            "
-          >
-            +
-          </div>
+          <div class="profile-avatar-badge">+</div>
         </div>
         <input
           id="avatar-upload-input"
           type="file"
           accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml"
-          style="display: none"
+          class="hidden-input"
           @change="onFileChange"
         />
       </div>
@@ -339,7 +322,7 @@ onMounted(loadProfile)
       </NForm>
     </NCard>
 
-    <NSpace v-if="editing" justify="end" style="margin-top: 16px">
+    <NSpace v-if="editing" justify="end" class="profile-actions">
       <NButton @click="cancelEdit">{{ $t('profile.cancel') }}</NButton>
       <NButton type="primary" :loading="saving" @click="saveProfile">
         {{ $t('profile.save') }}
@@ -347,3 +330,5 @@ onMounted(loadProfile)
     </NSpace>
   </div>
 </template>
+
+<style scoped src="./ProfilePage.css"></style>
