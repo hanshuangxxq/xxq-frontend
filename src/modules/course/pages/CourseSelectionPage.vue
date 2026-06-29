@@ -6,7 +6,7 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <div style="padding: 24px">
+  <div class="course-page">
     <NSpace vertical :size="16">
       <NCard :title="$t('course.title')">
         <NEmpty :description="$t('course.noCourses')" />
@@ -14,3 +14,5 @@ const { t } = useI18n()
     </NSpace>
   </div>
 </template>
+
+<style scoped src="./CourseSelectionPage.css"></style>
