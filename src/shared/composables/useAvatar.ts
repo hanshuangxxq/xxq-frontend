@@ -8,12 +8,13 @@ export function useAvatar(
   const blobUrl = ref<string>()
 
   async function load() {
-    const old = blobUrl.value
-    if (old) URL.revokeObjectURL(old)
-    blobUrl.value = undefined
-
     const url = avatarUrl(filenameRef.value)
-    if (!url) return
+    if (!url) {
+      const old = blobUrl.value
+      if (old) URL.revokeObjectURL(old)
+      blobUrl.value = undefined
+      return
+    }
 
     try {
       const headers: Record<string, string> = {}
@@ -33,10 +34,12 @@ export function useAvatar(
 
       if (res.ok) {
         const blob = await res.blob()
+        const old = blobUrl.value
         blobUrl.value = URL.createObjectURL(blob)
+        if (old) URL.revokeObjectURL(old)
       }
     } catch {
-      // leave blobUrl undefined so fallback text shows
+      // leave existing blobUrl so previously loaded avatar stays visible
     }
   }
 
