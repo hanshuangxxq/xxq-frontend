@@ -56,6 +56,15 @@ export const authApi = {
     return result.data
   },
 
+  async changePassword(params: {
+    oldPassword: string
+    newPassword: string
+  }): Promise<boolean> {
+    const result = await api.put<Result<boolean>>('/user/changePassword', params)
+    if (result.code !== 200) throw new Error(result.message)
+    return result.data
+  },
+
   async uploadAvatar(userId: number, file: File): Promise<string> {
     const formData = new FormData()
     formData.append('file', file)
