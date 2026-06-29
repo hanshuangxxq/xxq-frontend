@@ -59,8 +59,8 @@ async function handleRegister() {
 </script>
 
 <template>
-  <div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f0f2f5">
-    <NCard :title="$t('auth.register.title')" style="width: 400px; box-shadow: 0 2px 12px rgba(0,0,0,0.08)" bordered>
+  <div class="register-page">
+    <NCard :title="$t('auth.register.title')" class="register-card" bordered>
       <NForm :model="form">
         <NFormItem :label="$t('auth.register.account')">
           <NInput v-model:value="form.account" :placeholder="$t('auth.register.accountPlaceholder')" />
@@ -97,7 +97,7 @@ async function handleRegister() {
           {{ $t('auth.register.submit') }}
         </NButton>
       </NForm>
-      <div style="margin-top: 12px; text-align: center">
+      <div class="register-links">
         <NButton text type="primary" @click="router.push('/login')">
           {{ $t('auth.register.toLogin') }}
         </NButton>
@@ -105,3 +105,5 @@ async function handleRegister() {
     </NCard>
   </div>
 </template>
+
+<style scoped src="./RegisterPage.css"></style>
