@@ -8,13 +8,16 @@ import {
   setTokens,
   clearTokens,
   setPerformRefresh,
+  saveUser,
+  loadUser,
 } from '@/shared/tokenManager'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<UserSession | null>(null)
 
-  if (currentUserId.value !== null) {
-    user.value = { userId: currentUserId.value } as UserSession
+  const savedUser = loadUser() as UserSession | null
+  if (savedUser && savedUser.userId) {
+    user.value = savedUser
   }
 
   const isLoggedIn = computed(() => user.value !== null)
@@ -47,6 +50,7 @@ export const useAuthStore = defineStore('auth', () => {
     const session = await authApi.login(params)
     user.value = session
     setTokens(session.accessToken, session.refreshToken, session.userId)
+    saveUser(session)
   }
 
   async function register(params: RegisterParams) {
@@ -62,5 +66,9 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  return { user, isLoggedIn, login, register, logout }
+  function persistUser() {
+    if (user.value) saveUser(user.value)
+  }
+
+  return { user, isLoggedIn, login, register, logout, persistUser }
 })
