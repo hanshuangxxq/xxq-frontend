@@ -74,6 +74,13 @@ export interface UserProfile {
   position: string | null
 }
 
+/** 修改密码请求参数 */
+export interface ChangePasswordParams {
+  account: string
+  oldPassword: string
+  newPassword: string
+}
+
 /** 修改个人信息请求参数 */
 export interface UpdateProfileParams {
   email?: string
