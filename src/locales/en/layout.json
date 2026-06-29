@@ -1,0 +1,18 @@
+{
+  "projectName": "InfoBridge",
+  "collapse": "Collapse sidebar",
+  "expand": "Expand sidebar",
+  "settings": "Settings",
+  "changePassword": "Change Password",
+  "switchLanguage": "Switch Language",
+  "currentPassword": "Current Password",
+  "currentPasswordPlaceholder": "Enter current password",
+  "newPassword": "New Password",
+  "newPasswordPlaceholder": "Enter new password",
+  "confirmNewPassword": "Confirm New Password",
+  "confirmNewPasswordPlaceholder": "Re-enter new password",
+  "passwordMismatch": "New passwords do not match",
+  "passwordChangeSuccess": "Password changed successfully",
+  "passwordChangeFail": "Failed to change password",
+  "close": "Close"
+}
