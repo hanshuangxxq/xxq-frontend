@@ -62,6 +62,38 @@ export function clearTokens() {
   saveStr(ACCESS_KEY, null)
   saveStr(REFRESH_KEY, null)
   saveNum(USER_ID_KEY, null)
+  clearUser()
+}
+
+const USER_KEY = 'xxq-user'
+
+export function saveUser(user: unknown) {
+  try {
+    if (user) {
+      localStorage.setItem(USER_KEY, JSON.stringify(user))
+    } else {
+      localStorage.removeItem(USER_KEY)
+    }
+  } catch {
+    // localStorage unavailable
+  }
+}
+
+export function loadUser(): unknown {
+  try {
+    const raw = localStorage.getItem(USER_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
+function clearUser() {
+  try {
+    localStorage.removeItem(USER_KEY)
+  } catch {
+    // localStorage unavailable
+  }
 }
 
 export async function refreshAccessToken(): Promise<boolean> {
