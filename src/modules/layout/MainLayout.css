@@ -189,3 +189,28 @@
 .locale-select {
   max-width: 240px;
 }
+
+/* Sidebar dropdown menu — global because NDropdown teleports to body */
+:global(.n-dropdown-menu) {
+  background: #edeeef;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 4px 0;
+}
+
+:global(.n-dropdown-option) {
+  color: #444;
+  font-size: 13px;
+  padding: 0;
+  transition: background 0.12s;
+}
+
+:global(.n-dropdown-option:hover) {
+  background: #e3e5e8;
+  color: #333;
+}
+
+:global(.n-dropdown-divider) {
+  margin: 4px 12px;
+  border-color: #dde0e3;
+}
