@@ -165,21 +165,22 @@ async function handleChangePassword() {
           />
         </div>
 
-        <NDropdown
-          trigger="click"
-          :options="userMenuOptions"
-          placement="top-end"
-          @select="handleUserMenuSelect"
-        >
-          <div class="sidebar-bottom" :class="{ collapsed }">
-            <NAvatar :size="32" :src="avatarSrc" round>
-              <template v-if="!avatarSrc">{{ authStore.user?.name?.charAt(0) }}</template>
-              <template #fallback>{{ authStore.user?.name?.charAt(0) }}</template>
-            </NAvatar>
-            <span class="username">{{ authStore.user?.name }}</span>
-            <img :src="selectSvg" class="dropdown-arrow" />
-          </div>
-        </NDropdown>
+        <div class="sidebar-bottom" :class="{ collapsed }">
+          <NAvatar :size="32" :src="avatarSrc" round>
+            <template v-if="!avatarSrc">{{ authStore.user?.name?.charAt(0) }}</template>
+            <template #fallback>{{ authStore.user?.name?.charAt(0) }}</template>
+          </NAvatar>
+          <span class="username">{{ authStore.user?.name }}</span>
+          <NDropdown
+            trigger="click"
+            :options="userMenuOptions"
+            placement="top-end"
+            @select="handleUserMenuSelect"
+          >
+            <div class="dropdown-hitbox"></div>
+          </NDropdown>
+          <img :src="selectSvg" class="dropdown-arrow" />
+        </div>
       </div>
     </NLayoutSider>
 
