@@ -328,6 +328,7 @@ onMounted(loadProfile)
         {{ $t('profile.save') }}
       </NButton>
     </NSpace>
+
   </div>
 </template>
 
