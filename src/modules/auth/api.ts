@@ -2,7 +2,7 @@ import { API_BASE_URL } from '@/config'
 import { api } from '@/shared/api'
 import type { Result } from '@/shared/types'
 import { accessToken } from '@/shared/tokenManager'
-import type { LoginParams, RefreshResult, RegisterParams, UpdateProfileParams, UserProfile, UserSession } from './types'
+import type { ChangePasswordParams, LoginParams, RefreshResult, RegisterParams, UpdateProfileParams, UserProfile, UserSession } from './types'
 
 export const authApi = {
   async login(params: LoginParams): Promise<UserSession> {
@@ -56,11 +56,8 @@ export const authApi = {
     return result.data
   },
 
-  async changePassword(params: {
-    oldPassword: string
-    newPassword: string
-  }): Promise<boolean> {
-    const result = await api.put<Result<boolean>>('/user/changePassword', params)
+  async changePassword(params: ChangePasswordParams): Promise<boolean> {
+    const result = await api.post<Result<boolean>>('/password/change', params)
     if (result.code !== 200) throw new Error(result.message)
     return result.data
   },
