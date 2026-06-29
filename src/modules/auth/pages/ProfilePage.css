@@ -1,0 +1,52 @@
+.profile-page {
+  max-width: 720px;
+  margin: 24px auto;
+  padding: 0 16px;
+}
+
+.profile-header {
+  margin-bottom: 16px;
+}
+
+.profile-title {
+  margin: 0;
+}
+
+.profile-avatar-section {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.profile-avatar-wrapper {
+  cursor: pointer;
+  display: inline-block;
+  position: relative;
+}
+
+.avatar-uploading {
+  opacity: 0.5;
+}
+
+.profile-avatar-badge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: #2080f0;
+  color: #fff;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.hidden-input {
+  display: none;
+}
+
+.profile-actions {
+  margin-top: 16px;
+}
