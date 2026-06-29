@@ -3,10 +3,12 @@ import zhCNCommon from '@/locales/zh-CN/common.json'
 import zhCNAuth from '@/locales/zh-CN/auth.json'
 import zhCNProfile from '@/locales/zh-CN/profile.json'
 import zhCNCourse from '@/locales/zh-CN/course.json'
+import zhCNLayout from '@/locales/zh-CN/layout.json'
 import enCommon from '@/locales/en/common.json'
 import enAuth from '@/locales/en/auth.json'
 import enProfile from '@/locales/en/profile.json'
 import enCourse from '@/locales/en/course.json'
+import enLayout from '@/locales/en/layout.json'
 
 export type SupportedLocale = 'zh-CN' | 'en'
 
@@ -17,8 +19,8 @@ const i18n = createI18n({
   locale: 'zh-CN',
   fallbackLocale: 'zh-CN',
   messages: {
-    'zh-CN': { common: zhCNCommon, auth: zhCNAuth, profile: zhCNProfile, course: zhCNCourse },
-    en: { common: enCommon, auth: enAuth, profile: enProfile, course: enCourse },
+    'zh-CN': { common: zhCNCommon, auth: zhCNAuth, profile: zhCNProfile, course: zhCNCourse, layout: zhCNLayout },
+    en: { common: enCommon, auth: enAuth, profile: enProfile, course: enCourse, layout: enLayout },
   },
 })
 
