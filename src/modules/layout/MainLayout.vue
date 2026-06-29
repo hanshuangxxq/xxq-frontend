@@ -30,6 +30,7 @@ import perInfoSvg from '@/icons/perInfo.svg'
 import logoutSvg from '@/icons/logout.svg'
 import couSelSvg from '@/icons/couSel.svg'
 import settingSvg from '@/icons/setting.svg'
+import closeSvg from '@/icons/close.svg'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -192,28 +193,35 @@ async function handleChangePassword() {
   <NModal
     v-model:show="showSettings"
     preset="card"
-    :title="t('layout.settings')"
     class="settings-modal"
+    content-style="padding: 0; margin: 0"
     :segmented="{ content: 'soft', footer: 'soft' }"
   >
     <div class="settings-layout">
-      <div class="settings-nav">
-        <div
-          class="settings-nav-item"
-          :class="{ active: settingsTab === 'password' }"
-          @click="settingsTab = 'password'"
-        >
-          {{ t('layout.changePassword') }}
+      <img
+        :src="closeSvg"
+        class="settings-close-btn"
+        @click="showSettings = false"
+      />
+      <div class="settings-body">
+        <div class="settings-nav">
+          <div class="settings-nav-title">{{ t('layout.settings') }}</div>
+          <div
+            class="settings-nav-item"
+            :class="{ active: settingsTab === 'password' }"
+            @click="settingsTab = 'password'"
+          >
+            {{ t('layout.changePassword') }}
+          </div>
+          <div
+            class="settings-nav-item"
+            :class="{ active: settingsTab === 'language' }"
+            @click="settingsTab = 'language'"
+          >
+            {{ t('layout.switchLanguage') }}
+          </div>
         </div>
-        <div
-          class="settings-nav-item"
-          :class="{ active: settingsTab === 'language' }"
-          @click="settingsTab = 'language'"
-        >
-          {{ t('layout.switchLanguage') }}
-        </div>
-      </div>
-      <div class="settings-content">
+        <div class="settings-content">
         <template v-if="settingsTab === 'password'">
           <h4 class="settings-section-title">{{ t('layout.changePassword') }}</h4>
           <NForm :model="passwordForm">
@@ -256,12 +264,10 @@ async function handleChangePassword() {
             class="locale-select"
           />
         </template>
+        </div>
       </div>
     </div>
 
-    <template #footer>
-      <NButton @click="showSettings = false">{{ t('layout.close') }}</NButton>
-    </template>
   </NModal>
 </template>
 
