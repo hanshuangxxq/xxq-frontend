@@ -121,6 +121,7 @@ async function handleChangePassword() {
   changingPassword.value = true
   try {
     await authApi.changePassword({
+      account: authStore.user!.account,
       oldPassword: passwordForm.value.oldPassword,
       newPassword: passwordForm.value.newPassword,
     })
