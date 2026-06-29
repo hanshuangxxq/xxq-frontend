@@ -1,0 +1,18 @@
+{
+  "projectName": "信息桥",
+  "collapse": "收起侧边栏",
+  "expand": "展开侧边栏",
+  "settings": "设置",
+  "changePassword": "修改密码",
+  "switchLanguage": "切换语言",
+  "currentPassword": "当前密码",
+  "currentPasswordPlaceholder": "请输入当前密码",
+  "newPassword": "新密码",
+  "newPasswordPlaceholder": "请输入新密码",
+  "confirmNewPassword": "确认新密码",
+  "confirmNewPasswordPlaceholder": "请再次输入新密码",
+  "passwordMismatch": "两次输入的新密码不一致",
+  "passwordChangeSuccess": "密码修改成功",
+  "passwordChangeFail": "密码修改失败",
+  "close": "关闭"
+}
