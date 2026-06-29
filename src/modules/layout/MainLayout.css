@@ -9,19 +9,16 @@
 .sidebar-top {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   padding: 16px;
   min-height: 48px;
   flex-shrink: 0;
-  gap: 8px;
-  overflow: hidden;
-}
-
-.sidebar-top.collapsed {
-  justify-content: center;
+  position: relative;
 }
 
 .project-name {
+  position: absolute;
+  left: 16px;
   font-size: 16px;
   font-weight: 600;
   color: #333;
@@ -30,12 +27,11 @@
   text-overflow: ellipsis;
   max-width: 160px;
   opacity: 1;
-  transition: opacity 0.3s ease, max-width 0.3s ease;
+  transition: opacity 0.2s ease;
 }
 
 .sidebar-top.collapsed .project-name {
   opacity: 0;
-  max-width: 0;
   pointer-events: none;
 }
 
@@ -62,14 +58,13 @@
 .sidebar-bottom {
   display: flex;
   align-items: center;
-  gap: 8px;
   padding: 8px 12px;
   margin-top: auto;
   background: #dfe2e5;
   flex-shrink: 0;
   min-height: 48px;
   cursor: pointer;
-  overflow: hidden;
+  position: relative;
   transition: background 0.15s;
 }
 
@@ -77,39 +72,37 @@
   background: #d6dade;
 }
 
-.sidebar-bottom.collapsed {
-  justify-content: center;
-  padding: 8px;
-}
-
 .sidebar-bottom :deep(.n-avatar) {
   flex-shrink: 0;
 }
 
 .username {
-  flex: 1;
+  position: absolute;
+  left: 52px;
   font-size: 13px;
   font-weight: 500;
   color: #333;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 108px;
   opacity: 1;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.2s ease;
 }
 
 .sidebar-bottom.collapsed .username {
   opacity: 0;
-  flex: 0;
   pointer-events: none;
 }
 
 .dropdown-arrow {
+  position: absolute;
+  right: 12px;
   width: 16px;
   height: 16px;
   flex-shrink: 0;
   opacity: 0.5;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.2s ease;
 }
 
 .sidebar-bottom:hover .dropdown-arrow {
@@ -118,7 +111,6 @@
 
 .sidebar-bottom.collapsed .dropdown-arrow {
   opacity: 0;
-  width: 0;
   pointer-events: none;
 }
 
