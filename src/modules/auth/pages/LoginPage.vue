@@ -35,8 +35,8 @@ async function handleLogin() {
 </script>
 
 <template>
-  <div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f0f2f5">
-    <NCard :title="$t('auth.login.title')" style="width: 400px; box-shadow: 0 2px 12px rgba(0,0,0,0.08)" bordered>
+  <div class="login-page">
+    <NCard :title="$t('auth.login.title')" class="login-card" bordered>
       <NForm :model="form">
         <NFormItem :label="$t('auth.login.account')">
           <NInput v-model:value="form.account" :placeholder="$t('auth.login.accountPlaceholder')" />
@@ -58,7 +58,7 @@ async function handleLogin() {
           {{ $t('auth.login.submit') }}
         </NButton>
       </NForm>
-      <div style="margin-top: 12px; text-align: center">
+      <div class="login-links">
         <NButton text type="primary" @click="router.push('/register')">
           {{ $t('auth.login.toRegister') }}
         </NButton>
@@ -66,3 +66,5 @@ async function handleLogin() {
     </NCard>
   </div>
 </template>
+
+<style scoped src="./LoginPage.css"></style>
