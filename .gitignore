@@ -44,6 +44,7 @@ __screenshots__/
 
 # CLAUDE
 CLAUDE.md
+.claude/
 
 # gitkeep
 **/*.gitkeep
