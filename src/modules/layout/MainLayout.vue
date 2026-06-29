@@ -174,7 +174,7 @@ async function handleChangePassword() {
           <NDropdown
             trigger="click"
             :options="userMenuOptions"
-            placement="top-end"
+            :placement="collapsed ? 'top' : 'top-end'"
             @select="handleUserMenuSelect"
           >
             <div class="dropdown-hitbox"></div>
