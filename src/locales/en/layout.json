@@ -14,5 +14,7 @@
   "passwordMismatch": "New passwords do not match",
   "passwordChangeSuccess": "Password changed successfully",
   "passwordChangeFail": "Failed to change password",
-  "close": "Close"
+  "close": "Close",
+  "logoutConfirmTitle": "Logout Confirmation",
+  "logoutConfirmMessage": "Are you sure you want to logout?"
 }
