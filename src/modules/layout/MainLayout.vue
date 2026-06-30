@@ -28,6 +28,7 @@ import sidebarShowSvg from '@/icons/sidebar_show.svg'
 import selectSvg from '@/icons/select.svg'
 import perInfoSvg from '@/icons/perInfo.svg'
 import logoutSvg from '@/icons/logout.svg'
+import courseSvg from '@/icons/course.svg'
 import couSelSvg from '@/icons/couSel.svg'
 import settingSvg from '@/icons/setting.svg'
 import closeSvg from '@/icons/close.svg'
@@ -41,7 +42,9 @@ const message = useMessage()
 
 const collapsed = ref(false)
 const showSettings = ref(false)
-const settingsTab = ref<'password' | 'language'>('password')
+const showLogoutConfirm = ref(false)
+const loggingOut = ref(false)
+const settingsTab = ref<'password' | 'language'>('language')
 
 const avatarSrc = useAvatar(computed(() => authStore.user?.avatar ?? null))
 
@@ -66,6 +69,9 @@ const menuOptions = computed(() => {
   const items: Array<{ label: string; key: string; icon?: () => ReturnType<typeof h> }> = [
     { label: t('profile.title'), key: '/profile', icon: renderSvgIcon(perInfoSvg) },
   ]
+  if (authStore.user?.userType === 'student' || authStore.user?.userType === 'teacher') {
+    items.push({ label: t('curriculum.title'), key: '/curriculum', icon: renderSvgIcon(courseSvg) })
+  }
   if (authStore.user?.userType === 'student') {
     items.push({ label: t('course.title'), key: '/course', icon: renderSvgIcon(couSelSvg) })
   }
@@ -97,13 +103,19 @@ function handleUserMenuSelect(key: string) {
   if (key === 'settings') {
     showSettings.value = true
   } else if (key === 'logout') {
-    handleLogout()
+    showLogoutConfirm.value = true
   }
 }
 
 async function handleLogout() {
-  await authStore.logout()
-  router.push('/login')
+  loggingOut.value = true
+  try {
+    await authStore.logout()
+    showLogoutConfirm.value = false
+    router.push('/login')
+  } finally {
+    loggingOut.value = false
+  }
 }
 
 const passwordForm = ref({
@@ -209,17 +221,17 @@ async function handleChangePassword() {
           <div class="settings-nav-title">{{ t('layout.settings') }}</div>
           <div
             class="settings-nav-item"
-            :class="{ active: settingsTab === 'password' }"
-            @click="settingsTab = 'password'"
-          >
-            {{ t('layout.changePassword') }}
-          </div>
-          <div
-            class="settings-nav-item"
             :class="{ active: settingsTab === 'language' }"
             @click="settingsTab = 'language'"
           >
             {{ t('layout.switchLanguage') }}
+          </div>
+          <div
+            class="settings-nav-item"
+            :class="{ active: settingsTab === 'password' }"
+            @click="settingsTab = 'password'"
+          >
+            {{ t('layout.changePassword') }}
           </div>
         </div>
         <div class="settings-content">
@@ -269,6 +281,21 @@ async function handleChangePassword() {
       </div>
     </div>
 
+  </NModal>
+
+  <NModal
+    v-model:show="showLogoutConfirm"
+    preset="card"
+    class="logout-confirm-modal"
+    :title="t('layout.logoutConfirmTitle')"
+  >
+    <p class="logout-confirm-message">{{ t('layout.logoutConfirmMessage') }}</p>
+    <div class="logout-confirm-actions">
+      <NButton @click="showLogoutConfirm = false">{{ t('profile.cancel') }}</NButton>
+      <NButton type="error" :loading="loggingOut" @click="handleLogout">
+        {{ t('auth.logout') }}
+      </NButton>
+    </div>
   </NModal>
 </template>
 
