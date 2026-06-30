@@ -8,7 +8,7 @@
   "saveSuccess": "保存成功",
   "saveFail": "保存失败",
   "loadFail": "加载个人信息失败",
-  "account": "账号",
+  "account": "登录名",
   "name": "用户名",
   "email": "邮箱",
   "phone": "手机号",
