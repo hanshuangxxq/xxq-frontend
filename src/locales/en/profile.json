@@ -8,7 +8,7 @@
   "saveSuccess": "Profile updated successfully",
   "saveFail": "Failed to update profile",
   "loadFail": "Failed to load profile",
-  "account": "Account",
+  "account": "Login Name",
   "name": "Name",
   "email": "Email",
   "phone": "Phone",
