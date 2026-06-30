@@ -246,6 +246,11 @@
   display: none !important;
 }
 
+:global(.logout-confirm-modal) {
+  width: 360px !important;
+  max-width: 90vw !important;
+}
+
 /* Sidebar dropdown menu — global because NDropdown teleports to body */
 :global(.n-dropdown-menu) {
   background: #edeeef;
@@ -269,4 +274,21 @@
 :global(.n-dropdown-divider) {
   margin: 4px 12px;
   border-color: #dde0e3;
+}
+
+.logout-confirm-modal {
+  width: 360px;
+  max-width: 90vw;
+}
+
+.logout-confirm-message {
+  margin: 0 0 20px;
+  font-size: 14px;
+  color: #555;
+}
+
+.logout-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
 }
