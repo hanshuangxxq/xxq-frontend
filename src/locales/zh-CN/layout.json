@@ -14,5 +14,7 @@
   "passwordMismatch": "两次输入的新密码不一致",
   "passwordChangeSuccess": "密码修改成功",
   "passwordChangeFail": "密码修改失败",
-  "close": "关闭"
+  "close": "关闭",
+  "logoutConfirmTitle": "退出确认",
+  "logoutConfirmMessage": "确定要退出登录吗？"
 }
