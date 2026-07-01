@@ -50,6 +50,13 @@ export interface RefreshResult {
   refreshToken: string
 }
 
+/** 班级信息 */
+export interface ClassNameInfo {
+  id: number
+  className: string
+  college: string
+}
+
 /** 用户完整信息 */
 export interface UserProfile {
   userId: number
@@ -67,7 +74,7 @@ export interface UserProfile {
   identifier: string | null
   grade: string | null
   major: string | null
-  className: string | null
+  className: ClassNameInfo | null
   enrollmentYear: number | null
   title: string | null
   department: string | null
