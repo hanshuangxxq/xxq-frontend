@@ -282,3 +282,9 @@ onMounted(async () => {
 </template>
 
 <style scoped src="./CurriculumPage.css"></style>
+<style>
+.detail-modal {
+  width: 420px !important;
+  max-width: 90vw;
+}
+</style>
