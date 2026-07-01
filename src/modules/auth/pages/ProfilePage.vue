@@ -253,7 +253,7 @@ onMounted(loadProfile)
             </NGi>
             <NGi>
               <NFormItem :label="$t('profile.className')">
-                <span>{{ displayValue(profile.className) }}</span>
+                <span>{{ displayValue(profile.className?.className) }}</span>
               </NFormItem>
             </NGi>
             <NGi>
