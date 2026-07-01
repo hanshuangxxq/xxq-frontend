@@ -1,3 +1,57 @@
 .curriculum-page {
   padding: 24px;
 }
+
+.filter-bar {
+  padding: 4px 0;
+}
+
+.filter-label {
+  font-size: 14px;
+  color: var(--n-text-color-3, #555);
+}
+
+.filter-input {
+  width: 140px;
+}
+
+.teachinfo-table {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.detail-modal {
+  width: 520px;
+  max-width: 90vw;
+}
+
+.detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detail-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--n-border-color, #eee);
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  flex-shrink: 0;
+  width: 90px;
+  font-size: 13px;
+  color: var(--n-text-color-3, #999);
+  text-align: right;
+}
+
+.detail-value {
+  font-size: 14px;
+  color: var(--n-text-color, #333);
+}
