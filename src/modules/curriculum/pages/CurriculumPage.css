@@ -15,11 +15,113 @@
   width: 140px;
 }
 
-.teachinfo-table {
-  max-width: 100%;
+/* ---- Timetable grid ---- */
+.timetable-wrapper {
   overflow-x: auto;
 }
 
+.timetable {
+  border-collapse: collapse;
+  table-layout: auto;
+}
+
+.timetable-time-header {
+  width: 100px;
+}
+
+.timetable-day-header {
+  width: 120px;
+  padding: 10px 4px;
+  background: #f0f2f5;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+  border: 1px solid #ddd;
+}
+
+.timetable-cell {
+  width: 120px;
+  padding: 6px;
+  border: 1px solid #ddd;
+  vertical-align: top;
+  text-align: center;
+  height: 80px;
+}
+
+.timetable-time-cell {
+  padding: 8px 6px;
+  background: #f8f9fa;
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+  border: 1px solid #ddd;
+  vertical-align: middle;
+}
+
+.timetable-cell--filled {
+  cursor: pointer;
+  background: #e8f0fe;
+  transition: background 0.15s;
+}
+
+.timetable-cell--filled:hover {
+  background: #d0e2fc;
+}
+
+.cell-course-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin-bottom: 2px;
+}
+
+.cell-teacher {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 2px;
+}
+
+.cell-location {
+  font-size: 12px;
+  color: #999;
+}
+
+/* ---- Course cards ---- */
+.course-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 220px);
+  gap: 16px;
+}
+
+.course-card {
+  min-height: 120px;
+}
+
+.course-card :deep(.n-card-content) {
+  background: url('@/images/background.png') center/cover no-repeat;
+}
+
+.course-card-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.course-card-meta {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 6px;
+}
+
+.course-card-location {
+  font-size: 13px;
+  color: #888;
+}
+
+/* ---- Detail modal ---- */
 .detail-modal {
   width: 520px;
   max-width: 90vw;
