@@ -1,25 +1,33 @@
 export interface TeachInfo {
-  id: number
-  courseId: number
   courseName: string
-  courseCode: string
   credit: number
   courseHour: number
   courseType: string
-  teacherId: number
   teacherName: string
-  teacherNo: string
-  title: string
-  department: string
+  department: string | null
   className: string
   college: string
-  timeId: number
   dayOfWeek: number
-  startPeriod: number
-  endPeriod: number
-  localId: number
+  week: number
+  timeId: number
   building: string
   classroom: string
+}
+
+export interface ClassCourse {
+  courseName: string
+  teacherName: string
+  dayOfWeek: number
+  week: number
+  timeId: number
+  building: string
+  classroom: string
+}
+
+export interface TimeSlot {
+  id: number
+  startPeriod: string
+  endPeriod: string
 }
 
 export interface TeachInfoQuery {
