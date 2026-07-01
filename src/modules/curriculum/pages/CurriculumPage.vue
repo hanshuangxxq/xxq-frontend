@@ -3,11 +3,8 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
-  NSpace,
   NTabs,
   NTabPane,
-  NInput,
-  NButton,
   NModal,
   NSpin,
   NEmpty,
@@ -70,8 +67,6 @@ async function loadClassCourses() {
 // ---- Schedule tab (timetable grid) ----
 const loading = ref(false)
 const data = ref<TeachInfo[]>([])
-const teacherIdFilter = ref('')
-const courseIdFilter = ref('')
 
 const scheduleMap = computed(() => {
   const map = new Map<string, TeachInfo>()
@@ -136,28 +131,13 @@ function openDetail(item: TeachInfo) {
 async function loadData() {
   loading.value = true
   try {
-    const query: { teacherId?: number; courseId?: number } = {}
-    const tid = parseInt(teacherIdFilter.value, 10)
-    const cid = parseInt(courseIdFilter.value, 10)
-    if (!isNaN(tid)) query.teacherId = tid
-    if (!isNaN(cid)) query.courseId = cid
-    const res = await fetchTeachInfoList(Object.keys(query).length > 0 ? query : undefined)
+    const res = await fetchTeachInfoList()
     data.value = res.data
   } catch (e) {
     message.error((e as Error).message || t('curriculum.loadFail'))
   } finally {
     loading.value = false
   }
-}
-
-function handleSearch() {
-  loadData()
-}
-
-function handleReset() {
-  teacherIdFilter.value = ''
-  courseIdFilter.value = ''
-  loadData()
 }
 
 watch(activeTab, (tab) => {
@@ -200,67 +180,42 @@ onMounted(async () => {
         </NTabPane>
 
         <NTabPane name="schedule" :tab="$t('curriculum.tabSchedule')">
-          <NSpace vertical :size="16">
-            <div class="filter-bar">
-              <NSpace align="center" :wrap="true">
-                <span class="filter-label">{{ $t('curriculum.teacherId') }}</span>
-                <NInput
-                  v-model:value="teacherIdFilter"
-                  :placeholder="$t('curriculum.teacherIdPlaceholder')"
-                  class="filter-input"
-                  clearable
-                  @keyup.enter="handleSearch"
-                />
-                <span class="filter-label">{{ $t('curriculum.courseId') }}</span>
-                <NInput
-                  v-model:value="courseIdFilter"
-                  :placeholder="$t('curriculum.courseIdPlaceholder')"
-                  class="filter-input"
-                  clearable
-                  @keyup.enter="handleSearch"
-                />
-                <NButton type="primary" @click="handleSearch">{{ $t('curriculum.search') }}</NButton>
-                <NButton @click="handleReset">{{ $t('curriculum.reset') }}</NButton>
-              </NSpace>
+          <NSpin :show="loading">
+            <NEmpty
+              v-if="!loading && data.length === 0"
+              :description="$t('curriculum.empty')"
+            />
+            <div v-else class="timetable-wrapper">
+              <table class="timetable">
+                <thead>
+                  <tr>
+                    <th class="timetable-time-header"></th>
+                    <th v-for="day in DAYS" :key="day" class="timetable-day-header">
+                      {{ getDayLabel(day) }}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="slot in orderedTimeSlots" :key="slot.timeId">
+                    <td class="timetable-time-cell">{{ slot.label }}</td>
+                    <td
+                      v-for="day in DAYS"
+                      :key="day"
+                      class="timetable-cell"
+                      :class="{ 'timetable-cell--filled': getCourseAt(slot.timeId, day) }"
+                      @click="getCourseAt(slot.timeId, day) && openDetail(getCourseAt(slot.timeId, day)!)"
+                    >
+                      <template v-if="getCourseAt(slot.timeId, day)">
+                        <div class="cell-course-name">{{ getCourseAt(slot.timeId, day)!.courseName }}</div>
+                        <div class="cell-teacher">{{ getCourseAt(slot.timeId, day)!.teacherName }}</div>
+                        <div class="cell-location">{{ getCourseAt(slot.timeId, day)!.building }} {{ getCourseAt(slot.timeId, day)!.classroom }}</div>
+                      </template>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-
-            <NSpin :show="loading">
-              <NEmpty
-                v-if="!loading && data.length === 0"
-                :description="$t('curriculum.empty')"
-              />
-              <div v-else class="timetable-wrapper">
-                <table class="timetable">
-                  <thead>
-                    <tr>
-                      <th class="timetable-time-header"></th>
-                      <th v-for="day in DAYS" :key="day" class="timetable-day-header">
-                        {{ getDayLabel(day) }}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="slot in orderedTimeSlots" :key="slot.timeId">
-                      <td class="timetable-time-cell">{{ slot.label }}</td>
-                      <td
-                        v-for="day in DAYS"
-                        :key="day"
-                        class="timetable-cell"
-                        :class="{ 'timetable-cell--filled': getCourseAt(slot.timeId, day) }"
-                        @click="getCourseAt(slot.timeId, day) && openDetail(getCourseAt(slot.timeId, day)!)"
-                      >
-                        <template v-if="getCourseAt(slot.timeId, day)">
-                          <div class="cell-course-name">{{ getCourseAt(slot.timeId, day)!.courseName }}</div>
-                          <div class="cell-teacher">{{ getCourseAt(slot.timeId, day)!.teacherName }}</div>
-                          <div class="cell-location">{{ getCourseAt(slot.timeId, day)!.building }} {{ getCourseAt(slot.timeId, day)!.classroom }}</div>
-                        </template>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </NSpin>
-          </NSpace>
+          </NSpin>
         </NTabPane>
       </NTabs>
     </NCard>
