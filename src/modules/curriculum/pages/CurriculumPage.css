@@ -122,8 +122,8 @@
 }
 
 /* ---- Detail modal ---- */
-.detail-modal {
-  width: 520px;
+:deep(.detail-modal) {
+  width: 480px !important;
   max-width: 90vw;
 }
 
