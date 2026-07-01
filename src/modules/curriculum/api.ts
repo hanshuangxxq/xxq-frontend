@@ -1,6 +1,6 @@
 import { api } from '@/shared/api'
 import type { Result } from '@/shared/types'
-import type { TeachInfo, TeachInfoQuery } from './types'
+import type { TeachInfo, TeachInfoQuery, ClassCourse, TimeSlot } from './types'
 
 export function fetchTeachInfoList(query?: TeachInfoQuery): Promise<Result<TeachInfo[]>> {
   const params = new URLSearchParams()
@@ -10,6 +10,14 @@ export function fetchTeachInfoList(query?: TeachInfoQuery): Promise<Result<Teach
   return api.get(`/teach-info${qs ? `?${qs}` : ''}`)
 }
 
-export function fetchTeachInfo(id: number): Promise<Result<TeachInfo>> {
-  return api.get(`/teach-info/${id}`)
+export function fetchClassCourses(): Promise<Result<ClassCourse[]>> {
+  return api.get('/teach-info/class-courses')
+}
+
+export function fetchAllTimes(): Promise<Result<TimeSlot[]>> {
+  return api.get('/time')
+}
+
+export function fetchTime(id: number): Promise<Result<TimeSlot>> {
+  return api.get(`/time/${id}`)
 }
