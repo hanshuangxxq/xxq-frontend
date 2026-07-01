@@ -2,22 +2,10 @@
   padding: 24px;
 }
 
-.filter-bar {
-  padding: 4px 0;
-}
-
-.filter-label {
-  font-size: 14px;
-  color: var(--n-text-color-3, #555);
-}
-
-.filter-input {
-  width: 140px;
-}
-
 /* ---- Timetable grid ---- */
 .timetable-wrapper {
   overflow-x: auto;
+  margin-top: 16px;
 }
 
 .timetable {
@@ -46,10 +34,12 @@
   border: 1px solid #ddd;
   vertical-align: top;
   text-align: center;
-  height: 80px;
+  height: 100px;
 }
 
 .timetable-time-cell {
+  width: 100px;
+  height: 100px;
   padding: 8px 6px;
   background: #f8f9fa;
   font-size: 12px;
