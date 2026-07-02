@@ -20,5 +20,15 @@
   "columnTime": "时间",
   "columnWeek": "周数",
   "columnBuilding": "教学楼",
-  "columnClassroom": "教室"
+  "columnClassroom": "教室",
+  "viewData": "查看排课数据",
+  "hideData": "隐藏排课数据",
+  "dataTitle": "排课数据预览",
+  "columnCredit": "学分",
+  "columnCourseHour": "课时",
+  "columnCourseType": "课程类型",
+  "columnDepartment": "开课系",
+  "dataEmpty": "暂无排课数据，请先在课程排课中准备数据",
+  "viewDrafts": "草稿箱",
+  "hideDrafts": "隐藏草稿箱"
 }
