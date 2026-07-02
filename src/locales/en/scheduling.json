@@ -20,5 +20,15 @@
   "columnTime": "Time",
   "columnWeek": "Weeks",
   "columnBuilding": "Building",
-  "columnClassroom": "Room"
+  "columnClassroom": "Room",
+  "viewData": "View Scheduling Data",
+  "hideData": "Hide Scheduling Data",
+  "dataTitle": "Scheduling Data Preview",
+  "columnCredit": "Credits",
+  "columnCourseHour": "Hours",
+  "columnCourseType": "Type",
+  "columnDepartment": "Department",
+  "dataEmpty": "No scheduling data available. Please prepare data in Curriculum first.",
+  "viewDrafts": "Draft Box",
+  "hideDrafts": "Hide Draft Box"
 }
