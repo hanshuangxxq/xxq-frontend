@@ -88,11 +88,6 @@ const menuOptions = computed(() => {
       key: '/time-restrictions',
       icon: renderSvgIcon(timeResSvg),
     })
-    items.push({
-      label: t('scheduling.title'),
-      key: '/scheduling',
-      icon: renderSvgIcon(autoSvg),
-    })
   }
   if (authStore.user?.userType === 'department') {
     items.push({
@@ -116,6 +111,11 @@ const menuOptions = computed(() => {
       label: t('locals.title'),
       key: '/locals',
       icon: renderSvgIcon(classRoomSvg),
+    })
+    items.push({
+      label: t('scheduling.title'),
+      key: '/scheduling',
+      icon: renderSvgIcon(autoSvg),
     })
   }
   return items
