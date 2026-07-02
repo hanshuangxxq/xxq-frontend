@@ -63,3 +63,17 @@ export interface DraftClassSummary {
   countByClass: Record<string, number>
   totalDrafts: number
 }
+
+export interface DraftItem {
+  id: number | null
+  courseId: number
+  courseName: string
+  teacherId: number
+  teacherName: string
+  className: string
+  college: string
+  timeId: number | null
+  localId: number | null
+  dayOfWeek: number | null
+  week: number
+}
