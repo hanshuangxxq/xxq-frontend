@@ -1,0 +1,20 @@
+{
+  "title": "Class Management",
+  "add": "Add Class",
+  "edit": "Edit",
+  "delete": "Delete",
+  "deleteConfirm": "Delete this class?",
+  "className": "Class Name",
+  "college": "College",
+  "actions": "Actions",
+  "save": "Save",
+  "cancel": "Cancel",
+  "saveSuccess": "Saved successfully",
+  "saveFail": "Failed to save",
+  "deleteSuccess": "Deleted successfully",
+  "deleteFail": "Failed to delete",
+  "loadFail": "Failed to load classes",
+  "empty": "No classes",
+  "createTitle": "Add Class",
+  "editTitle": "Edit Class"
+}
