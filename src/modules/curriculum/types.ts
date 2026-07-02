@@ -16,12 +16,6 @@ export interface TeachInfo {
 
 export interface ClassCourse {
   courseName: string
-  teacherName: string
-  dayOfWeek: number
-  week: number
-  timeId: number
-  building: string
-  classroom: string
 }
 
 export interface TimeSlot {
@@ -31,6 +25,41 @@ export interface TimeSlot {
 }
 
 export interface TeachInfoQuery {
-  teacherId?: number
   courseId?: number
+}
+
+export interface TeachInfoForm {
+  courseId: number
+  teacherId: number
+  className: string
+  week: number
+  timeId?: number
+  localId?: number
+  dayOfWeek?: number
+}
+
+export interface TimeForm {
+  startPeriod: string
+  endPeriod: string
+}
+
+export interface TeachInfoDraft {
+  courseId: number
+  teacherId: number
+  className: string
+  week?: number
+}
+
+export interface Teacher {
+  id: number
+  name: string
+  teacherNo: string
+  title: string
+  department: string
+}
+
+export interface DraftClassSummary {
+  classes: string[]
+  countByClass: Record<string, number>
+  totalDrafts: number
 }
