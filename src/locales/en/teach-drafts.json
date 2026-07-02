@@ -27,5 +27,10 @@
   "summary": "Class Summary",
   "totalDrafts": "Total Drafts",
   "classes": "Configured Classes",
-  "coursesPerClass": "Courses per Class"
+  "coursesPerClass": "Courses per Class",
+  "actions": "Actions",
+  "deleteSingle": "Delete",
+  "deleteSingleConfirm": "Delete this draft?",
+  "deleteSingleSuccess": "Draft deleted",
+  "deleteSingleFail": "Failed to delete draft"
 }
