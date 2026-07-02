@@ -28,10 +28,10 @@ import {
 import { fetchClassNames } from '@/modules/class-names/api'
 import { fetchCourses } from '@/modules/course/api'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
-import type { TeachInfo, DraftClassSummary } from '../types'
+import type { DraftItem, DraftClassSummary } from '../types'
 
-function draftRowKey(row: TeachInfo): string {
-  return `${row.courseName}-${row.teacherName}-${row.className}-${row.week}`
+function draftRowKey(row: DraftItem): string {
+  return `${row.courseId}-${row.teacherId}-${row.className}`
 }
 
 const { t } = useI18n()
@@ -39,7 +39,7 @@ const message = useMessage()
 const { canManageDrafts } = useRoleCheck()
 
 const loading = ref(false)
-const drafts = ref<TeachInfo[]>([])
+const drafts = ref<DraftItem[]>([])
 const summary = ref<DraftClassSummary | null>(null)
 const classOptions = ref<{ label: string; value: string }[]>([])
 const courseOptions = ref<{ label: string; value: number }[]>([])
@@ -51,7 +51,7 @@ const entries = ref<{ courseId: number | null; teacherId: number | null; week: n
 ])
 const submitting = ref(false)
 
-const draftColumns: DataTableColumns<TeachInfo> = [
+const draftColumns: DataTableColumns<DraftItem> = [
   { title: t('curriculum.columnClassName'), key: 'className', width: 140, ellipsis: { tooltip: true } },
   { title: t('curriculum.columnCourseName'), key: 'courseName', width: 140, ellipsis: { tooltip: true } },
   { title: t('curriculum.columnTeacherName'), key: 'teacherName', width: 100 },
