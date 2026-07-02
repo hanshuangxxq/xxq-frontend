@@ -30,6 +30,8 @@
   "student": "Student",
   "teacher": "Teacher",
   "dean": "Dean",
+  "departmentAdmin": "Department Admin",
+  "academicAdmin": "Academic Admin",
   "statusActive": "Active",
   "statusInactive": "Disabled",
   "notSet": "Not set",
