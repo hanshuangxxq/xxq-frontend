@@ -2,6 +2,7 @@
   "title": "Teaching Info",
   "tabCourses": "Courses",
   "tabSchedule": "Schedule",
+    "tabMyCourses": "My Courses",
   "teacherId": "Teacher ID",
   "teacherIdPlaceholder": "Filter by teacher ID",
   "courseId": "Course ID",
@@ -23,5 +24,7 @@
   "columnWeek": "Weeks",
   "columnTime": "Time",
   "columnBuilding": "Building",
-  "columnClassroom": "Room"
+  "columnClassroom": "Room",
+  "blockedSlot": "Blocked",
+  "reservedFor": "Reserved"
 }
