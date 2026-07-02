@@ -85,30 +85,30 @@
 }
 
 .course-card {
-  min-height: 120px;
+  width: 220px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
 }
 
 .course-card :deep(.n-card-content) {
   background: url('@/images/background.png') center/cover no-repeat;
+  width: 100%;
+  overflow: hidden;
 }
 
 .course-card-name {
   font-size: 16px;
   font-weight: 700;
   color: #1a1a2e;
-  margin-bottom: 8px;
   line-height: 1.4;
-}
-
-.course-card-meta {
-  font-size: 13px;
-  color: #888;
-  margin-bottom: 6px;
-}
-
-.course-card-location {
-  font-size: 13px;
-  color: #888;
+  text-align: center;
+  word-break: break-all;
+  overflow-wrap: break-word;
+  padding: 0 12px;
 }
 
 /* ---- Detail modal ---- */
