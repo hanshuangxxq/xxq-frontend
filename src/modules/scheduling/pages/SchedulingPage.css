@@ -6,3 +6,31 @@
   font-size: 14px;
   color: var(--n-text-color-2, #666);
 }
+
+.scheduling-draft-select-crs {
+  width: 200px;
+}
+
+.scheduling-draft-select-tch {
+  width: 180px;
+}
+
+.scheduling-draft-input-num {
+  width: 100px;
+}
+
+.scheduling-draft-class-card {
+  text-align: center;
+}
+
+.scheduling-draft-class-name {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.scheduling-draft-class-count {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 8px;
+}
