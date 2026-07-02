@@ -1,6 +1,6 @@
 import { api } from '@/shared/api'
 import type { Result } from '@/shared/types'
-import type { TeachInfo, TeachInfoQuery, TeachInfoForm, TeachInfoDraft, DraftClassSummary, ClassCourse, TimeSlot, TimeForm, Teacher } from './types'
+import type { TeachInfo, TeachInfoQuery, TeachInfoForm, TeachInfoDraft, DraftClassSummary, DraftItem, ClassCourse, TimeSlot, TimeForm, Teacher } from './types'
 
 export function fetchTeachInfoList(query?: TeachInfoQuery): Promise<Result<TeachInfo[]>> {
   const params = new URLSearchParams()
@@ -58,7 +58,7 @@ export function submitDrafts(body: TeachInfoDraft[]): Promise<Result<number>> {
   return api.post('/teach-info/draft', body)
 }
 
-export function fetchDrafts(): Promise<Result<TeachInfo[]>> {
+export function fetchDrafts(): Promise<Result<DraftItem[]>> {
   return api.get('/teach-info/draft')
 }
 
@@ -72,4 +72,12 @@ export function clearAllDrafts(): Promise<Result<null>> {
 
 export function clearDraftsByClass(className: string): Promise<Result<null>> {
   return api.delete(`/teach-info/draft/${encodeURIComponent(className)}`)
+}
+
+export function deleteSingleDraft(courseId: number, teacherId: number, className: string): Promise<Result<null>> {
+  const params = new URLSearchParams()
+  params.set('courseId', String(courseId))
+  params.set('teacherId', String(teacherId))
+  params.set('className', className)
+  return api.delete(`/teach-info/draft/item?${params.toString()}`)
 }
