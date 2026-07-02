@@ -1,0 +1,23 @@
+{
+  "title": "课程管理",
+  "add": "新增课程",
+  "edit": "编辑",
+  "delete": "删除",
+  "deleteConfirm": "确定删除此课程吗？",
+  "courseName": "课程名称",
+  "courseCode": "课程编号",
+  "credit": "学分",
+  "courseHour": "学时",
+  "courseType": "课程类型",
+  "actions": "操作",
+  "save": "保存",
+  "cancel": "取消",
+  "saveSuccess": "保存成功",
+  "saveFail": "保存失败",
+  "deleteSuccess": "删除成功",
+  "deleteFail": "删除失败",
+  "loadFail": "加载课程列表失败",
+  "empty": "暂无课程",
+  "createTitle": "新增课程",
+  "editTitle": "编辑课程"
+}
