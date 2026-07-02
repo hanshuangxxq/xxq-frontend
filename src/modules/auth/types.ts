@@ -1,5 +1,5 @@
 /** 用户类型 */
-export type UserType = 'teacher' | 'student' | 'dean'
+export type UserType = 'teacher' | 'student' | 'dean' | 'department' | 'academic_admin'
 
 /** 登录渠道 */
 export type LoginChannel = 'account' | 'wechat' | 'qq' | 'alipay'
