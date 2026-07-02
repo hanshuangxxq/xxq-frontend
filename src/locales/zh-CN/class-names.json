@@ -1,0 +1,20 @@
+{
+  "title": "班级管理",
+  "add": "新增班级",
+  "edit": "编辑",
+  "delete": "删除",
+  "deleteConfirm": "确定删除此班级吗？",
+  "className": "班级名称",
+  "college": "学院",
+  "actions": "操作",
+  "save": "保存",
+  "cancel": "取消",
+  "saveSuccess": "保存成功",
+  "saveFail": "保存失败",
+  "deleteSuccess": "删除成功",
+  "deleteFail": "删除失败",
+  "loadFail": "加载班级列表失败",
+  "empty": "暂无班级",
+  "createTitle": "新增班级",
+  "editTitle": "编辑班级"
+}
