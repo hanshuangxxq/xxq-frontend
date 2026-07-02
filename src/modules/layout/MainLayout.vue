@@ -32,6 +32,10 @@ import courseSvg from '@/icons/course.svg'
 import couSelSvg from '@/icons/couSel.svg'
 import settingSvg from '@/icons/setting.svg'
 import closeSvg from '@/icons/close.svg'
+import timeResSvg from '@/icons/TimeRes.svg'
+import autoSvg from '@/icons/auto.svg'
+import classSvg from '@/icons/class.svg'
+import classRoomSvg from '@/icons/classRoom.svg'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -74,6 +78,45 @@ const menuOptions = computed(() => {
   }
   if (authStore.user?.userType === 'student') {
     items.push({ label: t('course.title'), key: '/course', icon: renderSvgIcon(couSelSvg) })
+  }
+  if (
+    authStore.user?.userType === 'academic_admin' ||
+    authStore.user?.userType === 'department'
+  ) {
+    items.push({
+      label: t('time-restrictions.title'),
+      key: '/time-restrictions',
+      icon: renderSvgIcon(timeResSvg),
+    })
+    items.push({
+      label: t('scheduling.title'),
+      key: '/scheduling',
+      icon: renderSvgIcon(autoSvg),
+    })
+  }
+  if (authStore.user?.userType === 'department') {
+    items.push({
+      label: t('teach-drafts.title'),
+      key: '/teach-drafts',
+      icon: renderSvgIcon(couSelSvg),
+    })
+  }
+  if (authStore.user?.userType === 'academic_admin') {
+    items.push({
+      label: t('course-management.title'),
+      key: '/course-management',
+      icon: renderSvgIcon(couSelSvg),
+    })
+    items.push({
+      label: t('class-names.title'),
+      key: '/class-names',
+      icon: renderSvgIcon(classSvg),
+    })
+    items.push({
+      label: t('locals.title'),
+      key: '/locals',
+      icon: renderSvgIcon(classRoomSvg),
+    })
   }
   return items
 })
