@@ -1,0 +1,8 @@
+.scheduling-page {
+  padding: 24px;
+}
+
+.scheduling-score {
+  font-size: 14px;
+  color: var(--n-text-color-2, #666);
+}
