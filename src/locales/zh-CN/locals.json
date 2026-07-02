@@ -1,0 +1,21 @@
+{
+  "title": "地点管理",
+  "add": "新增地点",
+  "edit": "编辑",
+  "delete": "删除",
+  "deleteConfirm": "确定删除此地点吗？",
+  "building": "教学楼",
+  "classroom": "教室",
+  "max": "容量",
+  "actions": "操作",
+  "save": "保存",
+  "cancel": "取消",
+  "saveSuccess": "保存成功",
+  "saveFail": "保存失败",
+  "deleteSuccess": "删除成功",
+  "deleteFail": "删除失败",
+  "loadFail": "加载地点列表失败",
+  "empty": "暂无地点",
+  "createTitle": "新增地点",
+  "editTitle": "编辑地点"
+}
