@@ -1,0 +1,23 @@
+{
+  "title": "Course Management",
+  "add": "Add Course",
+  "edit": "Edit",
+  "delete": "Delete",
+  "deleteConfirm": "Delete this course?",
+  "courseName": "Course Name",
+  "courseCode": "Course Code",
+  "credit": "Credit",
+  "courseHour": "Hours",
+  "courseType": "Type",
+  "actions": "Actions",
+  "save": "Save",
+  "cancel": "Cancel",
+  "saveSuccess": "Saved successfully",
+  "saveFail": "Failed to save",
+  "deleteSuccess": "Deleted successfully",
+  "deleteFail": "Failed to delete",
+  "loadFail": "Failed to load courses",
+  "empty": "No courses",
+  "createTitle": "Add Course",
+  "editTitle": "Edit Course"
+}
