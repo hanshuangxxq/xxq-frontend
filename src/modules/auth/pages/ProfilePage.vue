@@ -31,16 +31,9 @@ const uploading = ref(false)
 
 const genderOptions = computed(() => [
   { label: t('profile.notSet'), value: '' },
-  { label: t('profile.genderMale'), value: 'MALE' },
-  { label: t('profile.genderFemale'), value: 'FEMALE' },
+  { label: t('profile.genderMale'), value: '男' },
+  { label: t('profile.genderFemale'), value: '女' },
 ])
-
-const genderLabel = computed(() => {
-  const g = profile.value?.gender
-  if (g === 'MALE') return t('profile.genderMale')
-  if (g === 'FEMALE') return t('profile.genderFemale')
-  return t('profile.notSet')
-})
 
 const form = ref({
   email: '',
@@ -54,12 +47,16 @@ const avatarSrc = useAvatar(computed(() => profile.value?.avatar ?? null))
 const isStudent = computed(() => profile.value?.userType === 'student')
 const isTeacher = computed(() => profile.value?.userType === 'teacher')
 const isDean = computed(() => profile.value?.userType === 'dean')
+const isDepartmentAdmin = computed(() => profile.value?.userType === 'department')
+const isAcademicAdmin = computed(() => profile.value?.userType === 'academic_admin')
 
 const userTypeLabel = computed(() => {
   const type = profile.value?.userType
   if (type === 'student') return t('profile.student')
   if (type === 'teacher') return t('profile.teacher')
   if (type === 'dean') return t('profile.dean')
+  if (type === 'department') return t('profile.departmentAdmin')
+  if (type === 'academic_admin') return t('profile.academicAdmin')
   return ''
 })
 
@@ -230,7 +227,7 @@ onMounted(loadProfile)
                 v-model:value="form.gender"
                 :options="genderOptions"
               />
-              <span v-else>{{ genderLabel }}</span>
+              <span v-else>{{ displayValue(profile.gender) }}</span>
             </NFormItem>
           </NGi>
 
@@ -284,6 +281,44 @@ onMounted(loadProfile)
 
           <!-- Dean fields -->
           <template v-if="isDean">
+            <NGi>
+              <NFormItem :label="$t('profile.identifier')">
+                <span>{{ displayValue(profile.identifier) }}</span>
+              </NFormItem>
+            </NGi>
+            <NGi>
+              <NFormItem :label="$t('profile.department')">
+                <span>{{ displayValue(profile.department) }}</span>
+              </NFormItem>
+            </NGi>
+            <NGi>
+              <NFormItem :label="$t('profile.position')">
+                <span>{{ displayValue(profile.position) }}</span>
+              </NFormItem>
+            </NGi>
+          </template>
+
+          <!-- Department Admin fields -->
+          <template v-if="isDepartmentAdmin">
+            <NGi>
+              <NFormItem :label="$t('profile.identifier')">
+                <span>{{ displayValue(profile.identifier) }}</span>
+              </NFormItem>
+            </NGi>
+            <NGi>
+              <NFormItem :label="$t('profile.department')">
+                <span>{{ displayValue(profile.department) }}</span>
+              </NFormItem>
+            </NGi>
+            <NGi>
+              <NFormItem :label="$t('profile.position')">
+                <span>{{ displayValue(profile.position) }}</span>
+              </NFormItem>
+            </NGi>
+          </template>
+
+          <!-- Academic Admin fields -->
+          <template v-if="isAcademicAdmin">
             <NGi>
               <NFormItem :label="$t('profile.identifier')">
                 <span>{{ displayValue(profile.identifier) }}</span>
