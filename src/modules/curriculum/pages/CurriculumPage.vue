@@ -8,15 +8,19 @@ import {
   NModal,
   NSpin,
   NEmpty,
+  NDataTable,
   useMessage,
+  type DataTableColumns,
 } from 'naive-ui'
 import { fetchTeachInfoList, fetchClassCourses, fetchAllTimes } from '../api'
+import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import type { TeachInfo, ClassCourse, TimeSlot } from '../types'
 
 const { t } = useI18n()
 const message = useMessage()
+const { isTeacher, isStudent } = useRoleCheck()
 
-const activeTab = ref('courses')
+const activeTab = ref(isStudent.value ? 'courses' : 'myCourses')
 
 const timeMap = ref<Map<number, TimeSlot>>(new Map())
 
@@ -48,7 +52,7 @@ function getDayLabel(day: number): string {
   return days[day] ?? String(day)
 }
 
-// ---- Class Courses tab ----
+// ---- Student: Class Courses ----
 const classCoursesLoading = ref(false)
 const classCourses = ref<ClassCourse[]>([])
 
@@ -62,6 +66,15 @@ async function loadClassCourses() {
   } finally {
     classCoursesLoading.value = false
   }
+}
+
+// ---- Student: Course detail modal ----
+const courseDetailVisible = ref(false)
+const courseDetailItem = ref<ClassCourse | null>(null)
+
+function openCourseDetail(course: ClassCourse) {
+  courseDetailItem.value = course
+  courseDetailVisible.value = true
 }
 
 // ---- Schedule tab (timetable grid) ----
@@ -97,6 +110,36 @@ function getCourseAt(timeId: number, day: number): TeachInfo | undefined {
 }
 
 const DAYS = [1, 2, 3, 4, 5, 6, 7]
+
+// ---- Teacher: My Courses ----
+const teacherLoading = ref(false)
+const teacherCourses = ref<TeachInfo[]>([])
+
+const teacherColumns: DataTableColumns<TeachInfo> = [
+  { title: t('curriculum.columnCourseName'), key: 'courseName', width: 140, ellipsis: { tooltip: true } },
+  { title: t('curriculum.columnClassName'), key: 'className', width: 140, ellipsis: { tooltip: true } },
+  { title: t('curriculum.columnCollege'), key: 'college', width: 120, ellipsis: { tooltip: true } },
+  { title: t('curriculum.columnCourseHour'), key: 'courseHour', width: 60, align: 'center' },
+  { title: t('curriculum.columnCourseType'), key: 'courseType', width: 80 },
+  { title: t('curriculum.columnBuilding'), key: 'building', width: 100, ellipsis: { tooltip: true } },
+  { title: t('curriculum.columnClassroom'), key: 'classroom', width: 80, ellipsis: { tooltip: true } },
+]
+
+function teacherRowKey(row: TeachInfo): string {
+  return `${row.courseName}-${row.className}`
+}
+
+async function loadTeacherCourses() {
+  teacherLoading.value = true
+  try {
+    const res = await fetchTeachInfoList()
+    teacherCourses.value = res.data
+  } catch (e) {
+    message.error((e as Error).message || t('curriculum.loadFail'))
+  } finally {
+    teacherLoading.value = false
+  }
+}
 
 // ---- Detail modal ----
 const detailVisible = ref(false)
@@ -146,9 +189,14 @@ watch(activeTab, (tab) => {
   }
 })
 
+// ---- Init ----
 onMounted(async () => {
   await loadTimes()
-  loadClassCourses()
+  if (isStudent.value) {
+    loadClassCourses()
+  } else if (isTeacher.value) {
+    loadTeacherCourses()
+  }
 })
 </script>
 
@@ -156,7 +204,8 @@ onMounted(async () => {
   <div class="curriculum-page">
     <NCard>
       <NTabs v-model:value="activeTab" type="line" animated>
-        <NTabPane name="courses" :tab="$t('curriculum.tabCourses')">
+        <!-- Student: Class Courses -->
+        <NTabPane v-if="isStudent" name="courses" :tab="$t('curriculum.tabCourses')">
           <NSpin :show="classCoursesLoading">
             <NEmpty
               v-if="!classCoursesLoading && classCourses.length === 0"
@@ -165,21 +214,19 @@ onMounted(async () => {
             <div v-else class="course-card-grid">
               <NCard
                 v-for="(course, index) in classCourses"
-                :key="`${course.courseName}-${course.teacherName}-${index}`"
+                :key="`${course.courseName}-${index}`"
                 class="course-card"
                 hoverable
+                @click="openCourseDetail(course)"
               >
                 <div class="course-card-name">{{ course.courseName }}</div>
-                <div class="course-card-meta">{{ course.teacherName }}</div>
-                <div class="course-card-location">
-                  {{ course.building }} {{ course.classroom }}
-                </div>
               </NCard>
             </div>
           </NSpin>
         </NTabPane>
 
-        <NTabPane name="schedule" :tab="$t('curriculum.tabSchedule')">
+        <!-- Student: Schedule -->
+        <NTabPane v-if="isStudent" name="schedule" :tab="$t('curriculum.tabSchedule')">
           <NSpin :show="loading">
             <NEmpty
               v-if="!loading && data.length === 0"
@@ -217,6 +264,24 @@ onMounted(async () => {
             </div>
           </NSpin>
         </NTabPane>
+
+        <!-- Teacher: My Courses -->
+        <NTabPane v-if="isTeacher" name="myCourses" :tab="$t('curriculum.tabMyCourses')">
+          <NSpin :show="teacherLoading">
+            <NEmpty
+              v-if="!teacherLoading && teacherCourses.length === 0"
+              :description="$t('curriculum.empty')"
+            />
+            <NDataTable
+              v-else
+              :columns="teacherColumns"
+              :data="teacherCourses"
+              :row-key="teacherRowKey"
+              :single-line="false"
+              :bordered="false"
+            />
+          </NSpin>
+        </NTabPane>
       </NTabs>
     </NCard>
 
@@ -230,6 +295,20 @@ onMounted(async () => {
         <div v-for="field in detailFields" :key="field.label" class="detail-row">
           <span class="detail-label">{{ field.label }}</span>
           <span class="detail-value">{{ field.value }}</span>
+        </div>
+      </div>
+    </NModal>
+
+    <NModal
+      v-model:show="courseDetailVisible"
+      preset="card"
+      :title="$t('curriculum.detail')"
+      class="detail-modal"
+    >
+      <div v-if="courseDetailItem" class="detail-content">
+        <div class="detail-row">
+          <span class="detail-label">{{ $t('curriculum.columnCourseName') }}</span>
+          <span class="detail-value">{{ courseDetailItem.courseName }}</span>
         </div>
       </div>
     </NModal>
