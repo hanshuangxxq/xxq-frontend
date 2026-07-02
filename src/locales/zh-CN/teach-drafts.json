@@ -27,5 +27,10 @@
   "summary": "班级汇总",
   "totalDrafts": "草稿总数",
   "classes": "已配班级",
-  "coursesPerClass": "每班课程数"
+  "coursesPerClass": "每班课程数",
+  "actions": "操作",
+  "deleteSingle": "删除",
+  "deleteSingleConfirm": "确定删除此条草稿吗？",
+  "deleteSingleSuccess": "草稿已删除",
+  "deleteSingleFail": "删除草稿失败"
 }
