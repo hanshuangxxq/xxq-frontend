@@ -2,6 +2,7 @@
   "title": "课程信息",
   "tabCourses": "课程",
   "tabSchedule": "课表",
+    "tabMyCourses": "我的课程",
   "teacherId": "教师ID",
   "teacherIdPlaceholder": "输入教师ID筛选",
   "courseId": "课程ID",
@@ -23,5 +24,7 @@
   "columnWeek": "周数",
   "columnTime": "时间",
   "columnBuilding": "教学楼",
-  "columnClassroom": "教室"
+  "columnClassroom": "教室",
+  "blockedSlot": "禁止排课",
+  "reservedFor": "预留课程"
 }
