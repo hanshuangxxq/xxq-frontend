@@ -30,6 +30,36 @@ const routes: RouteRecordRaw[] = [
         name: 'Curriculum',
         component: () => import('@/modules/curriculum/pages/CurriculumPage.vue'),
       },
+      {
+        path: 'time-restrictions',
+        name: 'TimeRestrictions',
+        component: () => import('@/modules/time-restrictions/pages/TimeRestrictionsPage.vue'),
+      },
+      {
+        path: 'scheduling',
+        name: 'Scheduling',
+        component: () => import('@/modules/scheduling/pages/SchedulingPage.vue'),
+      },
+      {
+        path: 'course-management',
+        name: 'CourseManagement',
+        component: () => import('@/modules/course/pages/CourseManagementPage.vue'),
+      },
+      {
+        path: 'class-names',
+        name: 'ClassNameManagement',
+        component: () => import('@/modules/class-names/pages/ClassNameManagementPage.vue'),
+      },
+      {
+        path: 'locals',
+        name: 'LocalManagement',
+        component: () => import('@/modules/locals/pages/LocalManagementPage.vue'),
+      },
+      {
+        path: 'teach-drafts',
+        name: 'TeachDrafts',
+        component: () => import('@/modules/curriculum/pages/DraftManagementPage.vue'),
+      },
     ],
   },
   ...authRoutes,
