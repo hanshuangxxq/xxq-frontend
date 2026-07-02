@@ -1,0 +1,21 @@
+{
+  "title": "Location Management",
+  "add": "Add Location",
+  "edit": "Edit",
+  "delete": "Delete",
+  "deleteConfirm": "Delete this location?",
+  "building": "Building",
+  "classroom": "Room",
+  "max": "Capacity",
+  "actions": "Actions",
+  "save": "Save",
+  "cancel": "Cancel",
+  "saveSuccess": "Saved successfully",
+  "saveFail": "Failed to save",
+  "deleteSuccess": "Deleted successfully",
+  "deleteFail": "Failed to delete",
+  "loadFail": "Failed to load locations",
+  "empty": "No locations",
+  "createTitle": "Add Location",
+  "editTitle": "Edit Location"
+}
