@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
@@ -21,8 +21,8 @@ import {
   submitDrafts,
   fetchDrafts,
   fetchDraftClassSummary,
-  clearAllDrafts,
   clearDraftsByClass,
+  deleteSingleDraft,
   fetchTeachers,
 } from '../api'
 import { fetchClassNames } from '@/modules/class-names/api'
@@ -57,6 +57,23 @@ const draftColumns: DataTableColumns<DraftItem> = [
   { title: t('curriculum.columnTeacherName'), key: 'teacherName', width: 100 },
   { title: t('curriculum.columnWeek'), key: 'week', width: 60, align: 'center' },
   { title: t('curriculum.columnCollege'), key: 'college', width: 100, ellipsis: { tooltip: true } },
+  {
+    title: t('teach-drafts.actions'),
+    key: 'actions',
+    width: 80,
+    render(row) {
+      if (!canManageDrafts.value) return null
+      return h(
+        NPopconfirm,
+        { onPositiveClick: () => handleDeleteSingle(row) },
+        {
+          default: () => t('teach-drafts.deleteSingleConfirm'),
+          trigger: () =>
+            h(NButton, { type: 'error', size: 'tiny' }, () => t('teach-drafts.deleteSingle')),
+        },
+      )
+    },
+  },
 ]
 
 async function loadData() {
@@ -132,16 +149,6 @@ async function handleSubmit() {
   }
 }
 
-async function handleClearAll() {
-  try {
-    await clearAllDrafts()
-    message.success(t('teach-drafts.clearAllSuccess'))
-    await loadData()
-  } catch (e) {
-    message.error((e as Error).message || t('teach-drafts.clearAllFail'))
-  }
-}
-
 async function handleClearByClass(classNameVal: string) {
   try {
     await clearDraftsByClass(classNameVal)
@@ -149,6 +156,16 @@ async function handleClearByClass(classNameVal: string) {
     await loadData()
   } catch (e) {
     message.error((e as Error).message || t('teach-drafts.clearByClassFail'))
+  }
+}
+
+async function handleDeleteSingle(row: DraftItem) {
+  try {
+    await deleteSingleDraft(row.courseId, row.teacherId, row.className)
+    message.success(t('teach-drafts.deleteSingleSuccess'))
+    await loadData()
+  } catch (e) {
+    message.error((e as Error).message || t('teach-drafts.deleteSingleFail'))
   }
 }
 
@@ -227,14 +244,6 @@ onMounted(loadData)
 
       <!-- All Drafts -->
       <NCard :title="$t('teach-drafts.title')">
-        <template v-if="canManageDrafts && drafts.length > 0" #header-extra>
-          <NPopconfirm @positive-click="handleClearAll">
-            <template #default>{{ $t('teach-drafts.clearAllConfirm') }}</template>
-            <template #trigger>
-              <NButton type="error" size="small">{{ $t('teach-drafts.clearAll') }}</NButton>
-            </template>
-          </NPopconfirm>
-        </template>
         <NSpin :show="loading">
           <NEmpty v-if="!loading && drafts.length === 0" :description="$t('teach-drafts.empty')" />
           <NDataTable
