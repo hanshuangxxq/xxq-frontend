@@ -58,11 +58,6 @@ async function handleLogin() {
           {{ $t('auth.login.submit') }}
         </NButton>
       </NForm>
-      <div class="login-links">
-        <NButton text type="primary" @click="router.push('/register')">
-          {{ $t('auth.login.toRegister') }}
-        </NButton>
-      </div>
     </NCard>
   </div>
 </template>
