@@ -303,3 +303,10 @@ onMounted(loadData)
 </template>
 
 <style scoped src="./TimeRestrictionsPage.css"></style>
+
+<style>
+.tr-form-modal {
+  width: 420px;
+  max-width: 85vw;
+}
+</style>
