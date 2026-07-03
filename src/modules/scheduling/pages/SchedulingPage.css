@@ -2,6 +2,10 @@
   padding: 24px;
 }
 
+.scheduling-page :deep(.n-base-selection-placeholder) {
+  user-select: none;
+}
+
 .scheduling-score {
   font-size: 14px;
   color: var(--n-text-color-2, #666);
