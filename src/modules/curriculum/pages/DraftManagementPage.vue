@@ -264,6 +264,9 @@ onMounted(loadData)
 .draft-page {
   padding: 24px;
 }
+.draft-page :deep(.n-base-selection-placeholder) {
+  user-select: none;
+}
 .draft-select-crs {
   width: 200px;
 }
