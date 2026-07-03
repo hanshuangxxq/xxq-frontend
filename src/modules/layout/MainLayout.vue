@@ -202,7 +202,7 @@ async function handleChangePassword() {
     >
       <div class="sidebar-container">
         <div class="sidebar-top" :class="{ collapsed }">
-          <span class="project-name">{{ t('layout.projectName') }}</span>
+          <span v-show="!collapsed" class="project-name">{{ t('layout.projectName') }}</span>
           <img
             :src="collapsed ? sidebarShowSvg : sidebarHideSvg"
             class="toggle-icon"
