@@ -176,8 +176,11 @@ onMounted(loadData)
 .lm-page {
   padding: 24px;
 }
+</style>
+
+<style>
 .lm-form-modal {
-  width: 480px;
-  max-width: 90vw;
+  width: 420px;
+  max-width: 85vw;
 }
 </style>
