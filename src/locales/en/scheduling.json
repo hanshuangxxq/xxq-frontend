@@ -27,6 +27,7 @@
   "columnCredit": "Credits",
   "columnCourseHour": "Hours",
   "columnCourseType": "Type",
+  "columnCollege": "College",
   "columnDepartment": "Department",
   "dataEmpty": "No scheduling data available. Please prepare data in Curriculum first.",
   "viewDrafts": "Draft Box",
