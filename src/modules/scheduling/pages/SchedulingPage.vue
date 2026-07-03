@@ -430,6 +430,9 @@ async function handleSolve() {
   solving.value = true
   try {
     const res = await solve()
+    if (!res.data) {
+      throw new Error(res.message)
+    }
     scheduleId.value = res.data.scheduleId
     status.value = 'SOLVING'
     score.value = ''
