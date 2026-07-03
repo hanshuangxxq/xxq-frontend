@@ -2,17 +2,11 @@ import { API_BASE_URL } from '@/config'
 import { api } from '@/shared/api'
 import type { Result } from '@/shared/types'
 import { accessToken } from '@/shared/tokenManager'
-import type { ChangePasswordParams, LoginParams, RefreshResult, RegisterParams, UpdateProfileParams, UserProfile, UserSession } from './types'
+import type { ChangePasswordParams, LoginParams, RefreshResult, UpdateProfileParams, UserProfile, UserSession } from './types'
 
 export const authApi = {
   async login(params: LoginParams): Promise<UserSession> {
     const result = await api.post<Result<UserSession>>('/login', params)
-    if (result.code !== 200) throw new Error(result.message)
-    return result.data
-  },
-
-  async register(params: RegisterParams): Promise<boolean> {
-    const result = await api.post<Result<boolean>>('/register', params)
     if (result.code !== 200) throw new Error(result.message)
     return result.data
   },
