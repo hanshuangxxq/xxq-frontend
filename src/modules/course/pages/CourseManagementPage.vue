@@ -200,8 +200,11 @@ onMounted(loadData)
 .cm-page {
   padding: 24px;
 }
+</style>
+
+<style>
 .cm-form-modal {
-  width: 480px;
-  max-width: 90vw;
+  width: 420px;
+  max-width: 85vw;
 }
 </style>
