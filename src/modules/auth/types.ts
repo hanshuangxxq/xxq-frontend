@@ -4,14 +4,6 @@ export type UserType = 'teacher' | 'student' | 'dean' | 'department' | 'academic
 /** 登录渠道 */
 export type LoginChannel = 'account' | 'wechat' | 'qq' | 'alipay'
 
-/** 注册请求参数 */
-export interface RegisterParams {
-  account: string
-  password: string
-  userType: UserType
-  identifier?: string
-}
-
 /** 账号密码登录参数 */
 export interface AccountLoginData {
   account: string
