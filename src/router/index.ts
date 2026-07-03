@@ -3,7 +3,7 @@ import authRoutes from '@/modules/auth/router'
 import { useAuthStore } from '@/stores/useAuthStore'
 import MainLayout from '@/modules/layout/MainLayout.vue'
 
-const WHITELIST = ['/login', '/register']
+const WHITELIST = ['/login']
 
 const routes: RouteRecordRaw[] = [
   {
