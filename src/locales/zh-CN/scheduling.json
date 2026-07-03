@@ -27,6 +27,7 @@
   "columnCredit": "学分",
   "columnCourseHour": "课时",
   "columnCourseType": "课程类型",
+  "columnCollege": "学院",
   "columnDepartment": "开课系",
   "dataEmpty": "暂无排课数据，请先在课程排课中准备数据",
   "viewDrafts": "草稿箱",
