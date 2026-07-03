@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { authApi } from '@/modules/auth/api'
-import type { UserSession, LoginParams, RegisterParams } from '@/modules/auth/types'
+import type { UserSession, LoginParams } from '@/modules/auth/types'
 import {
   refreshToken,
   currentUserId,
@@ -53,10 +53,6 @@ export const useAuthStore = defineStore('auth', () => {
     saveUser(session)
   }
 
-  async function register(params: RegisterParams) {
-    await authApi.register(params)
-  }
-
   async function logout() {
     try {
       await authApi.logout()
@@ -70,5 +66,5 @@ export const useAuthStore = defineStore('auth', () => {
     if (user.value) saveUser(user.value)
   }
 
-  return { user, isLoggedIn, login, register, logout, persistUser }
+  return { user, isLoggedIn, login, logout, persistUser }
 })
