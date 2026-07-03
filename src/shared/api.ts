@@ -1,7 +1,7 @@
 import { API_BASE_URL } from '@/config'
 import { accessToken, refreshAccessToken } from '@/shared/tokenManager'
 
-const AUTH_WHITELIST = ['/login', '/register', '/login/refresh']
+const AUTH_WHITELIST = ['/login', '/login/refresh']
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
