@@ -171,8 +171,11 @@ onMounted(loadData)
 .cn-page {
   padding: 24px;
 }
+</style>
+
+<style>
 .cn-form-modal {
-  width: 480px;
-  max-width: 90vw;
+  width: 420px;
+  max-width: 85vw;
 }
 </style>
