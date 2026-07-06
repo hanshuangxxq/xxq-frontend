@@ -1,0 +1,83 @@
+.bi-page {
+  padding: 24px;
+}
+
+.bi-toolbar {
+  margin-bottom: 12px;
+}
+
+.bi-table-wrapper {
+  overflow-x: auto;
+}
+
+.bi-table {
+  width: 100%;
+  min-width: 960px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.bi-table th {
+  text-align: left;
+  padding: 8px 6px;
+  border-bottom: 2px solid #e8eaed;
+  font-weight: 600;
+  white-space: nowrap;
+  color: #333;
+}
+
+.bi-table td {
+  padding: 6px;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+
+.bi-table tbody tr:hover {
+  background: #fafafa;
+}
+
+.bi-col-num {
+  width: 40px;
+  text-align: center;
+  color: #999;
+}
+
+.bi-col-username,
+.bi-col-password {
+  width: 120px;
+}
+
+.bi-col-type,
+.bi-col-gender {
+  width: 100px;
+}
+
+.bi-col-identifier,
+.bi-col-class,
+.bi-col-department {
+  width: 130px;
+}
+
+.bi-col-action {
+  width: 60px;
+  text-align: center;
+}
+
+.bi-na {
+  display: block;
+  text-align: center;
+  color: #ccc;
+  padding: 4px 0;
+}
+
+.bi-result-summary {
+  margin-bottom: 12px;
+}
+
+.bi-success {
+  color: #18a058;
+}
+
+.bi-fail {
+  color: #d03050;
+}
