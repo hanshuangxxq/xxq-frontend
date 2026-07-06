@@ -1,0 +1,7 @@
+<svg t="1782956495821" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4800" width="200" height="200">
+  <path d="M512 128a64 64 0 0 1 64 64v320h192l-256 256-256-256h192V192a64 64 0 0 1 64-64z" fill="#666" p-id="4801"/>
+  <path d="M832 576h-64v256H256V576h-64v320h640V576z" fill="#666" p-id="4802"/>
+  <circle cx="384" cy="320" r="48" fill="#666" p-id="4803"/>
+  <circle cx="640" cy="320" r="48" fill="#666" p-id="4804"/>
+  <path d="M320 448c0-35.3 28.7-64 64-64h256c35.3 0 64 28.7 64 64v32H320v-32z" fill="#666" p-id="4805"/>
+</svg>
