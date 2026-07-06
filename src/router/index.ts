@@ -60,6 +60,11 @@ const routes: RouteRecordRaw[] = [
         name: 'TeachDrafts',
         component: () => import('@/modules/curriculum/pages/DraftManagementPage.vue'),
       },
+      {
+        path: 'batch-import',
+        name: 'BatchImport',
+        component: () => import('@/modules/batch-import/pages/BatchImportPage.vue'),
+      },
     ],
   },
   ...authRoutes,
