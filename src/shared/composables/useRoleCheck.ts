@@ -24,6 +24,8 @@ export function useRoleCheck() {
   const canManageClassNames = computed(() => authStore.user?.userType === 'academic_admin')
   const canManageLocals = computed(() => authStore.user?.userType === 'academic_admin')
 
+  const canManageBatchImport = computed(() => authStore.user?.userType === 'academic_admin')
+
   const canManageDrafts = computed(() => authStore.user?.userType === 'department')
   const canViewDrafts = computed(() => authStore.user?.userType === 'department')
 
@@ -41,6 +43,7 @@ export function useRoleCheck() {
     canManageCourses,
     canManageClassNames,
     canManageLocals,
+    canManageBatchImport,
     canManageDrafts,
     canViewDrafts,
   }
