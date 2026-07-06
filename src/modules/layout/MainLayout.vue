@@ -36,6 +36,7 @@ import timeResSvg from '@/icons/TimeRes.svg'
 import autoSvg from '@/icons/auto.svg'
 import classSvg from '@/icons/class.svg'
 import classRoomSvg from '@/icons/classRoom.svg'
+import batchImportSvg from '@/icons/batchImport.svg'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -116,6 +117,11 @@ const menuOptions = computed(() => {
       label: t('scheduling.title'),
       key: '/scheduling',
       icon: renderSvgIcon(autoSvg),
+    })
+    items.push({
+      label: t('batch-import.title'),
+      key: '/batch-import',
+      icon: renderSvgIcon(batchImportSvg),
     })
   }
   return items
