@@ -1,0 +1,12 @@
+.sm-page {
+  padding: 24px;
+}
+
+.sm-filter-bar {
+  margin-bottom: 4px;
+}
+
+.sm-form-modal {
+  width: 420px;
+  max-width: 85vw;
+}
