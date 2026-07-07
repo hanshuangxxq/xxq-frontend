@@ -1,0 +1,20 @@
+{
+  "title": "专业管理",
+  "majorName": "专业名称",
+  "add": "新增专业",
+  "edit": "修改",
+  "delete": "删除",
+  "save": "保存",
+  "cancel": "取消",
+  "actions": "操作",
+  "addTitle": "新增专业",
+  "editTitle": "修改专业",
+  "deleteConfirm": "确定删除该专业吗？",
+  "saveSuccess": "保存成功",
+  "saveFail": "保存失败",
+  "deleteSuccess": "删除成功",
+  "deleteFail": "删除失败",
+  "loadFail": "加载专业列表失败",
+  "empty": "暂无专业数据",
+  "nameRequired": "请输入专业名称"
+}
