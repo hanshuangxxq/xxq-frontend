@@ -65,6 +65,16 @@ const routes: RouteRecordRaw[] = [
         name: 'BatchImport',
         component: () => import('@/modules/batch-import/pages/BatchImportPage.vue'),
       },
+      {
+        path: 'student-management',
+        name: 'StudentManagement',
+        component: () => import('@/modules/student-management/pages/StudentManagementPage.vue'),
+      },
+      {
+        path: 'majors',
+        name: 'MajorManagement',
+        component: () => import('@/modules/majors/pages/MajorManagementPage.vue'),
+      },
     ],
   },
   ...authRoutes,
