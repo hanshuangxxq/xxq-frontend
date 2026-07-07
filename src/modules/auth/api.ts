@@ -1,19 +1,15 @@
-import { API_BASE_URL } from '@/config'
 import { api } from '@/shared/api'
 import type { Result } from '@/shared/types'
-import { accessToken } from '@/shared/tokenManager'
 import type { ChangePasswordParams, LoginParams, RefreshResult, UpdateProfileParams, UserProfile, UserSession } from './types'
 
 export const authApi = {
   async login(params: LoginParams): Promise<UserSession> {
     const result = await api.post<Result<UserSession>>('/login', params)
-    if (result.code !== 200) throw new Error(result.message)
     return result.data
   },
 
   async logout(): Promise<boolean> {
     const result = await api.post<Result<boolean>>('/login/logout')
-    if (result.code !== 200) throw new Error(result.message)
     return result.data
   },
 
@@ -21,7 +17,6 @@ export const authApi = {
     const result = await api.post<Result<RefreshResult>>(
       `/login/refresh?refreshToken=${encodeURIComponent(refreshToken)}`,
     )
-    if (result.code !== 200) throw new Error(result.message)
     return result.data
   },
 
@@ -29,7 +24,6 @@ export const authApi = {
     const result = await api.get<Result<UserProfile>>(
       `/user/profile?userId=${encodeURIComponent(userId)}`,
     )
-    if (result.code !== 200) throw new Error(result.message)
     return result.data
   },
 
@@ -37,7 +31,6 @@ export const authApi = {
     const result = await api.get<Result<UserProfile>>(
       `/user/profile?userId=${encodeURIComponent(userId)}&tokenId=${encodeURIComponent(tokenId)}`,
     )
-    if (result.code !== 200) throw new Error(result.message)
     return result.data
   },
 
@@ -46,37 +39,21 @@ export const authApi = {
       `/user/profile?userId=${encodeURIComponent(userId)}`,
       params,
     )
-    if (result.code !== 200) throw new Error(result.message)
     return result.data
   },
 
   async changePassword(params: ChangePasswordParams): Promise<boolean> {
     const result = await api.post<Result<boolean>>('/password/change', params)
-    if (result.code !== 200) throw new Error(result.message)
     return result.data
   },
 
   async uploadAvatar(userId: number, file: File): Promise<string> {
     const formData = new FormData()
     formData.append('file', file)
-
-    const headers: Record<string, string> = {}
-    if (accessToken.value) {
-      headers['Authorization'] = `Bearer ${accessToken.value}`
-    }
-
-    const res = await fetch(
-      `${API_BASE_URL}/user/avatar/upload?userId=${encodeURIComponent(userId)}`,
-      { method: 'POST', body: formData, headers },
+    const result = await api.postForm<Result<string>>(
+      `/user/avatar/upload?userId=${encodeURIComponent(userId)}`,
+      formData,
     )
-
-    if (!res.ok) {
-      const body = await res.text()
-      throw new Error(`HTTP ${res.status}: ${body}`)
-    }
-
-    const result = (await res.json()) as Result<string>
-    if (result.code !== 200) throw new Error(result.message)
     return result.data
   },
 }
