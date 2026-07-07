@@ -1,10 +1,18 @@
 import { API_BASE_URL } from '@/config'
 import { accessToken, refreshAccessToken } from '@/shared/tokenManager'
+import { createDiscreteApi } from 'naive-ui'
+
+const { message } = createDiscreteApi(['message'])
 
 const AUTH_WHITELIST = ['/login', '/login/refresh']
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  const headers: Record<string, string> = {}
+
+  const isFormData = options?.body instanceof FormData
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json'
+  }
 
   if (accessToken.value && !AUTH_WHITELIST.includes(url.split('?')[0]!)) {
     headers['Authorization'] = `Bearer ${accessToken.value}`
@@ -36,7 +44,12 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
     throw new Error(`HTTP ${res.status}: ${body}`)
   }
 
-  return res.json() as Promise<T>
+  const body = (await res.json()) as { code: number; message: string; data: unknown }
+  if (body.code !== 200) {
+    message.error(body.message || '请求失败')
+    throw new Error(body.message || '请求失败')
+  }
+  return body as T
 }
 
 export const api = {
@@ -48,6 +61,13 @@ export const api = {
     return request<T>(url, {
       method: 'POST',
       ...(data !== undefined && { body: JSON.stringify(data) }),
+    })
+  },
+
+  postForm<T>(url: string, formData: FormData): Promise<T> {
+    return request<T>(url, {
+      method: 'POST',
+      body: formData,
     })
   },
 
