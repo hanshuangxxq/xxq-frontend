@@ -37,6 +37,8 @@ import autoSvg from '@/icons/auto.svg'
 import classSvg from '@/icons/class.svg'
 import classRoomSvg from '@/icons/classRoom.svg'
 import batchImportSvg from '@/icons/batchImport.svg'
+import stuInfoSvg from '@/icons/stuInfo.svg'
+import majorSvg from '@/icons/major.svg'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -122,6 +124,16 @@ const menuOptions = computed(() => {
       label: t('batch-import.title'),
       key: '/batch-import',
       icon: renderSvgIcon(batchImportSvg),
+    })
+    items.push({
+      label: t('student-management.title'),
+      key: '/student-management',
+      icon: renderSvgIcon(stuInfoSvg),
+    })
+    items.push({
+      label: t('majors.title'),
+      key: '/majors',
+      icon: renderSvgIcon(majorSvg),
     })
   }
   return items
