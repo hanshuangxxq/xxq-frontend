@@ -209,12 +209,25 @@
 }
 
 .main-sider {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 10;
   height: 100vh;
+}
+
+.main-content {
+  margin-left: 220px;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.main-content.sidebar-collapsed {
+  margin-left: 64px;
 }
 
 .main-content :deep(> div) {
   background: #fff;
-  min-height: 100vh;
 }
 
 .settings-modal {
