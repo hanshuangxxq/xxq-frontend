@@ -28,12 +28,14 @@ import {
   clearDraftsByClass,
   deleteSingleDraft,
   fetchTeachers,
+  fetchCurrentSemester,
+  fetchAllSemesters,
 } from '@/modules/curriculum/api'
-import type { TeachInfo, TimeSlot, DraftClassSummary, DraftItem } from '@/modules/curriculum/types'
+import type { TeachInfo, TimeSlot, DraftClassSummary, DraftItem, Semester } from '@/modules/curriculum/types'
 import { fetchClassNames } from '@/modules/class-names/api'
 import { fetchCourses } from '@/modules/course/api'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
-import type { ScheduleSolution, ScheduledLesson } from '../types'
+import type { ScheduledLesson } from '../types'
 
 const { t } = useI18n()
 const message = useMessage()
@@ -62,10 +64,37 @@ const classOptions = ref<{ label: string; value: string }[]>([])
 const courseOptions = ref<{ label: string; value: number }[]>([])
 const teacherOptions = ref<{ label: string; value: number }[]>([])
 const selectedClasses = ref<string[]>([])
-const entries = ref<{ courseId: number | null; teacherId: number | null; week: number | null }[]>([
-  { courseId: null, teacherId: null, week: null },
+const entries = ref<{ courseId: number | null; teacherId: number | null; startWeek: number | null; endWeek: number | null }[]>([
+  { courseId: null, teacherId: null, startWeek: null, endWeek: null },
 ])
 const submitting = ref(false)
+
+// ---- Semester ----
+const semesterOptions = ref<{ label: string; value: number }[]>([])
+const selectedSemesterId = ref<number | null>(null)
+const currentSemester = ref<Semester | null>(null)
+
+async function loadSemesters() {
+  try {
+    const [allRes, curRes] = await Promise.all([
+      fetchAllSemesters(),
+      fetchCurrentSemester().catch(() => ({ data: null as Semester | null })),
+    ])
+    semesterOptions.value = allRes.data.map((s) => ({
+      label: `${s.name} (${s.startDate ? s.startDate : `第${s.startWeek}周`} ~ ${s.endDate ? s.endDate : `第${s.endWeek}周`})`,
+      value: s.id,
+    }))
+    const cur = curRes.data
+    if (cur) {
+      currentSemester.value = cur
+      if (!selectedSemesterId.value) {
+        selectedSemesterId.value = cur.id
+      }
+    }
+  } catch {
+    // non-blocking
+  }
+}
 
 const DAY_MAP: Record<string, string> = {
   MONDAY: '周一',
@@ -217,6 +246,14 @@ const dataColumns: DataTableColumns<TeachInfo> = [
     },
   },
   {
+    title: t('scheduling.columnWeek'),
+    key: 'week',
+    width: 100,
+    render(row) {
+      return row.startWeek === row.endWeek ? `第${row.startWeek}周` : `第${row.startWeek}-${row.endWeek}周`
+    },
+  },
+  {
     title: t('scheduling.columnTime'),
     key: 'time',
     width: 110,
@@ -243,7 +280,15 @@ const draftColumns: DataTableColumns<DraftItem> = [
   { title: t('scheduling.columnCourseName'), key: 'courseName', width: 140, ellipsis: { tooltip: true } },
   { title: t('scheduling.columnTeacherName'), key: 'teacherName', width: 100 },
   { title: t('scheduling.columnCollege'), key: 'college', width: 120, ellipsis: { tooltip: true } },
-  { title: t('teach-drafts.week'), key: 'week', width: 60, align: 'center' },
+  {
+    title: t('teach-drafts.week'),
+    key: 'week',
+    width: 100,
+    align: 'center',
+    render(row: DraftItem) {
+      return row.startWeek === row.endWeek ? `第${row.startWeek}周` : `第${row.startWeek}-${row.endWeek}周`
+    },
+  },
   {
     title: t('teach-drafts.actions'),
     key: 'actions',
@@ -272,7 +317,7 @@ async function loadSchedulingData() {
       fetchTeachInfoList(),
       fetchAllTimes(),
     ])
-    teachInfoList.value = teachRes.data
+    teachInfoList.value = teachRes.data.courses
     const map = new Map<number, TimeSlot>()
     for (const slot of timeRes.data) {
       map.set(slot.id, slot)
@@ -323,13 +368,14 @@ async function loadDraftData() {
 
 function toggleDrafts() {
   showDrafts.value = !showDrafts.value
-  if (showDrafts.value && drafts.value.length === 0) {
-    loadDraftData()
+  if (showDrafts.value) {
+    if (drafts.value.length === 0) loadDraftData()
+    if (semesterOptions.value.length === 0) loadSemesters()
   }
 }
 
 function addEntry() {
-  entries.value.push({ courseId: null, teacherId: null, week: null })
+  entries.value.push({ courseId: null, teacherId: null, startWeek: null, endWeek: null })
 }
 
 function removeEntry(index: number) {
@@ -350,7 +396,9 @@ async function handleDraftSubmit() {
       courseId: e.courseId!,
       teacherId: e.teacherId!,
       className: classNameVal,
-      week: e.week ?? undefined,
+      startWeek: e.startWeek ?? undefined,
+      endWeek: e.endWeek ?? undefined,
+      semesterId: selectedSemesterId.value ?? undefined,
     }))
   if (body.length === 0) {
     message.warning(t('teach-drafts.addCourse'))
@@ -361,7 +409,7 @@ async function handleDraftSubmit() {
     await submitDrafts(body)
     message.success(t('teach-drafts.submitSuccess'))
     selectedClasses.value = []
-    entries.value = [{ courseId: null, teacherId: null, week: null }]
+    entries.value = [{ courseId: null, teacherId: null, startWeek: null, endWeek: null }]
     await loadDraftData()
   } catch (e) {
     message.error((e as Error).message || t('teach-drafts.submitFail'))
@@ -506,6 +554,12 @@ onUnmounted(() => {
         <NCard v-if="canManageDrafts" :title="$t('teach-drafts.addDraft')">
           <NSpace vertical :size="12">
             <NSelect
+              v-model:value="selectedSemesterId"
+              :options="semesterOptions"
+              :placeholder="$t('semester.title')"
+              style="max-width: 400px"
+            />
+            <NSelect
               v-model:value="selectedClasses"
               multiple
               :options="classOptions"
@@ -530,10 +584,16 @@ onUnmounted(() => {
                   filterable
                 />
                 <NInput
-                  :value="entry.week !== null ? String(entry.week) : ''"
-                  :placeholder="$t('teach-drafts.weekPlaceholder')"
+                  :value="entry.startWeek !== null ? String(entry.startWeek) : ''"
+                  :placeholder="$t('teach-drafts.startWeekPlaceholder')"
                   class="scheduling-draft-input-num"
-                  @update:value="(v: string) => (entry.week = v ? parseInt(v, 10) : null)"
+                  @update:value="(v: string) => (entry.startWeek = v ? parseInt(v, 10) : null)"
+                />
+                <NInput
+                  :value="entry.endWeek !== null ? String(entry.endWeek) : ''"
+                  :placeholder="$t('teach-drafts.endWeekPlaceholder')"
+                  class="scheduling-draft-input-num"
+                  @update:value="(v: string) => (entry.endWeek = v ? parseInt(v, 10) : null)"
                 />
                 <NButton size="small" secondary @click="removeEntry(index)">
                   {{ $t('teach-drafts.removeCourse') }}
