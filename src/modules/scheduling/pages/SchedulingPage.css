@@ -38,3 +38,14 @@
   color: #888;
   margin-bottom: 8px;
 }
+
+.scheduling-semester-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--n-text-color, #333);
+}
+
+.scheduling-semester-range {
+  font-size: 13px;
+  color: var(--n-text-color-2, #666);
+}
