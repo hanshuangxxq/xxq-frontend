@@ -15,6 +15,7 @@
   "passwordChangeSuccess": "密码修改成功",
   "passwordChangeFail": "密码修改失败",
   "close": "关闭",
+  "semester": "学期管理",
   "logoutConfirmTitle": "退出确认",
   "logoutConfirmMessage": "确定要退出登录吗？"
 }
