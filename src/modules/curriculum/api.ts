@@ -1,12 +1,18 @@
 import { api } from '@/shared/api'
 import type { Result } from '@/shared/types'
-import type { TeachInfo, TeachInfoQuery, TeachInfoForm, TeachInfoDraft, DraftClassSummary, DraftItem, ClassCourse, TimeSlot, TimeForm, Teacher } from './types'
+import type { TeachInfo, TeachInfoQuery, TeachInfoForm, TeachInfoDraft, DraftClassSummary, DraftItem, ClassCourse, TeachInfoListResponse, WeekSchedule, TimeSlot, TimeForm, Teacher, Semester, SemesterForm } from './types'
 
-export function fetchTeachInfoList(query?: TeachInfoQuery): Promise<Result<TeachInfo[]>> {
+export function fetchTeachInfoList(query?: TeachInfoQuery): Promise<Result<TeachInfoListResponse>> {
   const params = new URLSearchParams()
+  if (query?.teacherId !== undefined) params.set('teacherId', String(query.teacherId))
   if (query?.courseId !== undefined) params.set('courseId', String(query.courseId))
+  if (query?.week !== undefined) params.set('week', String(query.week))
   const qs = params.toString()
   return api.get(`/teach-info${qs ? `?${qs}` : ''}`)
+}
+
+export function fetchWeekSchedule(week: number): Promise<Result<WeekSchedule>> {
+  return api.get(`/teach-info/week-schedule?week=${week}`)
 }
 
 export function fetchTeachInfoDetail(id: number): Promise<Result<TeachInfo>> {
@@ -80,4 +86,25 @@ export function deleteSingleDraft(courseId: number, teacherId: number, className
   params.set('teacherId', String(teacherId))
   params.set('className', className)
   return api.delete(`/teach-info/draft/item?${params.toString()}`)
+}
+
+// ---- Semester APIs ----
+export function fetchAllSemesters(): Promise<Result<Semester[]>> {
+  return api.get('/semester')
+}
+
+export function fetchCurrentSemester(): Promise<Result<Semester>> {
+  return api.get('/semester/current')
+}
+
+export function createSemester(body: SemesterForm): Promise<Result<Semester>> {
+  return api.post('/semester', body)
+}
+
+export function updateSemester(id: number, body: SemesterForm): Promise<Result<Semester>> {
+  return api.put(`/semester/${id}`, body)
+}
+
+export function deleteSemester(id: number): Promise<Result<null>> {
+  return api.delete(`/semester/${id}`)
 }
