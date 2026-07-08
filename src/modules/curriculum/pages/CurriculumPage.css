@@ -28,6 +28,13 @@
   border: 1px solid #ddd;
 }
 
+.timetable-day-date {
+  font-size: 12px;
+  font-weight: 400;
+  color: #888;
+  margin-top: 2px;
+}
+
 .timetable-cell {
   width: 120px;
   padding: 6px;
@@ -86,7 +93,6 @@
 
 .course-card {
   width: 220px;
-  height: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -109,6 +115,29 @@
   word-break: break-all;
   overflow-wrap: break-word;
   padding: 0 12px;
+  margin-bottom: 4px;
+}
+
+.course-card-info {
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.schedule-week-selector {
+  margin-bottom: 12px;
+}
+
+.week-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+  padding: 4px 0;
+}
+
+.week-tabs .n-button {
+  flex-shrink: 0;
 }
 
 /* ---- Detail modal ---- */
