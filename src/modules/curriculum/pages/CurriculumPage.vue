@@ -9,12 +9,14 @@ import {
   NSpin,
   NEmpty,
   NDataTable,
+  NScrollbar,
+  NButton,
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
-import { fetchTeachInfoList, fetchClassCourses, fetchAllTimes } from '../api'
+import { fetchTeachInfoList, fetchClassCourses, fetchWeekSchedule, fetchAllTimes, fetchCurrentSemester } from '../api'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
-import type { TeachInfo, ClassCourse, TimeSlot } from '../types'
+import type { TeachInfo, ClassCourse, ClassCourseResponse, TimeSlot, Semester } from '../types'
 
 const { t } = useI18n()
 const message = useMessage()
@@ -52,6 +54,19 @@ function getDayLabel(day: number): string {
   return days[day] ?? String(day)
 }
 
+const mondayDate = ref<string>('')
+
+function getDayDate(day: number): string {
+  if (!mondayDate.value) return ''
+  const [y, m, d] = mondayDate.value.split('-').map(Number) as [number, number, number]
+  const target = new Date(y, m - 1, d + day - 1)
+  return `${target.getMonth() + 1}/${target.getDate()}`
+}
+
+function getWeekRangeLabel(startWeek: number, endWeek: number): string {
+  return startWeek === endWeek ? `第${startWeek}周` : `第${startWeek}-${endWeek}周`
+}
+
 // ---- Student: Class Courses ----
 const classCoursesLoading = ref(false)
 const classCourses = ref<ClassCourse[]>([])
@@ -60,7 +75,13 @@ async function loadClassCourses() {
   classCoursesLoading.value = true
   try {
     const res = await fetchClassCourses()
-    classCourses.value = res.data
+    const body = res.data as unknown as ClassCourseResponse | ClassCourse[]
+    if (Array.isArray(body)) {
+      classCourses.value = body
+    } else {
+      mondayDate.value = body.mondayDate
+      classCourses.value = body.courses
+    }
   } catch (e) {
     message.error((e as Error).message || t('curriculum.loadFail'))
   } finally {
@@ -80,6 +101,32 @@ function openCourseDetail(course: ClassCourse) {
 // ---- Schedule tab (timetable grid) ----
 const loading = ref(false)
 const data = ref<TeachInfo[]>([])
+const scheduleWeek = ref(1)
+const currentSemester = ref<Semester | null>(null)
+
+const totalWeeks = computed(() => currentSemester.value?.endWeek ?? 20)
+
+const weekOptions = computed(() =>
+  Array.from({ length: totalWeeks.value }, (_, i) => i + 1),
+)
+
+async function loadSemester() {
+  try {
+    const res = await fetchCurrentSemester()
+    currentSemester.value = res.data
+    if (!scheduleWeek.value || scheduleWeek.value < 1) {
+      scheduleWeek.value = res.data.startWeek
+    }
+  } catch {
+    // non-blocking, fall back to default totalWeeks (20)
+  }
+}
+
+function selectWeek(week: number) {
+  if (week === scheduleWeek.value) return
+  scheduleWeek.value = week
+  loadData()
+}
 
 const scheduleMap = computed(() => {
   const map = new Map<string, TeachInfo>()
@@ -90,15 +137,11 @@ const scheduleMap = computed(() => {
 })
 
 const orderedTimeSlots = computed(() => {
-  const seen = new Set<number>()
   const slots: { timeId: number; label: string }[] = []
-  for (const item of data.value) {
-    if (seen.has(item.timeId)) continue
-    seen.add(item.timeId)
-    const ts = timeMap.value.get(item.timeId)
+  for (const [id, ts] of timeMap.value) {
     slots.push({
-      timeId: item.timeId,
-      label: ts ? `${formatTime(ts.startPeriod)}-${formatTime(ts.endPeriod)}` : String(item.timeId),
+      timeId: id,
+      label: `${formatTime(ts.startPeriod)}-${formatTime(ts.endPeriod)}`,
     })
   }
   slots.sort((a, b) => a.label.localeCompare(b.label))
@@ -133,7 +176,7 @@ async function loadTeacherCourses() {
   teacherLoading.value = true
   try {
     const res = await fetchTeachInfoList()
-    teacherCourses.value = res.data
+    teacherCourses.value = res.data.courses
   } catch (e) {
     message.error((e as Error).message || t('curriculum.loadFail'))
   } finally {
@@ -157,8 +200,8 @@ const detailFields = computed(() => {
     { label: t('curriculum.columnDepartment'), value: item.department },
     { label: t('curriculum.columnClassName'), value: item.className },
     { label: t('curriculum.columnCollege'), value: item.college },
-    { label: t('curriculum.columnDayOfWeek'), value: getDayLabel(item.dayOfWeek) },
-    { label: t('curriculum.columnWeek'), value: item.week },
+    { label: t('curriculum.columnDayOfWeek'), value: `${getDayLabel(item.dayOfWeek)} ${getDayDate(item.dayOfWeek)}` },
+    { label: t('curriculum.columnWeek'), value: getWeekRangeLabel(item.startWeek, item.endWeek) },
     { label: t('curriculum.columnTime'), value: getTimeLabel(item.timeId) },
     { label: t('curriculum.columnBuilding'), value: item.building },
     { label: t('curriculum.columnClassroom'), value: item.classroom },
@@ -174,8 +217,9 @@ function openDetail(item: TeachInfo) {
 async function loadData() {
   loading.value = true
   try {
-    const res = await fetchTeachInfoList()
-    data.value = res.data
+    const res = await fetchTeachInfoList({ week: scheduleWeek.value })
+    mondayDate.value = res.data.mondayDate
+    data.value = res.data.courses
   } catch (e) {
     message.error((e as Error).message || t('curriculum.loadFail'))
   } finally {
@@ -184,14 +228,16 @@ async function loadData() {
 }
 
 watch(activeTab, (tab) => {
-  if (tab === 'schedule' && data.value.length === 0) {
-    loadData()
+  if (tab === 'schedule') {
+    if (timeMap.value.size === 0) loadTimes()
+    if (data.value.length === 0) loadData()
   }
 })
 
 // ---- Init ----
 onMounted(async () => {
   await loadTimes()
+  loadSemester()
   if (isStudent.value) {
     loadClassCourses()
   } else if (isTeacher.value) {
@@ -216,8 +262,6 @@ onMounted(async () => {
                 v-for="(course, index) in classCourses"
                 :key="`${course.courseName}-${index}`"
                 class="course-card"
-                hoverable
-                @click="openCourseDetail(course)"
               >
                 <div class="course-card-name">{{ course.courseName }}</div>
               </NCard>
@@ -227,6 +271,21 @@ onMounted(async () => {
 
         <!-- Student: Schedule -->
         <NTabPane v-if="isStudent" name="schedule" :tab="$t('curriculum.tabSchedule')">
+          <div class="schedule-week-selector">
+            <NScrollbar x-scrollable>
+              <div class="week-tabs">
+                <NButton
+                  v-for="week in weekOptions"
+                  :key="week"
+                  :type="scheduleWeek === week ? 'primary' : 'default'"
+                  size="small"
+                  @click="selectWeek(week)"
+                >
+                  {{ $t('curriculum.weekUnit', { n: week }) }}
+                </NButton>
+              </div>
+            </NScrollbar>
+          </div>
           <NSpin :show="loading">
             <NEmpty
               v-if="!loading && data.length === 0"
@@ -238,7 +297,8 @@ onMounted(async () => {
                   <tr>
                     <th class="timetable-time-header"></th>
                     <th v-for="day in DAYS" :key="day" class="timetable-day-header">
-                      {{ getDayLabel(day) }}
+                      <div>{{ getDayLabel(day) }}</div>
+                      <div class="timetable-day-date">{{ getDayDate(day) }}</div>
                     </th>
                   </tr>
                 </thead>
@@ -309,6 +369,30 @@ onMounted(async () => {
         <div class="detail-row">
           <span class="detail-label">{{ $t('curriculum.columnCourseName') }}</span>
           <span class="detail-value">{{ courseDetailItem.courseName }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">{{ $t('curriculum.columnTeacherName') }}</span>
+          <span class="detail-value">{{ courseDetailItem.teacherName }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">{{ $t('curriculum.columnDayOfWeek') }}</span>
+          <span class="detail-value">{{ getDayLabel(courseDetailItem.dayOfWeek) }} {{ getDayDate(courseDetailItem.dayOfWeek) }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">{{ $t('curriculum.columnWeek') }}</span>
+          <span class="detail-value">{{ getWeekRangeLabel(courseDetailItem.startWeek, courseDetailItem.endWeek) }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">{{ $t('curriculum.columnTime') }}</span>
+          <span class="detail-value">{{ getTimeLabel(courseDetailItem.timeId) }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">{{ $t('curriculum.columnBuilding') }}</span>
+          <span class="detail-value">{{ courseDetailItem.building }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">{{ $t('curriculum.columnClassroom') }}</span>
+          <span class="detail-value">{{ courseDetailItem.classroom }}</span>
         </div>
       </div>
     </NModal>
