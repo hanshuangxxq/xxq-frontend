@@ -24,11 +24,13 @@ import {
   clearDraftsByClass,
   deleteSingleDraft,
   fetchTeachers,
+  fetchAllSemesters,
+  fetchCurrentSemester,
 } from '../api'
 import { fetchClassNames } from '@/modules/class-names/api'
 import { fetchCourses } from '@/modules/course/api'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
-import type { DraftItem, DraftClassSummary } from '../types'
+import type { DraftItem, DraftClassSummary, Semester } from '../types'
 
 function draftRowKey(row: DraftItem): string {
   return `${row.courseId}-${row.teacherId}-${row.className}`
@@ -46,16 +48,47 @@ const courseOptions = ref<{ label: string; value: number }[]>([])
 const teacherOptions = ref<{ label: string; value: number }[]>([])
 
 const selectedClasses = ref<string[]>([])
-const entries = ref<{ courseId: number | null; teacherId: number | null; week: number | null }[]>([
-  { courseId: null, teacherId: null, week: null },
+const entries = ref<{ courseId: number | null; teacherId: number | null; startWeek: number | null; endWeek: number | null }[]>([
+  { courseId: null, teacherId: null, startWeek: null, endWeek: null },
 ])
 const submitting = ref(false)
+
+// ---- Semester ----
+const semesterOptions = ref<{ label: string; value: number }[]>([])
+const selectedSemesterId = ref<number | null>(null)
+
+async function loadSemesters() {
+  try {
+    const [allRes, curRes] = await Promise.all([
+      fetchAllSemesters(),
+      fetchCurrentSemester().catch(() => ({ data: null as Semester | null })),
+    ])
+    semesterOptions.value = allRes.data.map((s) => ({
+      label: `${s.name} (${s.startDate ? s.startDate : `第${s.startWeek}周`} ~ ${s.endDate ? s.endDate : `第${s.endWeek}周`})`,
+      value: s.id,
+    }))
+    const cur = curRes.data
+    if (cur && !selectedSemesterId.value) {
+      selectedSemesterId.value = cur.id
+    }
+  } catch {
+    // non-blocking
+  }
+}
 
 const draftColumns: DataTableColumns<DraftItem> = [
   { title: t('curriculum.columnClassName'), key: 'className', width: 140, ellipsis: { tooltip: true } },
   { title: t('curriculum.columnCourseName'), key: 'courseName', width: 140, ellipsis: { tooltip: true } },
   { title: t('curriculum.columnTeacherName'), key: 'teacherName', width: 100 },
-  { title: t('curriculum.columnWeek'), key: 'week', width: 60, align: 'center' },
+  {
+    title: t('curriculum.columnWeek'),
+    key: 'week',
+    width: 100,
+    align: 'center',
+    render(row) {
+      return row.startWeek === row.endWeek ? `第${row.startWeek}周` : `第${row.startWeek}-${row.endWeek}周`
+    },
+  },
   { title: t('curriculum.columnCollege'), key: 'college', width: 100, ellipsis: { tooltip: true } },
   {
     title: t('teach-drafts.actions'),
@@ -86,6 +119,7 @@ async function loadData() {
       fetchCourses(),
       fetchTeachers(),
     ])
+    if (semesterOptions.value.length === 0) loadSemesters()
     drafts.value = draftRes.data
     summary.value = summaryRes.data
     classOptions.value = classRes.data
@@ -108,7 +142,7 @@ async function loadData() {
 }
 
 function addEntry() {
-  entries.value.push({ courseId: null, teacherId: null, week: null })
+  entries.value.push({ courseId: null, teacherId: null, startWeek: null, endWeek: null })
 }
 
 function removeEntry(index: number) {
@@ -129,7 +163,9 @@ async function handleSubmit() {
       courseId: e.courseId!,
       teacherId: e.teacherId!,
       className: classNameVal,
-      week: e.week ?? undefined,
+      startWeek: e.startWeek ?? undefined,
+      endWeek: e.endWeek ?? undefined,
+      semesterId: selectedSemesterId.value ?? undefined,
     }))
   if (body.length === 0) {
     message.warning(t('teach-drafts.addCourse'))
@@ -140,7 +176,7 @@ async function handleSubmit() {
     await submitDrafts(body)
     message.success(t('teach-drafts.submitSuccess'))
     selectedClasses.value = []
-    entries.value = [{ courseId: null, teacherId: null, week: null }]
+    entries.value = [{ courseId: null, teacherId: null, startWeek: null, endWeek: null }]
     await loadData()
   } catch (e) {
     message.error((e as Error).message || t('teach-drafts.submitFail'))
@@ -179,6 +215,12 @@ onMounted(loadData)
       <NCard v-if="canManageDrafts" :title="$t('teach-drafts.addDraft')">
         <NSpace vertical :size="12">
           <NSelect
+            v-model:value="selectedSemesterId"
+            :options="semesterOptions"
+            :placeholder="$t('semester.title')"
+            style="max-width: 400px"
+          />
+          <NSelect
             v-model:value="selectedClasses"
             multiple
             :options="classOptions"
@@ -203,10 +245,16 @@ onMounted(loadData)
                 filterable
               />
               <NInput
-                :value="entry.week !== null ? String(entry.week) : ''"
-                :placeholder="$t('teach-drafts.weekPlaceholder')"
+                :value="entry.startWeek !== null ? String(entry.startWeek) : ''"
+                :placeholder="$t('teach-drafts.startWeekPlaceholder')"
                 class="draft-input-num"
-                @update:value="(v: string) => (entry.week = v ? parseInt(v, 10) : null)"
+                @update:value="(v: string) => (entry.startWeek = v ? parseInt(v, 10) : null)"
+              />
+              <NInput
+                :value="entry.endWeek !== null ? String(entry.endWeek) : ''"
+                :placeholder="$t('teach-drafts.endWeekPlaceholder')"
+                class="draft-input-num"
+                @update:value="(v: string) => (entry.endWeek = v ? parseInt(v, 10) : null)"
               />
               <NButton size="small" secondary @click="removeEntry(index)">
                 {{ $t('teach-drafts.removeCourse') }}
