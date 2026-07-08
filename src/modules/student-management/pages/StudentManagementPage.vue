@@ -97,24 +97,30 @@ const emptyForm = (): StudentUpdateForm => ({
   enrollmentYear: undefined,
 })
 const form = ref<StudentUpdateForm>(emptyForm())
+const originalForm = ref<StudentUpdateForm>(emptyForm())
 
 function startEdit(row: Student) {
   editingStudentId.value = row.studentId
   editingStudentName.value = row.name
-  form.value = {
-    studentNo: (row.studentNo ?? '').replace(/s$/, ''),
+  originalForm.value = {
+    studentNo: row.studentNo ?? '',
     className: row.className ?? '',
     majorName: row.majorName ?? '',
     enrollmentYear: row.enrollmentYear ?? undefined,
   }
+  form.value = emptyForm()
   showForm.value = true
 }
 
 async function handleSave() {
   saving.value = true
   try {
-    const body = { ...form.value }
-    if (body.studentNo) body.studentNo += 's'
+    const body: StudentUpdateForm = {
+      studentNo: form.value.studentNo || originalForm.value.studentNo,
+      className: form.value.className || originalForm.value.className,
+      majorName: form.value.majorName || originalForm.value.majorName,
+      enrollmentYear: form.value.enrollmentYear ?? originalForm.value.enrollmentYear,
+    }
     await updateStudent(editingStudentId.value!, body)
     message.success(t('student-management.saveSuccess'))
     showForm.value = false
@@ -213,13 +219,17 @@ onMounted(() => {
     >
       <NForm :model="form">
         <NFormItem :label="$t('student-management.studentNo')">
-          <NInput v-model:value="form.studentNo" autocomplete="off" />
+          <NInput
+            v-model:value="form.studentNo"
+            :placeholder="originalForm.studentNo"
+            autocomplete="off"
+          />
         </NFormItem>
         <NFormItem :label="$t('student-management.className')">
           <NSelect
             v-model:value="form.className"
             :options="classOptions"
-            :placeholder="$t('student-management.className')"
+            :placeholder="originalForm.className || $t('student-management.className')"
             filterable
             clearable
           />
@@ -228,13 +238,19 @@ onMounted(() => {
           <NSelect
             v-model:value="form.majorName"
             :options="majorOptions"
-            :placeholder="$t('student-management.major')"
+            :placeholder="originalForm.majorName || $t('student-management.major')"
             filterable
             clearable
           />
         </NFormItem>
         <NFormItem :label="$t('student-management.enrollmentYear')">
-          <NInputNumber v-model:value="form.enrollmentYear" :min="2000" :max="2100" style="width: 100%" />
+          <NInputNumber
+            v-model:value="form.enrollmentYear"
+            :placeholder="originalForm.enrollmentYear != null ? String(originalForm.enrollmentYear) : ''"
+            :min="2000"
+            :max="2100"
+            style="width: 100%"
+          />
         </NFormItem>
       </NForm>
       <template #footer>
