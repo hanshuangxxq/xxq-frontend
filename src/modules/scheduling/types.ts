@@ -6,7 +6,9 @@ export interface ScheduledLesson {
   courseName: string
   teacherId: number
   teacherName: string
-  studentGroups: { id: number; name: string; college: string | null }[]
+  startWeek: number
+  endWeek: number
+  studentGroups: { id: number; name: string; college: string; studentCount: number }[]
   timeslot: {
     id: number
     dayOfWeek: string
