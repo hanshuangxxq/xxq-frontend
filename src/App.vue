@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { NConfigProvider, NMessageProvider } from 'naive-ui'
 import { useLocaleStore } from '@/stores/useLocaleStore'
 
 const localeStore = useLocaleStore()
-const naiveCfg = localeStore.naiveConfig()
+const naiveCfg = computed(() => localeStore.naiveConfig())
 </script>
 
 <template>
