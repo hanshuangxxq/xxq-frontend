@@ -15,6 +15,7 @@
   "passwordChangeSuccess": "Password changed successfully",
   "passwordChangeFail": "Failed to change password",
   "close": "Close",
+  "semester": "Semester",
   "logoutConfirmTitle": "Logout Confirmation",
   "logoutConfirmMessage": "Are you sure you want to logout?"
 }
