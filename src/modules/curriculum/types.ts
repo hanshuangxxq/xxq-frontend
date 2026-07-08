@@ -8,7 +8,8 @@ export interface TeachInfo {
   className: string
   college: string
   dayOfWeek: number
-  week: number
+  startWeek: number
+  endWeek: number
   timeId: number
   building: string
   classroom: string
@@ -16,6 +17,28 @@ export interface TeachInfo {
 
 export interface ClassCourse {
   courseName: string
+  teacherName: string
+  dayOfWeek: number
+  startWeek: number
+  endWeek: number
+  timeId: number
+  building: string
+  classroom: string
+}
+
+export interface ClassCourseResponse {
+  mondayDate: string
+  courses: ClassCourse[]
+}
+
+export interface TeachInfoListResponse {
+  mondayDate: string
+  courses: TeachInfo[]
+}
+
+export interface WeekSchedule {
+  weekNumber: number
+  scheduleByDay: Record<string, TeachInfo[]>
 }
 
 export interface TimeSlot {
@@ -25,17 +48,21 @@ export interface TimeSlot {
 }
 
 export interface TeachInfoQuery {
+  teacherId?: number
   courseId?: number
+  week?: number
 }
 
 export interface TeachInfoForm {
   courseId: number
   teacherId: number
   className: string
-  week: number
   timeId?: number
   localId?: number
   dayOfWeek?: number
+  startWeek?: number
+  endWeek?: number
+  semesterId?: number
 }
 
 export interface TimeForm {
@@ -47,7 +74,9 @@ export interface TeachInfoDraft {
   courseId: number
   teacherId: number
   className: string
-  week?: number
+  startWeek?: number
+  endWeek?: number
+  semesterId?: number
 }
 
 export interface Teacher {
@@ -75,5 +104,26 @@ export interface DraftItem {
   timeId: number | null
   localId: number | null
   dayOfWeek: number | null
-  week: number
+  startWeek: number
+  endWeek: number
+  semesterId: number | null
+}
+
+export interface Semester {
+  id: number
+  name: string
+  startWeek: number
+  endWeek: number
+  startDate: string
+  endDate: string
+  status: 'CURRENT' | 'HISTORICAL' | 'FUTURE'
+}
+
+export interface SemesterForm {
+  name: string
+  startWeek?: number
+  endWeek?: number
+  startDate?: string
+  endDate?: string
+  status: 'CURRENT' | 'HISTORICAL' | 'FUTURE'
 }
