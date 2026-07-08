@@ -75,6 +75,11 @@ const routes: RouteRecordRaw[] = [
         name: 'MajorManagement',
         component: () => import('@/modules/majors/pages/MajorManagementPage.vue'),
       },
+      {
+        path: 'semester',
+        name: 'SemesterManagement',
+        component: () => import('@/modules/curriculum/pages/SemesterManagementPage.vue'),
+      },
     ],
   },
   ...authRoutes,
