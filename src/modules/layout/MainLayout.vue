@@ -39,6 +39,7 @@ import classRoomSvg from '@/icons/classRoom.svg'
 import batchImportSvg from '@/icons/batchImport.svg'
 import stuInfoSvg from '@/icons/stuInfo.svg'
 import majorSvg from '@/icons/major.svg'
+import semesterSvg from '@/icons/semester.svg'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -134,6 +135,11 @@ const menuOptions = computed(() => {
       label: t('majors.title'),
       key: '/majors',
       icon: renderSvgIcon(majorSvg),
+    })
+    items.push({
+      label: t('layout.semester'),
+      key: '/semester',
+      icon: renderSvgIcon(semesterSvg),
     })
   }
   return items
@@ -259,7 +265,7 @@ async function handleChangePassword() {
       </div>
     </NLayoutSider>
 
-    <NLayoutContent class="main-content">
+    <NLayoutContent class="main-content" :class="{ 'sidebar-collapsed': collapsed }">
       <RouterView />
     </NLayoutContent>
   </NLayout>
