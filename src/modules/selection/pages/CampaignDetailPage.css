@@ -1,0 +1,21 @@
+.campaign-detail-page {
+  padding: 24px;
+}
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.detail-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.detail-title {
+  font-size: 18px;
+  font-weight: 600;
+}
