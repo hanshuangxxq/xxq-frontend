@@ -1,0 +1,8 @@
+/* CampaignCreateModal uses only the global .campaign-create-modal width override in the .vue file */
+.group-empty-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px 0;
+}
