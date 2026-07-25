@@ -141,6 +141,16 @@ const menuOptions = computed(() => {
       key: '/semester',
       icon: renderSvgIcon(semesterSvg),
     })
+    items.push({
+      label: t('grades.title'),
+      key: '/grades',
+      icon: renderSvgIcon(majorSvg),
+    })
+    items.push({
+      label: t('selection.title'),
+      key: '/selection',
+      icon: renderSvgIcon(couSelSvg),
+    })
   }
   return items
 })
