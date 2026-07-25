@@ -15,6 +15,8 @@ import zhCNBatchImport from '@/locales/zh-CN/batch-import.json'
 import zhCNStudentManagement from '@/locales/zh-CN/student-management.json'
 import zhCNMajors from '@/locales/zh-CN/majors.json'
 import zhCNSemester from '@/locales/zh-CN/semester.json'
+import zhCNSelection from '@/locales/zh-CN/selection.json'
+import zhCNGrades from '@/locales/zh-CN/grades.json'
 import enCommon from '@/locales/en/common.json'
 import enAuth from '@/locales/en/auth.json'
 import enProfile from '@/locales/en/profile.json'
@@ -31,6 +33,8 @@ import enBatchImport from '@/locales/en/batch-import.json'
 import enStudentManagement from '@/locales/en/student-management.json'
 import enMajors from '@/locales/en/majors.json'
 import enSemester from '@/locales/en/semester.json'
+import enSelection from '@/locales/en/selection.json'
+import enGrades from '@/locales/en/grades.json'
 
 export type SupportedLocale = 'zh-CN' | 'en'
 
@@ -41,8 +45,8 @@ const i18n = createI18n({
   locale: 'zh-CN',
   fallbackLocale: 'zh-CN',
   messages: {
-    'zh-CN': { common: zhCNCommon, auth: zhCNAuth, profile: zhCNProfile, course: zhCNCourse, curriculum: zhCNCurriculum, layout: zhCNLayout, 'time-restrictions': zhCNTimeRestrictions, scheduling: zhCNScheduling, 'course-management': zhCNCourseManagement, 'class-names': zhCNClassNames, locals: zhCNLocals, 'teach-drafts': zhCNTeachDrafts, 'batch-import': zhCNBatchImport, 'student-management': zhCNStudentManagement, majors: zhCNMajors, semester: zhCNSemester },
-    en: { common: enCommon, auth: enAuth, profile: enProfile, course: enCourse, curriculum: enCurriculum, layout: enLayout, 'time-restrictions': enTimeRestrictions, scheduling: enScheduling, 'course-management': enCourseManagement, 'class-names': enClassNames, locals: enLocals, 'teach-drafts': enTeachDrafts, 'batch-import': enBatchImport, 'student-management': enStudentManagement, majors: enMajors, semester: enSemester },
+    'zh-CN': { common: zhCNCommon, auth: zhCNAuth, profile: zhCNProfile, course: zhCNCourse, curriculum: zhCNCurriculum, layout: zhCNLayout, 'time-restrictions': zhCNTimeRestrictions, scheduling: zhCNScheduling, 'course-management': zhCNCourseManagement, 'class-names': zhCNClassNames, locals: zhCNLocals, 'teach-drafts': zhCNTeachDrafts, 'batch-import': zhCNBatchImport, 'student-management': zhCNStudentManagement, majors: zhCNMajors, semester: zhCNSemester, selection: zhCNSelection, grades: zhCNGrades },
+    en: { common: enCommon, auth: enAuth, profile: enProfile, course: enCourse, curriculum: enCurriculum, layout: enLayout, 'time-restrictions': enTimeRestrictions, scheduling: enScheduling, 'course-management': enCourseManagement, 'class-names': enClassNames, locals: enLocals, 'teach-drafts': enTeachDrafts, 'batch-import': enBatchImport, 'student-management': enStudentManagement, majors: enMajors, semester: enSemester, selection: enSelection, grades: enGrades },
   },
 })
 
