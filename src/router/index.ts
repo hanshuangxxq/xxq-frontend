@@ -23,7 +23,17 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'course',
         name: 'CourseSelection',
-        component: () => import('@/modules/course/pages/CourseSelectionPage.vue'),
+        component: () => import('@/modules/selection/pages/StudentSelectionPage.vue'),
+      },
+      {
+        path: 'selection',
+        name: 'SelectionCampaigns',
+        component: () => import('@/modules/selection/pages/CampaignManagementPage.vue'),
+      },
+      {
+        path: 'selection/:id',
+        name: 'SelectionCampaignDetail',
+        component: () => import('@/modules/selection/pages/CampaignDetailPage.vue'),
       },
       {
         path: 'curriculum',
@@ -79,6 +89,11 @@ const routes: RouteRecordRaw[] = [
         path: 'semester',
         name: 'SemesterManagement',
         component: () => import('@/modules/curriculum/pages/SemesterManagementPage.vue'),
+      },
+      {
+        path: 'grades',
+        name: 'GradeManagement',
+        component: () => import('@/modules/grades/pages/GradeManagementPage.vue'),
       },
     ],
   },
