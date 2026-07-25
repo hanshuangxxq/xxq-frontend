@@ -1,9 +1,3 @@
 {
-  "title": "Course Selection",
-  "selectCourse": "Select Course",
-  "myCourses": "My Courses",
-  "availableCourses": "Available Courses",
-  "noCourses": "No courses available",
-  "selectSuccess": "Course selected successfully",
-  "selectFail": "Failed to select course"
+  "title": "Course Selection"
 }
