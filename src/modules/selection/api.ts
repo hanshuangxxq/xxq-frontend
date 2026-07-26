@@ -8,7 +8,7 @@ import type {
   SelectionGroupForm,
   SelectionRecord,
   SelectionRecordForm,
-  StudentCourseGroup,
+  StudentCampaign,
 } from './types'
 
 // ---- Admin: Campaign ----
@@ -72,37 +72,17 @@ export function deleteGroup(groupId: number): Promise<Result<null>> {
 }
 
 // ---- Admin: Campaign <-> Group binding ----
-export interface CampaignGroupBindingForm {
-  groupId: number
-  sortOrder?: number
-}
-
 /**
  * 列出可绑定到指定选课组的选课活动。
  * 后端会排除已绑定到其它选课组的活动，仅返回：
  *   - 未绑定任何组的活动（boundGroupId 为 null）
- *   - 已绑定到本组的活动（boundGroupId === groupId，用于展示解绑入口）
+ *   - 已绑定到本组的活动（boundGroupId === groupId）
+ *
+ * 绑定/换绑通过 createCampaign / updateCampaign 携带 groupId 字段完成，
+ * 独立的绑定/解绑接口已废弃。
  */
 export function fetchBindableCampaigns(groupId: number): Promise<Result<Campaign[]>> {
   return api.get(`/selection/groups/${groupId}/bindable-campaigns`)
-}
-
-export function fetchCampaignGroups(campaignId: number): Promise<Result<SelectionGroup[]>> {
-  return api.get(`/selection/campaigns/${campaignId}/groups`)
-}
-
-export function bindGroupToCampaign(
-  campaignId: number,
-  body: CampaignGroupBindingForm,
-): Promise<Result<null>> {
-  return api.post(`/selection/campaigns/${campaignId}/groups`, body)
-}
-
-export function unbindGroupFromCampaign(
-  campaignId: number,
-  groupId: number,
-): Promise<Result<null>> {
-  return api.delete(`/selection/campaigns/${campaignId}/groups/${groupId}`)
 }
 
 // ---- Admin: Class Results ----
@@ -111,14 +91,12 @@ export function fetchCampaignClasses(campaignId: number): Promise<Result<Selecti
 }
 
 // ---- Student ----
-export function fetchStudentCampaigns(): Promise<Result<Campaign[]>> {
+export function fetchStudentCampaigns(): Promise<Result<StudentCampaign[]>> {
   return api.get('/selection/student/campaigns')
 }
 
-export function fetchStudentCourseGroups(
-  campaignId: number,
-): Promise<Result<StudentCourseGroup[]>> {
-  return api.get(`/selection/student/campaigns/${campaignId}/courses`)
+export function fetchStudentCampaign(campaignId: number): Promise<Result<StudentCampaign>> {
+  return api.get(`/selection/student/campaigns/${campaignId}`)
 }
 
 export function selectCourse(body: SelectionRecordForm): Promise<Result<SelectionRecord>> {
