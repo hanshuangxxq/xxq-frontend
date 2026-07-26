@@ -19,6 +19,7 @@ import {
 } from 'naive-ui'
 import { fetchStudents, updateStudent, fetchMajors } from '../api'
 import { fetchClassNames } from '@/modules/class-names/api'
+import { fetchGrades } from '@/modules/grades/api'
 import type { Student, StudentQuery, StudentUpdateForm } from '../types'
 
 const { t } = useI18n()
@@ -28,7 +29,7 @@ const loading = ref(false)
 const data = ref<Student[]>([])
 
 const filterName = ref('')
-const filterGrade = ref('')
+const filterGradeId = ref<number | null>(null)
 const filterClassName = ref('')
 const filterMajor = ref('')
 const filterUnassigned = ref<string | null>(null)
@@ -41,7 +42,7 @@ const columns: DataTableColumns<Student> = [
   { title: t('student-management.name'), key: 'name', width: 100, ellipsis: { tooltip: true } },
   { title: t('student-management.studentNo'), key: 'studentNo', width: 130, ellipsis: { tooltip: true } },
   { title: t('student-management.className'), key: 'className', width: 140, ellipsis: { tooltip: true } },
-  { title: t('student-management.grade'), key: 'grade', width: 80 },
+  { title: t('student-management.grade'), key: 'gradeName', width: 100 },
   { title: t('student-management.major'), key: 'majorName', width: 180, ellipsis: { tooltip: true } },
   { title: t('student-management.enrollmentYear'), key: 'enrollmentYear', width: 110 },
   {
@@ -63,7 +64,7 @@ async function loadData() {
   try {
     const q: StudentQuery = {}
     if (filterName.value) q.name = filterName.value
-    if (filterGrade.value) q.grade = filterGrade.value
+    if (filterGradeId.value != null) q.gradeId = filterGradeId.value
     if (filterClassName.value) q.className = filterClassName.value
     if (filterMajor.value) q.major = filterMajor.value
     if (filterUnassigned.value !== null) q.unassigned = true
@@ -78,7 +79,7 @@ async function loadData() {
 
 function handleReset() {
   filterName.value = ''
-  filterGrade.value = ''
+  filterGradeId.value = null
   filterClassName.value = ''
   filterMajor.value = ''
   filterUnassigned.value = null
@@ -94,6 +95,7 @@ const emptyForm = (): StudentUpdateForm => ({
   studentNo: '',
   className: '',
   majorName: '',
+  gradeName: '',
   enrollmentYear: undefined,
 })
 const form = ref<StudentUpdateForm>(emptyForm())
@@ -106,6 +108,7 @@ function startEdit(row: Student) {
     studentNo: row.studentNo ?? '',
     className: row.className ?? '',
     majorName: row.majorName ?? '',
+    gradeName: row.gradeName ?? '',
     enrollmentYear: row.enrollmentYear ?? undefined,
   }
   form.value = emptyForm()
@@ -119,6 +122,7 @@ async function handleSave() {
       studentNo: form.value.studentNo || originalForm.value.studentNo,
       className: form.value.className || originalForm.value.className,
       majorName: form.value.majorName || originalForm.value.majorName,
+      gradeName: form.value.gradeName || originalForm.value.gradeName,
       enrollmentYear: form.value.enrollmentYear ?? originalForm.value.enrollmentYear,
     }
     await updateStudent(editingStudentId.value!, body)
@@ -134,12 +138,18 @@ async function handleSave() {
 
 const classOptions = ref<Array<{ label: string; value: string }>>([])
 const majorOptions = ref<Array<{ label: string; value: string }>>([])
+const gradeOptions = ref<Array<{ label: string; value: number }>>([])
 
 async function loadDropdownData() {
   try {
-    const [classRes, majorRes] = await Promise.all([fetchClassNames(), fetchMajors()])
+    const [classRes, majorRes, gradeRes] = await Promise.all([
+      fetchClassNames(),
+      fetchMajors(),
+      fetchGrades(),
+    ])
     classOptions.value = classRes.data.map((c) => ({ label: c.className, value: c.className }))
     majorOptions.value = majorRes.data.map((m) => ({ label: m.majorName, value: m.majorName }))
+    gradeOptions.value = gradeRes.data.map((g) => ({ label: g.name, value: g.id }))
   } catch {
     // dropdown data load failure is non-blocking
   }
@@ -162,9 +172,10 @@ onMounted(() => {
             clearable
             style="width: 120px"
           />
-          <NInput
-            v-model:value="filterGrade"
+          <NSelect
+            v-model:value="filterGradeId"
             :placeholder="$t('student-management.grade')"
+            :options="gradeOptions"
             clearable
             style="width: 140px"
           />
@@ -239,6 +250,15 @@ onMounted(() => {
             v-model:value="form.majorName"
             :options="majorOptions"
             :placeholder="originalForm.majorName || $t('student-management.major')"
+            filterable
+            clearable
+          />
+        </NFormItem>
+        <NFormItem :label="$t('student-management.grade')">
+          <NSelect
+            v-model:value="form.gradeName"
+            :options="gradeOptions.map(g => ({ label: g.label, value: g.label }))"
+            :placeholder="originalForm.gradeName || $t('student-management.grade')"
             filterable
             clearable
           />
