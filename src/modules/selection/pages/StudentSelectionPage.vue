@@ -12,45 +12,34 @@ import {
   NEmpty,
   NSpin,
   NAlert,
+  NProgress,
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
 import {
   fetchStudentCampaigns,
-  fetchStudentCourseGroups,
   fetchMyRecords,
   selectCourse,
   dropCourse,
 } from '../api'
 import type {
-  Campaign,
   SelectionRecord,
-  StudentCourseGroup,
-  SelectionCourse,
+  StudentCampaign,
 } from '../types'
 
 const { t } = useI18n()
 const message = useMessage()
 
-interface CampaignDetail {
-  campaign: Campaign
-  groups: StudentCourseGroup[]
-}
-
-interface SelectionItem {
-  campaign: Campaign
-  course: SelectionCourse | null
-}
-
 interface GroupedSelection {
   groupId: number
   groupName: string
-  groupMax: number
-  items: SelectionItem[]
+  groupMax: number | null
+  selectedInGroup: number
+  campaigns: StudentCampaign[]
 }
 
 const loading = ref(false)
-const campaignDetails = ref<CampaignDetail[]>([])
+const campaigns = ref<StudentCampaign[]>([])
 const records = ref<SelectionRecord[]>([])
 
 const now = ref(Date.now())
@@ -68,7 +57,9 @@ function tick() {
 }
 
 onMounted(() => {
-  lastTickSecond = Math.floor(Date.now() / 1000)
+  const current = Date.now()
+  lastTickSecond = Math.floor(current / 1000)
+  now.value = current
   rafHandle = requestAnimationFrame(tick)
 })
 onUnmounted(() => {
@@ -105,7 +96,7 @@ function parseDateTime(s: string | null | undefined): number {
   ).getTime()
 }
 
-function campaignCountdown(c: Campaign): string {
+function campaignCountdown(c: StudentCampaign): string {
   if (!c || !c.endTime) return ''
   const end = parseDateTime(c.endTime)
   if (isNaN(end)) return ''
@@ -117,21 +108,20 @@ function campaignCountdown(c: Campaign): string {
   const hours = Math.floor((totalSeconds % 86400) / 3600)
   const minutes = Math.floor((totalSeconds % 3600) / 60)
   const seconds = totalSeconds % 60
-  const timeStr =
-    days > 0
-      ? `${days}${t('selection.dayShort')} ${pad2(hours)}:${pad2(minutes)}:${pad2(seconds)}`
-      : `${pad2(hours)}:${pad2(minutes)}:${pad2(seconds)}`
+  // 始终携带"天"部分，避免 days 从 1 跳到 0 时显示格式突变
+  // （否则"1天 00:00:00" -> "23:59:59" 会被误读为"归零后重新从 24 小时开始"）
+  const timeStr = `${days}${t('selection.dayShort')} ${pad2(hours)}:${pad2(minutes)}:${pad2(seconds)}`
   return t('selection.endIn', { time: timeStr })
 }
 
 type WindowStatus = 'before' | 'in' | 'after'
 
-function campaignWindowStatus(c: Campaign): WindowStatus {
+function campaignWindowStatus(c: StudentCampaign): WindowStatus {
   const start = parseDateTime(c.startTime)
   const end = parseDateTime(c.endTime)
   const current = now.value
   if (current < start) return 'before'
-  if (current > end) return 'after'
+  if (current >= end) return 'after'
   return 'in'
 }
 
@@ -147,6 +137,18 @@ function windowStatusLabel(s: WindowStatus): string {
   return t('selection.windowEnded')
 }
 
+function capacityPercentage(c: StudentCampaign): number {
+  if (c.capacity <= 0) return 0
+  return Math.min(100, Math.round((c.selectedCount / c.capacity) * 100))
+}
+
+function capacityColor(c: StudentCampaign): string {
+  if (c.remaining <= 0) return '#d03050'
+  const ratio = c.capacity > 0 ? c.selectedCount / c.capacity : 0
+  if (ratio >= 0.8) return '#f0a020'
+  return '#18a058'
+}
+
 function findActiveRecord(campaignId: number): SelectionRecord | undefined {
   return records.value.find(
     (r) => r.campaignId === campaignId && r.status === 'SELECTED',
@@ -154,79 +156,33 @@ function findActiveRecord(campaignId: number): SelectionRecord | undefined {
 }
 
 function campaignNameOf(campaignId: number): string {
-  return campaignDetails.value.find((d) => d.campaign.id === campaignId)?.campaign.name ?? '-'
+  return campaigns.value.find((c) => c.id === campaignId)?.name ?? '-'
 }
 
 /**
- * 活动 -> 所属选课组的映射（一个活动只绑定一个组）。
- * 用于按组累计已选数，不依赖 `group.courses` 是否返回。
- */
-const campaignToGroup = computed(() => {
-  const map = new Map<number, number>()
-  for (const detail of campaignDetails.value) {
-    if (detail.groups.length > 0) {
-      map.set(detail.campaign.id, detail.groups[0]!.groupId)
-    }
-  }
-  return map
-})
-
-/**
- * 跨活动累计的选课组已选数。
- * 直接基于 `records`（选课记录）统计，而非 `group.courses` 中的 `selectedByMe`，
- * 这样即使后端未返回课程详情，也能正确展示组上限进度。
- */
-const crossCampaignSelectedCounts = computed(() => {
-  const counts = new Map<number, number>()
-  for (const record of records.value) {
-    if (record.status !== 'SELECTED') continue
-    const groupId = campaignToGroup.value.get(record.campaignId)
-    if (groupId == null) continue
-    counts.set(groupId, (counts.get(groupId) ?? 0) + 1)
-  }
-  return counts
-})
-
-function selectedInGroupCross(groupId: number): number {
-  return crossCampaignSelectedCounts.value.get(groupId) ?? 0
-}
-
-/**
- * 将 `campaignDetails` 重新分组为 `groupedSelections`：
- * 选课组为数组，每组内为 (campaign, course) 列表。
+ * 将学生端活动列表按选课组分组。
+ * - 有 groupId 的活动归入对应组
+ * - 无 groupId 的活动归入虚拟"未分组"组（groupId = 0），不显示组上限
  *
- * 即使活动在该组内没有可选课程（`courses` 为空或缺失），
- * 仍把活动作为一行加入 `items`（`course` 为 null），
- * 这样活动名称、状态、时间窗口等信息仍可见，
- * 只是行内不展示课程详情和选课按钮。
+ * 新模型下活动即课程，组内课程数 = 组内活动数，
+ * 组上限进度直接使用活动返回的 selectedInGroup（跨活动累计）。
  */
+const UNGROUPED_ID = 0
+
 const groupedSelections = computed<GroupedSelection[]>(() => {
   const map = new Map<number, GroupedSelection>()
-  for (const detail of campaignDetails.value) {
-    for (const group of detail.groups) {
-      if (!map.has(group.groupId)) {
-        map.set(group.groupId, {
-          groupId: group.groupId,
-          groupName: group.groupName,
-          groupMax: group.groupMax,
-          items: [],
-        })
-      }
-      const courses = group.courses ?? []
-      if (courses.length === 0) {
-        map.get(group.groupId)!.items.push({
-          campaign: detail.campaign,
-          course: null,
-        })
-      } else {
-        for (const course of courses) {
-          map.get(group.groupId)!.items.push({
-            campaign: detail.campaign,
-            course,
-          })
-        }
-      }
+  for (const c of campaigns.value) {
+    const gid = c.groupId ?? UNGROUPED_ID
+    if (!map.has(gid)) {
+      map.set(gid, {
+        groupId: gid,
+        groupName: c.groupName ?? t('selection.ungrouped'),
+        groupMax: c.groupMax,
+        selectedInGroup: c.selectedInGroup,
+        campaigns: [],
+      })
     }
+    map.get(gid)!.campaigns.push(c)
   }
   return Array.from(map.values())
 })
@@ -235,20 +191,16 @@ async function loadAll() {
   loading.value = true
   try {
     const campaignRes = await fetchStudentCampaigns()
-    const campaigns = campaignRes.data
-    if (campaigns.length === 0) {
-      campaignDetails.value = []
+    const list = campaignRes.data
+    if (list.length === 0) {
+      campaigns.value = []
       records.value = []
       return
     }
-    const [groupResults, recordResults] = await Promise.all([
-      Promise.all(campaigns.map((c) => fetchStudentCourseGroups(c.id).catch(() => null))),
-      Promise.all(campaigns.map((c) => fetchMyRecords(c.id).catch(() => null))),
-    ])
-    campaignDetails.value = campaigns.map((c, idx) => ({
-      campaign: c,
-      groups: groupResults[idx]?.data ?? [],
-    }))
+    const recordResults = await Promise.all(
+      list.map((c) => fetchMyRecords(c.id).catch(() => null)),
+    )
+    campaigns.value = list
     records.value = recordResults
       .filter((r): r is NonNullable<typeof r> => r !== null)
       .flatMap((r) => r.data)
@@ -259,12 +211,9 @@ async function loadAll() {
   }
 }
 
-async function handleSelect(item: SelectionItem) {
+async function handleSelect(campaign: StudentCampaign) {
   try {
-    await selectCourse({
-      campaignId: item.campaign.id,
-      selectionCourseId: item.course?.id ?? item.campaign.id,
-    })
+    await selectCourse({ campaignId: campaign.id })
     message.success(t('selection.selectSuccess'))
     await loadAll()
   } catch (e) {
@@ -297,10 +246,9 @@ const recordColumns = computed<DataTableColumns<SelectionRecord>>(() => [
     ellipsis: { tooltip: true },
     render: (row) => campaignNameOf(row.campaignId),
   },
-  { title: t('selection.courseName'), key: 'courseName', width: 180, ellipsis: { tooltip: true } },
+  { title: t('selection.courseName'), key: 'courseName', width: 200, ellipsis: { tooltip: true } },
   { title: t('selection.courseCode'), key: 'courseCode', width: 120 },
   { title: t('selection.credit'), key: 'credit', width: 70, align: 'center' },
-  { title: t('selection.courseType'), key: 'courseType', width: 90 },
   {
     title: t('selection.recordStatus'),
     key: 'status',
@@ -333,8 +281,8 @@ const recordColumns = computed<DataTableColumns<SelectionRecord>>(() => [
     align: 'center',
     render(row) {
       if (row.status !== 'SELECTED') return '-'
-      const detail = campaignDetails.value.find((d) => d.campaign.id === row.campaignId)
-      const inWindow = detail ? campaignWindowStatus(detail.campaign) === 'in' : false
+      const campaign = campaigns.value.find((c) => c.id === row.campaignId)
+      const inWindow = campaign ? campaignWindowStatus(campaign) === 'in' : false
       const button = h(
         NPopconfirm,
         { onPositiveClick: () => handleDrop(row.id) },
@@ -381,15 +329,15 @@ onMounted(loadAll)
             <template #header>
               <span class="group-card-title">{{ group.groupName }}</span>
             </template>
-            <template #header-extra>
+            <template v-if="group.groupMax != null" #header-extra>
               <NTag
-                :type="selectedInGroupCross(group.groupId) >= group.groupMax ? 'warning' : 'info'"
+                :type="group.selectedInGroup >= group.groupMax ? 'warning' : 'info'"
                 size="small"
                 :bordered="false"
               >
                 {{
                   t('selection.groupProgress', {
-                    selected: selectedInGroupCross(group.groupId),
+                    selected: group.selectedInGroup,
                     max: group.groupMax,
                   })
                 }}
@@ -397,57 +345,106 @@ onMounted(loadAll)
             </template>
 
             <NEmpty
-              v-if="group.items.length === 0"
+              v-if="group.campaigns.length === 0"
               size="small"
               :description="$t('selection.groupCoursesEmpty')"
             />
             <div v-else class="campaign-list">
               <div
-                v-for="item in group.items"
-                :key="`${item.campaign.id}-${item.course?.id ?? 'none'}`"
+                v-for="campaign in group.campaigns"
+                :key="campaign.id"
                 class="campaign-row"
               >
                 <div class="campaign-row-main">
                   <div class="campaign-row-header">
-                    <span class="campaign-row-name">{{ item.campaign.name }}</span>
+                    <span class="campaign-row-name">{{ campaign.name }}</span>
+                    <NTag size="small" type="info" :bordered="false">
+                      {{ $t('selection.publicElectiveTag') }}
+                    </NTag>
                     <NTag
-                      :type="windowStatusTagType[campaignWindowStatus(item.campaign)]"
+                      :type="windowStatusTagType[campaignWindowStatus(campaign)]"
                       size="small"
                       :bordered="false"
                     >
-                      {{ windowStatusLabel(campaignWindowStatus(item.campaign)) }}
+                      {{ windowStatusLabel(campaignWindowStatus(campaign)) }}
                     </NTag>
                     <span
+                      v-if="campaignCountdown(campaign)"
                       class="countdown-text"
-                      :title="`raw=${item.campaign.endTime} | parsed=${parseDateTime(item.campaign.endTime)} | now=${now}`"
                     >
-                      {{ campaignCountdown(item.campaign) || '（倒计时不可用）' }}
+                      {{ campaignCountdown(campaign) }}
                     </span>
                   </div>
-                  <div class="campaign-row-meta">
-                    <span>{{ $t('selection.semester') }}: {{ item.campaign.semesterName }}</span>
+
+                  <div class="campaign-row-attrs">
+                    <span class="attr-item">
+                      <span class="attr-label">{{ $t('selection.courseCode') }}</span>
+                      <span class="attr-value">{{ campaign.courseCode }}</span>
+                    </span>
+                    <span class="attr-item">
+                      <span class="attr-label">{{ $t('selection.credit') }}</span>
+                      <span class="attr-value">{{ campaign.credit }}</span>
+                    </span>
+                    <span v-if="campaign.courseHour != null" class="attr-item">
+                      <span class="attr-label">{{ $t('selection.courseHour') }}</span>
+                      <span class="attr-value">{{ campaign.courseHour }}</span>
+                    </span>
+                  </div>
+
+                  <div class="campaign-row-capacity">
+                    <span
+                      class="capacity-text"
+                      :class="{ 'capacity-full': campaign.remaining <= 0 }"
+                    >
+                      {{
+                        t('selection.capacityProgress', {
+                          selected: campaign.selectedCount,
+                          total: campaign.capacity,
+                        })
+                      }}
+                    </span>
+                    <NProgress
+                      type="line"
+                      :percentage="capacityPercentage(campaign)"
+                      :show-indicator="false"
+                      :height="6"
+                      :color="capacityColor(campaign)"
+                      :rail-color="'#e8e8e8'"
+                      style="flex: 1; min-width: 120px"
+                    />
+                    <span
+                      class="capacity-remaining"
+                      :class="{ 'capacity-full': campaign.remaining <= 0 }"
+                    >
+                      {{ $t('selection.remainingSlots', { n: campaign.remaining }) }}
+                    </span>
+                  </div>
+
+                  <div class="campaign-row-context">
+                    <span>{{ $t('selection.semester') }}: {{ campaign.semesterName }}</span>
                     <span>
-                      {{ $t('selection.startTime') }}: {{ formatDateTime(item.campaign.startTime) }}
+                      {{ $t('selection.startTime') }}: {{ formatDateTime(campaign.startTime) }}
                     </span>
                     <span>
-                      {{ $t('selection.endTime') }}: {{ formatDateTime(item.campaign.endTime) }}
+                      {{ $t('selection.endTime') }}: {{ formatDateTime(campaign.endTime) }}
                     </span>
                     <span>
-                      {{ $t('selection.weekRangeValue', { start: item.campaign.startWeek, end: item.campaign.endWeek }) }}
+                      {{ $t('selection.weekRangeValue', { start: campaign.startWeek, end: campaign.endWeek }) }}
                     </span>
-                    <span v-if="item.course" :class="{ 'capacity-full': item.course.remaining <= 0 }">
-                      {{ $t('selection.remainingSlots', { n: item.course.remaining }) }}
-                    </span>
+                  </div>
+
+                  <div v-if="campaign.description" class="campaign-row-desc">
+                    {{ campaign.description }}
                   </div>
                 </div>
                 <div class="campaign-row-actions">
-                  <div v-if="findActiveRecord(item.campaign.id)" class="selected-actions">
+                  <div v-if="findActiveRecord(campaign.id)" class="selected-actions">
                     <NTag type="success" size="small" :bordered="false">
                       {{ $t('selection.SELECTED') }}
                     </NTag>
                     <NPopconfirm
                       :on-positive-click="() => {
-                        const rec = findActiveRecord(item.campaign.id)
+                        const rec = findActiveRecord(campaign.id)
                         if (rec) handleDrop(rec.id)
                       }"
                     >
@@ -455,7 +452,7 @@ onMounted(loadAll)
                         <NButton
                           size="small"
                           type="error"
-                          :disabled="campaignWindowStatus(item.campaign) !== 'in'"
+                          :disabled="campaignWindowStatus(campaign) !== 'in'"
                         >
                           {{ $t('selection.dropCourse') }}
                         </NButton>
@@ -463,7 +460,7 @@ onMounted(loadAll)
                       {{ $t('selection.dropConfirm') }}
                     </NPopconfirm>
                   </div>
-                  <NTooltip v-else-if="campaignWindowStatus(item.campaign) !== 'in'">
+                  <NTooltip v-else-if="campaignWindowStatus(campaign) !== 'in'">
                     <template #trigger>
                       <NButton size="small" type="primary" disabled>
                         {{ $t('selection.selectCourse') }}
@@ -471,7 +468,7 @@ onMounted(loadAll)
                     </template>
                     {{ $t('selection.notInWindowHint') }}
                   </NTooltip>
-                  <NTooltip v-else-if="item.course && item.course.remaining <= 0">
+                  <NTooltip v-else-if="campaign.remaining <= 0">
                     <template #trigger>
                       <NButton size="small" type="primary" disabled>
                         {{ $t('selection.selectCourse') }}
@@ -480,7 +477,7 @@ onMounted(loadAll)
                     {{ $t('selection.full') }}
                   </NTooltip>
                   <NTooltip
-                    v-else-if="selectedInGroupCross(group.groupId) >= group.groupMax"
+                    v-else-if="group.groupMax != null && group.selectedInGroup >= group.groupMax"
                   >
                     <template #trigger>
                       <NButton size="small" type="primary" disabled>
@@ -493,7 +490,7 @@ onMounted(loadAll)
                     v-else
                     size="small"
                     type="primary"
-                    @click="handleSelect(item)"
+                    @click="handleSelect(campaign)"
                   >
                     {{ $t('selection.selectCourse') }}
                   </NButton>
