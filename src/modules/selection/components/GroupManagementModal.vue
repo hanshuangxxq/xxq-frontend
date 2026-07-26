@@ -23,8 +23,7 @@ import {
   createGroup,
   updateGroup,
   deleteGroup,
-  bindGroupToCampaign,
-  unbindGroupFromCampaign,
+  updateCampaign,
   fetchBindableCampaigns,
 } from '../api'
 import type { Campaign, CampaignStatus, SelectionGroup, SelectionGroupForm } from '../types'
@@ -77,25 +76,19 @@ watch(
 )
 
 const groupColumns = computed<DataTableColumns<SelectionGroup>>(() => [
-  { title: t('selection.groupName'), key: 'name', width: 200, ellipsis: { tooltip: true } },
+  { title: t('selection.groupName'), key: 'name', width: 220, ellipsis: { tooltip: true } },
   {
     title: t('selection.groupMaxCourses'),
     key: 'maxCourses',
+    width: 160,
+    align: 'center',
+  },
+  {
+    title: t('selection.campaignCount'),
+    key: 'campaignCount',
     width: 140,
     align: 'center',
-  },
-  {
-    title: t('selection.boundCampaignCount'),
-    key: 'boundCampaignCount',
-    width: 130,
-    align: 'center',
-    render: (row) => row.boundCampaignCount ?? 0,
-  },
-  {
-    title: t('selection.courseCount'),
-    key: 'courseCount',
-    width: 120,
-    align: 'center',
+    render: (row) => row.campaignCount ?? 0,
   },
   {
     title: t('selection.createTime'),
@@ -126,7 +119,7 @@ const groupColumns = computed<DataTableColumns<SelectionGroup>>(() => [
           () => t('selection.manageBindings'),
         ),
       )
-      const boundCount = row.boundCampaignCount ?? 0
+      const boundCount = row.campaignCount ?? 0
       if (boundCount > 0) {
         buttons.push(
           h(
@@ -342,7 +335,7 @@ const bindingColumns = computed<DataTableColumns<Campaign>>(() => [
 async function handleBind(campaignId: number) {
   if (!bindingGroup.value) return
   try {
-    await bindGroupToCampaign(campaignId, { groupId: bindingGroup.value.id })
+    await updateCampaign(campaignId, { groupId: bindingGroup.value.id })
     message.success(t('selection.bindSuccess'))
     await loadBindableCampaigns(bindingGroup.value.id)
     await loadGroups()
@@ -355,7 +348,7 @@ async function handleBind(campaignId: number) {
 async function handleUnbind(campaignId: number) {
   if (!bindingGroup.value) return
   try {
-    await unbindGroupFromCampaign(campaignId, bindingGroup.value.id)
+    await updateCampaign(campaignId, { unbindGroup: true })
     message.success(t('selection.unbindSuccess'))
     await loadBindableCampaigns(bindingGroup.value.id)
     await loadGroups()
