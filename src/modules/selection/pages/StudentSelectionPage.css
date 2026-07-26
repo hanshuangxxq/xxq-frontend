@@ -22,22 +22,23 @@
 .campaign-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .campaign-row {
   display: flex;
   align-items: flex-start;
   gap: 16px;
-  padding: 10px 12px;
+  padding: 12px 14px;
   border: 1px solid #e8e8e8;
-  border-radius: 4px;
+  border-radius: 6px;
   background: #fff;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .campaign-row:hover {
   border-color: #d0d7de;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
 }
 
 .campaign-row-main {
@@ -45,7 +46,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .campaign-row-header {
@@ -56,7 +57,7 @@
 }
 
 .campaign-row-name {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   color: #222;
   word-break: break-all;
@@ -73,25 +74,72 @@
   opacity: 1;
 }
 
-.campaign-row-meta {
+.campaign-row-attrs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 13px;
+}
+
+.attr-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.attr-label {
+  color: #999;
+}
+
+.attr-value {
+  color: #333;
+  font-weight: 500;
+}
+
+.campaign-row-capacity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.capacity-text {
+  color: #333;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.capacity-remaining {
+  color: #18a058;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.capacity-full {
+  color: #d03050 !important;
+  font-weight: 600;
+}
+
+.campaign-row-context {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
   font-size: 12px;
-  color: #666;
-}
-
-.capacity-full {
-  color: #d03050;
-  font-weight: 600;
+  color: #888;
+  padding-top: 2px;
+  border-top: 1px dashed #efefef;
 }
 
 .campaign-row-desc {
   font-size: 12px;
-  color: #999;
-  line-height: 1.4;
+  color: #666;
+  line-height: 1.5;
   white-space: pre-wrap;
   word-break: break-all;
+  padding: 4px 8px;
+  background: #f9f9f9;
+  border-radius: 4px;
 }
 
 .campaign-row-actions {
