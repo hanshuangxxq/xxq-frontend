@@ -3,8 +3,9 @@ export interface Student {
   userId: number
   name: string
   studentNo: string | null
+  gradeId: number | null
+  gradeName: string | null
   className: string | null
-  grade: string | null
   majorName: string | null
   enrollmentYear: number | null
   email: string | null
@@ -13,7 +14,7 @@ export interface Student {
 }
 
 export interface StudentQuery {
-  grade?: string
+  gradeId?: number
   className?: string
   major?: string
   unassigned?: boolean
@@ -24,6 +25,7 @@ export interface StudentUpdateForm {
   studentNo?: string
   className?: string
   majorName?: string
+  gradeName?: string
   enrollmentYear?: number
 }
 
