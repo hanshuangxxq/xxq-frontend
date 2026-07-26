@@ -4,7 +4,7 @@ import type { Student, StudentQuery, StudentUpdateForm, Major } from './types'
 
 export function fetchStudents(query?: StudentQuery): Promise<Result<Student[]>> {
   const params = new URLSearchParams()
-  if (query?.grade) params.set('grade', query.grade)
+  if (query?.gradeId != null) params.set('gradeId', String(query.gradeId))
   if (query?.className) params.set('className', query.className)
   if (query?.major) params.set('major', query.major)
   if (query?.unassigned !== undefined) params.set('unassigned', String(query.unassigned))
