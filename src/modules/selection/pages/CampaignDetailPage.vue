@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, h, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -24,7 +24,6 @@ import {
   fetchCampaignClasses,
   closeCampaign,
   finalizeCampaign,
-  openCampaign,
 } from '../api'
 import type {
   Campaign,
@@ -53,6 +52,11 @@ const statusTagType: Record<CampaignStatus, 'default' | 'info' | 'warning' | 'su
 function formatDateTime(s: string | null | undefined): string {
   return s ? s.replace('T', ' ') : ''
 }
+
+const isExpired = computed(() => {
+  if (!campaign.value?.endTime) return false
+  return new Date(campaign.value.endTime) < new Date()
+})
 
 async function loadCampaign() {
   try {
@@ -99,17 +103,7 @@ async function handleClose() {
   try {
     await closeCampaign(campaignId.value)
     message.success(t('selection.close'))
-    await loadCampaign()
-  } catch (e) {
-    message.error((e as Error).message || t('selection.saveFail'))
-  }
-}
-
-async function handleOpen() {
-  try {
-    await openCampaign(campaignId.value)
-    message.success(t('selection.open'))
-    await loadCampaign()
+    if (campaign.value) campaign.value.status = 'CLOSED'
   } catch (e) {
     message.error((e as Error).message || t('selection.saveFail'))
   }
@@ -117,9 +111,12 @@ async function handleOpen() {
 
 async function handleFinalize() {
   try {
+    if (campaign.value?.status === 'OPEN') {
+      await closeCampaign(campaignId.value)
+    }
     await finalizeCampaign(campaignId.value)
     message.success(t('selection.finalize'))
-    await loadCampaign()
+    if (campaign.value) campaign.value.status = 'FINALIZED'
     await loadClasses()
   } catch (e) {
     message.error((e as Error).message || t('selection.saveFail'))
@@ -148,10 +145,13 @@ onMounted(loadAll)
             >
               {{ $t(`selection.${campaign.status}`) }}
             </NTag>
+            <NTag v-if="campaign" type="info" :bordered="false">
+              {{ $t('selection.publicElectiveTag') }}
+            </NTag>
           </div>
           <NSpace>
             <NPopconfirm
-              v-if="campaign?.status === 'OPEN'"
+              v-if="campaign?.status === 'OPEN' && !isExpired"
               :on-positive-click="handleClose"
             >
               <template #trigger>
@@ -160,7 +160,7 @@ onMounted(loadAll)
               {{ $t('selection.closeConfirm') }}
             </NPopconfirm>
             <NPopconfirm
-              v-if="campaign?.status === 'CLOSED'"
+              v-if="campaign?.status === 'CLOSED' || (campaign?.status === 'OPEN' && isExpired)"
               :on-positive-click="handleFinalize"
             >
               <template #trigger>
@@ -186,11 +186,33 @@ onMounted(loadAll)
           <NDescriptionsItem :label="$t('selection.weekRange')">
             {{ $t('selection.weekRangeValue', { start: campaign.startWeek, end: campaign.endWeek }) }}
           </NDescriptionsItem>
-          <NDescriptionsItem :label="$t('selection.selectedCourseCount')">
-            {{ campaign.selectedCourseCount }}
+          <NDescriptionsItem :label="$t('selection.courseName')">
+            {{ campaign.name }}
+          </NDescriptionsItem>
+          <NDescriptionsItem :label="$t('selection.courseCode')">
+            {{ campaign.courseCode }}
+          </NDescriptionsItem>
+          <NDescriptionsItem :label="$t('selection.credit')">
+            {{ campaign.credit }}
+          </NDescriptionsItem>
+          <NDescriptionsItem :label="$t('selection.courseHour')">
+            {{ campaign.courseHour ?? '-' }}
+          </NDescriptionsItem>
+          <NDescriptionsItem :label="$t('selection.capacity')">
+            {{ campaign.capacity }}
+          </NDescriptionsItem>
+          <NDescriptionsItem :label="$t('selection.group')">
+            {{ campaign.groupName ?? '-' }}
           </NDescriptionsItem>
           <NDescriptionsItem :label="$t('selection.createTime')">
             {{ formatDateTime(campaign.createTime) }}
+          </NDescriptionsItem>
+          <NDescriptionsItem
+            v-if="campaign.description"
+            :label="$t('selection.description')"
+            :span="3"
+          >
+            {{ campaign.description }}
           </NDescriptionsItem>
         </NDescriptions>
       </NCard>
@@ -206,7 +228,7 @@ onMounted(loadAll)
           </NAlert>
           <NEmpty
             v-else-if="!loading && classes.length === 0"
-            :description="$t('selection.noClassResults')"
+            :description="$t('selection.noStudentsSelected')"
           />
           <NCollapse v-else arrow-placement="left">
             <NCollapseItem
