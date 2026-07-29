@@ -131,5 +131,7 @@ export interface SelectionClass {
   courseName: string
   classNo: number
   studentCount: number
+  teacherId: number | null
+  teacherName: string | null
   members: StudentSelectionMember[]
 }
