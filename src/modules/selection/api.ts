@@ -90,6 +90,14 @@ export function fetchCampaignClasses(campaignId: number): Promise<Result<Selecti
   return api.get(`/selection/campaigns/${campaignId}/classes`)
 }
 
+export function assignClassTeacher(
+  campaignId: number,
+  classId: number,
+  teacherId: number | null,
+): Promise<Result<SelectionClass>> {
+  return api.put(`/selection/campaigns/${campaignId}/classes/${classId}/teacher`, { teacherId })
+}
+
 // ---- Student ----
 export function fetchStudentCampaigns(): Promise<Result<StudentCampaign[]>> {
   return api.get('/selection/student/campaigns')
