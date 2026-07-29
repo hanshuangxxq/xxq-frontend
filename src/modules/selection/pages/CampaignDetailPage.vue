@@ -16,6 +16,10 @@ import {
   NDescriptionsItem,
   NDataTable,
   NAlert,
+  NModal,
+  NForm,
+  NFormItem,
+  NSelect,
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
@@ -24,7 +28,9 @@ import {
   fetchCampaignClasses,
   closeCampaign,
   finalizeCampaign,
+  assignClassTeacher,
 } from '../api'
+import { fetchTeachers } from '@/modules/curriculum/api'
 import type {
   Campaign,
   CampaignStatus,
@@ -125,6 +131,76 @@ async function handleFinalize() {
 
 function goBack() {
   router.push('/selection')
+}
+
+// ---- Teacher assignment ----
+const showTeacherModal = ref(false)
+const teacherLoading = ref(false)
+const savingTeacher = ref(false)
+const teacherOptions = ref<{ label: string; value: number }[]>([])
+const editingClassId = ref<number | null>(null)
+const selectedTeacherId = ref<number | null>(null)
+
+async function loadTeacherOptions() {
+  teacherLoading.value = true
+  try {
+    const res = await fetchTeachers()
+    teacherOptions.value = res.data
+      .slice()
+      .sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'))
+      .map((tch) => {
+        const suffix = tch.title ? ` · ${tch.title}` : ''
+        return { label: `${tch.name}（${tch.teacherNo}）${suffix}`, value: tch.id }
+      })
+  } catch (e) {
+    message.error((e as Error).message || t('selection.loadFail'))
+  } finally {
+    teacherLoading.value = false
+  }
+}
+
+async function openAssignTeacher(cls: SelectionClass) {
+  editingClassId.value = cls.classId
+  selectedTeacherId.value = cls.teacherId
+  showTeacherModal.value = true
+  await loadTeacherOptions()
+}
+
+async function handleSaveTeacher() {
+  if (editingClassId.value == null) return
+  const classId = editingClassId.value
+  const target = classes.value.find((c) => c.classId === classId)
+  if (target && selectedTeacherId.value === target.teacherId) {
+    showTeacherModal.value = false
+    return
+  }
+  savingTeacher.value = true
+  try {
+    const res = await assignClassTeacher(campaignId.value, classId, selectedTeacherId.value)
+    const idx = classes.value.findIndex((c) => c.classId === classId)
+    if (idx >= 0) {
+      classes.value[idx] = res.data
+    }
+    message.success(t('selection.assignTeacherSuccess'))
+    showTeacherModal.value = false
+  } catch (e) {
+    message.error((e as Error).message || t('selection.assignTeacherFail'))
+  } finally {
+    savingTeacher.value = false
+  }
+}
+
+async function handleUnassignTeacher(cls: SelectionClass) {
+  try {
+    const res = await assignClassTeacher(campaignId.value, cls.classId, null)
+    const idx = classes.value.findIndex((c) => c.classId === cls.classId)
+    if (idx >= 0) {
+      classes.value[idx] = res.data
+    }
+    message.success(t('selection.unassignTeacherSuccess'))
+  } catch (e) {
+    message.error((e as Error).message || t('selection.assignTeacherFail'))
+  }
 }
 
 onMounted(loadAll)
@@ -237,6 +313,35 @@ onMounted(loadAll)
               :name="String(cls.classId)"
               :title="`${cls.courseName} - ${$t('selection.classNo')} ${cls.classNo} (${cls.studentCount} ${$t('selection.studentCount')})`"
             >
+              <template #header-extra>
+                <NSpace :size="8" align="center" @click.stop>
+                  <NTag
+                    v-if="cls.teacherName"
+                    size="small"
+                    type="info"
+                    :bordered="false"
+                  >
+                    {{ $t('selection.teacher') }}: {{ cls.teacherName }}
+                  </NTag>
+                  <NTag v-else size="small" type="warning" :bordered="false">
+                    {{ $t('selection.unassignedTeacher') }}
+                  </NTag>
+                  <NButton size="small" @click="openAssignTeacher(cls)">
+                    {{ cls.teacherId ? $t('selection.changeTeacher') : $t('selection.assignTeacher') }}
+                  </NButton>
+                  <NPopconfirm
+                    v-if="cls.teacherId"
+                    :on-positive-click="() => handleUnassignTeacher(cls)"
+                  >
+                    <template #trigger>
+                      <NButton size="small" type="warning" quaternary>
+                        {{ $t('selection.unassignTeacher') }}
+                      </NButton>
+                    </template>
+                    {{ $t('selection.unassignTeacherConfirm') }}
+                  </NPopconfirm>
+                </NSpace>
+              </template>
               <NDataTable
                 :columns="memberColumns"
                 :data="cls.members"
@@ -250,6 +355,37 @@ onMounted(loadAll)
         </NSpin>
       </NCard>
     </NSpace>
+
+    <NModal
+      v-model:show="showTeacherModal"
+      preset="card"
+      :title="$t('selection.assignTeacherTitle')"
+      class="teacher-assign-modal"
+      style="width: 480px; max-width: 90vw"
+    >
+      <NForm label-placement="top">
+        <NFormItem :label="$t('selection.teacher')">
+          <NSelect
+            v-model:value="selectedTeacherId"
+            :options="teacherOptions"
+            :loading="teacherLoading"
+            :placeholder="$t('selection.teacherPlaceholder')"
+            clearable
+            filterable
+          />
+        </NFormItem>
+      </NForm>
+      <template #footer>
+        <NSpace justify="end">
+          <NButton @click="showTeacherModal = false">
+            {{ $t('selection.cancel') }}
+          </NButton>
+          <NButton type="primary" :loading="savingTeacher" @click="handleSaveTeacher">
+            {{ $t('selection.save') }}
+          </NButton>
+        </NSpace>
+      </template>
+    </NModal>
   </div>
 </template>
 
