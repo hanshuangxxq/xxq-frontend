@@ -38,6 +38,8 @@ export const useNotificationStore = defineStore('notification', () => {
       },
       onNotification: (n) => {
         if (toastHandler) toastHandler(n)
+        // 广播消息后端不再单独推送未读数，本地 +1 即时反馈
+        if (n.broadcast) unreadCount.value += 1
         // 面板打开且当前筛选匹配（新消息为未读，故「已读」筛选不前置）
         if (showPanel.value && activeStatus.value !== 'read') {
           notifications.value = [n, ...notifications.value]
@@ -79,8 +81,13 @@ export const useNotificationStore = defineStore('notification', () => {
   }
 
   async function markRead(id: number): Promise<void> {
-    await notificationApi.markRead(id)
     const item = notifications.value.find((n) => n.id === id)
+    // 广播消息走专用端点标记已读
+    if (item?.broadcast) {
+      await notificationApi.markBroadcastRead(id)
+    } else {
+      await notificationApi.markRead(id)
+    }
     if (item) item.isRead = 1
     // 未读数由 WS 推送更新；本地乐观更新以即时反馈
     if (unreadCount.value > 0) unreadCount.value -= 1
