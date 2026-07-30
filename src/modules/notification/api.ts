@@ -26,6 +26,11 @@ export const notificationApi = {
     await api.put<Result<null>>(`/notification/${id}/read`)
   },
 
+  /** 标记广播消息已读（广播消息走专用端点） */
+  async markBroadcastRead(id: number): Promise<void> {
+    await api.put<Result<null>>(`/notification/broadcast/${id}/read`)
+  },
+
   /** 全部已读 */
   async readAll(): Promise<void> {
     await api.put<Result<null>>('/notification/read-all')
