@@ -14,7 +14,7 @@ import {
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
-import { fetchTeachInfoList, fetchClassCourses, fetchWeekSchedule, fetchAllTimes, fetchCurrentSemester } from '../api'
+import { fetchTeachInfoList, fetchClassCourses, fetchAllTimes, fetchCurrentSemester } from '../api'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import type { TeachInfo, ClassCourse, ClassCourseResponse, TimeSlot, Semester } from '../types'
 
@@ -92,11 +92,6 @@ async function loadClassCourses() {
 // ---- Student: Course detail modal ----
 const courseDetailVisible = ref(false)
 const courseDetailItem = ref<ClassCourse | null>(null)
-
-function openCourseDetail(course: ClassCourse) {
-  courseDetailItem.value = course
-  courseDetailVisible.value = true
-}
 
 // ---- Schedule tab (timetable grid) ----
 const loading = ref(false)
@@ -237,11 +232,11 @@ watch(activeTab, (tab) => {
 // ---- Init ----
 onMounted(async () => {
   await loadTimes()
-  loadSemester()
+  await loadSemester()
   if (isStudent.value) {
-    loadClassCourses()
+    await loadClassCourses()
   } else if (isTeacher.value) {
-    loadTeacherCourses()
+    await loadTeacherCourses()
   }
 })
 </script>
