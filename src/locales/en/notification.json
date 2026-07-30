@@ -1,0 +1,12 @@
+{
+  "title": "Notifications",
+  "all": "All",
+  "unread": "Unread",
+  "read": "Read",
+  "markAllRead": "Mark all read",
+  "markRead": "Mark as read",
+  "delete": "Delete",
+  "deleteConfirm": "Delete this notification?",
+  "empty": "No notifications",
+  "newMessage": "New message"
+}
