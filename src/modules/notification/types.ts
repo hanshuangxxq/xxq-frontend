@@ -17,6 +17,8 @@ export interface NotificationResponse {
   content: string | null
   /** 是否已读：0 未读 / 1 已读 */
   isRead: number
+  /** 是否广播消息：true 时标记已读需调用广播端点 /notification/broadcast/{id}/read */
+  broadcast: boolean
   /** 创建时间 ISO-8601 yyyy-MM-ddTHH:mm:ss */
   createTime: string
 }
