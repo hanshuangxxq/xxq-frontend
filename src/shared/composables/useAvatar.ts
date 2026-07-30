@@ -26,7 +26,7 @@ export function useAvatar(
 
       if (res.status === 401) {
         const refreshed = await refreshAccessToken()
-        if (refreshed) {
+        if (refreshed === 'success') {
           headers['Authorization'] = `Bearer ${accessToken.value}`
           res = await fetch(url, { headers })
         }
