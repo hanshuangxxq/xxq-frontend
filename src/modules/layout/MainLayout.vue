@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, h } from 'vue'
+import { ref, computed, h, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -16,12 +16,15 @@ import {
   NInput,
   NButton,
   NSelect,
+  NBadge,
   useMessage,
 } from 'naive-ui'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useLocaleStore } from '@/stores/useLocaleStore'
 import { useAvatar } from '@/shared/composables/useAvatar'
 import { authApi } from '@/modules/auth/api'
+import { useNotificationStore } from '@/stores/useNotificationStore'
+import NotificationPanel from '@/modules/notification/NotificationPanel.vue'
 import type { SupportedLocale } from '@/i18n'
 import sidebarHideSvg from '@/icons/sidebar_hide.svg'
 import sidebarShowSvg from '@/icons/sidebar_show.svg'
@@ -40,12 +43,14 @@ import batchImportSvg from '@/icons/batchImport.svg'
 import stuInfoSvg from '@/icons/stuInfo.svg'
 import majorSvg from '@/icons/major.svg'
 import semesterSvg from '@/icons/semester.svg'
+import informationSvg from '@/icons/information.svg'
 
 const { t } = useI18n()
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const localeStore = useLocaleStore()
+const notificationStore = useNotificationStore()
 const message = useMessage()
 
 const collapsed = ref(false)
@@ -71,6 +76,21 @@ function renderSvgIcon(svgSrc: string) {
     h(NIcon, null, {
       default: () => h('img', { src: svgSrc, style: { width: '18px', height: '18px' } }),
     })
+}
+
+function renderNotificationLabel() {
+  const children = [h('span', null, t('notification.title'))]
+  if (notificationStore.unreadCount > 0) {
+    children.push(h(NBadge, { value: notificationStore.unreadCount, type: 'error', max: 99 }))
+  }
+  return h(
+    'div',
+    {
+      style:
+        'display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; padding-right: 8px',
+    },
+    children,
+  )
 }
 
 const menuOptions = computed(() => {
@@ -161,23 +181,21 @@ function handleMenuClick(key: string) {
   router.push(key)
 }
 
-const userMenuOptions = computed(() => {
-  if (collapsed.value) {
-    return [
-      { key: 'settings', icon: renderSvgIcon(settingSvg) },
-      { type: 'divider' as const, key: 'divider' },
-      { key: 'logout', icon: renderSvgIcon(logoutSvg) },
-    ]
-  }
-  return [
-    { label: t('layout.settings'), key: 'settings', icon: renderSvgIcon(settingSvg) },
-    { type: 'divider' as const, key: 'divider' },
-    { label: t('auth.logout'), key: 'logout', icon: renderSvgIcon(logoutSvg) },
-  ]
-})
+const userMenuOptions = computed(() => [
+  {
+    label: renderNotificationLabel,
+    key: 'notification',
+    icon: renderSvgIcon(informationSvg),
+  },
+  { label: t('layout.settings'), key: 'settings', icon: renderSvgIcon(settingSvg) },
+  { type: 'divider' as const, key: 'divider' },
+  { label: t('auth.logout'), key: 'logout', icon: renderSvgIcon(logoutSvg) },
+])
 
 function handleUserMenuSelect(key: string) {
-  if (key === 'settings') {
+  if (key === 'notification') {
+    notificationStore.openPanel()
+  } else if (key === 'settings') {
     showSettings.value = true
   } else if (key === 'logout') {
     showLogoutConfirm.value = true
@@ -222,6 +240,18 @@ async function handleChangePassword() {
     changingPassword.value = false
   }
 }
+
+onMounted(() => {
+  notificationStore.setToastHandler((n) => {
+    message.info(`${t('notification.newMessage')}：${n.title}`)
+  })
+  notificationStore.connect()
+})
+
+onUnmounted(() => {
+  notificationStore.disconnect()
+  notificationStore.setToastHandler(null)
+})
 </script>
 
 <template>
@@ -374,6 +404,8 @@ async function handleChangePassword() {
       </NButton>
     </div>
   </NModal>
+
+  <NotificationPanel />
 </template>
 
 <style scoped src="./MainLayout.css"></style>
