@@ -6,6 +6,25 @@ const { message } = createDiscreteApi(['message'])
 
 const AUTH_WHITELIST = ['/login', '/login/refresh']
 
+/** 网络层错误(后端不可达、DNS 失败、CORS、超时等),区别于认证失败与业务错误 */
+export class ApiNetworkError extends Error {
+  readonly isNetworkError = true
+  constructor(message: string) {
+    super(message)
+    this.name = 'ApiNetworkError'
+  }
+}
+
+/** HTTP 状态码错误(4xx/5xx),携带状态码供调用方区分认证失败与服务器暂时错误 */
+export class HttpError extends Error {
+  readonly status: number
+  constructor(status: number, message: string) {
+    super(message)
+    this.name = 'HttpError'
+    this.status = status
+  }
+}
+
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const headers: Record<string, string> = {}
 
@@ -23,16 +42,24 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
     headers: { ...headers, ...(options?.headers as Record<string, string> | undefined) },
   }
 
-  let res = await fetch(`${API_BASE_URL}${url}`, mergedOptions)
+  const doFetch = (opts: RequestInit): Promise<Response> =>
+    fetch(`${API_BASE_URL}${url}`, opts).catch((e) => {
+      throw new ApiNetworkError(e instanceof Error ? e.message : '网络请求失败')
+    })
+
+  let res = await doFetch(mergedOptions)
 
   if (res.status === 401 && !url.startsWith('/login/refresh')) {
-    const refreshed = await refreshAccessToken()
-    if (refreshed) {
+    const outcome = await refreshAccessToken()
+    if (outcome === 'success') {
       headers['Authorization'] = `Bearer ${accessToken.value}`
-      res = await fetch(`${API_BASE_URL}${url}`, {
+      res = await doFetch({
         ...mergedOptions,
         headers: { ...headers, ...(options?.headers as Record<string, string> | undefined) },
       })
+    } else if (outcome === 'network_error') {
+      // 后端暂时不可达(如重启中):保留登录态,不跳转登录页
+      throw new ApiNetworkError('刷新登录状态失败,请检查网络连接')
     } else {
       window.location.replace('/login')
       throw new Error('Session expired')
@@ -41,7 +68,7 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
 
   if (!res.ok) {
     const body = await res.text()
-    throw new Error(`HTTP ${res.status}: ${body}`)
+    throw new HttpError(res.status, `HTTP ${res.status}: ${body}`)
   }
 
   const body = (await res.json()) as { code: number; message: string; data: unknown }
