@@ -39,10 +39,12 @@ export const accessToken = ref<string | null>(loadStr(ACCESS_KEY))
 export const refreshToken = ref<string | null>(loadStr(REFRESH_KEY))
 export const currentUserId = ref<number | null>(loadNum(USER_ID_KEY))
 
-let _performRefresh: (() => Promise<boolean>) | null = null
-let _refreshPromise: Promise<boolean> | null = null
+export type RefreshOutcome = 'success' | 'auth_failed' | 'network_error'
 
-export function setPerformRefresh(fn: () => Promise<boolean>) {
+let _performRefresh: (() => Promise<RefreshOutcome>) | null = null
+let _refreshPromise: Promise<RefreshOutcome> | null = null
+
+export function setPerformRefresh(fn: () => Promise<RefreshOutcome>) {
   _performRefresh = fn
 }
 
@@ -96,8 +98,8 @@ function clearUser() {
   }
 }
 
-export async function refreshAccessToken(): Promise<boolean> {
-  if (!_performRefresh) return false
+export async function refreshAccessToken(): Promise<RefreshOutcome> {
+  if (!_performRefresh) return 'auth_failed'
   if (!_refreshPromise) {
     _refreshPromise = _performRefresh().finally(() => {
       _refreshPromise = null
