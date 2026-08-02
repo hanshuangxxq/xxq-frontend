@@ -12,6 +12,8 @@
   "empty": "暂无数据",
   "loadFail": "加载教学信息失败",
   "detail": "课程详情",
+  "viewDetail": "查看详情",
+  "columnAction": "操作",
   "columnCourseName": "课程名称",
   "columnCredit": "学分",
   "columnCourseHour": "学时",
