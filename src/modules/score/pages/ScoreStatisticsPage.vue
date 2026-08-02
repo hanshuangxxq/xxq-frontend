@@ -110,6 +110,8 @@ const levelStackOption = computed<EChartsOption>(() => {
     { key: 'passCount', label: t('score.statPass'), lv: '及格' },
     { key: 'failCount', label: t('score.statFail'), lv: '不及格' },
   ]
+  // 过滤掉所有课程中总数均为 0 的等级，避免空系列在图表中阻挡
+  const visibleLevels = levels.filter((lv) => sumCount(lv.key) > 0)
   return {
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
     legend: { top: 0 },
@@ -120,7 +122,7 @@ const levelStackOption = computed<EChartsOption>(() => {
       axisLabel: { rotate: 30, interval: 0, hideOverlap: false },
     },
     yAxis: { type: 'value', name: t('score.statTotalCount') },
-    series: levels.map((lv) => ({
+    series: visibleLevels.map((lv) => ({
       name: lv.label,
       type: 'bar',
       stack: 'total',
@@ -139,6 +141,13 @@ const levelPieOption = computed<EChartsOption>(() => {
     { key: 'passCount', label: t('score.statPass'), lv: '及格' },
     { key: 'failCount', label: t('score.statFail'), lv: '不及格' },
   ]
+  const pieData = items
+    .map((it) => ({
+      name: it.label,
+      value: sumCount(it.key),
+      itemStyle: { color: levelColor(it.lv) },
+    }))
+    .filter((d) => d.value > 0)
   return {
     tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
     legend: { bottom: 8, type: 'scroll' },
@@ -149,11 +158,7 @@ const levelPieOption = computed<EChartsOption>(() => {
         center: ['50%', '46%'],
         minAngle: 5,
         avoidLabelOverlap: true,
-        data: items.map((it) => ({
-          name: it.label,
-          value: sumCount(it.key),
-          itemStyle: { color: levelColor(it.lv) },
-        })),
+        data: pieData,
         label: { position: 'inside', formatter: '{d}%', color: '#fff', fontSize: 11 },
       },
     ],
