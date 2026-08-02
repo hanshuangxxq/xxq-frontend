@@ -1,4 +1,8 @@
 export interface TeachInfo {
+  /** 授课安排 id（成绩录入/考试按此关联；课表视图可能不返回） */
+  id?: number
+  courseId?: number
+  semesterId?: number
   courseName: string
   credit: number
   courseHour: number
