@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, h, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
@@ -8,6 +8,7 @@ import {
   NModal,
   NSpin,
   NEmpty,
+  NTag,
   NDataTable,
   NScrollbar,
   NButton,
@@ -17,6 +18,9 @@ import {
 import { fetchTeachInfoList, fetchClassCourses, fetchAllTimes, fetchCurrentSemester } from '../api'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import type { TeachInfo, ClassCourse, ClassCourseResponse, TimeSlot, Semester } from '../types'
+import { fetchTeacherExams } from '@/modules/exam/api'
+import type { ExamView } from '@/modules/exam/types'
+import { calcDurationMinutes } from '@/modules/exam/utils'
 
 const { t } = useI18n()
 const message = useMessage()
@@ -101,9 +105,7 @@ const currentSemester = ref<Semester | null>(null)
 
 const totalWeeks = computed(() => currentSemester.value?.endWeek ?? 20)
 
-const weekOptions = computed(() =>
-  Array.from({ length: totalWeeks.value }, (_, i) => i + 1),
-)
+const weekOptions = computed(() => Array.from({ length: totalWeeks.value }, (_, i) => i + 1))
 
 async function loadSemester() {
   try {
@@ -154,13 +156,45 @@ const teacherLoading = ref(false)
 const teacherCourses = ref<TeachInfo[]>([])
 
 const teacherColumns: DataTableColumns<TeachInfo> = [
-  { title: t('curriculum.columnCourseName'), key: 'courseName', width: 140, ellipsis: { tooltip: true } },
-  { title: t('curriculum.columnClassName'), key: 'className', width: 140, ellipsis: { tooltip: true } },
+  {
+    title: t('curriculum.columnCourseName'),
+    key: 'courseName',
+    width: 140,
+    ellipsis: { tooltip: true },
+  },
+  {
+    title: t('curriculum.columnClassName'),
+    key: 'className',
+    width: 140,
+    ellipsis: { tooltip: true },
+  },
   { title: t('curriculum.columnCollege'), key: 'college', width: 120, ellipsis: { tooltip: true } },
   { title: t('curriculum.columnCourseHour'), key: 'courseHour', width: 60, align: 'center' },
   { title: t('curriculum.columnCourseType'), key: 'courseType', width: 80 },
-  { title: t('curriculum.columnBuilding'), key: 'building', width: 100, ellipsis: { tooltip: true } },
-  { title: t('curriculum.columnClassroom'), key: 'classroom', width: 80, ellipsis: { tooltip: true } },
+  {
+    title: t('curriculum.columnBuilding'),
+    key: 'building',
+    width: 100,
+    ellipsis: { tooltip: true },
+  },
+  {
+    title: t('curriculum.columnClassroom'),
+    key: 'classroom',
+    width: 80,
+    ellipsis: { tooltip: true },
+  },
+  {
+    title: t('curriculum.columnAction'),
+    key: 'action',
+    width: 100,
+    align: 'center',
+    render: (row) =>
+      h(
+        NButton,
+        { size: 'small', type: 'primary', ghost: true, onClick: () => openDetail(row) },
+        { default: () => t('curriculum.viewDetail') },
+      ),
+  },
 ]
 
 function teacherRowKey(row: TeachInfo): string {
@@ -176,6 +210,79 @@ async function loadTeacherCourses() {
     message.error((e as Error).message || t('curriculum.loadFail'))
   } finally {
     teacherLoading.value = false
+  }
+}
+
+// ---- Teacher: My Course Exams ----
+const examLoading = ref(false)
+const exams = ref<ExamView[]>([])
+
+function examStatusTagType(status: string): 'success' | 'info' | 'warning' | 'error' | 'default' {
+  switch (status) {
+    case '已安排':
+      return 'info'
+    case '已完成':
+      return 'success'
+    case '已取消':
+      return 'error'
+    default:
+      return 'default'
+  }
+}
+
+const examColumns = computed<DataTableColumns<ExamView>>(() => [
+  { title: t('exam.tcExamName'), key: 'examName', minWidth: 220, ellipsis: { tooltip: true } },
+  { title: t('exam.tcCourse'), key: 'courseName', width: 150, ellipsis: { tooltip: true } },
+  { title: t('exam.tcExamType'), key: 'examType', width: 100 },
+  { title: t('exam.tcExamDate'), key: 'examDate', width: 120 },
+  {
+    title: t('exam.tcTime'),
+    key: 'time',
+    width: 150,
+    render: (r) => `${r.startTime?.slice(0, 5) ?? ''} - ${r.endTime?.slice(0, 5) ?? ''}`,
+  },
+  {
+    title: t('exam.tcDuration'),
+    key: 'duration',
+    width: 130,
+    align: 'center',
+    render: (r) => {
+      const m = calcDurationMinutes(r.startTime, r.endTime)
+      return m == null ? '-' : String(m)
+    },
+  },
+  { title: t('exam.tcLocation'), key: 'localName', width: 130, render: (r) => r.localName || '-' },
+  {
+    title: t('exam.tcNotes'),
+    key: 'notes',
+    width: 160,
+    ellipsis: { tooltip: true },
+    render: (r) => r.notes || '-',
+  },
+  {
+    title: t('exam.tcStatus'),
+    key: 'status',
+    width: 90,
+    align: 'center',
+    render: (r) =>
+      h(
+        NTag,
+        { type: examStatusTagType(r.status), size: 'small', bordered: false },
+        () => r.status,
+      ),
+  },
+])
+
+async function loadTeacherExams() {
+  examLoading.value = true
+  try {
+    const res = await fetchTeacherExams()
+    exams.value = res.data.sort((a, b) => a.examDate.localeCompare(b.examDate))
+  } catch (e) {
+    message.error((e as Error).message || t('exam.tcLoadFail'))
+    exams.value = []
+  } finally {
+    examLoading.value = false
   }
 }
 
@@ -195,7 +302,10 @@ const detailFields = computed(() => {
     { label: t('curriculum.columnDepartment'), value: item.department },
     { label: t('curriculum.columnClassName'), value: item.className },
     { label: t('curriculum.columnCollege'), value: item.college },
-    { label: t('curriculum.columnDayOfWeek'), value: `${getDayLabel(item.dayOfWeek)} ${getDayDate(item.dayOfWeek)}` },
+    {
+      label: t('curriculum.columnDayOfWeek'),
+      value: `${getDayLabel(item.dayOfWeek)} ${getDayDate(item.dayOfWeek)}`,
+    },
     { label: t('curriculum.columnWeek'), value: getWeekRangeLabel(item.startWeek, item.endWeek) },
     { label: t('curriculum.columnTime'), value: getTimeLabel(item.timeId) },
     { label: t('curriculum.columnBuilding'), value: item.building },
@@ -236,14 +346,14 @@ onMounted(async () => {
   if (isStudent.value) {
     await loadClassCourses()
   } else if (isTeacher.value) {
-    await loadTeacherCourses()
+    await Promise.all([loadTeacherCourses(), loadTeacherExams()])
   }
 })
 </script>
 
 <template>
   <div class="curriculum-page">
-    <NCard>
+    <NCard v-if="isStudent">
       <NTabs v-model:value="activeTab" type="line" animated>
         <!-- Student: Class Courses -->
         <NTabPane v-if="isStudent" name="courses" :tab="$t('curriculum.tabCourses')">
@@ -282,10 +392,7 @@ onMounted(async () => {
             </NScrollbar>
           </div>
           <NSpin :show="loading">
-            <NEmpty
-              v-if="!loading && data.length === 0"
-              :description="$t('curriculum.empty')"
-            />
+            <NEmpty v-if="!loading && data.length === 0" :description="$t('curriculum.empty')" />
             <div v-else class="timetable-wrapper">
               <table class="timetable">
                 <thead>
@@ -305,12 +412,21 @@ onMounted(async () => {
                       :key="day"
                       class="timetable-cell"
                       :class="{ 'timetable-cell--filled': getCourseAt(slot.timeId, day) }"
-                      @click="getCourseAt(slot.timeId, day) && openDetail(getCourseAt(slot.timeId, day)!)"
+                      @click="
+                        getCourseAt(slot.timeId, day) && openDetail(getCourseAt(slot.timeId, day)!)
+                      "
                     >
                       <template v-if="getCourseAt(slot.timeId, day)">
-                        <div class="cell-course-name">{{ getCourseAt(slot.timeId, day)!.courseName }}</div>
-                        <div class="cell-teacher">{{ getCourseAt(slot.timeId, day)!.teacherName }}</div>
-                        <div class="cell-location">{{ getCourseAt(slot.timeId, day)!.building }} {{ getCourseAt(slot.timeId, day)!.classroom }}</div>
+                        <div class="cell-course-name">
+                          {{ getCourseAt(slot.timeId, day)!.courseName }}
+                        </div>
+                        <div class="cell-teacher">
+                          {{ getCourseAt(slot.timeId, day)!.teacherName }}
+                        </div>
+                        <div class="cell-location">
+                          {{ getCourseAt(slot.timeId, day)!.building }}
+                          {{ getCourseAt(slot.timeId, day)!.classroom }}
+                        </div>
                       </template>
                     </td>
                   </tr>
@@ -319,9 +435,14 @@ onMounted(async () => {
             </div>
           </NSpin>
         </NTabPane>
+      </NTabs>
+    </NCard>
 
+    <!-- Teacher: My Courses + Exams (tabs, like student) -->
+    <NCard v-else-if="isTeacher">
+      <NTabs v-model:value="activeTab" type="line" animated>
         <!-- Teacher: My Courses -->
-        <NTabPane v-if="isTeacher" name="myCourses" :tab="$t('curriculum.tabMyCourses')">
+        <NTabPane name="myCourses" :tab="$t('curriculum.tabMyCourses')">
           <NSpin :show="teacherLoading">
             <NEmpty
               v-if="!teacherLoading && teacherCourses.length === 0"
@@ -334,6 +455,22 @@ onMounted(async () => {
               :row-key="teacherRowKey"
               :single-line="false"
               :bordered="false"
+            />
+          </NSpin>
+        </NTabPane>
+
+        <!-- Teacher: My Course Exams -->
+        <NTabPane name="myExams" :tab="$t('exam.tcTitle')">
+          <NSpin :show="examLoading">
+            <NEmpty v-if="!examLoading && exams.length === 0" :description="$t('exam.tcEmpty')" />
+            <NDataTable
+              v-else
+              :columns="examColumns"
+              :data="exams"
+              :row-key="(r: ExamView) => r.id"
+              :single-line="false"
+              :bordered="false"
+              :scroll-x="1230"
             />
           </NSpin>
         </NTabPane>
@@ -371,11 +508,16 @@ onMounted(async () => {
         </div>
         <div class="detail-row">
           <span class="detail-label">{{ $t('curriculum.columnDayOfWeek') }}</span>
-          <span class="detail-value">{{ getDayLabel(courseDetailItem.dayOfWeek) }} {{ getDayDate(courseDetailItem.dayOfWeek) }}</span>
+          <span class="detail-value"
+            >{{ getDayLabel(courseDetailItem.dayOfWeek) }}
+            {{ getDayDate(courseDetailItem.dayOfWeek) }}</span
+          >
         </div>
         <div class="detail-row">
           <span class="detail-label">{{ $t('curriculum.columnWeek') }}</span>
-          <span class="detail-value">{{ getWeekRangeLabel(courseDetailItem.startWeek, courseDetailItem.endWeek) }}</span>
+          <span class="detail-value">{{
+            getWeekRangeLabel(courseDetailItem.startWeek, courseDetailItem.endWeek)
+          }}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">{{ $t('curriculum.columnTime') }}</span>
