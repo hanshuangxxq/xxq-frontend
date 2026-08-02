@@ -1,0 +1,57 @@
+.score-rv-page {
+  padding: 16px;
+}
+
+/* 状态统计带：5 张可点击卡片 */
+.stat-band {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+}
+
+.stat-clickable {
+  cursor: pointer;
+  border-radius: 8px;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.stat-clickable:hover {
+  transform: translateY(-2px);
+}
+
+.stat-clickable :deep(.stat-card) {
+  border: 1px solid #eceef0;
+}
+
+.stat-clickable.active :deep(.stat-card) {
+  border-color: #2080f0;
+  box-shadow: 0 0 0 2px rgba(32, 128, 240, 0.15);
+}
+
+@media (max-width: 1100px) {
+  .stat-band {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 680px) {
+  .stat-band {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.filter-hint {
+  font-size: 12px;
+  color: #b1b6bf;
+  margin-bottom: 12px;
+}
+
+.rv-desc {
+  margin-bottom: 20px;
+}
+
+.rv-timeline {
+  padding: 4px 4px 0;
+}
