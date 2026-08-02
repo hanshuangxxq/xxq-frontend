@@ -44,7 +44,7 @@ const { isStudent } = useRoleCheck()
 const loading = ref(false)
 const scores = ref<ScoreView[]>([])
 const semesterOptions = ref<Array<{ label: string; value: number }>>([])
-const filterSemesterId = ref<number | null>(null)
+const selectedSemesterId = ref<number | null>(null)
 const activeTab = ref<'detail' | 'analysis'>('detail')
 
 const semesterMap = computed(() => {
@@ -61,6 +61,11 @@ async function loadSemesters() {
   try {
     const res = await fetchAllSemesters()
     semesterOptions.value = res.data.map((s: Semester) => ({ label: s.name, value: s.id }))
+    // 默认选中当前学期（后端 /scores/my 不传 semesterId 即返回当前学期）
+    if (selectedSemesterId.value === null) {
+      const current = res.data.find((s) => s.status === 'CURRENT')
+      if (current) selectedSemesterId.value = current.id
+    }
   } catch {
     // 非阻塞
   }
@@ -69,9 +74,8 @@ async function loadSemesters() {
 async function loadData() {
   loading.value = true
   try {
-    // 一次拉取全部学期成绩，学期筛选在前端完成：
-    // 表格/条形图/饼图取当前筛选结果，趋势图需要跨学期数据，不能随筛选缩到单个学期
-    const res = await fetchMyScores()
+    // 不传 semesterId 时后端返回当前学期；切换学期时传入选定 id
+    const res = await fetchMyScores(selectedSemesterId.value ?? undefined)
     scores.value = res.data
   } catch (e) {
     message.error((e as Error).message || t('score.myLoadFail'))
@@ -81,15 +85,15 @@ async function loadData() {
   }
 }
 
-/** 当前学期筛选下的成绩（表格、条形图、饼图使用） */
-const visibleScores = computed(() => {
-  if (filterSemesterId.value == null) return scores.value
-  return scores.value.filter((s) => s.semesterId === filterSemesterId.value)
-})
+/** 切换学期：更新选中值并重新拉取该学期成绩 */
+function handleSemesterChange(id: number | null) {
+  selectedSemesterId.value = id
+  loadData()
+}
 
 // ---- 概要统计 ----
 const stats = computed(() => {
-  const list = visibleScores.value
+  const list = scores.value
   const total = list.length
   const courseSet = new Set<number>()
   let sum = 0
@@ -142,7 +146,6 @@ async function handleApply() {
 
 const columns = computed<DataTableColumns<ScoreView>>(() => {
   const cols: DataTableColumns<ScoreView> = [
-    { title: t('score.mySemester'), key: 'semesterId', width: 150, render: (r) => semesterLabel(r.semesterId) },
     { title: t('score.myCourseName'), key: 'courseName', minWidth: 160, ellipsis: { tooltip: true } },
     { title: t('score.myTeacher'), key: 'teacherName', width: 100 },
     {
@@ -179,8 +182,8 @@ const columns = computed<DataTableColumns<ScoreView>>(() => {
 })
 
 // ---- 图表 ----
-/** 按总评降序排列的当前筛选成绩，条形图读取 */
-const barData = computed(() => [...visibleScores.value].sort((a, b) => b.totalScore - a.totalScore))
+/** 按总评降序排列的全部成绩，条形图读取 */
+const barData = computed(() => [...scores.value].sort((a, b) => b.totalScore - a.totalScore))
 
 const scoreBarOption = computed<EChartsOption>(() => {
   const manyCourses = barData.value.length > 10
@@ -251,7 +254,7 @@ const scoreBarOption = computed<EChartsOption>(() => {
 
 const levelPieOption = computed<EChartsOption>(() => {
   const counts: Record<string, number> = { 优: 0, 良: 0, 中: 0, 及格: 0, 不及格: 0 }
-  for (const s of visibleScores.value) counts[s.scoreLevel] = (counts[s.scoreLevel] ?? 0) + 1
+  for (const s of scores.value) counts[s.scoreLevel] = (counts[s.scoreLevel] ?? 0) + 1
   const items: Array<[string, string]> = [
     [t('score.levelExcellent'), '优'],
     [t('score.levelGood'), '良'],
@@ -289,85 +292,6 @@ const levelPieOption = computed<EChartsOption>(() => {
   }
 })
 
-const trendOption = computed<EChartsOption>(() => {
-  const bySem = new Map<number, number[]>()
-  for (const s of scores.value) {
-    const arr = bySem.get(s.semesterId)
-    if (arr) arr.push(s.totalScore)
-    else bySem.set(s.semesterId, [s.totalScore])
-  }
-  const labels: string[] = []
-  const avgs: number[] = []
-  for (const opt of semesterOptions.value) {
-    const arr = bySem.get(opt.value)
-    if (arr && arr.length) {
-      labels.push(opt.label)
-      avgs.push(Number((arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(2)))
-    }
-  }
-  const lastIndex = avgs.length - 1
-  return {
-    tooltip: {
-      ...chartTooltip,
-      trigger: 'axis',
-      axisPointer: { type: 'line', lineStyle: { color: '#c0c4cc', width: 1 } },
-    },
-    grid: { left: 8, right: 24, top: 24, bottom: 8, ...chartGrid },
-    xAxis: {
-      type: 'category',
-      data: labels,
-      axisLabel: { rotate: 30, interval: 0, hideOverlap: false, ...chartAxisTextStyle },
-      axisLine: chartAxisLine,
-      axisTick: { show: false },
-    },
-    yAxis: {
-      type: 'value',
-      name: t('score.myAvgScore'),
-      nameTextStyle: chartAxisTextStyle,
-      // 成绩普遍偏高时自动抬高下限，避免折线被压平；至少保留及格线(60)可视
-      min: (v: { min: number }) => Math.min(55, Math.max(0, Math.floor((v.min - 5) / 10) * 10)),
-      max: 100,
-      axisLabel: chartAxisTextStyle,
-      axisLine: chartAxisLine,
-      splitLine: chartSplitLine,
-    },
-    series: [
-      {
-        type: 'line',
-        data: avgs,
-        smooth: true,
-        symbol: 'circle',
-        symbolSize: 8,
-        lineStyle: { width: 2, color: '#2080f0' },
-        itemStyle: { color: '#2080f0', borderColor: '#fff', borderWidth: 2 },
-        areaStyle: {
-          // 10% 透明度面积填充，突出走势
-          color: {
-            type: 'linear',
-            x: 0,
-            y: 0,
-            x2: 0,
-            y2: 1,
-            colorStops: [
-              { offset: 0, color: 'rgba(32, 128, 240, 0.15)' },
-              { offset: 1, color: 'rgba(32, 128, 240, 0)' },
-            ],
-          },
-        },
-        markLine: passMarkLine(t('score.myPassLine')),
-        // 只标注最后一个点，避免每点标注造成杂乱
-        label: {
-          show: true,
-          position: 'top',
-          color: '#606266',
-          fontSize: 12,
-          formatter: (p: { dataIndex: number }) => (p.dataIndex === lastIndex ? String(avgs[p.dataIndex]) : ''),
-        },
-      },
-    ],
-  }
-})
-
 const hasData = computed(() => scores.value.length > 0)
 
 onMounted(() => {
@@ -379,6 +303,19 @@ onMounted(() => {
 <template>
   <div class="my-scores-page">
     <NSpace vertical :size="16">
+      <!-- 学期切换 -->
+      <div class="semester-toolbar">
+        <span class="semester-toolbar-label">{{ $t('score.mySemester') }}</span>
+        <NSelect
+          :value="selectedSemesterId"
+          :options="semesterOptions"
+          :placeholder="$t('score.mySemesterPlaceholder')"
+          :consistent-menu-width="false"
+          class="semester-select"
+          @update:value="handleSemesterChange"
+        />
+      </div>
+
       <!-- 概要统计 -->
       <div class="stat-band">
         <StatCard :label="$t('score.myStatCourses')" :value="stats.courses" tone="primary" />
@@ -392,37 +329,20 @@ onMounted(() => {
         <StatCard :label="$t('score.myStatFail')" :value="stats.fail" :tone="stats.fail > 0 ? 'error' : 'default'" />
       </div>
 
-      <!-- 工具栏：学期为前端即时筛选 -->
-      <NCard>
-        <NSpace align="center" :size="12" wrap>
-          <NSelect
-            v-model:value="filterSemesterId"
-            :options="semesterOptions"
-            :placeholder="$t('score.myAllSemester')"
-            clearable
-            style="width: 240px"
-          />
-        </NSpace>
-      </NCard>
-
       <!-- 明细 / 分析 -->
       <NCard>
         <NTabs v-model:value="activeTab" type="line" animated>
           <NTabPane name="detail" :tab="$t('score.myTabDetail')">
             <NSpin :show="loading">
               <NEmpty v-if="!loading && !hasData" :description="$t('score.myEmpty')" />
-              <NEmpty
-                v-else-if="!loading && visibleScores.length === 0"
-                :description="$t('score.myNoMatch')"
-              />
               <NDataTable
                 v-else
                 :columns="columns"
-                :data="visibleScores"
+                :data="scores"
                 :row-key="(r: ScoreView) => r.id"
                 :single-line="false"
                 :bordered="false"
-                :scroll-x="1000"
+                :scroll-x="900"
               />
             </NSpin>
           </NTabPane>
@@ -431,31 +351,14 @@ onMounted(() => {
             <NSpin :show="loading">
               <NEmpty v-if="!loading && !hasData" :description="$t('score.myEmpty')" />
               <template v-else>
-                <div class="chart-full">
-                  <div class="chart-title">{{ $t('score.myScoreBar') }}</div>
-                  <NEmpty
-                    v-if="!loading && visibleScores.length === 0"
-                    size="small"
-                    :description="$t('score.myNoMatch')"
-                  />
-                  <div v-else class="chart-box chart-box-tall"><BaseChart :option="scoreBarOption" /></div>
-                </div>
                 <div class="chart-row">
                   <div class="chart-card">
-                    <div class="chart-title">{{ $t('score.myLevelPie') }}</div>
-                    <NEmpty
-                      v-if="!loading && visibleScores.length === 0"
-                      size="small"
-                      :description="$t('score.myNoMatch')"
-                    />
-                    <div v-else class="chart-box chart-box-tall"><BaseChart :option="levelPieOption" /></div>
+                    <div class="chart-title">{{ $t('score.myScoreBar') }}</div>
+                    <div class="chart-box chart-box-tall"><BaseChart :option="scoreBarOption" /></div>
                   </div>
                   <div class="chart-card">
-                    <div class="chart-title-row">
-                      <span class="chart-title">{{ $t('score.myTrend') }}</span>
-                      <span class="chart-note">{{ $t('score.myTrendHint') }}</span>
-                    </div>
-                    <div class="chart-box chart-box-tall"><BaseChart :option="trendOption" /></div>
+                    <div class="chart-title">{{ $t('score.myLevelPie') }}</div>
+                    <div class="chart-box chart-box-tall"><BaseChart :option="levelPieOption" /></div>
                   </div>
                 </div>
               </template>
