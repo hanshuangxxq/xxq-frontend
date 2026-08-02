@@ -194,7 +194,6 @@ const menuOptions = computed(() => {
     })
   }
   if (authStore.user?.userType === 'academic_admin') {
-    items.push({ label: t('score.mgTitle'), key: '/scores', icon: renderSvgIcon(scoreEntrySvg) })
     items.push({
       label: t('score.statTitle'),
       key: '/score-statistics',
