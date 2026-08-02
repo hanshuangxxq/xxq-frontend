@@ -112,6 +112,9 @@
   "mkLocation": "地点",
 
   "myTitle": "我的考试",
+  "myTabNormal": "正常考试",
+  "myTabMakeup": "补考",
+  "myTabRetake": "重修",
   "myExamName": "考试名称",
   "myCourse": "课程",
   "myExamType": "类型",
