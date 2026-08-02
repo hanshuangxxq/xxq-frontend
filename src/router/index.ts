@@ -95,6 +95,41 @@ const routes: RouteRecordRaw[] = [
         name: 'GradeManagement',
         component: () => import('@/modules/grades/pages/GradeManagementPage.vue'),
       },
+      {
+        path: 'scores',
+        name: 'ScoreManagement',
+        component: () => import('@/modules/score/pages/ScoreManagementPage.vue'),
+      },
+      {
+        path: 'score-statistics',
+        name: 'ScoreStatistics',
+        component: () => import('@/modules/score/pages/ScoreStatisticsPage.vue'),
+      },
+      {
+        path: 'my-scores',
+        name: 'MyScores',
+        component: () => import('@/modules/score/pages/MyScoresPage.vue'),
+      },
+      {
+        path: 'score-review',
+        name: 'ScoreReview',
+        component: () => import('@/modules/score/pages/ScoreReviewPage.vue'),
+      },
+      {
+        path: 'exams',
+        name: 'ExamManagement',
+        component: () => import('@/modules/exam/pages/ExamManagementPage.vue'),
+      },
+      {
+        path: 'makeup-exams',
+        name: 'MakeupExams',
+        component: () => import('@/modules/exam/pages/MakeupExamPage.vue'),
+      },
+      {
+        path: 'my-exams',
+        name: 'MyExams',
+        component: () => import('@/modules/exam/pages/MyExamsPage.vue'),
+      },
     ],
   },
   ...authRoutes,
