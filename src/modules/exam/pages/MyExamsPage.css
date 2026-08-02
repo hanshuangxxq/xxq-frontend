@@ -1,3 +1,25 @@
 .my-exams-page {
   padding: 16px;
 }
+
+/* Left-right tab layout — tab bar on the left, content on the right */
+.my-exams-page :deep(.n-tabs) {
+  min-height: 400px;
+}
+
+.my-exams-page :deep(.n-tabs-nav) {
+  min-width: 120px;
+  padding-top: 8px;
+}
+
+.my-exams-page :deep(.n-tabs-tab) {
+  font-size: 15px;
+  font-weight: 500;
+  padding: 12px 20px;
+}
+
+.my-exams-page :deep(.n-tabs-pane-wrapper) {
+  padding-left: 16px;
+  flex: 1;
+  min-width: 0;
+}
