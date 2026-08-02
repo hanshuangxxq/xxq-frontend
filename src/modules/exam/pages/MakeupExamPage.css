@@ -1,0 +1,18 @@
+.makeup-page {
+  padding: 16px;
+}
+
+.chart-card {
+  margin-top: 16px;
+}
+
+.chart-title {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.chart-box {
+  height: 360px;
+}
