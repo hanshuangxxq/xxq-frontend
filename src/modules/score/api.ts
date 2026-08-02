@@ -2,6 +2,7 @@ import { api } from '@/shared/api'
 import { accessToken, refreshAccessToken } from '@/shared/tokenManager'
 import { API_BASE_URL } from '@/config'
 import type { Result } from '@/shared/types'
+import type { Semester } from '@/modules/curriculum/types'
 import type {
   ScoreConfig,
   ScoreRosterDto,
@@ -56,6 +57,11 @@ export function fetchScoresByTeachInfo(teachInfoId: number): Promise<Result<Scor
 export function fetchMyScores(semesterId?: number): Promise<Result<ScoreView[]>> {
   const qs = semesterId != null ? `?semesterId=${semesterId}` : ''
   return api.get(`/scores/my${qs}`)
+}
+
+export function fetchMyScoreSemesters(): Promise<Result<Semester[]>> {
+  // 仅返回该学生有成绩的学期，用于学期切换下拉
+  return api.get('/scores/my/semesters')
 }
 
 // ---- 统计 ----
