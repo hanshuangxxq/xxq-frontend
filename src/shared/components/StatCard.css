@@ -1,0 +1,53 @@
+.stat-card {
+  padding: 16px 20px;
+  background: #fff;
+  border: 1px solid #eceef0;
+  border-radius: 8px;
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.stat-card:hover {
+  border-color: #d6dce1;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+/* NStatistic label/value 颜色由 tone 控制 */
+.stat-card :deep(.n-statistic__label) {
+  font-size: 13px;
+  color: #8a8f99;
+  margin-bottom: 4px;
+}
+
+.stat-card :deep(.n-statistic-value) {
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.stat-card-suffix {
+  font-size: 14px;
+  font-weight: 500;
+  margin-left: 2px;
+}
+
+.stat-card--default :deep(.n-statistic-value) {
+  color: #333;
+}
+
+.stat-card--primary :deep(.n-statistic-value) {
+  color: #2080f0;
+}
+
+.stat-card--success :deep(.n-statistic-value) {
+  color: #18a058;
+}
+
+.stat-card--warning :deep(.n-statistic-value) {
+  color: #f0a020;
+}
+
+.stat-card--error :deep(.n-statistic-value) {
+  color: #d03050;
+}
