@@ -31,8 +31,7 @@ import {
   chartGrid,
   passMarkLine,
 } from '@/shared/chartTheme'
-import { fetchMyScores, applyReview } from '../api'
-import { fetchAllSemesters } from '@/modules/curriculum/api'
+import { fetchMyScores, fetchMyScoreSemesters, applyReview } from '../api'
 import type { Semester } from '@/modules/curriculum/types'
 import type { ScoreView } from '../types'
 import { levelColor, levelTagType } from '../utils'
@@ -59,9 +58,10 @@ function semesterLabel(id: number): string {
 
 async function loadSemesters() {
   try {
-    const res = await fetchAllSemesters()
+    const res = await fetchMyScoreSemesters()
     semesterOptions.value = res.data.map((s: Semester) => ({ label: s.name, value: s.id }))
-    // 默认选中当前学期（后端 /scores/my 不传 semesterId 即返回当前学期）
+    // 下拉仅含该生有成绩的学期；默认选中当前学期（若当前学期无成绩则不命中，
+    // loadData 不传 semesterId 仍取当前学期成绩）
     if (selectedSemesterId.value === null) {
       const current = res.data.find((s) => s.status === 'CURRENT')
       if (current) selectedSemesterId.value = current.id
