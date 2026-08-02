@@ -12,6 +12,8 @@
   "empty": "No data available",
   "loadFail": "Failed to load teaching info",
   "detail": "Course Detail",
+  "viewDetail": "View Detail",
+  "columnAction": "Action",
   "columnCourseName": "Course Name",
   "columnCredit": "Credit",
   "columnCourseHour": "Hours",
