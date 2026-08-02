@@ -44,6 +44,12 @@ import stuInfoSvg from '@/icons/stuInfo.svg'
 import majorSvg from '@/icons/major.svg'
 import semesterSvg from '@/icons/semester.svg'
 import informationSvg from '@/icons/information.svg'
+import reviewSvg from '@/icons/review.svg'
+import makeupSvg from '@/icons/makeup.svg'
+import scoreEntrySvg from '@/icons/scoreEntry.svg'
+import scoreStatisticsSvg from '@/icons/scoreStatistics.svg'
+import scoreInquirySvg from '@/icons/scoreInquiry.svg'
+import examTimeSvg from '@/icons/examTime.svg'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -170,6 +176,42 @@ const menuOptions = computed(() => {
       label: t('selection.title'),
       key: '/selection',
       icon: renderSvgIcon(couSelSvg),
+    })
+  }
+  // 成绩与考试
+  if (authStore.user?.userType === 'student') {
+    items.push({ label: t('score.myTitle'), key: '/my-scores', icon: renderSvgIcon(scoreInquirySvg) })
+    items.push({ label: t('exam.myTitle'), key: '/my-exams', icon: renderSvgIcon(examTimeSvg) })
+  }
+  if (authStore.user?.userType === 'teacher') {
+    items.push({ label: t('score.mgTitle'), key: '/scores', icon: renderSvgIcon(scoreEntrySvg) })
+  }
+  if (authStore.user?.userType === 'department') {
+    items.push({
+      label: t('score.statTitle'),
+      key: '/score-statistics',
+      icon: renderSvgIcon(scoreStatisticsSvg),
+    })
+  }
+  if (authStore.user?.userType === 'academic_admin') {
+    items.push({ label: t('score.mgTitle'), key: '/scores', icon: renderSvgIcon(scoreEntrySvg) })
+    items.push({
+      label: t('score.statTitle'),
+      key: '/score-statistics',
+      icon: renderSvgIcon(scoreStatisticsSvg),
+    })
+    items.push({ label: t('exam.mgTitle'), key: '/exams', icon: renderSvgIcon(examTimeSvg) })
+    items.push({ label: t('exam.mkTitle'), key: '/makeup-exams', icon: renderSvgIcon(makeupSvg) })
+  }
+  if (
+    authStore.user?.userType === 'student' ||
+    authStore.user?.userType === 'teacher' ||
+    authStore.user?.userType === 'academic_admin'
+  ) {
+    items.push({
+      label: t('score.rvTitle'),
+      key: '/score-review',
+      icon: renderSvgIcon(reviewSvg),
     })
   }
   return items
