@@ -1,5 +1,5 @@
 /** 消息类型 code（请求推荐传此值），响应中 type 返回中文描述 */
-export type NotificationTypeCode = 'SYSTEM' | 'SELECTION' | 'SCHEDULE' | 'COURSE'
+export type NotificationTypeCode = 'SYSTEM' | 'SELECTION' | 'SCHEDULE' | 'COURSE' | 'GRADE'
 
 /** 消息已读状态筛选：unread 未读 / read 已读 */
 export type NotificationStatus = 'unread' | 'read'
