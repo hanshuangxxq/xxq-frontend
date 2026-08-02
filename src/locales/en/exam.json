@@ -112,6 +112,9 @@
   "mkLocation": "Location",
 
   "myTitle": "My Exams",
+  "myTabNormal": "Normal Exams",
+  "myTabMakeup": "Makeup",
+  "myTabRetake": "Retake",
   "myExamName": "Exam name",
   "myCourse": "Course",
   "myExamType": "Type",
