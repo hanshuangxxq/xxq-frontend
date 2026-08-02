@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, h, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { NCard, NDataTable, NTag, NSpin, NEmpty, useMessage, type DataTableColumns } from 'naive-ui'
+import { NCard, NDataTable, NTag, NSpin, NEmpty, NTabs, NTabPane, useMessage, type DataTableColumns } from 'naive-ui'
 import { fetchMyExams } from '../api'
 import type { ExamView } from '../types'
 import { calcDurationMinutes } from '../utils'
@@ -11,6 +11,16 @@ const message = useMessage()
 
 const loading = ref(false)
 const data = ref<ExamView[]>([])
+
+const activeTab = ref('normal')
+
+const normalExams = computed(() =>
+  data.value.filter((e) => e.examType === '期末考试' || e.examType === '期中考试'),
+)
+
+const makeupExams = computed(() => data.value.filter((e) => e.examType === '补考'))
+
+const retakeExams = computed(() => data.value.filter((e) => e.examType === '重修'))
 
 function statusTagType(status: string): 'success' | 'info' | 'warning' | 'error' | 'default' {
   switch (status) {
@@ -85,15 +95,55 @@ onMounted(loadData)
     <NCard :title="$t('exam.myTitle')">
       <NSpin :show="loading">
         <NEmpty v-if="!loading && data.length === 0" :description="$t('exam.myEmpty')" />
-        <NDataTable
-          v-else
-          :columns="columns"
-          :data="data"
-          :row-key="(r: ExamView) => r.id"
-          :single-line="false"
-          :bordered="false"
-          :scroll-x="1230"
-        />
+        <NTabs v-else v-model:value="activeTab" type="line" placement="left" animated>
+          <NTabPane name="normal" :tab="$t('exam.myTabNormal')">
+            <NEmpty
+              v-if="normalExams.length === 0"
+              :description="$t('exam.myEmpty')"
+            />
+            <NDataTable
+              v-else
+              :columns="columns"
+              :data="normalExams"
+              :row-key="(r: ExamView) => r.id"
+              :single-line="false"
+              :bordered="false"
+              :scroll-x="1230"
+            />
+          </NTabPane>
+
+          <NTabPane name="makeup" :tab="$t('exam.myTabMakeup')">
+            <NEmpty
+              v-if="makeupExams.length === 0"
+              :description="$t('exam.myEmpty')"
+            />
+            <NDataTable
+              v-else
+              :columns="columns"
+              :data="makeupExams"
+              :row-key="(r: ExamView) => r.id"
+              :single-line="false"
+              :bordered="false"
+              :scroll-x="1230"
+            />
+          </NTabPane>
+
+          <NTabPane name="retake" :tab="$t('exam.myTabRetake')">
+            <NEmpty
+              v-if="retakeExams.length === 0"
+              :description="$t('exam.myEmpty')"
+            />
+            <NDataTable
+              v-else
+              :columns="columns"
+              :data="retakeExams"
+              :row-key="(r: ExamView) => r.id"
+              :single-line="false"
+              :bordered="false"
+              :scroll-x="1230"
+            />
+          </NTabPane>
+        </NTabs>
       </NSpin>
     </NCard>
   </div>
