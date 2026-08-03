@@ -1,0 +1,28 @@
+.override-hint {
+  margin-bottom: 16px;
+}
+
+.override-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.override-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+}
+
+.override-none {
+  font-size: 13px;
+  color: #909399;
+}
+
+.override-actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 12px;
+}
