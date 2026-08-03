@@ -176,3 +176,14 @@
   font-size: 14px;
   color: var(--n-text-color, #333);
 }
+
+/* ---- Learning progress (学情分析融入) ---- */
+.progress-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
