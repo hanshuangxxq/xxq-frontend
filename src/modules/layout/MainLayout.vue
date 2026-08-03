@@ -50,6 +50,9 @@ import scoreEntrySvg from '@/icons/scoreEntry.svg'
 import scoreStatisticsSvg from '@/icons/scoreStatistics.svg'
 import scoreInquirySvg from '@/icons/scoreInquiry.svg'
 import examTimeSvg from '@/icons/examTime.svg'
+import teachingQualitySvg from '@/icons/teachingQuality.svg'
+import evaluateTeachingSvg from '@/icons/evaluateTeaching.svg'
+import earlyWarningSvg from '@/icons/earlyWarning.svg'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -109,10 +112,7 @@ const menuOptions = computed(() => {
   if (authStore.user?.userType === 'student') {
     items.push({ label: t('course.title'), key: '/course', icon: renderSvgIcon(couSelSvg) })
   }
-  if (
-    authStore.user?.userType === 'academic_admin' ||
-    authStore.user?.userType === 'department'
-  ) {
+  if (authStore.user?.userType === 'academic_admin' || authStore.user?.userType === 'department') {
     items.push({
       label: t('time-restrictions.title'),
       key: '/time-restrictions',
@@ -180,7 +180,11 @@ const menuOptions = computed(() => {
   }
   // 成绩与考试
   if (authStore.user?.userType === 'student') {
-    items.push({ label: t('score.myTitle'), key: '/my-scores', icon: renderSvgIcon(scoreInquirySvg) })
+    items.push({
+      label: t('score.myTitle'),
+      key: '/my-scores',
+      icon: renderSvgIcon(scoreInquirySvg),
+    })
     items.push({ label: t('exam.myTitle'), key: '/my-exams', icon: renderSvgIcon(examTimeSvg) })
   }
   if (authStore.user?.userType === 'teacher') {
@@ -211,6 +215,45 @@ const menuOptions = computed(() => {
       label: t('score.rvTitle'),
       key: '/score-review',
       icon: renderSvgIcon(reviewSvg),
+    })
+  }
+  // 学情分析
+  if (authStore.user?.userType === 'student') {
+    items.push({
+      label: t('analysis.warnings'),
+      key: '/analysis/warnings',
+      icon: renderSvgIcon(earlyWarningSvg),
+    })
+    items.push({
+      label: t('analysis.evaluations'),
+      key: '/analysis/evaluations',
+      icon: renderSvgIcon(evaluateTeachingSvg),
+    })
+  }
+  if (authStore.user?.userType === 'teacher') {
+    items.push({
+      label: t('analysis.teacherQuality'),
+      key: '/analysis/teacher-quality',
+      icon: renderSvgIcon(teachingQualitySvg),
+    })
+  }
+  if (authStore.user?.userType === 'department' || authStore.user?.userType === 'academic_admin') {
+    items.push({
+      label: t('analysis.warnings'),
+      key: '/analysis/warnings',
+      icon: renderSvgIcon(earlyWarningSvg),
+    })
+    items.push({
+      label: t('analysis.teacherQuality'),
+      key: '/analysis/teacher-quality',
+      icon: renderSvgIcon(teachingQualitySvg),
+    })
+  }
+  if (authStore.user?.userType === 'academic_admin') {
+    items.push({
+      label: t('analysis.evaluations'),
+      key: '/analysis/evaluations',
+      icon: renderSvgIcon(evaluateTeachingSvg),
     })
   }
   return items
@@ -359,11 +402,7 @@ onUnmounted(() => {
     :segmented="{ content: 'soft', footer: 'soft' }"
   >
     <div class="settings-layout">
-      <img
-        :src="closeSvg"
-        class="settings-close-btn"
-        @click="showSettings = false"
-      />
+      <img :src="closeSvg" class="settings-close-btn" @click="showSettings = false" />
       <div class="settings-body">
         <div class="settings-nav">
           <div class="settings-nav-title">{{ t('layout.settings') }}</div>
@@ -383,52 +422,47 @@ onUnmounted(() => {
           </div>
         </div>
         <div class="settings-content">
-        <template v-if="settingsTab === 'password'">
-          <h4 class="settings-section-title">{{ t('layout.changePassword') }}</h4>
-          <NForm :model="passwordForm">
-            <NFormItem :label="t('layout.currentPassword')">
-              <NInput
-                v-model:value="passwordForm.oldPassword"
-                type="password"
-                :placeholder="t('layout.currentPasswordPlaceholder')"
-              />
-            </NFormItem>
-            <NFormItem :label="t('layout.newPassword')">
-              <NInput
-                v-model:value="passwordForm.newPassword"
-                type="password"
-                :placeholder="t('layout.newPasswordPlaceholder')"
-              />
-            </NFormItem>
-            <NFormItem :label="t('layout.confirmNewPassword')">
-              <NInput
-                v-model:value="passwordForm.confirmNewPassword"
-                type="password"
-                :placeholder="t('layout.confirmNewPasswordPlaceholder')"
-              />
-            </NFormItem>
-            <NButton
-              type="primary"
-              :loading="changingPassword"
-              block
-              @click="handleChangePassword"
-            >
-              {{ t('layout.changePassword') }}
-            </NButton>
-          </NForm>
-        </template>
-        <template v-else>
-          <h4 class="settings-section-title">{{ t('layout.switchLanguage') }}</h4>
-          <NSelect
-            v-model:value="currentLocale"
-            :options="localeOptions"
-            class="locale-select"
-          />
-        </template>
+          <template v-if="settingsTab === 'password'">
+            <h4 class="settings-section-title">{{ t('layout.changePassword') }}</h4>
+            <NForm :model="passwordForm">
+              <NFormItem :label="t('layout.currentPassword')">
+                <NInput
+                  v-model:value="passwordForm.oldPassword"
+                  type="password"
+                  :placeholder="t('layout.currentPasswordPlaceholder')"
+                />
+              </NFormItem>
+              <NFormItem :label="t('layout.newPassword')">
+                <NInput
+                  v-model:value="passwordForm.newPassword"
+                  type="password"
+                  :placeholder="t('layout.newPasswordPlaceholder')"
+                />
+              </NFormItem>
+              <NFormItem :label="t('layout.confirmNewPassword')">
+                <NInput
+                  v-model:value="passwordForm.confirmNewPassword"
+                  type="password"
+                  :placeholder="t('layout.confirmNewPasswordPlaceholder')"
+                />
+              </NFormItem>
+              <NButton
+                type="primary"
+                :loading="changingPassword"
+                block
+                @click="handleChangePassword"
+              >
+                {{ t('layout.changePassword') }}
+              </NButton>
+            </NForm>
+          </template>
+          <template v-else>
+            <h4 class="settings-section-title">{{ t('layout.switchLanguage') }}</h4>
+            <NSelect v-model:value="currentLocale" :options="localeOptions" class="locale-select" />
+          </template>
         </div>
       </div>
     </div>
-
   </NModal>
 
   <NModal
