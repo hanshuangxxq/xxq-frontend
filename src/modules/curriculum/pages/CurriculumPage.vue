@@ -12,10 +12,17 @@ import {
   NDataTable,
   NScrollbar,
   NButton,
+  NProgress,
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
 import { fetchTeachInfoList, fetchClassCourses, fetchAllTimes, fetchCurrentSemester } from '../api'
+import { getMyProgress } from '@/modules/analysis/api'
+import type { CourseProgress, LearningProgressDto } from '@/modules/analysis/types'
+import {
+  progressStatusTagType,
+  examStatusTagType as progressExamStatusTagType,
+} from '@/modules/analysis/utils'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import type { TeachInfo, ClassCourse, ClassCourseResponse, TimeSlot, Semester } from '../types'
 import { fetchTeacherExams } from '@/modules/exam/api'
@@ -318,6 +325,98 @@ function openDetail(item: TeachInfo) {
   detailVisible.value = true
 }
 
+// ---- Student: Learning Progress (学情分析 #6 融入) ----
+const progressLoading = ref(false)
+const progress = ref<LearningProgressDto | null>(null)
+
+async function loadProgress() {
+  progressLoading.value = true
+  try {
+    const res = await getMyProgress()
+    progress.value = res.data
+  } catch (e) {
+    message.error((e as Error).message || t('analysis.pgLoadFail'))
+    progress.value = null
+  } finally {
+    progressLoading.value = false
+  }
+}
+
+const hasProgress = computed(() => (progress.value?.courses?.length ?? 0) > 0)
+
+const progressColumns = computed<DataTableColumns<CourseProgress>>(() => [
+  {
+    title: t('analysis.pgCourseName'),
+    key: 'courseName',
+    minWidth: 150,
+    ellipsis: { tooltip: true },
+  },
+  { title: t('analysis.pgTeacherName'), key: 'teacherName', width: 90 },
+  {
+    title: t('analysis.pgWeekRange'),
+    key: 'weekRange',
+    width: 110,
+    align: 'center',
+    render: (r) => `${r.startWeek}-${r.endWeek}`,
+  },
+  {
+    title: t('analysis.pgProgressPercent'),
+    key: 'progressPercent',
+    width: 180,
+    align: 'center',
+    render: (r) =>
+      h(NProgress, {
+        type: 'line',
+        percentage: r.progressPercent,
+        status: r.progressPercent >= 100 ? 'success' : 'default',
+        indicatorPlacement: 'inside',
+      }),
+  },
+  {
+    title: t('analysis.pgStatus'),
+    key: 'status',
+    width: 90,
+    align: 'center',
+    render: (r) =>
+      h(
+        NTag,
+        { type: progressStatusTagType(r.status), size: 'small', bordered: false },
+        () => r.status,
+      ),
+  },
+  {
+    title: t('analysis.pgExamStatus'),
+    key: 'examStatus',
+    width: 100,
+    align: 'center',
+    render: (r) =>
+      h(
+        NTag,
+        { type: progressExamStatusTagType(r.examStatus), size: 'small', bordered: false },
+        () => r.examStatus,
+      ),
+  },
+  {
+    title: t('analysis.pgScoreEntered'),
+    key: 'scoreEntered',
+    width: 90,
+    align: 'center',
+    render: (r) =>
+      h(
+        NTag,
+        { type: r.scoreEntered ? 'success' : 'default', size: 'small', bordered: false },
+        () => (r.scoreEntered ? t('analysis.pgYes') : t('analysis.pgNo')),
+      ),
+  },
+  {
+    title: t('analysis.pgTotalScore'),
+    key: 'totalScore',
+    width: 90,
+    align: 'center',
+    render: (r) => (r.totalScore != null ? r.totalScore : '-'),
+  },
+])
+
 // ---- Data loading ----
 async function loadData() {
   loading.value = true
@@ -345,6 +444,7 @@ onMounted(async () => {
   await loadSemester()
   if (isStudent.value) {
     await loadClassCourses()
+    loadProgress()
   } else if (isTeacher.value) {
     await Promise.all([loadTeacherCourses(), loadTeacherExams()])
   }
@@ -433,6 +533,32 @@ onMounted(async () => {
                 </tbody>
               </table>
             </div>
+          </NSpin>
+        </NTabPane>
+
+        <!-- Student: Learning Progress -->
+        <NTabPane v-if="isStudent" name="progress" :tab="$t('curriculum.tabProgress')">
+          <NSpin :show="progressLoading">
+            <NEmpty v-if="!progressLoading && !hasProgress" :description="$t('analysis.pgEmpty')" />
+            <template v-else-if="hasProgress">
+              <div class="progress-header">
+                <span
+                  >{{ $t('analysis.pgCurrentWeek') }}：{{ progress?.currentWeek ?? '-'
+                  }}{{ $t('analysis.pgWeekUnit') }}</span
+                >
+                <span v-if="progress?.semesterName"
+                  >{{ $t('analysis.pgSemester') }}：{{ progress.semesterName }}</span
+                >
+              </div>
+              <NDataTable
+                :columns="progressColumns"
+                :data="progress?.courses ?? []"
+                :row-key="(r: CourseProgress) => r.teachInfoId"
+                :single-line="false"
+                :bordered="false"
+                :scroll-x="1000"
+              />
+            </template>
           </NSpin>
         </NTabPane>
       </NTabs>
