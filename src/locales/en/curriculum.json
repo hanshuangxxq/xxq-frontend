@@ -2,6 +2,7 @@
   "title": "Teaching Info",
   "tabCourses": "Courses",
   "tabSchedule": "Schedule",
+  "tabProgress": "Progress",
   "tabMyCourses": "My Courses",
   "teacherId": "Teacher ID",
   "teacherIdPlaceholder": "Filter by teacher ID",
