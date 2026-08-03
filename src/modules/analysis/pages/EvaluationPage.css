@@ -1,0 +1,57 @@
+.analysis-evaluation-page {
+  padding: 16px;
+}
+
+.eval-form {
+  max-width: 700px;
+}
+
+.eval-template-name {
+  font-size: 13px;
+  color: #606266;
+  margin-bottom: 12px;
+}
+
+.eval-rates {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 24px;
+}
+
+.eval-score-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.eval-score-meta {
+  font-size: 12px;
+  color: #909399;
+}
+
+.eval-hint {
+  font-size: 12px;
+  color: #909399;
+  margin: -4px 0 16px;
+}
+
+.eval-hint-update {
+  margin: 0 0 16px;
+}
+
+.eval-actions {
+  margin-top: 8px;
+}
+
+.period-actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 12px;
+}
+
+@media (max-width: 700px) {
+  .eval-rates {
+    grid-template-columns: 1fr;
+  }
+}
