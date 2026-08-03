@@ -2,6 +2,7 @@
   "title": "课程信息",
   "tabCourses": "课程",
   "tabSchedule": "课表",
+  "tabProgress": "学习进度",
   "tabMyCourses": "我的课程",
   "teacherId": "教师ID",
   "teacherIdPlaceholder": "输入教师ID筛选",
