@@ -130,6 +130,21 @@ const routes: RouteRecordRaw[] = [
         name: 'MyExams',
         component: () => import('@/modules/exam/pages/MyExamsPage.vue'),
       },
+      {
+        path: 'analysis/warnings',
+        name: 'AnalysisWarnings',
+        component: () => import('@/modules/analysis/pages/WarningPage.vue'),
+      },
+      {
+        path: 'analysis/evaluations',
+        name: 'AnalysisEvaluations',
+        component: () => import('@/modules/analysis/pages/EvaluationPage.vue'),
+      },
+      {
+        path: 'analysis/teacher-quality',
+        name: 'AnalysisTeacherQuality',
+        component: () => import('@/modules/analysis/pages/TeacherQualityPage.vue'),
+      },
     ],
   },
   ...authRoutes,
