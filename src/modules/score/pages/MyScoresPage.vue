@@ -32,6 +32,8 @@ import {
   passMarkLine,
 } from '@/shared/chartTheme'
 import { fetchMyScores, fetchMyScoreSemesters, applyReview } from '../api'
+import { getMyProfile } from '@/modules/analysis/api'
+import type { StudentProfileDto } from '@/modules/analysis/types'
 import type { Semester } from '@/modules/curriculum/types'
 import type { ScoreView } from '../types'
 import { levelColor, levelTagType } from '../utils'
@@ -44,7 +46,7 @@ const loading = ref(false)
 const scores = ref<ScoreView[]>([])
 const semesterOptions = ref<Array<{ label: string; value: number }>>([])
 const selectedSemesterId = ref<number | null>(null)
-const activeTab = ref<'detail' | 'analysis'>('detail')
+const activeTab = ref<'detail' | 'analysis' | 'profile'>('detail')
 
 const semesterMap = computed(() => {
   const m = new Map<number, string>()
@@ -146,7 +148,12 @@ async function handleApply() {
 
 const columns = computed<DataTableColumns<ScoreView>>(() => {
   const cols: DataTableColumns<ScoreView> = [
-    { title: t('score.myCourseName'), key: 'courseName', minWidth: 160, ellipsis: { tooltip: true } },
+    {
+      title: t('score.myCourseName'),
+      key: 'courseName',
+      minWidth: 160,
+      ellipsis: { tooltip: true },
+    },
     { title: t('score.myTeacher'), key: 'teacherName', width: 100 },
     {
       title: t('score.myScoreType'),
@@ -154,7 +161,11 @@ const columns = computed<DataTableColumns<ScoreView>>(() => {
       width: 80,
       align: 'center',
       render: (r) =>
-        h(NTag, { size: 'small', bordered: false, type: r.scoreType === '正常' ? 'default' : 'info' }, () => r.scoreType),
+        h(
+          NTag,
+          { size: 'small', bordered: false, type: r.scoreType === '正常' ? 'default' : 'info' },
+          () => r.scoreType,
+        ),
     },
     { title: t('score.myRegularScore'), key: 'regularScore', width: 80, align: 'center' },
     { title: t('score.myFinalScore'), key: 'finalScore', width: 80, align: 'center' },
@@ -164,7 +175,12 @@ const columns = computed<DataTableColumns<ScoreView>>(() => {
       key: 'scoreLevel',
       width: 80,
       align: 'center',
-      render: (r) => h(NTag, { type: levelTagType(r.scoreLevel), size: 'small', bordered: false }, () => r.scoreLevel),
+      render: (r) =>
+        h(
+          NTag,
+          { type: levelTagType(r.scoreLevel), size: 'small', bordered: false },
+          () => r.scoreLevel,
+        ),
     },
   ]
   if (isStudent.value) {
@@ -175,7 +191,11 @@ const columns = computed<DataTableColumns<ScoreView>>(() => {
       align: 'center',
       fixed: 'right',
       render: (row) =>
-        h(NButton, { size: 'small', type: 'primary', ghost: true, onClick: () => openApply(row) }, () => t('score.rvApply')),
+        h(
+          NButton,
+          { size: 'small', type: 'primary', ghost: true, onClick: () => openApply(row) },
+          () => t('score.rvApply'),
+        ),
     })
   }
   return cols
@@ -245,7 +265,13 @@ const scoreBarOption = computed<EChartsOption>(() => {
       ? {
           dataZoom: [
             { type: 'inside' as const, yAxisIndex: 0 },
-            { type: 'slider' as const, yAxisIndex: 0, height: 14, bottom: 4, borderColor: 'transparent' },
+            {
+              type: 'slider' as const,
+              yAxisIndex: 0,
+              height: 14,
+              bottom: 4,
+              borderColor: 'transparent',
+            },
           ],
         }
       : {}),
@@ -294,9 +320,97 @@ const levelPieOption = computed<EChartsOption>(() => {
 
 const hasData = computed(() => scores.value.length > 0)
 
+// ---- 学习画像（学情分析 #1 融入） ----
+const profileLoading = ref(false)
+const profile = ref<StudentProfileDto | null>(null)
+
+async function loadProfile() {
+  profileLoading.value = true
+  try {
+    const res = await getMyProfile()
+    profile.value = res.data
+  } catch (e) {
+    message.error((e as Error).message || t('analysis.pfLoadFail'))
+    profile.value = null
+  } finally {
+    profileLoading.value = false
+  }
+}
+
+const hasProfileSubjects = computed(() => (profile.value?.subjects?.length ?? 0) > 0)
+
+const rankText = computed(() => {
+  const p = profile.value
+  if (!p || p.classRank == null) return '-'
+  const size = p.classSize ?? 0
+  return size > 0 ? `${p.classRank} / ${size}` : String(p.classRank)
+})
+
+// 学习画像：分科目成绩折线（横坐标为科目，点位以直线连接）
+const profileSubjectOption = computed<EChartsOption>(() => {
+  const subjects = profile.value?.subjects ?? []
+  return {
+    tooltip: { ...chartTooltip, trigger: 'axis' },
+    legend: { top: 0, textStyle: chartAxisTextStyle },
+    grid: { top: 40, right: 16, bottom: 8, left: 8, ...chartGrid },
+    xAxis: {
+      type: 'category',
+      data: subjects.map((s) => s.courseName),
+      axisLabel: {
+        ...chartAxisTextStyle,
+        rotate: subjects.length > 4 ? 25 : 0,
+        interval: 0,
+      },
+      axisLine: chartAxisLine,
+    },
+    yAxis: [
+      {
+        type: 'value',
+        name: t('analysis.pfGradePoint'),
+        min: 0,
+        max: 5,
+        axisLabel: chartAxisTextStyle,
+        splitLine: chartSplitLine,
+        axisLine: chartAxisLine,
+      },
+      {
+        type: 'value',
+        name: t('analysis.pfScore'),
+        min: 0,
+        max: 100,
+        axisLabel: chartAxisTextStyle,
+        splitLine: { show: false },
+        axisLine: chartAxisLine,
+      },
+    ],
+    series: [
+      {
+        name: t('analysis.pfGradePoint'),
+        type: 'line',
+        symbol: 'circle',
+        symbolSize: 7,
+        itemStyle: { color: '#2080f0' },
+        lineStyle: { width: 3 },
+        data: subjects.map((s) => s.gradePoint),
+      },
+      {
+        name: t('analysis.pfScore'),
+        type: 'line',
+        yAxisIndex: 1,
+        symbol: 'circle',
+        symbolSize: 7,
+        itemStyle: { color: '#18a058' },
+        lineStyle: { width: 3 },
+        data: subjects.map((s) => s.totalScore),
+      },
+    ],
+  }
+})
+
 onMounted(() => {
   loadSemesters()
   loadData()
+  loadProfile()
 })
 </script>
 
@@ -326,7 +440,11 @@ onMounted(() => {
           suffix="%"
           tone="success"
         />
-        <StatCard :label="$t('score.myStatFail')" :value="stats.fail" :tone="stats.fail > 0 ? 'error' : 'default'" />
+        <StatCard
+          :label="$t('score.myStatFail')"
+          :value="stats.fail"
+          :tone="stats.fail > 0 ? 'error' : 'default'"
+        />
       </div>
 
       <!-- 明细 / 分析 -->
@@ -354,12 +472,57 @@ onMounted(() => {
                 <div class="chart-row">
                   <div class="chart-card">
                     <div class="chart-title">{{ $t('score.myScoreBar') }}</div>
-                    <div class="chart-box chart-box-tall"><BaseChart :option="scoreBarOption" /></div>
+                    <div class="chart-box chart-box-tall">
+                      <BaseChart :option="scoreBarOption" />
+                    </div>
                   </div>
                   <div class="chart-card">
                     <div class="chart-title">{{ $t('score.myLevelPie') }}</div>
-                    <div class="chart-box chart-box-tall"><BaseChart :option="levelPieOption" /></div>
+                    <div class="chart-box chart-box-tall">
+                      <BaseChart :option="levelPieOption" />
+                    </div>
                   </div>
+                </div>
+              </template>
+            </NSpin>
+          </NTabPane>
+
+          <NTabPane name="profile" :tab="$t('score.myTabProfile')">
+            <NSpin :show="profileLoading">
+              <NEmpty v-if="!profileLoading && !profile" :description="$t('analysis.pfEmpty')" />
+              <template v-else-if="profile">
+                <div class="stat-band">
+                  <StatCard
+                    :label="$t('analysis.pfCumulativeGpa')"
+                    :value="profile.cumulativeGpa"
+                    tone="primary"
+                  />
+                  <StatCard
+                    :label="$t('analysis.pfSemesterGpa')"
+                    :value="profile.semesterGpa"
+                    tone="success"
+                  />
+                  <StatCard
+                    :label="$t('analysis.pfTotalCredits')"
+                    :value="profile.totalCredits"
+                    tone="default"
+                  />
+                  <StatCard
+                    :label="$t('analysis.pfEarnedCredits')"
+                    :value="profile.earnedCredits"
+                    tone="default"
+                  />
+                  <StatCard
+                    :label="$t('analysis.pfFailCount')"
+                    :value="profile.failCount"
+                    :tone="profile.failCount > 0 ? 'error' : 'default'"
+                  />
+                  <StatCard :label="$t('analysis.pfClassRank')" :value="rankText" tone="primary" />
+                </div>
+                <div class="chart-title">{{ $t('analysis.pfSubjectTrend') }}</div>
+                <div class="chart-box chart-box-tall">
+                  <NEmpty v-if="!hasProfileSubjects" :description="$t('analysis.pfEmpty')" />
+                  <BaseChart v-else :option="profileSubjectOption" />
                 </div>
               </template>
             </NSpin>
@@ -377,7 +540,10 @@ onMounted(() => {
     >
       <NForm v-if="applyTarget">
         <NFormItem :label="$t('score.myCourseName')">
-          <span>{{ applyTarget.courseName }}（{{ $t('score.myTotalScore') }}{{ applyTarget.totalScore }}）</span>
+          <span
+            >{{ applyTarget.courseName }}（{{ $t('score.myTotalScore')
+            }}{{ applyTarget.totalScore }}）</span
+          >
         </NFormItem>
         <NFormItem :label="$t('score.rvReason')" required>
           <NInput
