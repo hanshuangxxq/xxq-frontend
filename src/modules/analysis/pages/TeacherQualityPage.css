@@ -1,0 +1,50 @@
+.analysis-tq-page {
+  padding: 16px;
+}
+
+.toolbar-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+}
+
+.stat-band {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 1200px) {
+  .stat-band {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .stat-band {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.chart-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.chart-box {
+  height: 340px;
+}
+
+.link-btn {
+  color: #2080f0;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.link-btn:hover {
+  text-decoration: underline;
+}
