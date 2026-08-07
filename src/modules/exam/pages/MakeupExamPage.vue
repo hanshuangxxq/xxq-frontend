@@ -28,6 +28,7 @@ import {
   enterMakeupGrades,
 } from '../api'
 import { fetchCourses } from '@/modules/course/api'
+import { courseKey, parseCourseKey, isPublicCourse } from '@/modules/course/utils'
 import { fetchAllSemesters } from '@/modules/curriculum/api'
 import { fetchLocals } from '@/modules/locals/api'
 import type { Course } from '@/modules/course/types'
@@ -44,12 +45,14 @@ import { calcDurationMinutes } from '../utils'
 const { t } = useI18n()
 const message = useMessage()
 
-const courseOptions = ref<Array<{ label: string; value: number }>>([])
+const courseOptions = ref<Array<{ label: string; value: string }>>([])
+/** 建补考/重修考试仅支持常规课（公选课无 course.id，后端建考请求体未含 campaignId） */
+const createCourseOptions = ref<Array<{ label: string; value: number }>>([])
 const semesterOptions = ref<Array<{ label: string; value: number }>>([])
 const localOptions = ref<Array<{ label: string; value: number }>>([])
 
 // ---- 候选名单 ----
-const candCourseId = ref<number | null>(null)
+const candCourseKey = ref<string | null>(null)
 const candSemesterId = ref<number | null>(null)
 const candidates = ref<MakeupCandidateDto[]>([])
 const loadingCand = ref(false)
@@ -60,14 +63,16 @@ const makeupTypeOptions = computed(() => [
 ])
 
 async function loadCandidates() {
-  if (candCourseId.value == null) {
+  if (candCourseKey.value == null) {
     message.warning(t('exam.mkCandidateCoursePlaceholder'))
     return
   }
+  const sel = parseCourseKey(candCourseKey.value)
   loadingCand.value = true
   try {
     const res = await fetchMakeupCandidates({
-      courseId: candCourseId.value,
+      courseId: sel.id,
+      source: sel.source === 'SELECTION_CAMPAIGN' ? 'SELECTION_CAMPAIGN' : undefined,
       semesterId: candSemesterId.value ?? undefined,
     })
     candidates.value = res.data
@@ -189,9 +194,12 @@ function tsToTimeStr(ts: number): string {
 }
 
 function openCreate() {
+  // 建补考仅支持常规课；若当前筛选的是公选课，预填 null 由用户在常规课列表中重选
+  const sel = candCourseKey.value ? parseCourseKey(candCourseKey.value) : null
+  const presetCourseId = sel && sel.source !== 'SELECTION_CAMPAIGN' ? sel.id : null
   createForm.value = {
     examName: '',
-    courseId: candCourseId.value,
+    courseId: presetCourseId,
     examType: 'MAKEUP',
     semesterId: null,
     sourceSemesterId: candSemesterId.value,
@@ -271,6 +279,11 @@ async function openGrades(row: ExamView) {
   gradeExam.value = row
   showGrades.value = true
   gradeRows.value = []
+  // 补考/重修考试仅针对常规课建考（公选课 courseId 为 null，理论上不会出现在此列表）
+  if (row.courseId == null) {
+    loadingGrades.value = false
+    return
+  }
   loadingGrades.value = true
   try {
     // ExamView 未暴露来源学期，按考试学期回退（后端建考时已写入考生名单）
@@ -369,7 +382,15 @@ async function loadDropdowns() {
       fetchAllSemesters(),
       fetchLocals(),
     ])
-    courseOptions.value = courseRes.data.map((c: Course) => ({ label: c.courseName, value: c.id }))
+    courseOptions.value = courseRes.data.map((c: Course) => ({
+      label: isPublicCourse(c) ? `${c.courseName}（${t('common.publicTag')}）` : c.courseName,
+      // 公选课与常规课 id 可能重复，用 (source:id) 复合值作 option value
+      value: courseKey(c.id, c.source),
+    }))
+    // 建补考表单仅列常规课（公选课不支持建补考）
+    createCourseOptions.value = courseRes.data
+      .filter((c) => !isPublicCourse(c))
+      .map((c) => ({ label: c.courseName, value: c.id }))
     semesterOptions.value = semRes.data.map((s: Semester) => ({ label: s.name, value: s.id }))
     localOptions.value = localRes.data.map((l: Local) => ({
       label: `${l.building} ${l.classRoom}`,
@@ -391,13 +412,13 @@ onMounted(() => {
     <NSpace vertical :size="16">
       <NCard :title="$t('exam.mkCandidates')">
         <template #header-extra>
-          <NButton type="primary" :disabled="candCourseId == null" @click="openCreate">
+          <NButton type="primary" :disabled="candCourseKey == null" @click="openCreate">
             {{ $t('exam.mkCreate') }}
           </NButton>
         </template>
         <NSpace align="center" :size="12" wrap>
           <NSelect
-            v-model:value="candCourseId"
+            v-model:value="candCourseKey"
             :options="courseOptions"
             :placeholder="$t('exam.mkCandidateCoursePlaceholder')"
             filterable
@@ -415,6 +436,7 @@ onMounted(() => {
         <NSpin :show="loadingCand">
           <NEmpty
             v-if="!loadingCand && candidates.length === 0"
+            class="candidates-empty"
             :description="$t('exam.mkNoCandidates')"
           />
           <template v-else>
@@ -477,7 +499,7 @@ onMounted(() => {
         </NFormItem>
         <NSpace :size="12" wrap>
           <NFormItem :label="$t('exam.mkCourse')" required style="width: 220px">
-            <NSelect v-model:value="createForm.courseId" :options="courseOptions" filterable />
+            <NSelect v-model:value="createForm.courseId" :options="createCourseOptions" filterable />
           </NFormItem>
           <NFormItem :label="$t('exam.mkExamType')" required style="width: 140px">
             <NSelect v-model:value="createForm.examType" :options="makeupTypeOptions" />
