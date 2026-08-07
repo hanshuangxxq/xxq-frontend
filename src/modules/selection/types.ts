@@ -16,7 +16,8 @@ export interface Campaign {
   name: string
   semesterId: number
   semesterName: string
-  courseId: number
+  /** 解耦后公选课不再关联 course 表，courseId 置 null；改用 id 标识公选课 */
+  courseId: number | null
   startWeek: number
   endWeek: number
   startTime: string
