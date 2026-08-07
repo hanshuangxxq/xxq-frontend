@@ -33,5 +33,12 @@
   "weekLabel": "Week: ",
   "weekUnit": "Week {n}",
   "blockedSlot": "Blocked",
-  "reservedFor": "Reserved"
+  "reservedFor": "Reserved",
+  "columnCampaignStatus": "Campaign Status",
+  "columnCampaignCapacity": "Selected/Capacity",
+  "columnClassNo": "Class No.",
+  "campaignStatusDraft": "Draft",
+  "campaignStatusOpen": "Open",
+  "campaignStatusClosed": "Closed",
+  "campaignStatusFinalized": "Finalized"
 }
