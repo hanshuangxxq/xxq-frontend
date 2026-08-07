@@ -32,8 +32,8 @@ async function loadCourses() {
     courseOptions.value = res.data.courses
       .filter((c: TeachInfo) => c.id != null)
       .map((c: TeachInfo) => {
-        // 公选课 courseName 为 null，实际课程名落在 className
-        const name = c.courseName || c.className
+        // 解耦后各类课程 courseName 均由 course 表填充（公选课亦然）
+        const name = c.courseName
         return {
           label: c.teacherName ? `${name} - ${c.teacherName}` : name,
           value: c.id as number,
