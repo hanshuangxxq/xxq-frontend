@@ -1,3 +1,5 @@
+import type { CourseSource } from '@/modules/course/types'
+
 /** 成绩类型（响应为中文描述） */
 export type ScoreType = '正常' | '补考' | '重修'
 /** 成绩类型 code（请求时传） */
@@ -15,7 +17,8 @@ export type ScoreLevel = '优' | '良' | '中' | '及格' | '不及格'
 export interface ScoreView {
   id: number
   teachInfoId: number
-  courseId: number
+  /** 公选课成绩行为 null（公选课无 course.id），courseName 仍正常返回 */
+  courseId: number | null
   courseName: string
   teacherId: number
   teacherName: string
@@ -85,6 +88,8 @@ export interface ScoreStatisticsDto {
 
 export interface ScoreStatisticsQuery {
   courseId?: number
+  /** 公选课须传 SELECTION_CAMPAIGN，否则按 course_id 过滤查不到公选课成绩 */
+  source?: CourseSource
   className?: string
   semesterId?: number
 }
