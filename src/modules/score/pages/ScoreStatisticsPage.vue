@@ -19,6 +19,7 @@ import StatCard from '@/shared/components/StatCard.vue'
 import { fetchScoreStatistics } from '../api'
 import { fetchCourses } from '@/modules/course/api'
 import { fetchAllSemesters } from '@/modules/curriculum/api'
+import { courseKey, parseCourseKey, isPublicCourse } from '@/modules/course/utils'
 import type { Course } from '@/modules/course/types'
 import type { Semester } from '@/modules/curriculum/types'
 import type { ScoreStatisticsDto } from '../types'
@@ -30,17 +31,21 @@ const message = useMessage()
 const loading = ref(false)
 const data = ref<ScoreStatisticsDto[]>([])
 
-const courseOptions = ref<Array<{ label: string; value: number }>>([])
+const courseOptions = ref<Array<{ label: string; value: string }>>([])
 const semesterOptions = ref<Array<{ label: string; value: number }>>([])
 
-const filterCourseId = ref<number | null>(null)
+const filterCourseKey = ref<string | null>(null)
 const filterClassName = ref('')
 const filterSemesterId = ref<number | null>(null)
 
 async function loadDropdowns() {
   try {
     const [courseRes, semRes] = await Promise.all([fetchCourses(), fetchAllSemesters()])
-    courseOptions.value = courseRes.data.map((c: Course) => ({ label: c.courseName, value: c.id }))
+    // 公选课与常规课 id 可能重复，用 (source:id) 复合值作 option value
+    courseOptions.value = courseRes.data.map((c: Course) => ({
+      label: isPublicCourse(c) ? `${c.courseName}（${t('common.publicTag')}）` : c.courseName,
+      value: courseKey(c.id, c.source),
+    }))
     semesterOptions.value = semRes.data.map((s: Semester) => ({ label: s.name, value: s.id }))
   } catch {
     // 下拉数据加载失败不阻塞
@@ -50,8 +55,10 @@ async function loadDropdowns() {
 async function loadData() {
   loading.value = true
   try {
+    const sel = filterCourseKey.value ? parseCourseKey(filterCourseKey.value) : null
     const res = await fetchScoreStatistics({
-      courseId: filterCourseId.value ?? undefined,
+      courseId: sel?.id,
+      source: sel?.source === 'SELECTION_CAMPAIGN' ? 'SELECTION_CAMPAIGN' : undefined,
       className: filterClassName.value || undefined,
       semesterId: filterSemesterId.value ?? undefined,
     })
@@ -65,7 +72,7 @@ async function loadData() {
 }
 
 function handleReset() {
-  filterCourseId.value = null
+  filterCourseKey.value = null
   filterClassName.value = ''
   filterSemesterId.value = null
   loadData()
@@ -228,7 +235,7 @@ onMounted(() => {
       <NCard>
         <NSpace align="center" :size="12" wrap>
           <NSelect
-            v-model:value="filterCourseId"
+            v-model:value="filterCourseKey"
             :options="courseOptions"
             :placeholder="$t('score.statAllCourse')"
             clearable
@@ -277,7 +284,7 @@ onMounted(() => {
             <NDataTable
               :columns="columns"
               :data="data"
-              :row-key="(r: ScoreStatisticsDto) => r.courseId"
+              :row-key="(r: ScoreStatisticsDto) => `${r.courseId}:${r.courseName}`"
               :single-line="false"
               :bordered="false"
               :scroll-x="1100"
