@@ -30,6 +30,7 @@ export function fetchExams(query?: ExamQuery): Promise<Result<ExamView[]>> {
   const params = new URLSearchParams()
   if (query?.semesterId != null) params.set('semesterId', String(query.semesterId))
   if (query?.courseId != null) params.set('courseId', String(query.courseId))
+  if (query?.source) params.set('source', query.source)
   if (query?.examType) params.set('examType', query.examType)
   const qs = params.toString()
   return api.get(`/exams${qs ? `?${qs}` : ''}`)
@@ -55,6 +56,7 @@ export function fetchMakeupCandidates(
 ): Promise<Result<MakeupCandidateDto[]>> {
   const params = new URLSearchParams()
   params.set('courseId', String(query.courseId))
+  if (query.source) params.set('source', query.source)
   if (query.semesterId != null) params.set('semesterId', String(query.semesterId))
   return api.get(`/exams/makeup/candidates?${params.toString()}`)
 }
