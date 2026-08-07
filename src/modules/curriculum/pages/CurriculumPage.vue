@@ -24,7 +24,15 @@ import {
   examStatusTagType as progressExamStatusTagType,
 } from '@/modules/analysis/utils'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
-import type { TeachInfo, ClassCourse, ClassCourseResponse, TimeSlot, Semester } from '../types'
+import type {
+  TeachInfo,
+  PublicCourseDto,
+  CampaignStatus,
+  ClassCourse,
+  ClassCourseResponse,
+  TimeSlot,
+  Semester,
+} from '../types'
 import { fetchTeacherExams } from '@/modules/exam/api'
 import type { ExamView } from '@/modules/exam/types'
 import { calcDurationMinutes } from '@/modules/exam/utils'
@@ -76,6 +84,25 @@ function getDayDate(day: number): string {
 
 function getWeekRangeLabel(startWeek: number, endWeek: number): string {
   return startWeek === endWeek ? `第${startWeek}周` : `第${startWeek}-${endWeek}周`
+}
+
+/** 公选课类型守卫：收敛 TeachInfo 联合到 PublicCourseDto，以访问内联的选课活动字段 */
+function isPublicCourse(item: TeachInfo): item is PublicCourseDto {
+  return item.category === 'PUBLIC'
+}
+
+/** 选课活动状态文案（与后端 CampaignStatus 对应） */
+function campaignStatusLabel(status: CampaignStatus): string {
+  switch (status) {
+    case 'DRAFT':
+      return t('curriculum.campaignStatusDraft')
+    case 'OPEN':
+      return t('curriculum.campaignStatusOpen')
+    case 'CLOSED':
+      return t('curriculum.campaignStatusClosed')
+    case 'FINALIZED':
+      return t('curriculum.campaignStatusFinalized')
+  }
 }
 
 // ---- Student: Class Courses ----
@@ -300,7 +327,7 @@ const detailItem = ref<TeachInfo | null>(null)
 const detailFields = computed(() => {
   const item = detailItem.value
   if (!item) return []
-  return [
+  const fields = [
     { label: t('curriculum.columnCourseName'), value: item.courseName },
     { label: t('curriculum.columnCredit'), value: item.credit },
     { label: t('curriculum.columnCourseHour'), value: item.courseHour },
@@ -318,6 +345,21 @@ const detailFields = computed(() => {
     { label: t('curriculum.columnBuilding'), value: item.building },
     { label: t('curriculum.columnClassroom'), value: item.classroom },
   ]
+  // 公选课（选课活动）内联字段：解耦后课表视图直接携带，无需再调 selection 接口合并
+  if (isPublicCourse(item)) {
+    fields.push(
+      {
+        label: t('curriculum.columnCampaignStatus'),
+        value: campaignStatusLabel(item.campaignStatus),
+      },
+      {
+        label: t('curriculum.columnCampaignCapacity'),
+        value: `${item.selectedCount} / ${item.capacity}`,
+      },
+      { label: t('curriculum.columnClassNo'), value: item.classNo },
+    )
+  }
+  return fields
 })
 
 function openDetail(item: TeachInfo) {
