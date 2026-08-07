@@ -97,12 +97,13 @@ function handleSemesterChange(id: number | null) {
 const stats = computed(() => {
   const list = scores.value
   const total = list.length
-  const courseSet = new Set<number>()
+  // 公选课成绩行 courseId 为 null，改按 courseName 去重统计课程数
+  const courseSet = new Set<string>()
   let sum = 0
   let pass = 0
   let fail = 0
   for (const s of list) {
-    courseSet.add(s.courseId)
+    courseSet.add(s.courseName)
     sum += s.totalScore
     if (s.totalScore >= 60) pass++
     else fail++
@@ -351,8 +352,7 @@ const profileSubjectOption = computed<EChartsOption>(() => {
   const subjects = profile.value?.subjects ?? []
   return {
     tooltip: { ...chartTooltip, trigger: 'axis' },
-    legend: { top: 0, textStyle: chartAxisTextStyle },
-    grid: { top: 40, right: 16, bottom: 8, left: 8, ...chartGrid },
+    grid: { top: 24, right: 16, bottom: 8, left: 8, ...chartGrid },
     xAxis: {
       type: 'category',
       data: subjects.map((s) => s.courseName),
@@ -363,43 +363,22 @@ const profileSubjectOption = computed<EChartsOption>(() => {
       },
       axisLine: chartAxisLine,
     },
-    yAxis: [
-      {
-        type: 'value',
-        name: t('analysis.pfGradePoint'),
-        min: 0,
-        max: 5,
-        axisLabel: chartAxisTextStyle,
-        splitLine: chartSplitLine,
-        axisLine: chartAxisLine,
-      },
-      {
-        type: 'value',
-        name: t('analysis.pfScore'),
-        min: 0,
-        max: 100,
-        axisLabel: chartAxisTextStyle,
-        splitLine: { show: false },
-        axisLine: chartAxisLine,
-      },
-    ],
+    yAxis: {
+      type: 'value',
+      name: t('analysis.pfScore'),
+      min: 0,
+      max: 100,
+      axisLabel: chartAxisTextStyle,
+      splitLine: chartSplitLine,
+      axisLine: chartAxisLine,
+    },
     series: [
       {
-        name: t('analysis.pfGradePoint'),
+        name: t('analysis.pfScore'),
         type: 'line',
         symbol: 'circle',
         symbolSize: 7,
         itemStyle: { color: '#2080f0' },
-        lineStyle: { width: 3 },
-        data: subjects.map((s) => s.gradePoint),
-      },
-      {
-        name: t('analysis.pfScore'),
-        type: 'line',
-        yAxisIndex: 1,
-        symbol: 'circle',
-        symbolSize: 7,
-        itemStyle: { color: '#18a058' },
         lineStyle: { width: 3 },
         data: subjects.map((s) => s.totalScore),
       },
