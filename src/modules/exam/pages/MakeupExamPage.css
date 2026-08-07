@@ -2,6 +2,11 @@
   padding: 16px;
 }
 
+/* 不及格名单为空时，空状态图标下移，避免与上方查询区域视觉重合 */
+.candidates-empty {
+  margin-top: 24px;
+}
+
 .chart-card {
   margin-top: 16px;
 }
