@@ -24,6 +24,7 @@ import {
 } from 'naive-ui'
 import { createExam, updateExam, deleteExam, fetchExams, fetchClassCourseOptions } from '../api'
 import { fetchCourses } from '@/modules/course/api'
+import { courseKey, parseCourseKey, isPublicCourse } from '@/modules/course/utils'
 import { fetchAllSemesters } from '@/modules/curriculum/api'
 import { fetchLocals } from '@/modules/locals/api'
 import { fetchClassNames } from '@/modules/class-names/api'
@@ -46,7 +47,7 @@ const message = useMessage()
 const loading = ref(false)
 const data = ref<ExamView[]>([])
 
-const courseOptions = ref<Array<{ label: string; value: number }>>([])
+const courseOptions = ref<Array<{ label: string; value: string }>>([])
 const semesterOptions = ref<Array<{ label: string; value: number }>>([])
 const classOptions = ref<Array<{ label: string; value: number }>>([])
 const localOptions = ref<Array<{ label: string; value: number }>>([])
@@ -56,7 +57,7 @@ const classCourseOptions = ref<ClassCourseOptionDto[]>([])
 const loadingCourses = ref(false)
 
 const filterSemesterId = ref<number | null>(null)
-const filterCourseId = ref<number | null>(null)
+const filterCourseKey = ref<string | null>(null)
 const filterExamType = ref<ExamTypeCode | null>(null)
 
 const examTypeOptions = computed(() => [
@@ -103,7 +104,11 @@ async function loadDropdowns() {
       fetchClassNames(),
       fetchLocals(),
     ])
-    courseOptions.value = courseRes.data.map((c: Course) => ({ label: c.courseName, value: c.id }))
+    courseOptions.value = courseRes.data.map((c: Course) => ({
+      label: isPublicCourse(c) ? `${c.courseName}（${t('common.publicTag')}）` : c.courseName,
+      // 公选课与常规课 id 可能重复，用 (source:id) 复合值作 option value
+      value: courseKey(c.id, c.source),
+    }))
     semesterOptions.value = semRes.data.map((s: Semester) => ({ label: s.name, value: s.id }))
     classOptions.value = classRes.data.map((c: ClassName) => ({ label: c.className, value: c.id }))
     localOptions.value = localRes.data.map((l: Local) => ({
@@ -118,9 +123,11 @@ async function loadDropdowns() {
 async function loadData() {
   loading.value = true
   try {
+    const sel = filterCourseKey.value ? parseCourseKey(filterCourseKey.value) : null
     const res = await fetchExams({
       semesterId: filterSemesterId.value ?? undefined,
-      courseId: filterCourseId.value ?? undefined,
+      courseId: sel?.id,
+      source: sel?.source === 'SELECTION_CAMPAIGN' ? 'SELECTION_CAMPAIGN' : undefined,
       examType: filterExamType.value ?? undefined,
     })
     // 仅展示期末/期中（补考/重修在专门页面）
@@ -135,7 +142,7 @@ async function loadData() {
 
 function handleReset() {
   filterSemesterId.value = null
-  filterCourseId.value = null
+  filterCourseKey.value = null
   filterExamType.value = null
   loadData()
 }
@@ -423,7 +430,7 @@ onMounted(() => {
             style="width: 180px"
           />
           <NSelect
-            v-model:value="filterCourseId"
+            v-model:value="filterCourseKey"
             :options="courseOptions"
             :placeholder="$t('exam.mgCourse')"
             clearable
