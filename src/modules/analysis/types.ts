@@ -152,8 +152,6 @@ export interface EvaluationItemUpdateRequest {
   name?: string
   description?: string
   maxScore?: number
-  /** true: 同步刷新引用本指标的模板快照；false/不传: 模板保留旧快照 */
-  updateTemplates?: boolean
 }
 
 /** 模板-指标关联（含快照） */
