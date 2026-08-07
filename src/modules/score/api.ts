@@ -71,6 +71,7 @@ export function fetchScoreStatistics(
 ): Promise<Result<ScoreStatisticsDto[]>> {
   const params = new URLSearchParams()
   if (query?.courseId != null) params.set('courseId', String(query.courseId))
+  if (query?.source) params.set('source', query.source)
   if (query?.className) params.set('className', query.className)
   if (query?.semesterId != null) params.set('semesterId', String(query.semesterId))
   const qs = params.toString()
