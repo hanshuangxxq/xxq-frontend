@@ -29,6 +29,7 @@ import {
 } from '../api'
 import { fetchClassNames } from '@/modules/class-names/api'
 import { fetchCourses } from '@/modules/course/api'
+import { isPublicCourse } from '@/modules/course/utils'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import type { DraftItem, DraftClassSummary, Semester } from '../types'
 
@@ -129,6 +130,7 @@ async function loadData() {
         value: c.className,
       }))
     courseOptions.value = courseRes.data
+      .filter((c) => !isPublicCourse(c))
       .sort((a, b) => a.courseName.localeCompare(b.courseName, 'zh-CN'))
       .map((c) => ({ label: `${c.courseName} (${c.courseCode})`, value: c.id }))
     teacherOptions.value = teacherRes.data
