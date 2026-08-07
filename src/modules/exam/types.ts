@@ -1,4 +1,5 @@
 import type { ScoreView } from '@/modules/score/types'
+import type { CourseSource } from '@/modules/course/types'
 
 /** 考试类型（响应为中文描述） */
 export type ExamType = '期末考试' | '期中考试' | '补考' | '重修'
@@ -14,7 +15,8 @@ export type ExamStatusCode = 'SCHEDULED' | 'CANCELED' | 'COMPLETED'
 export interface ExamView {
   id: number
   examName: string
-  courseId: number
+  /** 公选课考试行为 null（公选课无 course.id），courseName 仍正常返回 */
+  courseId: number | null
   courseName: string
   /** 期末/期中绑授课安排；补考/重修为 null */
   teachInfoId: number | null
@@ -53,6 +55,8 @@ export interface ExamCreateRequest {
 export interface ExamQuery {
   semesterId?: number
   courseId?: number
+  /** 公选课须传 SELECTION_CAMPAIGN，按 exam.campaign_id 过滤 */
+  source?: CourseSource
   examType?: ExamTypeCode
 }
 
@@ -83,6 +87,8 @@ export interface MakeupCandidateDto {
 
 export interface MakeupCandidateQuery {
   courseId: number
+  /** 公选课须传 SELECTION_CAMPAIGN，按 score.campaign_id 查不及格名单 */
+  source?: CourseSource
   semesterId?: number
 }
 
