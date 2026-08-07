@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, h, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
@@ -18,10 +19,12 @@ import {
 } from 'naive-ui'
 import { fetchCourses, createCourse, updateCourse, deleteCourse } from '../api'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
+import { isPublicCourse } from '../utils'
 import type { Course, CourseForm } from '../types'
 
 const { t } = useI18n()
 const message = useMessage()
+const router = useRouter()
 const { canManageCourses } = useRoleCheck()
 
 const loading = ref(false)
@@ -44,9 +47,11 @@ const columns = computed<DataTableColumns<Course>>(() => {
       key: 'actions',
       width: 140,
       render(row) {
+        // 公选课编辑跳转选课活动详情页（公选课 CRUD 走 /api/selection/campaigns/*，不可调 PUT /courses/{id}）
+        const onEdit = () => (isPublicCourse(row) ? router.push(`/selection/${row.id}`) : startEdit(row))
         return h(NSpace, null, () => [
-          h(NButton, { size: 'small', onClick: () => startEdit(row) }, () => t('course-management.edit')),
-          h(NPopconfirm, { onPositiveClick: () => handleDelete(row.id) }, {
+          h(NButton, { size: 'small', onClick: onEdit }, () => t('course-management.edit')),
+          h(NPopconfirm, { onPositiveClick: () => handleDelete(row) }, {
             default: () => t('course-management.deleteConfirm'),
             trigger: () => h(NButton, { size: 'small', type: 'error' }, () => t('course-management.delete')),
           }),
@@ -121,9 +126,10 @@ async function handleSave() {
   }
 }
 
-async function handleDelete(id: number) {
+async function handleDelete(row: Course) {
   try {
-    await deleteCourse(id)
+    // 公选课必须带 source=SELECTION_CAMPAIGN，否则可能误删同 id 的常规课
+    await deleteCourse(row.id, row.source ?? undefined)
     message.success(t('course-management.deleteSuccess'))
     await loadData()
   } catch (e) {
