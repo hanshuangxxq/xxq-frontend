@@ -13,7 +13,6 @@
   "pfClassRank": "Class Rank",
   "pfClassSize": "Class Size",
   "pfSubjectTrend": "Scores by Subject",
-  "pfGradePoint": "Grade Point",
   "pfScore": "Score",
   "pfNoCurrentSemester": "No current semester data",
   "pfEmpty": "No profile data",
@@ -128,8 +127,6 @@
   "evItemEmpty": "No items",
   "evItemNameRequired": "Please enter item name",
   "evItemMaxScoreRange": "Max score range 1-100",
-  "evUpdateTemplates": "Sync to referencing templates",
-  "evUpdateTemplatesHint": "When enabled, name/maxScore changes sync to all templates referencing this item (affects future submissions). Submitted evaluations are not affected.",
 
   "evTemplates": "Evaluation Templates",
   "evTemplateName": "Template Name",
