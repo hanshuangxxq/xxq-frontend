@@ -13,7 +13,6 @@
   "pfClassRank": "班级排名",
   "pfClassSize": "班级人数",
   "pfSubjectTrend": "分科目成绩",
-  "pfGradePoint": "绩点",
   "pfScore": "成绩",
   "pfNoCurrentSemester": "暂无当前学期数据",
   "pfEmpty": "暂无画像数据",
@@ -128,8 +127,6 @@
   "evItemEmpty": "暂无指标",
   "evItemNameRequired": "请输入指标名称",
   "evItemMaxScoreRange": "满分范围 1-100",
-  "evUpdateTemplates": "同步更新引用模板",
-  "evUpdateTemplatesHint": "开启后，名称/满分变更将同步刷新所有引用本指标的模板快照（影响后续新提交）；已提交评教不受影响",
 
   "evTemplates": "评教模板",
   "evTemplateName": "模板名称",
