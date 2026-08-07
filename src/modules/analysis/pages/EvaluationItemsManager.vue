@@ -11,7 +11,6 @@ import {
   NFormItem,
   NInput,
   NInputNumber,
-  NSwitch,
   NPopconfirm,
   NSpin,
   NEmpty,
@@ -98,14 +97,12 @@ interface ItemForm {
   name: string
   description: string
   maxScore: number
-  updateTemplates: boolean
 }
 
 const emptyForm = (): ItemForm => ({
   name: '',
   description: '',
   maxScore: 5,
-  updateTemplates: false,
 })
 const form = ref<ItemForm>(emptyForm())
 
@@ -123,7 +120,6 @@ function startEdit(row: EvaluationItemDto) {
     name: row.name,
     description: row.description ?? '',
     maxScore: row.maxScore,
-    updateTemplates: false,
   }
   showForm.value = true
 }
@@ -147,7 +143,6 @@ async function handleSave() {
         name,
         description: form.value.description.trim() || undefined,
         maxScore: form.value.maxScore,
-        updateTemplates: form.value.updateTemplates,
       })
     }
     message.success(t('analysis.evSubmitSuccess'))
@@ -213,12 +208,6 @@ onMounted(loadData)
       <NFormItem :label="$t('analysis.evItemMaxScore')">
         <NInputNumber v-model:value="form.maxScore" :min="1" :max="100" style="width: 160px" />
       </NFormItem>
-      <NFormItem v-if="formMode === 'edit'" :label="$t('analysis.evUpdateTemplates')">
-        <NSpace vertical :size="4">
-          <NSwitch v-model:value="form.updateTemplates" />
-          <span class="form-hint">{{ $t('analysis.evUpdateTemplatesHint') }}</span>
-        </NSpace>
-      </NFormItem>
     </NForm>
     <template #footer>
       <NSpace justify="end">
@@ -230,8 +219,6 @@ onMounted(loadData)
     </template>
   </NModal>
 </template>
-
-<style scoped src="./EvaluationItemsManager.css"></style>
 
 <style>
 .eval-item-form-modal {
