@@ -33,5 +33,12 @@
   "weekLabel": "教学周：",
   "weekUnit": "第{n}周",
   "blockedSlot": "禁止排课",
-  "reservedFor": "预留课程"
+  "reservedFor": "预留课程",
+  "columnCampaignStatus": "选课状态",
+  "columnCampaignCapacity": "选课人数",
+  "columnClassNo": "教学班号",
+  "campaignStatusDraft": "草稿",
+  "campaignStatusOpen": "开放中",
+  "campaignStatusClosed": "已关闭",
+  "campaignStatusFinalized": "已分班"
 }
