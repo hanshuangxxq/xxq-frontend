@@ -10,6 +10,7 @@ import {
   NForm,
   NFormItem,
   NInput,
+  NSelect,
   NPopconfirm,
   NSpin,
   NEmpty,
@@ -17,8 +18,15 @@ import {
   type DataTableColumns,
 } from 'naive-ui'
 import { fetchLocals, createLocal, updateLocal, deleteLocal } from '../api'
+import { fetchTeachers } from '@/modules/curriculum/api'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
-import type { Local, LocalForm } from '../types'
+import {
+  LOCAL_TYPE_TO_CODE,
+  LOCAL_TYPE_REQUIRES_MANAGER,
+  type Local,
+  type LocalForm,
+  type LocalTypeCode,
+} from '../types'
 
 const { t } = useI18n()
 const message = useMessage()
@@ -27,10 +35,26 @@ const { canManageLocals } = useRoleCheck()
 const loading = ref(false)
 const data = ref<Local[]>([])
 
+/** 类型下拉选项（value 为 code，请求/筛选时传 name） */
+const typeOptions = computed(() => [
+  { label: t('locals.typeClassroom'), value: 'CLASSROOM' as LocalTypeCode },
+  { label: t('locals.typeLaboratory'), value: 'LABORATORY' as LocalTypeCode },
+  { label: t('locals.typeComputerRoom'), value: 'COMPUTER_ROOM' as LocalTypeCode },
+  { label: t('locals.typeLectureHall'), value: 'LECTURE_HALL' as LocalTypeCode },
+])
+
+/** 列表类型筛选（null = 全部） */
+const filterType = ref<LocalTypeCode | null>(null)
+
+/** 管理者教师下拉选项 */
+const teacherOptions = ref<Array<{ label: string; value: number }>>([])
+
 const baseColumns: DataTableColumns<Local> = [
   { title: t('locals.building'), key: 'building', width: 200, ellipsis: { tooltip: true } },
   { title: t('locals.classroom'), key: 'classRoom', width: 120 },
   { title: t('locals.max'), key: 'max', width: 80 },
+  { title: t('locals.type'), key: 'type', width: 100 },
+  { title: t('locals.manager'), key: 'managerName', width: 100 },
 ]
 
 const columns = computed<DataTableColumns<Local>>(() => {
@@ -57,7 +81,7 @@ const columns = computed<DataTableColumns<Local>>(() => {
 async function loadData() {
   loading.value = true
   try {
-    const res = await fetchLocals()
+    const res = await fetchLocals({ type: filterType.value ?? undefined })
     data.value = res.data
   } catch (e) {
     message.error((e as Error).message || t('locals.loadFail'))
@@ -66,13 +90,34 @@ async function loadData() {
   }
 }
 
+async function loadTeachers() {
+  try {
+    const res = await fetchTeachers()
+    teacherOptions.value = res.data
+      .slice()
+      .sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'))
+      .map((tch) => ({ label: `${tch.name} (${tch.title})`, value: tch.id }))
+  } catch (e) {
+    message.error((e as Error).message || t('locals.managerLoadFail'))
+  }
+}
+
 const showForm = ref(false)
 const formMode = ref<'create' | 'edit'>('create')
 const editingId = ref<number | null>(null)
 const saving = ref(false)
 
-const emptyForm = (): LocalForm => ({ building: '', classRoom: '', max: null })
+const emptyForm = (): LocalForm => ({
+  building: '',
+  classRoom: '',
+  max: null,
+  type: 'CLASSROOM',
+  managerId: null,
+})
 const form = ref<LocalForm>(emptyForm())
+
+/** 实验室/机房必须指定管理者 */
+const managerRequired = computed(() => LOCAL_TYPE_REQUIRES_MANAGER.has(form.value.type))
 
 function startCreate() {
   formMode.value = 'create'
@@ -84,11 +129,21 @@ function startCreate() {
 function startEdit(row: Local) {
   formMode.value = 'edit'
   editingId.value = row.id
-  form.value = { building: row.building, classRoom: row.classRoom, max: row.max }
+  form.value = {
+    building: row.building,
+    classRoom: row.classRoom,
+    max: row.max,
+    // 响应 type 为中文描述，转回 code 供下拉选择；未知/缺失降级为普通教室
+    type: row.type ? (LOCAL_TYPE_TO_CODE[row.type] ?? 'CLASSROOM') : 'CLASSROOM',
+    managerId: row.managerId,
+  }
   showForm.value = true
 }
 
 async function handleSave() {
+  if (managerRequired.value && form.value.managerId == null) {
+    return message.warning(t('locals.managerRequired'))
+  }
   saving.value = true
   try {
     if (formMode.value === 'create') {
@@ -116,15 +171,30 @@ async function handleDelete(id: number) {
   }
 }
 
-onMounted(loadData)
+onMounted(() => {
+  loadData()
+  loadTeachers()
+})
 </script>
 
 <template>
   <div class="lm-page">
     <NSpace vertical :size="16">
       <NCard :title="$t('locals.title')">
-        <template v-if="canManageLocals" #header-extra>
-          <NButton type="primary" @click="startCreate">{{ $t('locals.add') }}</NButton>
+        <template #header-extra>
+          <NSpace align="center">
+            <NSelect
+              v-model:value="filterType"
+              :options="typeOptions"
+              :placeholder="$t('locals.allTypes')"
+              clearable
+              class="lm-filter-select"
+              @update:value="loadData"
+            />
+            <NButton v-if="canManageLocals" type="primary" @click="startCreate">
+              {{ $t('locals.add') }}
+            </NButton>
+          </NSpace>
         </template>
         <NSpin :show="loading">
           <NEmpty v-if="!loading && data.length === 0" :description="$t('locals.empty')" />
@@ -159,6 +229,18 @@ onMounted(loadData)
             @update:value="(v: string) => (form.max = v ? parseInt(v, 10) : null)"
           />
         </NFormItem>
+        <NFormItem :label="$t('locals.type')">
+          <NSelect v-model:value="form.type" :options="typeOptions" />
+        </NFormItem>
+        <NFormItem :label="$t('locals.manager')" :required="managerRequired">
+          <NSelect
+            v-model:value="form.managerId"
+            :options="teacherOptions"
+            :placeholder="$t('locals.managerPlaceholder')"
+            clearable
+            filterable
+          />
+        </NFormItem>
       </NForm>
       <template #footer>
         <NSpace justify="end">
@@ -175,6 +257,9 @@ onMounted(loadData)
 <style scoped>
 .lm-page {
   padding: 24px;
+}
+.lm-filter-select {
+  width: 160px;
 }
 </style>
 
