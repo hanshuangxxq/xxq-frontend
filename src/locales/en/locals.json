@@ -17,5 +17,15 @@
   "loadFail": "Failed to load locations",
   "empty": "No locations",
   "createTitle": "Add Location",
-  "editTitle": "Edit Location"
+  "editTitle": "Edit Location",
+  "type": "Type",
+  "typeClassroom": "Classroom",
+  "typeLaboratory": "Laboratory",
+  "typeComputerRoom": "Computer Room",
+  "typeLectureHall": "Lecture Hall",
+  "allTypes": "All Types",
+  "manager": "Manager",
+  "managerPlaceholder": "Select manager teacher",
+  "managerRequired": "Laboratory/Computer Room must specify a manager",
+  "managerLoadFail": "Failed to load teacher list"
 }
