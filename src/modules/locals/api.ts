@@ -1,9 +1,12 @@
 import { api } from '@/shared/api'
 import type { Result } from '@/shared/types'
-import type { Local, LocalForm } from './types'
+import type { Local, LocalForm, LocalQuery } from './types'
 
-export function fetchLocals(): Promise<Result<Local[]>> {
-  return api.get('/locals')
+export function fetchLocals(query?: LocalQuery): Promise<Result<Local[]>> {
+  const params = new URLSearchParams()
+  if (query?.type) params.set('type', query.type)
+  const qs = params.toString()
+  return api.get(`/locals${qs ? `?${qs}` : ''}`)
 }
 
 export function fetchLocal(id: number): Promise<Result<Local>> {
