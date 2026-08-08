@@ -17,5 +17,15 @@
   "loadFail": "加载地点列表失败",
   "empty": "暂无地点",
   "createTitle": "新增地点",
-  "editTitle": "编辑地点"
+  "editTitle": "编辑地点",
+  "type": "类型",
+  "typeClassroom": "普通教室",
+  "typeLaboratory": "实验室",
+  "typeComputerRoom": "机房",
+  "typeLectureHall": "报告厅",
+  "allTypes": "全部类型",
+  "manager": "管理者",
+  "managerPlaceholder": "选择管理者教师",
+  "managerRequired": "实验室/机房必须指定管理者",
+  "managerLoadFail": "加载教师列表失败"
 }
