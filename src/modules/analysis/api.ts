@@ -1,5 +1,5 @@
 import { api } from '@/shared/api'
-import type { Result } from '@/shared/types'
+import type { PageResult, Result } from '@/shared/types'
 import type {
   StudentProfileDto,
   WarningConfigDto,
@@ -46,10 +46,12 @@ export function scanWarnings(): Promise<Result<WarningScanResultDto>> {
   return api.post(`${BASE}/warnings/scan`)
 }
 
-export function fetchWarnings(query?: WarningQuery): Promise<Result<WarningItemDto[]>> {
+export function fetchWarnings(query?: WarningQuery): Promise<Result<PageResult<WarningItemDto>>> {
   const params = new URLSearchParams()
   if (query?.semesterId != null) params.set('semesterId', String(query.semesterId))
   if (query?.level) params.set('level', query.level)
+  if (query?.page != null) params.set('page', String(query.page))
+  if (query?.pageSize != null) params.set('pageSize', String(query.pageSize))
   const qs = params.toString()
   return api.get(`${BASE}/warnings${qs ? `?${qs}` : ''}`)
 }
@@ -182,9 +184,17 @@ export function getTeacherQuality(
   return api.get(`${BASE}/teacher-quality/${teacherId}${qs ? `?${qs}` : ''}`)
 }
 
-export function fetchTeacherQualityList(semesterId?: number): Promise<Result<TeacherQualityDto[]>> {
-  const qs = semesterId != null ? `?semesterId=${semesterId}` : ''
-  return api.get(`${BASE}/teacher-quality${qs}`)
+export function fetchTeacherQualityList(
+  semesterId?: number,
+  page?: number,
+  pageSize?: number,
+): Promise<Result<PageResult<TeacherQualityDto>>> {
+  const params = new URLSearchParams()
+  if (semesterId != null) params.set('semesterId', String(semesterId))
+  if (page != null) params.set('page', String(page))
+  if (pageSize != null) params.set('pageSize', String(pageSize))
+  const qs = params.toString()
+  return api.get(`${BASE}/teacher-quality${qs ? `?${qs}` : ''}`)
 }
 
 // ---- #6 学习进度（学生自查，融入「课表」） ----
