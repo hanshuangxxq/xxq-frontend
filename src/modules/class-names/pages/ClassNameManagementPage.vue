@@ -12,12 +12,12 @@ import {
   NInput,
   NPopconfirm,
   NSpin,
-  NEmpty,
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
 import { fetchClassNames, createClassName, updateClassName, deleteClassName } from '../api'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
+import { useRemotePagination } from '@/shared/composables/useRemotePagination'
 import type { ClassName, ClassNameForm } from '../types'
 
 const { t } = useI18n()
@@ -26,6 +26,7 @@ const { canManageClassNames } = useRoleCheck()
 
 const loading = ref(false)
 const data = ref<ClassName[]>([])
+const { pagination } = useRemotePagination(loadData)
 
 const baseColumns: DataTableColumns<ClassName> = [
   { title: t('class-names.className'), key: 'className', width: 180, ellipsis: { tooltip: true } },
@@ -43,10 +44,15 @@ const columns = computed<DataTableColumns<ClassName>>(() => {
       render(row) {
         return h(NSpace, null, () => [
           h(NButton, { size: 'small', onClick: () => startEdit(row) }, () => t('class-names.edit')),
-          h(NPopconfirm, { onPositiveClick: () => handleDelete(row.id) }, {
-            default: () => t('class-names.deleteConfirm'),
-            trigger: () => h(NButton, { size: 'small', type: 'error' }, () => t('class-names.delete')),
-          }),
+          h(
+            NPopconfirm,
+            { onPositiveClick: () => handleDelete(row.id) },
+            {
+              default: () => t('class-names.deleteConfirm'),
+              trigger: () =>
+                h(NButton, { size: 'small', type: 'error' }, () => t('class-names.delete')),
+            },
+          ),
         ])
       },
     },
@@ -56,10 +62,9 @@ const columns = computed<DataTableColumns<ClassName>>(() => {
 async function loadData() {
   loading.value = true
   try {
-    const res = await fetchClassNames()
-    data.value = res.data.sort((a, b) =>
-      a.className.localeCompare(b.className, 'zh-CN', { numeric: true }),
-    )
+    const res = await fetchClassNames(pagination.page, pagination.pageSize)
+    data.value = res.data.records
+    pagination.itemCount = res.data.total
   } catch (e) {
     message.error((e as Error).message || t('class-names.loadFail'))
   } finally {
@@ -128,15 +133,17 @@ onMounted(loadData)
           <NButton type="primary" @click="startCreate">{{ $t('class-names.add') }}</NButton>
         </template>
         <NSpin :show="loading">
-          <NEmpty v-if="!loading && data.length === 0" :description="$t('class-names.empty')" />
           <NDataTable
-            v-else
             :columns="columns"
             :data="data"
             :row-key="(r: ClassName) => r.id"
             :single-line="false"
             :bordered="false"
-          />
+            remote
+            :pagination="pagination"
+          >
+            <template #empty>{{ $t('class-names.empty') }}</template>
+          </NDataTable>
         </NSpin>
       </NCard>
     </NSpace>
