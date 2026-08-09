@@ -48,4 +48,8 @@ export interface LocalForm {
 export interface LocalQuery {
   /** 按类型筛选，推荐传 name */
   type?: LocalTypeCode
+  /** 页码（从 1 开始） */
+  page?: number
+  /** 每页条数（上限 100） */
+  pageSize?: number
 }
