@@ -19,7 +19,6 @@ import {
   NModal,
   NForm,
   NFormItem,
-  NSelect,
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
@@ -31,11 +30,9 @@ import {
   assignClassTeacher,
 } from '../api'
 import { fetchTeachers } from '@/modules/curriculum/api'
-import type {
-  Campaign,
-  CampaignStatus,
-  SelectionClass,
-} from '../types'
+import PagedSelect from '@/shared/components/PagedSelect.vue'
+import type { Teacher } from '@/modules/curriculum/types'
+import type { Campaign, CampaignStatus, SelectionClass } from '../types'
 
 const { t } = useI18n()
 const message = useMessage()
@@ -135,35 +132,17 @@ function goBack() {
 
 // ---- Teacher assignment ----
 const showTeacherModal = ref(false)
-const teacherLoading = ref(false)
 const savingTeacher = ref(false)
-const teacherOptions = ref<{ label: string; value: number }[]>([])
 const editingClassId = ref<number | null>(null)
 const selectedTeacherId = ref<number | null>(null)
-
-async function loadTeacherOptions() {
-  teacherLoading.value = true
-  try {
-    const res = await fetchTeachers()
-    teacherOptions.value = res.data
-      .slice()
-      .sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'))
-      .map((tch) => {
-        const suffix = tch.title ? ` · ${tch.title}` : ''
-        return { label: `${tch.name}（${tch.teacherNo}）${suffix}`, value: tch.id }
-      })
-  } catch (e) {
-    message.error((e as Error).message || t('selection.loadFail'))
-  } finally {
-    teacherLoading.value = false
-  }
-}
+/** 分配教师弹窗回显用（选中教师不在已加载页时兜底显示） */
+const assignInitialLabel = ref<string | undefined>(undefined)
 
 async function openAssignTeacher(cls: SelectionClass) {
   editingClassId.value = cls.classId
   selectedTeacherId.value = cls.teacherId
+  assignInitialLabel.value = cls.teacherName ?? undefined
   showTeacherModal.value = true
-  await loadTeacherOptions()
 }
 
 async function handleSaveTeacher() {
@@ -214,11 +193,7 @@ onMounted(loadAll)
           <div class="detail-header-left">
             <NButton quaternary @click="goBack">{{ $t('selection.back') }}</NButton>
             <span class="detail-title">{{ campaign?.name }}</span>
-            <NTag
-              v-if="campaign"
-              :type="statusTagType[campaign.status]"
-              :bordered="false"
-            >
+            <NTag v-if="campaign" :type="statusTagType[campaign.status]" :bordered="false">
               {{ $t(`selection.${campaign.status}`) }}
             </NTag>
             <NTag v-if="campaign" type="info" :bordered="false">
@@ -260,7 +235,9 @@ onMounted(loadAll)
             {{ formatDateTime(campaign.endTime) }}
           </NDescriptionsItem>
           <NDescriptionsItem :label="$t('selection.weekRange')">
-            {{ $t('selection.weekRangeValue', { start: campaign.startWeek, end: campaign.endWeek }) }}
+            {{
+              $t('selection.weekRangeValue', { start: campaign.startWeek, end: campaign.endWeek })
+            }}
           </NDescriptionsItem>
           <NDescriptionsItem :label="$t('selection.courseName')">
             {{ campaign.name }}
@@ -295,11 +272,7 @@ onMounted(loadAll)
 
       <NCard :title="$t('selection.classResults')">
         <NSpin :show="loading">
-          <NAlert
-            v-if="campaign && campaign.status !== 'FINALIZED'"
-            type="info"
-            :show-icon="false"
-          >
+          <NAlert v-if="campaign && campaign.status !== 'FINALIZED'" type="info" :show-icon="false">
             {{ $t('selection.noClassResults') }}
           </NAlert>
           <NEmpty
@@ -315,19 +288,16 @@ onMounted(loadAll)
             >
               <template #header-extra>
                 <NSpace :size="8" align="center" @click.stop>
-                  <NTag
-                    v-if="cls.teacherName"
-                    size="small"
-                    type="info"
-                    :bordered="false"
-                  >
+                  <NTag v-if="cls.teacherName" size="small" type="info" :bordered="false">
                     {{ $t('selection.teacher') }}: {{ cls.teacherName }}
                   </NTag>
                   <NTag v-else size="small" type="warning" :bordered="false">
                     {{ $t('selection.unassignedTeacher') }}
                   </NTag>
                   <NButton size="small" @click="openAssignTeacher(cls)">
-                    {{ cls.teacherId ? $t('selection.changeTeacher') : $t('selection.assignTeacher') }}
+                    {{
+                      cls.teacherId ? $t('selection.changeTeacher') : $t('selection.assignTeacher')
+                    }}
                   </NButton>
                   <NPopconfirm
                     v-if="cls.teacherId"
@@ -365,13 +335,21 @@ onMounted(loadAll)
     >
       <NForm label-placement="top">
         <NFormItem :label="$t('selection.teacher')">
-          <NSelect
-            v-model:value="selectedTeacherId"
-            :options="teacherOptions"
-            :loading="teacherLoading"
+          <PagedSelect
+            :model-value="selectedTeacherId"
+            :fetch-page="(page: number, pageSize: number) => fetchTeachers(page, pageSize)"
+            :label-of="
+              (tch: Teacher) =>
+                `${tch.name}（${tch.teacherNo}）${tch.title ? ` · ${tch.title}` : ''}`
+            "
+            :value-of="(tch: Teacher) => tch.id"
+            :initial-label="assignInitialLabel"
             :placeholder="$t('selection.teacherPlaceholder')"
             clearable
-            filterable
+            @update:model-value="
+              (v: string | number | null | Array<string | number>) =>
+                (selectedTeacherId = v as number | null)
+            "
           />
         </NFormItem>
       </NForm>
