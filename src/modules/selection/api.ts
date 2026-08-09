@@ -1,5 +1,5 @@
 import { api } from '@/shared/api'
-import type { Result } from '@/shared/types'
+import type { PageResult, Result } from '@/shared/types'
 import type {
   Campaign,
   CampaignForm,
@@ -12,8 +12,15 @@ import type {
 } from './types'
 
 // ---- Admin: Campaign ----
-export function fetchCampaigns(): Promise<Result<Campaign[]>> {
-  return api.get('/selection/campaigns')
+export function fetchCampaigns(
+  page?: number,
+  pageSize?: number,
+): Promise<Result<PageResult<Campaign>>> {
+  const params = new URLSearchParams()
+  if (page != null) params.set('page', String(page))
+  if (pageSize != null) params.set('pageSize', String(pageSize))
+  const qs = params.toString()
+  return api.get(`/selection/campaigns${qs ? `?${qs}` : ''}`)
 }
 
 export function fetchCampaign(id: number): Promise<Result<Campaign>> {
@@ -24,10 +31,7 @@ export function createCampaign(body: CampaignForm): Promise<Result<Campaign>> {
   return api.post('/selection/campaigns', body)
 }
 
-export function updateCampaign(
-  id: number,
-  body: Partial<CampaignForm>,
-): Promise<Result<Campaign>> {
+export function updateCampaign(id: number, body: Partial<CampaignForm>): Promise<Result<Campaign>> {
   return api.put(`/selection/campaigns/${id}`, body)
 }
 
@@ -48,8 +52,15 @@ export function finalizeCampaign(id: number): Promise<Result<null>> {
 }
 
 // ---- Admin: Selection Groups (independent CRUD) ----
-export function fetchAllGroups(): Promise<Result<SelectionGroup[]>> {
-  return api.get('/selection/groups')
+export function fetchAllGroups(
+  page?: number,
+  pageSize?: number,
+): Promise<Result<PageResult<SelectionGroup>>> {
+  const params = new URLSearchParams()
+  if (page != null) params.set('page', String(page))
+  if (pageSize != null) params.set('pageSize', String(pageSize))
+  const qs = params.toString()
+  return api.get(`/selection/groups${qs ? `?${qs}` : ''}`)
 }
 
 export function fetchGroup(groupId: number): Promise<Result<SelectionGroup>> {
