@@ -58,6 +58,10 @@ export interface ExamQuery {
   /** 公选课须传 SELECTION_CAMPAIGN，按 exam.campaign_id 过滤 */
   source?: CourseSource
   examType?: ExamTypeCode
+  /** 页码（从 1 开始） */
+  page?: number
+  /** 每页条数（上限 100） */
+  pageSize?: number
 }
 
 /** 按班级查询可排考课程的选项（建考用，含 teachInfoId/courseId）。 */
