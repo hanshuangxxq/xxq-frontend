@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, h, onMounted } from 'vue'
+import { ref, computed, h, reactive, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
@@ -18,6 +18,7 @@ import {
 import type { EChartsOption } from 'echarts'
 import BaseChart from '@/shared/components/BaseChart.vue'
 import StatCard from '@/shared/components/StatCard.vue'
+import { fetchAllPages } from '@/shared/pagination'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import { getMyTeacherQuality, fetchTeacherQualityList } from '../api'
 import { fetchAllSemesters } from '@/modules/curriculum/api'
@@ -113,12 +114,19 @@ async function loadMyQuality() {
 // ---- 管理员/院系：列表 + 对比 ----
 const listLoading = ref(false)
 const list = ref<TeacherQualityDto[]>([])
+/** 列表本地分页（对比柱状图需全集，故分块拉全量后客户端分页） */
+const listPagination = reactive({
+  pageSize: 20,
+  showSizePicker: true,
+  pageSizes: [10, 20, 50],
+})
 
 async function loadList() {
   listLoading.value = true
   try {
-    const res = await fetchTeacherQualityList(filterSemesterId.value ?? undefined)
-    list.value = res.data
+    list.value = await fetchAllPages((page, pageSize) =>
+      fetchTeacherQualityList(filterSemesterId.value ?? undefined, page, pageSize),
+    )
   } catch (e) {
     message.error((e as Error).message || t('analysis.tqLoadFail'))
     list.value = []
@@ -307,6 +315,7 @@ onMounted(() => {
               :single-line="false"
               :bordered="false"
               :scroll-x="1000"
+              :pagination="listPagination"
             />
           </NSpin>
         </NCard>
