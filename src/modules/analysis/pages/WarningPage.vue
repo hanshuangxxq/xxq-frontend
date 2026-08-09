@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, h, onMounted } from 'vue'
+import { ref, computed, h, reactive, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
@@ -29,6 +29,7 @@ import {
   scanWarnings,
 } from '../api'
 import { fetchAllSemesters } from '@/modules/curriculum/api'
+import { fetchAllPages } from '@/shared/pagination'
 import type { Semester } from '@/modules/curriculum/types'
 import type { WarningItemDto, WarningConfigDto, WarningLevelCode } from '../types'
 import {
@@ -65,6 +66,12 @@ const dashWarnings = ref<WarningItemDto[]>([])
 const semesterOptions = ref<Array<{ label: string; value: number }>>([])
 const filterSemesterId = ref<number | null>(null)
 const filterLevel = ref<WarningLevelCode | null>(null)
+/** 看板表格本地分页（数据需全集以汇总各级别数量，故全量拉取后客户端分页） */
+const dashPagination = reactive({
+  pageSize: 20,
+  showSizePicker: true,
+  pageSizes: [10, 20, 50],
+})
 
 const levelOptions = computed(() => [
   { label: t('analysis.wrnYellow'), value: 'YELLOW' as WarningLevelCode },
@@ -84,11 +91,16 @@ async function loadSemesters() {
 async function loadDashboard() {
   dashLoading.value = true
   try {
-    const res = await fetchWarnings({
-      semesterId: filterSemesterId.value ?? undefined,
-      level: filterLevel.value ?? undefined,
-    })
-    dashWarnings.value = res.data
+    // 看板顶部「按级别汇总」依赖全集，故分块拉全量后客户端分页
+    const all = await fetchAllPages((page, pageSize) =>
+      fetchWarnings({
+        semesterId: filterSemesterId.value ?? undefined,
+        level: filterLevel.value ?? undefined,
+        page,
+        pageSize,
+      }),
+    )
+    dashWarnings.value = all
   } catch (e) {
     message.error((e as Error).message || t('analysis.wrnLoadFail'))
     dashWarnings.value = []
@@ -398,6 +410,7 @@ onMounted(() => {
                   :single-line="false"
                   :bordered="false"
                   :scroll-x="1400"
+                  :pagination="dashPagination"
                 />
               </NSpin>
             </NCard>
