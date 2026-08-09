@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, h, onMounted } from 'vue'
+import { ref, computed, h, reactive, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
@@ -16,7 +16,6 @@ import {
   NInputNumber,
   NTag,
   NSpin,
-  NEmpty,
   NPopconfirm,
   NAlert,
   useMessage,
@@ -28,6 +27,8 @@ import { courseKey, parseCourseKey, isPublicCourse } from '@/modules/course/util
 import { fetchAllSemesters } from '@/modules/curriculum/api'
 import { fetchLocals } from '@/modules/locals/api'
 import { fetchClassNames } from '@/modules/class-names/api'
+import { fetchAllPages } from '@/shared/pagination'
+import PagedSelect from '@/shared/components/PagedSelect.vue'
 import type { Course } from '@/modules/course/types'
 import type { Semester } from '@/modules/curriculum/types'
 import type { Local } from '@/modules/locals/types'
@@ -46,15 +47,33 @@ const message = useMessage()
 
 const loading = ref(false)
 const data = ref<ExamView[]>([])
+/** 考试列表本地分页（需客户端过滤补考/重修，故分块拉全量后客户端分页） */
+const examPagination = reactive({
+  pageSize: 20,
+  showSizePicker: true,
+  pageSizes: [10, 20, 50],
+})
 
-const courseOptions = ref<Array<{ label: string; value: string }>>([])
 const semesterOptions = ref<Array<{ label: string; value: number }>>([])
-const classOptions = ref<Array<{ label: string; value: number }>>([])
-const localOptions = ref<Array<{ label: string; value: number }>>([])
 
 /** 当前所选班级的可排考课程（由后端按班级在库中查询返回） */
 const classCourseOptions = ref<ClassCourseOptionDto[]>([])
 const loadingCourses = ref(false)
+
+/** classId -> className 缓存：PagedSelect 翻页时累积，供保存时由 classId 反查 className */
+const classNameById = ref<Record<number, string>>({})
+/** 编辑时考试行无 classId，记录原 className 供不改班级时回填 */
+const editingClassName = ref<string | null>(null)
+/** 编辑回显地点下拉用 */
+const editingLocalLabel = ref<string | undefined>(undefined)
+
+/** 拉班级分页并累积 classId->className 映射，供 PagedSelect 与保存逻辑共用 */
+function fetchClassNamesTracked(page: number, pageSize: number) {
+  return fetchClassNames(page, pageSize).then((res) => {
+    for (const c of res.data.records) classNameById.value[c.id] = c.className
+    return res
+  })
+}
 
 const filterSemesterId = ref<number | null>(null)
 const filterCourseKey = ref<string | null>(null)
@@ -96,25 +115,10 @@ function statusToCode(status: string): ExamStatusCode | null {
   }
 }
 
-async function loadDropdowns() {
+async function loadSemesters() {
   try {
-    const [courseRes, semRes, classRes, localRes] = await Promise.all([
-      fetchCourses(),
-      fetchAllSemesters(),
-      fetchClassNames(),
-      fetchLocals(),
-    ])
-    courseOptions.value = courseRes.data.map((c: Course) => ({
-      label: isPublicCourse(c) ? `${c.courseName}（${t('common.publicTag')}）` : c.courseName,
-      // 公选课与常规课 id 可能重复，用 (source:id) 复合值作 option value
-      value: courseKey(c.id, c.source),
-    }))
+    const semRes = await fetchAllSemesters()
     semesterOptions.value = semRes.data.map((s: Semester) => ({ label: s.name, value: s.id }))
-    classOptions.value = classRes.data.map((c: ClassName) => ({ label: c.className, value: c.id }))
-    localOptions.value = localRes.data.map((l: Local) => ({
-      label: `${l.building} ${l.classRoom}`,
-      value: l.id,
-    }))
   } catch {
     // 非阻塞
   }
@@ -124,14 +128,19 @@ async function loadData() {
   loading.value = true
   try {
     const sel = filterCourseKey.value ? parseCourseKey(filterCourseKey.value) : null
-    const res = await fetchExams({
-      semesterId: filterSemesterId.value ?? undefined,
-      courseId: sel?.id,
-      source: sel?.source === 'SELECTION_CAMPAIGN' ? 'SELECTION_CAMPAIGN' : undefined,
-      examType: filterExamType.value ?? undefined,
-    })
+    // 服务端 examType 无法表达「期末或期中、排除补考」，故分块拉全量后客户端过滤+分页
+    const all = await fetchAllPages((page, pageSize) =>
+      fetchExams({
+        semesterId: filterSemesterId.value ?? undefined,
+        courseId: sel?.id,
+        source: sel?.source === 'SELECTION_CAMPAIGN' ? 'SELECTION_CAMPAIGN' : undefined,
+        examType: filterExamType.value ?? undefined,
+        page,
+        pageSize,
+      }),
+    )
     // 仅展示期末/期中（补考/重修在专门页面）
-    data.value = res.data.filter((e) => e.examType === '期末考试' || e.examType === '期中考试')
+    data.value = all.filter((e) => e.examType === '期末考试' || e.examType === '期中考试')
   } catch (e) {
     message.error((e as Error).message || t('exam.mgLoadFail'))
     data.value = []
@@ -267,6 +276,8 @@ function startCreate() {
   formMode.value = 'create'
   editingId.value = null
   form.value = emptyForm()
+  editingClassName.value = null
+  editingLocalLabel.value = undefined
   classCourseOptions.value = []
   showForm.value = true
 }
@@ -274,10 +285,12 @@ function startCreate() {
 async function startEdit(row: ExamView) {
   formMode.value = 'edit'
   editingId.value = row.id
-  const cls = classOptions.value.find((c) => c.label === row.className)
+  // 考试行无 classId，编辑时班级置空；不改班级则保留原 className（见 handleSave）
+  editingClassName.value = row.className ?? null
+  editingLocalLabel.value = row.localName ?? undefined
   form.value = {
     examName: row.examName,
-    classId: cls ? cls.value : null,
+    classId: null,
     teachInfoId: row.teachInfoId,
     courseId: row.courseId,
     semesterId: row.semesterId,
@@ -290,17 +303,30 @@ async function startEdit(row: ExamView) {
     notes: row.notes ?? '',
     status: statusToCode(row.status),
   }
-  classCourseOptions.value = []
+  // 用考试行合成当前授课安排选项，回显已有 teachInfo（考试行无 classId，无法按班级重拉）
+  classCourseOptions.value =
+    row.teachInfoId != null
+      ? [
+          {
+            teachInfoId: row.teachInfoId,
+            courseId: row.courseId ?? 0,
+            courseName: row.courseName,
+            teacherName: null,
+            className: row.className ?? '',
+            semesterId: row.semesterId,
+            semesterName: '',
+          },
+        ]
+      : []
   showForm.value = true
-  if (cls) {
-    await loadClassCourses(cls.value)
-  }
 }
 
 async function handleSave() {
   const f = form.value
   if (!f.examName.trim()) return message.warning(t('exam.mgExamNameRequired'))
-  if (f.classId == null) return message.warning(t('exam.mgClassRequired'))
+  // 编辑时班级可不改（classId 为空表示沿用原班级）
+  if (formMode.value === 'create' && f.classId == null)
+    return message.warning(t('exam.mgClassRequired'))
   if (f.teachInfoId == null || f.courseId == null)
     return message.warning(t('exam.mgCourseRequired'))
   if (f.semesterId == null) return message.warning(t('exam.mgSemesterRequired'))
@@ -310,13 +336,14 @@ async function handleSave() {
     return message.warning(t('exam.mgDurationRequired'))
   }
 
-  // 排考班级取所选班级的单班级名
-  const cls = classOptions.value.find((c) => c.value === f.classId)
+  // 排考班级：改选了班级取新班级名，未改则沿用原 className
+  const className =
+    f.classId != null ? (classNameById.value[f.classId] ?? null) : (editingClassName.value ?? null)
   const body: ExamCreateRequest = {
     examName: f.examName.trim(),
     courseId: f.courseId,
     teachInfoId: f.teachInfoId,
-    className: cls?.label ?? null,
+    className,
     examType: f.examType,
     semesterId: f.semesterId,
     examDate: tsToDateStr(f.examDateTs),
@@ -412,7 +439,7 @@ const columns = computed<DataTableColumns<ExamView>>(() => [
 ])
 
 onMounted(() => {
-  loadDropdowns()
+  loadSemesters()
   loadData()
 })
 </script>
@@ -429,13 +456,21 @@ onMounted(() => {
             clearable
             style="width: 180px"
           />
-          <NSelect
-            v-model:value="filterCourseKey"
-            :options="courseOptions"
+          <PagedSelect
+            :model-value="filterCourseKey"
+            :fetch-page="(page: number, pageSize: number) => fetchCourses(page, pageSize)"
+            :label-of="
+              (c: Course) =>
+                isPublicCourse(c) ? `${c.courseName}（${t('common.publicTag')}）` : c.courseName
+            "
+            :value-of="(c: Course) => courseKey(c.id, c.source)"
             :placeholder="$t('exam.mgCourse')"
             clearable
-            filterable
             style="width: 180px"
+            @update:model-value="
+              (v: string | number | null | Array<string | number>) =>
+                (filterCourseKey = (v as string) ?? null)
+            "
           />
           <NSelect
             v-model:value="filterExamType"
@@ -453,16 +488,17 @@ onMounted(() => {
 
       <NCard>
         <NSpin :show="loading">
-          <NEmpty v-if="!loading && data.length === 0" :description="$t('exam.mgEmpty')" />
           <NDataTable
-            v-else
             :columns="columns"
             :data="data"
             :row-key="(r: ExamView) => r.id"
             :single-line="false"
             :bordered="false"
             :scroll-x="1450"
-          />
+            :pagination="examPagination"
+          >
+            <template #empty>{{ $t('exam.mgEmpty') }}</template>
+          </NDataTable>
         </NSpin>
       </NCard>
     </NSpace>
@@ -479,12 +515,17 @@ onMounted(() => {
         </NFormItem>
         <NSpace :size="12" wrap>
           <NFormItem :label="$t('exam.mgClass')" required style="width: 240px">
-            <NSelect
-              :value="form.classId"
-              :options="classOptions"
-              :placeholder="$t('exam.mgClassPlaceholder')"
+            <PagedSelect
+              :model-value="form.classId"
+              :fetch-page="fetchClassNamesTracked"
+              :label-of="(c: ClassName) => c.className"
+              :value-of="(c: ClassName) => c.id"
+              :placeholder="editingClassName || $t('exam.mgClassPlaceholder')"
               filterable
-              @update:value="onClassChange"
+              @update:model-value="
+                (v: string | number | null | Array<string | number>) =>
+                  onClassChange(v as number | null)
+              "
             />
           </NFormItem>
           <NFormItem :label="$t('exam.mgExamType')" required style="width: 160px">
@@ -535,12 +576,19 @@ onMounted(() => {
         </NSpace>
         <NSpace :size="12" wrap>
           <NFormItem :label="$t('exam.mgLocal')" style="width: 240px">
-            <NSelect
-              v-model:value="form.localId"
-              :options="localOptions"
+            <PagedSelect
+              :model-value="form.localId"
+              :fetch-page="(page: number, pageSize: number) => fetchLocals({ page, pageSize })"
+              :label-of="(l: Local) => `${l.building} ${l.classRoom}`"
+              :value-of="(l: Local) => l.id"
+              :initial-label="editingLocalLabel"
               :placeholder="$t('exam.mgLocalPlaceholder')"
-              filterable
               clearable
+              filterable
+              @update:model-value="
+                (v: string | number | null | Array<string | number>) =>
+                  (form.localId = v as number | null)
+              "
             />
           </NFormItem>
           <NFormItem :label="$t('exam.mgStatus')" style="width: 180px">
