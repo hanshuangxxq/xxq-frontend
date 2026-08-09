@@ -1,9 +1,16 @@
 import { api } from '@/shared/api'
-import type { Result } from '@/shared/types'
+import type { PageResult, Result } from '@/shared/types'
 import type { ClassName, ClassNameForm } from './types'
 
-export function fetchClassNames(): Promise<Result<ClassName[]>> {
-  return api.get('/class-names')
+export function fetchClassNames(
+  page?: number,
+  pageSize?: number,
+): Promise<Result<PageResult<ClassName>>> {
+  const params = new URLSearchParams()
+  if (page != null) params.set('page', String(page))
+  if (pageSize != null) params.set('pageSize', String(pageSize))
+  const qs = params.toString()
+  return api.get(`/class-names${qs ? `?${qs}` : ''}`)
 }
 
 export function fetchClassName(id: number): Promise<Result<ClassName>> {
