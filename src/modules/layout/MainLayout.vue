@@ -256,6 +256,63 @@ const menuOptions = computed(() => {
       icon: renderSvgIcon(evaluateTeachingSvg),
     })
   }
+  // 实践与创新
+  if (authStore.user?.userType === 'teacher') {
+    items.push({
+      label: t('practice.graduation.mgTitle'),
+      key: '/practice/graduation',
+      icon: renderSvgIcon(reviewSvg),
+    })
+    items.push({
+      label: t('practice.internship.mgTitle'),
+      key: '/practice/internship',
+      icon: renderSvgIcon(courseSvg),
+    })
+  }
+  if (authStore.user?.userType === 'academic_admin') {
+    items.push({
+      label: t('practice.graduation.mgTitle'),
+      key: '/practice/graduation',
+      icon: renderSvgIcon(reviewSvg),
+    })
+    items.push({
+      label: t('practice.internship.mgTitle'),
+      key: '/practice/internship',
+      icon: renderSvgIcon(courseSvg),
+    })
+    items.push({
+      label: t('practice.competition.mgTitle'),
+      key: '/practice/competition',
+      icon: renderSvgIcon(couSelSvg),
+    })
+    items.push({
+      label: t('practice.socialPractice.mgTitle'),
+      key: '/practice/social-practice',
+      icon: renderSvgIcon(informationSvg),
+    })
+  }
+  if (authStore.user?.userType === 'student') {
+    items.push({
+      label: t('practice.graduation.myTitle'),
+      key: '/practice/graduation/my',
+      icon: renderSvgIcon(reviewSvg),
+    })
+    items.push({
+      label: t('practice.internship.myTitle'),
+      key: '/practice/internship/my',
+      icon: renderSvgIcon(courseSvg),
+    })
+    items.push({
+      label: t('practice.competition.myTitle'),
+      key: '/practice/competition/my',
+      icon: renderSvgIcon(couSelSvg),
+    })
+    items.push({
+      label: t('practice.socialPractice.myTitle'),
+      key: '/practice/social-practice/my',
+      icon: renderSvgIcon(informationSvg),
+    })
+  }
   return items
 })
 
@@ -291,8 +348,10 @@ async function handleLogout() {
   try {
     await authStore.logout()
     showLogoutConfirm.value = false
-    router.push('/login')
+    // 先跳转到登录页,跳转完成前不清空用户,避免当前页面的角色守卫短暂显示「无权限」
+    await router.replace('/login')
   } finally {
+    authStore.clearSession()
     loggingOut.value = false
   }
 }
