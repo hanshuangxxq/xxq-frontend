@@ -1,5 +1,5 @@
 import { api } from '@/shared/api'
-import type { Result } from '@/shared/types'
+import type { PageResult, Result } from '@/shared/types'
 import type {
   NotificationResponse,
   NotificationStatus,
@@ -14,11 +14,18 @@ export const notificationApi = {
     return result.data.count
   },
 
-  /** 消息列表（按创建时间倒序） */
-  async getList(status?: NotificationStatus): Promise<NotificationResponse[]> {
-    const query = status ? `?status=${encodeURIComponent(status)}` : ''
-    const result = await api.get<Result<NotificationResponse[]>>(`/notification/list${query}`)
-    return result.data
+  /** 消息列表（按创建时间倒序，分页） */
+  async getListPage(
+    status?: NotificationStatus,
+    page?: number,
+    pageSize?: number,
+  ): Promise<Result<PageResult<NotificationResponse>>> {
+    const params = new URLSearchParams()
+    if (status) params.set('status', status)
+    if (page != null) params.set('page', String(page))
+    if (pageSize != null) params.set('pageSize', String(pageSize))
+    const qs = params.toString()
+    return api.get(`/notification/list${qs ? `?${qs}` : ''}`)
   },
 
   /** 标记单条已读 */
