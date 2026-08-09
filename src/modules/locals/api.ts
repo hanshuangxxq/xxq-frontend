@@ -1,10 +1,12 @@
 import { api } from '@/shared/api'
-import type { Result } from '@/shared/types'
+import type { PageResult, Result } from '@/shared/types'
 import type { Local, LocalForm, LocalQuery } from './types'
 
-export function fetchLocals(query?: LocalQuery): Promise<Result<Local[]>> {
+export function fetchLocals(query?: LocalQuery): Promise<Result<PageResult<Local>>> {
   const params = new URLSearchParams()
   if (query?.type) params.set('type', query.type)
+  if (query?.page != null) params.set('page', String(query.page))
+  if (query?.pageSize != null) params.set('pageSize', String(query.pageSize))
   const qs = params.toString()
   return api.get(`/locals${qs ? `?${qs}` : ''}`)
 }
