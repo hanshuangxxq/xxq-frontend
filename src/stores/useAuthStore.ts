@@ -23,6 +23,9 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isLoggedIn = computed(() => user.value !== null)
 
+  /** 登出流程进行中:路由守卫据此允许已登录用户进入 /login,以便先跳转再清理会话 */
+  const isLoggingOut = ref(false)
+
   async function doRefresh(): Promise<RefreshOutcome> {
     const rt = refreshToken.value
     if (!rt) return 'auth_failed'
@@ -63,18 +66,30 @@ export const useAuthStore = defineStore('auth', () => {
     saveUser(session)
   }
 
+  /** 通知后端登出;即使请求失败(如后端不可达)也要继续本地登出流程 */
   async function logout() {
+    isLoggingOut.value = true
     try {
       await authApi.logout()
-    } finally {
-      user.value = null
-      clearTokens()
+    } catch {
+      // 忽略登出接口错误,本地会话仍会清空
     }
+  }
+
+  /**
+   * 清空本地会话(用户与 token)。
+   * 必须在跳转到登录页之后再调用:若跳转前清空用户,当前页面的角色守卫会因角色消失
+   * 而短暂渲染「无权限」页面。
+   */
+  function clearSession() {
+    user.value = null
+    clearTokens()
+    isLoggingOut.value = false
   }
 
   function persistUser() {
     if (user.value) saveUser(user.value)
   }
 
-  return { user, isLoggedIn, login, logout, persistUser }
+  return { user, isLoggedIn, isLoggingOut, login, logout, clearSession, persistUser }
 })
