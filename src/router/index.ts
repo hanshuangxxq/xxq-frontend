@@ -145,6 +145,46 @@ const routes: RouteRecordRaw[] = [
         name: 'AnalysisTeacherQuality',
         component: () => import('@/modules/analysis/pages/TeacherQualityPage.vue'),
       },
+      {
+        path: 'practice/graduation',
+        name: 'PracticeGraduation',
+        component: () => import('@/modules/practice/pages/GraduationManagementPage.vue'),
+      },
+      {
+        path: 'practice/graduation/my',
+        name: 'PracticeGraduationMy',
+        component: () => import('@/modules/practice/pages/GraduationStudentPage.vue'),
+      },
+      {
+        path: 'practice/internship',
+        name: 'PracticeInternship',
+        component: () => import('@/modules/practice/pages/InternshipManagementPage.vue'),
+      },
+      {
+        path: 'practice/internship/my',
+        name: 'PracticeInternshipMy',
+        component: () => import('@/modules/practice/pages/InternshipStudentPage.vue'),
+      },
+      {
+        path: 'practice/competition',
+        name: 'PracticeCompetition',
+        component: () => import('@/modules/practice/pages/CompetitionManagementPage.vue'),
+      },
+      {
+        path: 'practice/competition/my',
+        name: 'PracticeCompetitionMy',
+        component: () => import('@/modules/practice/pages/CompetitionStudentPage.vue'),
+      },
+      {
+        path: 'practice/social-practice',
+        name: 'PracticeSocialPractice',
+        component: () => import('@/modules/practice/pages/SocialPracticeManagementPage.vue'),
+      },
+      {
+        path: 'practice/social-practice/my',
+        name: 'PracticeSocialPracticeMy',
+        component: () => import('@/modules/practice/pages/SocialPracticeStudentPage.vue'),
+      },
     ],
   },
   ...authRoutes,
@@ -162,7 +202,8 @@ router.beforeEach((to) => {
     return '/login'
   }
 
-  if (authStore.isLoggedIn && WHITELIST.includes(to.path)) {
+  // 登出流程中允许已登录用户进入 /login(先跳转再清空会话,避免旧页面闪现无权限)
+  if (authStore.isLoggedIn && WHITELIST.includes(to.path) && !authStore.isLoggingOut) {
     return '/profile'
   }
 })
