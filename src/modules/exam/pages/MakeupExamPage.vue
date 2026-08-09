@@ -31,6 +31,7 @@ import { fetchCourses } from '@/modules/course/api'
 import { courseKey, parseCourseKey, isPublicCourse } from '@/modules/course/utils'
 import { fetchAllSemesters } from '@/modules/curriculum/api'
 import { fetchLocals } from '@/modules/locals/api'
+import PagedSelect from '@/shared/components/PagedSelect.vue'
 import type { Course } from '@/modules/course/types'
 import type { Semester } from '@/modules/curriculum/types'
 import type { Local } from '@/modules/locals/types'
@@ -45,11 +46,15 @@ import { calcDurationMinutes } from '../utils'
 const { t } = useI18n()
 const message = useMessage()
 
-const courseOptions = ref<Array<{ label: string; value: string }>>([])
-/** 建补考/重修考试仅支持常规课（公选课无 course.id，后端建考请求体未含 campaignId） */
-const createCourseOptions = ref<Array<{ label: string; value: number }>>([])
 const semesterOptions = ref<Array<{ label: string; value: number }>>([])
-const localOptions = ref<Array<{ label: string; value: number }>>([])
+
+/** 建补考/重修考试仅支持常规课（公选课无 course.id）；端点不支持按 source 过滤，故按页客户端过滤 */
+function fetchRegularCourses(page: number, pageSize: number) {
+  return fetchCourses(page, pageSize).then((res) => ({
+    ...res,
+    data: { ...res.data, records: res.data.records.filter((c) => !isPublicCourse(c)) },
+  }))
+}
 
 // ---- 候选名单 ----
 const candCourseKey = ref<string | null>(null)
@@ -377,25 +382,8 @@ const makeupListColumns = computed<DataTableColumns<ExamView>>(() => [
 
 async function loadDropdowns() {
   try {
-    const [courseRes, semRes, localRes] = await Promise.all([
-      fetchCourses(),
-      fetchAllSemesters(),
-      fetchLocals(),
-    ])
-    courseOptions.value = courseRes.data.map((c: Course) => ({
-      label: isPublicCourse(c) ? `${c.courseName}（${t('common.publicTag')}）` : c.courseName,
-      // 公选课与常规课 id 可能重复，用 (source:id) 复合值作 option value
-      value: courseKey(c.id, c.source),
-    }))
-    // 建补考表单仅列常规课（公选课不支持建补考）
-    createCourseOptions.value = courseRes.data
-      .filter((c) => !isPublicCourse(c))
-      .map((c) => ({ label: c.courseName, value: c.id }))
+    const semRes = await fetchAllSemesters()
     semesterOptions.value = semRes.data.map((s: Semester) => ({ label: s.name, value: s.id }))
-    localOptions.value = localRes.data.map((l: Local) => ({
-      label: `${l.building} ${l.classRoom}`,
-      value: l.id,
-    }))
   } catch {
     // 非阻塞
   }
@@ -417,12 +405,20 @@ onMounted(() => {
           </NButton>
         </template>
         <NSpace align="center" :size="12" wrap>
-          <NSelect
-            v-model:value="candCourseKey"
-            :options="courseOptions"
+          <PagedSelect
+            :model-value="candCourseKey"
+            :fetch-page="(page: number, pageSize: number) => fetchCourses(page, pageSize)"
+            :label-of="
+              (c: Course) =>
+                isPublicCourse(c) ? `${c.courseName}（${t('common.publicTag')}）` : c.courseName
+            "
+            :value-of="(c: Course) => courseKey(c.id, c.source)"
             :placeholder="$t('exam.mkCandidateCoursePlaceholder')"
-            filterable
             style="width: 220px"
+            @update:model-value="
+              (v: string | number | null | Array<string | number>) =>
+                (candCourseKey = (v as string) ?? null)
+            "
           />
           <NSelect
             v-model:value="candSemesterId"
@@ -499,7 +495,16 @@ onMounted(() => {
         </NFormItem>
         <NSpace :size="12" wrap>
           <NFormItem :label="$t('exam.mkCourse')" required style="width: 220px">
-            <NSelect v-model:value="createForm.courseId" :options="createCourseOptions" filterable />
+            <PagedSelect
+              :model-value="createForm.courseId"
+              :fetch-page="fetchRegularCourses"
+              :label-of="(c: Course) => c.courseName"
+              :value-of="(c: Course) => c.id"
+              @update:model-value="
+                (v: string | number | null | Array<string | number>) =>
+                  (createForm.courseId = v as number | null)
+              "
+            />
           </NFormItem>
           <NFormItem :label="$t('exam.mkExamType')" required style="width: 140px">
             <NSelect v-model:value="createForm.examType" :options="makeupTypeOptions" />
@@ -539,12 +544,17 @@ onMounted(() => {
           </NFormItem>
         </NSpace>
         <NFormItem :label="$t('exam.mkLocal')">
-          <NSelect
-            v-model:value="createForm.localId"
-            :options="localOptions"
-            filterable
+          <PagedSelect
+            :model-value="createForm.localId"
+            :fetch-page="(page: number, pageSize: number) => fetchLocals({ page, pageSize })"
+            :label-of="(l: Local) => `${l.building} ${l.classRoom}`"
+            :value-of="(l: Local) => l.id"
             clearable
             style="width: 240px"
+            @update:model-value="
+              (v: string | number | null | Array<string | number>) =>
+                (createForm.localId = v as number | null)
+            "
           />
         </NFormItem>
         <NFormItem :label="$t('exam.mkNotes')">
