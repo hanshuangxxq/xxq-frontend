@@ -17,7 +17,6 @@ import {
   NDatePicker,
   NPopconfirm,
   NSpin,
-  NEmpty,
   NTag,
   NDivider,
   useMessage,
@@ -34,13 +33,10 @@ import {
 } from '../api'
 import { fetchAllSemesters } from '@/modules/curriculum/api'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
+import { useRemotePagination } from '@/shared/composables/useRemotePagination'
+import PagedSelect from '@/shared/components/PagedSelect.vue'
 import { useLocaleStore } from '@/stores/useLocaleStore'
-import type {
-  Campaign,
-  CampaignForm,
-  CampaignStatus,
-  SelectionGroup,
-} from '../types'
+import type { Campaign, CampaignForm, CampaignStatus, SelectionGroup } from '../types'
 import type { Semester } from '@/modules/curriculum/types'
 import CampaignCreateModal from '../components/CampaignCreateModal.vue'
 import GroupManagementModal from '../components/GroupManagementModal.vue'
@@ -60,15 +56,9 @@ const dateLocale = computed(() => localeStore.naiveConfig().dateLocale)
 const loading = ref(false)
 const data = ref<Campaign[]>([])
 const semesters = ref<Semester[]>([])
-const groups = ref<SelectionGroup[]>([])
+const { pagination } = useRemotePagination(loadData)
 
-const semesterOptions = computed(() =>
-  semesters.value.map((s) => ({ label: s.name, value: s.id })),
-)
-
-const groupOptions = computed(() =>
-  groups.value.map((g) => ({ label: g.name, value: g.id })),
-)
+const semesterOptions = computed(() => semesters.value.map((s) => ({ label: s.name, value: s.id })))
 
 const statusTagType: Record<CampaignStatus, 'default' | 'info' | 'warning' | 'success'> = {
   DRAFT: 'default',
@@ -88,14 +78,13 @@ function isExpired(endTime: string): boolean {
 async function loadData() {
   loading.value = true
   try {
-    const [campaignRes, semesterRes, groupRes] = await Promise.all([
-      fetchCampaigns(),
+    const [campaignRes, semesterRes] = await Promise.all([
+      fetchCampaigns(pagination.page, pagination.pageSize),
       fetchAllSemesters(),
-      fetchAllGroups(),
     ])
-    data.value = campaignRes.data
+    data.value = campaignRes.data.records
+    pagination.itemCount = campaignRes.data.total
     semesters.value = semesterRes.data
-    groups.value = groupRes.data
   } catch (e) {
     message.error((e as Error).message || t('selection.loadFail'))
   } finally {
@@ -138,10 +127,8 @@ const columns = computed<DataTableColumns<Campaign>>(() => [
     width: 100,
     align: 'center',
     render(row) {
-      return h(
-        NTag,
-        { type: statusTagType[row.status], bordered: false },
-        () => t(`selection.${row.status}`),
+      return h(NTag, { type: statusTagType[row.status], bordered: false }, () =>
+        t(`selection.${row.status}`),
       )
     },
   },
@@ -210,10 +197,8 @@ const columns = computed<DataTableColumns<Campaign>>(() => [
       }
       if (row.status === 'FINALIZED') {
         buttons.push(
-          h(
-            NButton,
-            { size: 'small', quaternary: true, onClick: () => goDetail(row.id) },
-            () => t('selection.viewClasses'),
+          h(NButton, { size: 'small', quaternary: true, onClick: () => goDetail(row.id) }, () =>
+            t('selection.viewClasses'),
           ),
         )
       }
@@ -411,19 +396,18 @@ onMounted(loadData)
           </NSpace>
         </template>
         <NSpin :show="loading">
-          <NEmpty
-            v-if="!loading && data.length === 0"
-            :description="$t('selection.empty')"
-          />
           <NDataTable
-            v-else
             :columns="columns"
             :data="data"
             :row-key="(r: Campaign) => r.id"
             :single-line="false"
             :bordered="false"
             :scroll-x="1500"
-          />
+            remote
+            :pagination="pagination"
+          >
+            <template #empty>{{ $t('selection.empty') }}</template>
+          </NDataTable>
         </NSpin>
       </NCard>
     </NSpace>
@@ -438,10 +422,7 @@ onMounted(loadData)
         <NDivider title-placement="left">{{ $t('selection.section.basicInfo') }}</NDivider>
         <NGrid :cols="2" :x-gap="16" :y-gap="0">
           <NFormItemGi :span="2" :label="$t('selection.name')" required>
-            <NInput
-              v-model:value="form.name"
-              :placeholder="$t('selection.namePlaceholder')"
-            />
+            <NInput v-model:value="form.name" :placeholder="$t('selection.namePlaceholder')" />
           </NFormItemGi>
           <NFormItemGi :label="$t('selection.semester')" required>
             <NSelect
@@ -534,11 +515,17 @@ onMounted(loadData)
         <NDivider title-placement="left">{{ $t('selection.section.binding') }}</NDivider>
         <NGrid :cols="2" :x-gap="16" :y-gap="0">
           <NFormItemGi :span="2" :label="$t('selection.group')">
-            <NSelect
-              v-model:value="form.groupId"
-              :options="groupOptions"
+            <PagedSelect
+              :model-value="form.groupId ?? null"
+              :fetch-page="(page: number, pageSize: number) => fetchAllGroups(page, pageSize)"
+              :label-of="(g: SelectionGroup) => g.name"
+              :value-of="(g: SelectionGroup) => g.id"
               :placeholder="$t('selection.groupKeepBindingPlaceholder')"
               clearable
+              @update:model-value="
+                (v: string | number | null | Array<string | number>) =>
+                  (form.groupId = v as number | null)
+              "
             />
           </NFormItemGi>
         </NGrid>
@@ -556,14 +543,10 @@ onMounted(loadData)
     <CampaignCreateModal
       v-model:show="showCreateModal"
       :semesters="semesters"
-      :groups="groups"
       @success="loadData"
     />
 
-    <GroupManagementModal
-      v-model:show="showGroupModal"
-      @changed="loadData"
-    />
+    <GroupManagementModal v-model:show="showGroupModal" @changed="loadData" />
   </div>
 </template>
 
