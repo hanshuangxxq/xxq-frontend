@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, h, onMounted, type VNode } from 'vue'
+import { ref, computed, h, reactive, onMounted, type VNode } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
@@ -28,6 +28,7 @@ import {
   type DataTableColumns,
 } from 'naive-ui'
 import StatCard from '@/shared/components/StatCard.vue'
+import { fetchAllPages } from '@/shared/pagination'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import {
   applyReview,
@@ -48,6 +49,12 @@ const { isStudent, isTeacher, isAcademicAdmin } = useRoleCheck()
 const loading = ref(false)
 const reviews = ref<ReviewView[]>([])
 const statusFilter = ref<ReviewStatusCode | null>(null)
+/** 列表本地分页（状态计数带需全集，故分块拉全量后客户端分页） */
+const reviewPagination = reactive({
+  pageSize: 20,
+  showSizePicker: true,
+  pageSizes: [10, 20, 50],
+})
 
 const STATUS_CODE_MAP: Record<ReviewStatus, ReviewStatusCode> = {
   待教师处理: 'PENDING',
@@ -70,11 +77,31 @@ const statusOptions = computed(() => [
 ])
 
 const statusCards = computed(() => [
-  { code: 'PENDING' as ReviewStatusCode, label: t('score.statusPending'), tone: 'warning' as const },
-  { code: 'TEACHER_REPLIED' as ReviewStatusCode, label: t('score.statusTeacherReplied'), tone: 'primary' as const },
-  { code: 'ESCALATED' as ReviewStatusCode, label: t('score.statusEscalated'), tone: 'default' as const },
-  { code: 'RESOLVED' as ReviewStatusCode, label: t('score.statusResolved'), tone: 'success' as const },
-  { code: 'REJECTED' as ReviewStatusCode, label: t('score.statusRejected'), tone: 'error' as const },
+  {
+    code: 'PENDING' as ReviewStatusCode,
+    label: t('score.statusPending'),
+    tone: 'warning' as const,
+  },
+  {
+    code: 'TEACHER_REPLIED' as ReviewStatusCode,
+    label: t('score.statusTeacherReplied'),
+    tone: 'primary' as const,
+  },
+  {
+    code: 'ESCALATED' as ReviewStatusCode,
+    label: t('score.statusEscalated'),
+    tone: 'default' as const,
+  },
+  {
+    code: 'RESOLVED' as ReviewStatusCode,
+    label: t('score.statusResolved'),
+    tone: 'success' as const,
+  },
+  {
+    code: 'REJECTED' as ReviewStatusCode,
+    label: t('score.statusRejected'),
+    tone: 'error' as const,
+  },
 ])
 
 function countOf(code: ReviewStatusCode): number {
@@ -93,9 +120,15 @@ function toggleStatusFilter(code: ReviewStatusCode) {
 async function loadData() {
   loading.value = true
   try {
-    // 统一全量拉取，状态在前端筛选，保证统计带计数准确
-    const res = isStudent.value ? await fetchMyReviews() : await fetchReviewTodos()
-    reviews.value = res.data
+    if (isStudent.value) {
+      const res = await fetchMyReviews()
+      reviews.value = res.data
+    } else {
+      // 统计带计数需全集，故分块拉全量后客户端分页
+      reviews.value = await fetchAllPages((page, pageSize) =>
+        fetchReviewTodos(undefined, page, pageSize),
+      )
+    }
   } catch (e) {
     message.error((e as Error).message || t('score.rvLoadFail'))
     reviews.value = []
@@ -264,12 +297,27 @@ const columns = computed<DataTableColumns<ReviewView>>(() => {
       render: (r) => `${r.studentName}（${r.studentNo}）`,
     })
   }
-  cols.push({ title: t('score.rvCourse'), key: 'courseName', width: 150, ellipsis: { tooltip: true } })
+  cols.push({
+    title: t('score.rvCourse'),
+    key: 'courseName',
+    width: 150,
+    ellipsis: { tooltip: true },
+  })
   if (!isStudent.value) {
     cols.push({ title: t('score.rvTeacher'), key: 'teacherName', width: 100 })
   }
-  cols.push({ title: t('score.rvCurrentScore'), key: 'currentTotalScore', width: 90, align: 'center' })
-  cols.push({ title: t('score.rvReason'), key: 'reason', minWidth: 160, ellipsis: { tooltip: true } })
+  cols.push({
+    title: t('score.rvCurrentScore'),
+    key: 'currentTotalScore',
+    width: 90,
+    align: 'center',
+  })
+  cols.push({
+    title: t('score.rvReason'),
+    key: 'reason',
+    minWidth: 160,
+    ellipsis: { tooltip: true },
+  })
   if (isAcademicAdmin.value) {
     cols.push({
       title: t('score.rvAdminReply'),
@@ -284,7 +332,8 @@ const columns = computed<DataTableColumns<ReviewView>>(() => {
     key: 'status',
     width: 110,
     align: 'center',
-    render: (r) => h(NTag, { type: statusTagType(r.status), size: 'small', bordered: false }, () => r.status),
+    render: (r) =>
+      h(NTag, { type: statusTagType(r.status), size: 'small', bordered: false }, () => r.status),
   })
   cols.push({
     title: t('score.rvApplyTime'),
@@ -309,7 +358,11 @@ const columns = computed<DataTableColumns<ReviewView>>(() => {
               trigger: () =>
                 h(
                   NButton,
-                  { size: 'small', type: 'warning', onClick: (e: MouseEvent) => e.stopPropagation() },
+                  {
+                    size: 'small',
+                    type: 'warning',
+                    onClick: (e: MouseEvent) => e.stopPropagation(),
+                  },
                   () => t('score.rvEscalate'),
                 ),
             },
@@ -320,7 +373,14 @@ const columns = computed<DataTableColumns<ReviewView>>(() => {
         btns.push(
           h(
             NButton,
-            { size: 'small', type: 'primary', onClick: (e: MouseEvent) => { e.stopPropagation(); openReply(row) } },
+            {
+              size: 'small',
+              type: 'primary',
+              onClick: (e: MouseEvent) => {
+                e.stopPropagation()
+                openReply(row)
+              },
+            },
             () => t('score.rvReply'),
           ),
         )
@@ -329,13 +389,22 @@ const columns = computed<DataTableColumns<ReviewView>>(() => {
         btns.push(
           h(
             NButton,
-            { size: 'small', type: 'primary', onClick: (e: MouseEvent) => { e.stopPropagation(); openResolve(row) } },
+            {
+              size: 'small',
+              type: 'primary',
+              onClick: (e: MouseEvent) => {
+                e.stopPropagation()
+                openResolve(row)
+              },
+            },
             () => t('score.rvResolve'),
           ),
         )
       }
       if (btns.length === 0) {
-        return h(NButton, { size: 'small', tertiary: true, onClick: () => openDetail(row) }, () => t('score.rvViewDetail'))
+        return h(NButton, { size: 'small', tertiary: true, onClick: () => openDetail(row) }, () =>
+          t('score.rvViewDetail'),
+        )
       }
       return h(NSpace, { size: 8 }, () => btns)
     },
@@ -389,7 +458,10 @@ onMounted(() => {
         </template>
         <div class="filter-hint">{{ $t('score.rvClickFilter') }}</div>
         <NSpin :show="loading">
-          <NEmpty v-if="!loading && filteredReviews.length === 0" :description="$t('score.rvEmpty')" />
+          <NEmpty
+            v-if="!loading && filteredReviews.length === 0"
+            :description="$t('score.rvEmpty')"
+          />
           <NDataTable
             v-else
             :columns="columns"
@@ -399,6 +471,7 @@ onMounted(() => {
             :single-line="false"
             :bordered="false"
             :scroll-x="1100"
+            :pagination="reviewPagination"
           />
         </NSpin>
       </NCard>
@@ -411,9 +484,15 @@ onMounted(() => {
           <NDescriptionsItem v-if="!isStudent" :label="$t('score.rvStudent')">
             {{ selected.studentName }}（{{ selected.studentNo }}）
           </NDescriptionsItem>
-          <NDescriptionsItem :label="$t('score.rvCourse')">{{ selected.courseName }}</NDescriptionsItem>
-          <NDescriptionsItem :label="$t('score.rvTeacher')">{{ selected.teacherName }}</NDescriptionsItem>
-          <NDescriptionsItem :label="$t('score.rvCurrentScore')">{{ selected.currentTotalScore }}</NDescriptionsItem>
+          <NDescriptionsItem :label="$t('score.rvCourse')">{{
+            selected.courseName
+          }}</NDescriptionsItem>
+          <NDescriptionsItem :label="$t('score.rvTeacher')">{{
+            selected.teacherName
+          }}</NDescriptionsItem>
+          <NDescriptionsItem :label="$t('score.rvCurrentScore')">{{
+            selected.currentTotalScore
+          }}</NDescriptionsItem>
           <NDescriptionsItem :label="$t('score.rvStatus')">
             <NTag :type="statusTagType(selected.status)" size="small" :bordered="false">
               {{ selected.status }}
@@ -466,7 +545,9 @@ onMounted(() => {
               {{ $t('score.rvEscalateConfirm') }}
             </NPopconfirm>
             <NButton
-              v-if="isTeacher && (selected.status === '待教师处理' || selected.status === '教师已回复')"
+              v-if="
+                isTeacher && (selected.status === '待教师处理' || selected.status === '教师已回复')
+              "
               type="primary"
               @click="openReply(selected)"
             >
@@ -485,7 +566,12 @@ onMounted(() => {
     </NDrawer>
 
     <!-- 申请复核 -->
-    <NModal v-model:show="showApply" preset="card" :title="$t('score.rvApplyTitle')" class="rv-modal">
+    <NModal
+      v-model:show="showApply"
+      preset="card"
+      :title="$t('score.rvApplyTitle')"
+      class="rv-modal"
+    >
       <NForm>
         <NFormItem :label="$t('score.rvSelectScore')" required>
           <NSelect
@@ -515,7 +601,12 @@ onMounted(() => {
     </NModal>
 
     <!-- 教师回复 -->
-    <NModal v-model:show="showReply" preset="card" :title="$t('score.rvReplyTitle')" class="rv-modal">
+    <NModal
+      v-model:show="showReply"
+      preset="card"
+      :title="$t('score.rvReplyTitle')"
+      class="rv-modal"
+    >
       <NForm>
         <NFormItem :label="$t('score.rvReply')" required>
           <NInput
@@ -541,7 +632,12 @@ onMounted(() => {
     </NModal>
 
     <!-- 教务终审 -->
-    <NModal v-model:show="showResolve" preset="card" :title="$t('score.rvResolveTitle')" class="rv-modal">
+    <NModal
+      v-model:show="showResolve"
+      preset="card"
+      :title="$t('score.rvResolveTitle')"
+      class="rv-modal"
+    >
       <NForm>
         <NFormItem :label="$t('score.rvReply')" required>
           <NInput
