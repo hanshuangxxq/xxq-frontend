@@ -6,5 +6,12 @@
   "nav": {
     "home": "首页"
   },
+  "pagedSelect": {
+    "prev": "上一页",
+    "next": "下一页",
+    "pageInfo": "第 {page}/{pages} 页",
+    "loading": "加载中…",
+    "empty": "无数据"
+  },
   "publicTag": "公选"
 }
