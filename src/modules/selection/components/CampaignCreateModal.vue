@@ -16,8 +16,9 @@ import {
   useMessage,
   type SelectOption,
 } from 'naive-ui'
-import { createCampaign } from '../api'
+import { createCampaign, fetchAllGroups } from '../api'
 import { useLocaleStore } from '@/stores/useLocaleStore'
+import PagedSelect from '@/shared/components/PagedSelect.vue'
 import type { CampaignForm, SelectionGroup } from '../types'
 import type { Semester } from '@/modules/curriculum/types'
 
@@ -30,7 +31,6 @@ const PUBLIC_ELECTIVE_COURSE_TYPE = '公选'
 const props = defineProps<{
   show: boolean
   semesters: Semester[]
-  groups: SelectionGroup[]
 }>()
 
 const emit = defineEmits<{
@@ -47,10 +47,6 @@ const saving = ref(false)
 
 const semesterOptions = computed<SelectOption[]>(() =>
   props.semesters.map((s) => ({ label: s.name, value: s.id })),
-)
-
-const groupOptions = computed<SelectOption[]>(() =>
-  props.groups.map((g) => ({ label: g.name, value: g.id })),
 )
 
 function emptyForm(): CampaignForm {
@@ -96,7 +92,11 @@ function validate(): string | null {
   if (form.value.endWeek == null || form.value.endWeek <= 0) {
     return t('selection.endWeekRequired')
   }
-  if (form.value.startWeek != null && form.value.endWeek != null && form.value.startWeek > form.value.endWeek) {
+  if (
+    form.value.startWeek != null &&
+    form.value.endWeek != null &&
+    form.value.startWeek > form.value.endWeek
+  ) {
     return t('selection.endWeekAfterStartWeek')
   }
   if (!form.value.courseCode) return t('selection.courseCodeRequired')
@@ -249,10 +249,17 @@ async function handleSubmit() {
       <NDivider title-placement="left">{{ $t('selection.section.binding') }}</NDivider>
       <NGrid :cols="2" :x-gap="16" :y-gap="0">
         <NFormItemGi :span="2" :label="$t('selection.group')">
-          <NSelect
-            v-model:value="form.groupId"
-            :options="groupOptions"
+          <PagedSelect
+            :model-value="form.groupId ?? null"
+            :fetch-page="(page: number, pageSize: number) => fetchAllGroups(page, pageSize)"
+            :label-of="(g: SelectionGroup) => g.name"
+            :value-of="(g: SelectionGroup) => g.id"
             :placeholder="$t('selection.groupNonePlaceholder')"
+            clearable
+            @update:model-value="
+              (v: string | number | null | Array<string | number>) =>
+                (form.groupId = v as number | null)
+            "
           />
         </NFormItemGi>
       </NGrid>
