@@ -1,0 +1,6 @@
+.empty-state-icon {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* 颜色继承自 .n-empty__icon 的 --n-icon-color，fill=currentColor 取此值 */
+}
