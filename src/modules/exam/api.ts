@@ -1,5 +1,5 @@
 import { api } from '@/shared/api'
-import type { Result } from '@/shared/types'
+import type { PageResult, Result } from '@/shared/types'
 import type {
   ExamView,
   ExamCreateRequest,
@@ -26,12 +26,14 @@ export function deleteExam(id: number): Promise<Result<null>> {
   return api.delete(`/exams/${id}`)
 }
 
-export function fetchExams(query?: ExamQuery): Promise<Result<ExamView[]>> {
+export function fetchExams(query?: ExamQuery): Promise<Result<PageResult<ExamView>>> {
   const params = new URLSearchParams()
   if (query?.semesterId != null) params.set('semesterId', String(query.semesterId))
   if (query?.courseId != null) params.set('courseId', String(query.courseId))
   if (query?.source) params.set('source', query.source)
   if (query?.examType) params.set('examType', query.examType)
+  if (query?.page != null) params.set('page', String(query.page))
+  if (query?.pageSize != null) params.set('pageSize', String(query.pageSize))
   const qs = params.toString()
   return api.get(`/exams${qs ? `?${qs}` : ''}`)
 }
