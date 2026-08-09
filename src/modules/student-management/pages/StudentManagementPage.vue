@@ -13,20 +13,23 @@ import {
   NInputNumber,
   NSelect,
   NSpin,
-  NEmpty,
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
 import { fetchStudents, updateStudent, fetchMajors } from '../api'
 import { fetchClassNames } from '@/modules/class-names/api'
 import { fetchGrades } from '@/modules/grades/api'
+import { useRemotePagination } from '@/shared/composables/useRemotePagination'
+import PagedSelect from '@/shared/components/PagedSelect.vue'
 import type { Student, StudentQuery, StudentUpdateForm } from '../types'
+import type { ClassName } from '@/modules/class-names/types'
 
 const { t } = useI18n()
 const message = useMessage()
 
 const loading = ref(false)
 const data = ref<Student[]>([])
+const { pagination, reset } = useRemotePagination(loadData)
 
 const filterName = ref('')
 const filterGradeId = ref<number | null>(null)
@@ -40,20 +43,33 @@ const unassignedOptions = computed(() => [
 
 const columns: DataTableColumns<Student> = [
   { title: t('student-management.name'), key: 'name', width: 100, ellipsis: { tooltip: true } },
-  { title: t('student-management.studentNo'), key: 'studentNo', width: 130, ellipsis: { tooltip: true } },
-  { title: t('student-management.className'), key: 'className', width: 140, ellipsis: { tooltip: true } },
+  {
+    title: t('student-management.studentNo'),
+    key: 'studentNo',
+    width: 130,
+    ellipsis: { tooltip: true },
+  },
+  {
+    title: t('student-management.className'),
+    key: 'className',
+    width: 140,
+    ellipsis: { tooltip: true },
+  },
   { title: t('student-management.grade'), key: 'gradeName', width: 100 },
-  { title: t('student-management.major'), key: 'majorName', width: 180, ellipsis: { tooltip: true } },
+  {
+    title: t('student-management.major'),
+    key: 'majorName',
+    width: 180,
+    ellipsis: { tooltip: true },
+  },
   { title: t('student-management.enrollmentYear'), key: 'enrollmentYear', width: 110 },
   {
     title: t('student-management.actions'),
     key: 'actions',
     width: 100,
     render(row) {
-      return h(
-        NButton,
-        { size: 'small', onClick: () => startEdit(row) },
-        () => t('student-management.edit'),
+      return h(NButton, { size: 'small', onClick: () => startEdit(row) }, () =>
+        t('student-management.edit'),
       )
     },
   },
@@ -62,19 +78,28 @@ const columns: DataTableColumns<Student> = [
 async function loadData() {
   loading.value = true
   try {
-    const q: StudentQuery = {}
+    const q: StudentQuery = {
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+    }
     if (filterName.value) q.name = filterName.value
     if (filterGradeId.value != null) q.gradeId = filterGradeId.value
     if (filterClassName.value) q.className = filterClassName.value
     if (filterMajor.value) q.major = filterMajor.value
     if (filterUnassigned.value !== null) q.unassigned = true
     const res = await fetchStudents(q)
-    data.value = res.data
+    data.value = res.data.records
+    pagination.itemCount = res.data.total
   } catch (e) {
     message.error((e as Error).message || t('student-management.loadFail'))
   } finally {
     loading.value = false
   }
+}
+
+function handleQuery() {
+  reset()
+  loadData()
 }
 
 function handleReset() {
@@ -83,6 +108,7 @@ function handleReset() {
   filterClassName.value = ''
   filterMajor.value = ''
   filterUnassigned.value = null
+  reset()
   loadData()
 }
 
@@ -136,18 +162,12 @@ async function handleSave() {
   }
 }
 
-const classOptions = ref<Array<{ label: string; value: string }>>([])
 const majorOptions = ref<Array<{ label: string; value: string }>>([])
 const gradeOptions = ref<Array<{ label: string; value: number }>>([])
 
 async function loadDropdownData() {
   try {
-    const [classRes, majorRes, gradeRes] = await Promise.all([
-      fetchClassNames(),
-      fetchMajors(),
-      fetchGrades(),
-    ])
-    classOptions.value = classRes.data.map((c) => ({ label: c.className, value: c.className }))
+    const [majorRes, gradeRes] = await Promise.all([fetchMajors(), fetchGrades()])
     majorOptions.value = majorRes.data.map((m) => ({ label: m.majorName, value: m.majorName }))
     gradeOptions.value = gradeRes.data.map((g) => ({ label: g.name, value: g.id }))
   } catch {
@@ -198,25 +218,26 @@ onMounted(() => {
             clearable
             style="width: 120px"
           />
-          <NButton type="primary" @click="loadData">{{ $t('student-management.query') }}</NButton>
+          <NButton type="primary" @click="handleQuery">{{
+            $t('student-management.query')
+          }}</NButton>
           <NButton @click="handleReset">{{ $t('student-management.reset') }}</NButton>
         </NSpace>
       </NCard>
 
       <NCard>
         <NSpin :show="loading">
-          <NEmpty
-            v-if="!loading && data.length === 0"
-            :description="$t('student-management.empty')"
-          />
           <NDataTable
-            v-else
             :columns="columns"
             :data="data"
             :row-key="(r: Student) => r.studentId"
             :single-line="false"
             :bordered="false"
-          />
+            remote
+            :pagination="pagination"
+          >
+            <template #empty>{{ $t('student-management.empty') }}</template>
+          </NDataTable>
         </NSpin>
       </NCard>
     </NSpace>
@@ -237,12 +258,18 @@ onMounted(() => {
           />
         </NFormItem>
         <NFormItem :label="$t('student-management.className')">
-          <NSelect
-            v-model:value="form.className"
-            :options="classOptions"
+          <PagedSelect
+            :model-value="form.className || null"
+            :fetch-page="(page: number, pageSize: number) => fetchClassNames(page, pageSize)"
+            :label-of="(c: ClassName) => c.className"
+            :value-of="(c: ClassName) => c.className"
+            :initial-label="originalForm.className || undefined"
             :placeholder="originalForm.className || $t('student-management.className')"
-            filterable
             clearable
+            @update:model-value="
+              (v: string | number | null | Array<string | number>) =>
+                (form.className = (v as string) ?? '')
+            "
           />
         </NFormItem>
         <NFormItem :label="$t('student-management.major')">
@@ -257,7 +284,7 @@ onMounted(() => {
         <NFormItem :label="$t('student-management.grade')">
           <NSelect
             v-model:value="form.gradeName"
-            :options="gradeOptions.map(g => ({ label: g.label, value: g.label }))"
+            :options="gradeOptions.map((g) => ({ label: g.label, value: g.label }))"
             :placeholder="originalForm.gradeName || $t('student-management.grade')"
             filterable
             clearable
@@ -266,7 +293,9 @@ onMounted(() => {
         <NFormItem :label="$t('student-management.enrollmentYear')">
           <NInputNumber
             v-model:value="form.enrollmentYear"
-            :placeholder="originalForm.enrollmentYear != null ? String(originalForm.enrollmentYear) : ''"
+            :placeholder="
+              originalForm.enrollmentYear != null ? String(originalForm.enrollmentYear) : ''
+            "
             :min="2000"
             :max="2100"
             style="width: 100%"
