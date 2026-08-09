@@ -14,6 +14,10 @@ export const useNotificationStore = defineStore('notification', () => {
   const showPanel = ref(false)
   const activeStatus = ref<NotificationFilter>('all')
   const loading = ref(false)
+  const page = ref(1)
+  const pageSize = ref(20)
+  const total = ref(0)
+  const pages = ref(0)
 
   let socket: NotificationSocket | null = null
   let toastHandler: NewNotificationHandler | null = null
@@ -69,7 +73,10 @@ export const useNotificationStore = defineStore('notification', () => {
     loading.value = true
     try {
       const status = activeStatus.value === 'all' ? undefined : activeStatus.value
-      notifications.value = await notificationApi.getList(status)
+      const res = await notificationApi.getListPage(status, page.value, pageSize.value)
+      notifications.value = res.data.records
+      total.value = res.data.total
+      pages.value = res.data.pages
     } finally {
       loading.value = false
     }
@@ -77,7 +84,22 @@ export const useNotificationStore = defineStore('notification', () => {
 
   async function setStatus(status: NotificationFilter): Promise<void> {
     activeStatus.value = status
+    page.value = 1
     await fetchList()
+  }
+
+  async function gotoPage(p: number): Promise<void> {
+    if (p < 1 || (pages.value > 0 && p > pages.value)) return
+    page.value = p
+    await fetchList()
+  }
+
+  async function prevPage(): Promise<void> {
+    await gotoPage(page.value - 1)
+  }
+
+  async function nextPage(): Promise<void> {
+    await gotoPage(page.value + 1)
   }
 
   async function markRead(id: number): Promise<void> {
@@ -105,6 +127,7 @@ export const useNotificationStore = defineStore('notification', () => {
     const target = notifications.value.find((n) => n.id === id)
     await notificationApi.remove(id)
     notifications.value = notifications.value.filter((n) => n.id !== id)
+    if (total.value > 0) total.value -= 1
     if (target && target.isRead === 0 && unreadCount.value > 0) {
       unreadCount.value -= 1
     }
@@ -112,6 +135,7 @@ export const useNotificationStore = defineStore('notification', () => {
 
   function openPanel(): void {
     showPanel.value = true
+    page.value = 1
     void fetchList()
   }
 
@@ -126,12 +150,19 @@ export const useNotificationStore = defineStore('notification', () => {
     showPanel,
     activeStatus,
     loading,
+    page,
+    pageSize,
+    total,
+    pages,
     setToastHandler,
     connect,
     disconnect,
     fetchUnreadCount,
     fetchList,
     setStatus,
+    gotoPage,
+    prevPage,
+    nextPage,
     markRead,
     readAll,
     remove,
