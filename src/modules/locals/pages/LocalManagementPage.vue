@@ -13,13 +13,14 @@ import {
   NSelect,
   NPopconfirm,
   NSpin,
-  NEmpty,
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
 import { fetchLocals, createLocal, updateLocal, deleteLocal } from '../api'
 import { fetchTeachers } from '@/modules/curriculum/api'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
+import { useRemotePagination } from '@/shared/composables/useRemotePagination'
+import PagedSelect from '@/shared/components/PagedSelect.vue'
 import {
   LOCAL_TYPE_TO_CODE,
   LOCAL_TYPE_REQUIRES_MANAGER,
@@ -27,6 +28,7 @@ import {
   type LocalForm,
   type LocalTypeCode,
 } from '../types'
+import type { Teacher } from '@/modules/curriculum/types'
 
 const { t } = useI18n()
 const message = useMessage()
@@ -34,6 +36,7 @@ const { canManageLocals } = useRoleCheck()
 
 const loading = ref(false)
 const data = ref<Local[]>([])
+const { pagination, reset } = useRemotePagination(loadData)
 
 /** 类型下拉选项（value 为 code，请求/筛选时传 name） */
 const typeOptions = computed(() => [
@@ -46,8 +49,8 @@ const typeOptions = computed(() => [
 /** 列表类型筛选（null = 全部） */
 const filterType = ref<LocalTypeCode | null>(null)
 
-/** 管理者教师下拉选项 */
-const teacherOptions = ref<Array<{ label: string; value: number }>>([])
+/** 管理者下拉编辑回显用（选中教师不在已加载页时兜底显示） */
+const managerInitialLabel = ref<string | undefined>(undefined)
 
 const baseColumns: DataTableColumns<Local> = [
   { title: t('locals.building'), key: 'building', width: 200, ellipsis: { tooltip: true } },
@@ -68,10 +71,14 @@ const columns = computed<DataTableColumns<Local>>(() => {
       render(row) {
         return h(NSpace, null, () => [
           h(NButton, { size: 'small', onClick: () => startEdit(row) }, () => t('locals.edit')),
-          h(NPopconfirm, { onPositiveClick: () => handleDelete(row.id) }, {
-            default: () => t('locals.deleteConfirm'),
-            trigger: () => h(NButton, { size: 'small', type: 'error' }, () => t('locals.delete')),
-          }),
+          h(
+            NPopconfirm,
+            { onPositiveClick: () => handleDelete(row.id) },
+            {
+              default: () => t('locals.deleteConfirm'),
+              trigger: () => h(NButton, { size: 'small', type: 'error' }, () => t('locals.delete')),
+            },
+          ),
         ])
       },
     },
@@ -81,8 +88,13 @@ const columns = computed<DataTableColumns<Local>>(() => {
 async function loadData() {
   loading.value = true
   try {
-    const res = await fetchLocals({ type: filterType.value ?? undefined })
-    data.value = res.data
+    const res = await fetchLocals({
+      type: filterType.value ?? undefined,
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+    })
+    data.value = res.data.records
+    pagination.itemCount = res.data.total
   } catch (e) {
     message.error((e as Error).message || t('locals.loadFail'))
   } finally {
@@ -90,16 +102,9 @@ async function loadData() {
   }
 }
 
-async function loadTeachers() {
-  try {
-    const res = await fetchTeachers()
-    teacherOptions.value = res.data
-      .slice()
-      .sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'))
-      .map((tch) => ({ label: `${tch.name} (${tch.title})`, value: tch.id }))
-  } catch (e) {
-    message.error((e as Error).message || t('locals.managerLoadFail'))
-  }
+function handleTypeChange() {
+  reset()
+  loadData()
 }
 
 const showForm = ref(false)
@@ -123,6 +128,7 @@ function startCreate() {
   formMode.value = 'create'
   editingId.value = null
   form.value = emptyForm()
+  managerInitialLabel.value = undefined
   showForm.value = true
 }
 
@@ -137,6 +143,7 @@ function startEdit(row: Local) {
     type: row.type ? (LOCAL_TYPE_TO_CODE[row.type] ?? 'CLASSROOM') : 'CLASSROOM',
     managerId: row.managerId,
   }
+  managerInitialLabel.value = row.managerName ?? undefined
   showForm.value = true
 }
 
@@ -173,7 +180,6 @@ async function handleDelete(id: number) {
 
 onMounted(() => {
   loadData()
-  loadTeachers()
 })
 </script>
 
@@ -189,7 +195,7 @@ onMounted(() => {
               :placeholder="$t('locals.allTypes')"
               clearable
               class="lm-filter-select"
-              @update:value="loadData"
+              @update:value="handleTypeChange"
             />
             <NButton v-if="canManageLocals" type="primary" @click="startCreate">
               {{ $t('locals.add') }}
@@ -197,15 +203,17 @@ onMounted(() => {
           </NSpace>
         </template>
         <NSpin :show="loading">
-          <NEmpty v-if="!loading && data.length === 0" :description="$t('locals.empty')" />
           <NDataTable
-            v-else
             :columns="columns"
             :data="data"
             :row-key="(r: Local) => r.id"
             :single-line="false"
             :bordered="false"
-          />
+            remote
+            :pagination="pagination"
+          >
+            <template #empty>{{ $t('locals.empty') }}</template>
+          </NDataTable>
         </NSpin>
       </NCard>
     </NSpace>
@@ -233,12 +241,18 @@ onMounted(() => {
           <NSelect v-model:value="form.type" :options="typeOptions" />
         </NFormItem>
         <NFormItem :label="$t('locals.manager')" :required="managerRequired">
-          <NSelect
-            v-model:value="form.managerId"
-            :options="teacherOptions"
+          <PagedSelect
+            :model-value="form.managerId"
+            :fetch-page="(page: number, pageSize: number) => fetchTeachers(page, pageSize)"
+            :label-of="(tch: Teacher) => `${tch.name} (${tch.title})`"
+            :value-of="(tch: Teacher) => tch.id"
+            :initial-label="managerInitialLabel"
             :placeholder="$t('locals.managerPlaceholder')"
             clearable
-            filterable
+            @update:model-value="
+              (v: string | number | null | Array<string | number>) =>
+                (form.managerId = v as number | null)
+            "
           />
         </NFormItem>
       </NForm>
