@@ -1,7 +1,7 @@
 import { api } from '@/shared/api'
 import { accessToken, refreshAccessToken } from '@/shared/tokenManager'
 import { API_BASE_URL } from '@/config'
-import type { Result } from '@/shared/types'
+import type { PageResult, Result } from '@/shared/types'
 import type { Semester } from '@/modules/curriculum/types'
 import type {
   ScoreConfig,
@@ -33,7 +33,10 @@ export function setScoreConfig(
 
 // ---- 录入名单 ----
 
-export function fetchRoster(teachInfoId: number, examId?: number): Promise<Result<ScoreRosterDto[]>> {
+export function fetchRoster(
+  teachInfoId: number,
+  examId?: number,
+): Promise<Result<ScoreRosterDto[]>> {
   const qs = examId != null ? `?examId=${examId}` : ''
   return api.get(`/scores/roster/${teachInfoId}${qs}`)
 }
@@ -118,9 +121,17 @@ export function fetchMyReviews(): Promise<Result<ReviewView[]>> {
   return api.get('/scores/reviews/my')
 }
 
-export function fetchReviewTodos(status?: ReviewStatusCode): Promise<Result<ReviewView[]>> {
-  const qs = status ? `?status=${status}` : ''
-  return api.get(`/scores/reviews${qs}`)
+export function fetchReviewTodos(
+  status?: ReviewStatusCode,
+  page?: number,
+  pageSize?: number,
+): Promise<Result<PageResult<ReviewView>>> {
+  const params = new URLSearchParams()
+  if (status) params.set('status', status)
+  if (page != null) params.set('page', String(page))
+  if (pageSize != null) params.set('pageSize', String(pageSize))
+  const qs = params.toString()
+  return api.get(`/scores/reviews${qs ? `?${qs}` : ''}`)
 }
 
 export function replyReview(id: number, body: ReviewReplyRequest): Promise<Result<ReviewView>> {
