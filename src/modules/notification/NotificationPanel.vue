@@ -101,6 +101,22 @@ async function handleDelete(id: number) {
           </div>
         </div>
       </NSpin>
+      <div v-if="store.pages > 1" class="panel-pagination">
+        <NButton size="small" quaternary :disabled="store.page <= 1" @click="store.prevPage">
+          {{ $t('common.pagedSelect.prev') }}
+        </NButton>
+        <span class="panel-pagination-info">
+          {{ $t('common.pagedSelect.pageInfo', { page: store.page, pages: store.pages }) }}
+        </span>
+        <NButton
+          size="small"
+          quaternary
+          :disabled="store.page >= store.pages"
+          @click="store.nextPage"
+        >
+          {{ $t('common.pagedSelect.next') }}
+        </NButton>
+      </div>
     </NDrawerContent>
   </NDrawer>
 </template>
