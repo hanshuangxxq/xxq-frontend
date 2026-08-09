@@ -31,7 +31,11 @@ import { fetchClassNames } from '@/modules/class-names/api'
 import { fetchCourses } from '@/modules/course/api'
 import { isPublicCourse } from '@/modules/course/utils'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
+import PagedSelect from '@/shared/components/PagedSelect.vue'
 import type { DraftItem, DraftClassSummary, Semester } from '../types'
+import type { ClassName } from '@/modules/class-names/types'
+import type { Course } from '@/modules/course/types'
+import type { Teacher } from '@/modules/curriculum/types'
 
 function draftRowKey(row: DraftItem): string {
   return `${row.courseId}-${row.teacherId}-${row.className}`
@@ -44,15 +48,25 @@ const { canManageDrafts } = useRoleCheck()
 const loading = ref(false)
 const drafts = ref<DraftItem[]>([])
 const summary = ref<DraftClassSummary | null>(null)
-const classOptions = ref<{ label: string; value: string }[]>([])
-const courseOptions = ref<{ label: string; value: number }[]>([])
-const teacherOptions = ref<{ label: string; value: number }[]>([])
 
 const selectedClasses = ref<string[]>([])
-const entries = ref<{ courseId: number | null; teacherId: number | null; startWeek: number | null; endWeek: number | null }[]>([
-  { courseId: null, teacherId: null, startWeek: null, endWeek: null },
-])
+const entries = ref<
+  {
+    courseId: number | null
+    teacherId: number | null
+    startWeek: number | null
+    endWeek: number | null
+  }[]
+>([{ courseId: null, teacherId: null, startWeek: null, endWeek: null }])
 const submitting = ref(false)
+
+/** 排课草稿仅用常规课（排除公选课）；端点不支持按 source 过滤，故按页客户端过滤 */
+function fetchRegularCourses(page: number, pageSize: number) {
+  return fetchCourses(page, pageSize).then((res) => ({
+    ...res,
+    data: { ...res.data, records: res.data.records.filter((c) => !isPublicCourse(c)) },
+  }))
+}
 
 // ---- Semester ----
 const semesterOptions = ref<{ label: string; value: number }[]>([])
@@ -78,8 +92,18 @@ async function loadSemesters() {
 }
 
 const draftColumns: DataTableColumns<DraftItem> = [
-  { title: t('curriculum.columnClassName'), key: 'className', width: 140, ellipsis: { tooltip: true } },
-  { title: t('curriculum.columnCourseName'), key: 'courseName', width: 140, ellipsis: { tooltip: true } },
+  {
+    title: t('curriculum.columnClassName'),
+    key: 'className',
+    width: 140,
+    ellipsis: { tooltip: true },
+  },
+  {
+    title: t('curriculum.columnCourseName'),
+    key: 'courseName',
+    width: 140,
+    ellipsis: { tooltip: true },
+  },
   { title: t('curriculum.columnTeacherName'), key: 'teacherName', width: 100 },
   {
     title: t('curriculum.columnWeek'),
@@ -87,7 +111,9 @@ const draftColumns: DataTableColumns<DraftItem> = [
     width: 100,
     align: 'center',
     render(row) {
-      return row.startWeek === row.endWeek ? `第${row.startWeek}周` : `第${row.startWeek}-${row.endWeek}周`
+      return row.startWeek === row.endWeek
+        ? `第${row.startWeek}周`
+        : `第${row.startWeek}-${row.endWeek}周`
     },
   },
   { title: t('curriculum.columnCollege'), key: 'college', width: 100, ellipsis: { tooltip: true } },
@@ -113,29 +139,10 @@ const draftColumns: DataTableColumns<DraftItem> = [
 async function loadData() {
   loading.value = true
   try {
-    const [draftRes, summaryRes, classRes, courseRes, teacherRes] = await Promise.all([
-      fetchDrafts(),
-      fetchDraftClassSummary(),
-      fetchClassNames(),
-      fetchCourses(),
-      fetchTeachers(),
-    ])
+    const [draftRes, summaryRes] = await Promise.all([fetchDrafts(), fetchDraftClassSummary()])
     if (semesterOptions.value.length === 0) loadSemesters()
     drafts.value = draftRes.data
     summary.value = summaryRes.data
-    classOptions.value = classRes.data
-      .sort((a, b) => a.className.localeCompare(b.className, 'zh-CN', { numeric: true }))
-      .map((c) => ({
-        label: `${c.className} (${c.college})`,
-        value: c.className,
-      }))
-    courseOptions.value = courseRes.data
-      .filter((c) => !isPublicCourse(c))
-      .sort((a, b) => a.courseName.localeCompare(b.courseName, 'zh-CN'))
-      .map((c) => ({ label: `${c.courseName} (${c.courseCode})`, value: c.id }))
-    teacherOptions.value = teacherRes.data
-      .sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'))
-      .map((t) => ({ label: `${t.name} (${t.title})`, value: t.id }))
   } catch (e) {
     message.error((e as Error).message || t('teach-drafts.loadFail'))
   } finally {
@@ -222,29 +229,47 @@ onMounted(loadData)
             :placeholder="$t('semester.title')"
             style="max-width: 400px"
           />
-          <NSelect
-            v-model:value="selectedClasses"
-            multiple
-            :options="classOptions"
+          <PagedSelect
+            :model-value="selectedClasses"
+            :fetch-page="(page: number, pageSize: number) => fetchClassNames(page, pageSize)"
+            :label-of="(c: ClassName) => `${c.className} (${c.college})`"
+            :value-of="(c: ClassName) => c.className"
             :placeholder="$t('teach-drafts.classNamePlaceholder')"
+            multiple
+            @update:model-value="
+              (v: string | number | null | Array<string | number>) =>
+                (selectedClasses = v as string[])
+            "
           />
           <div v-for="(entry, index) in entries" :key="index">
             <NSpace align="center">
-              <NSelect
-                v-model:value="entry.courseId"
-                :options="courseOptions"
+              <PagedSelect
+                :model-value="entry.courseId"
+                :fetch-page="fetchRegularCourses"
+                :label-of="(c: Course) => `${c.courseName} (${c.courseCode})`"
+                :value-of="(c: Course) => c.id"
                 :placeholder="$t('teach-drafts.courseIdPlaceholder')"
                 class="draft-select-crs"
                 clearable
                 filterable
+                @update:model-value="
+                  (v: string | number | null | Array<string | number>) =>
+                    (entry.courseId = v as number | null)
+                "
               />
-              <NSelect
-                v-model:value="entry.teacherId"
-                :options="teacherOptions"
+              <PagedSelect
+                :model-value="entry.teacherId"
+                :fetch-page="(page: number, pageSize: number) => fetchTeachers(page, pageSize)"
+                :label-of="(tch: Teacher) => `${tch.name} (${tch.title})`"
+                :value-of="(tch: Teacher) => tch.id"
                 :placeholder="$t('teach-drafts.teacherIdPlaceholder')"
                 class="draft-select-tch"
                 clearable
                 filterable
+                @update:model-value="
+                  (v: string | number | null | Array<string | number>) =>
+                    (entry.teacherId = v as number | null)
+                "
               />
               <NInput
                 :value="entry.startWeek !== null ? String(entry.startWeek) : ''"
@@ -279,11 +304,21 @@ onMounted(loadData)
             <NTag type="info">{{ $t('teach-drafts.totalDrafts') }}: {{ summary.totalDrafts }}</NTag>
           </div>
           <NGrid :cols="4" :x-gap="12" :y-gap="8">
-            <NGi v-for="cls in [...summary.classes].sort((a, b) => a.localeCompare(b, 'zh-CN', { numeric: true }))" :key="cls">
+            <NGi
+              v-for="cls in [...summary.classes].sort((a, b) =>
+                a.localeCompare(b, 'zh-CN', { numeric: true }),
+              )"
+              :key="cls"
+            >
               <NCard size="small" class="draft-class-card">
                 <div class="draft-class-name">{{ cls }}</div>
                 <div class="draft-class-count">{{ summary.countByClass[cls] }} 门课</div>
-                <NButton v-if="canManageDrafts" size="tiny" type="error" @click="handleClearByClass(cls)">
+                <NButton
+                  v-if="canManageDrafts"
+                  size="tiny"
+                  type="error"
+                  @click="handleClearByClass(cls)"
+                >
                   {{ $t('teach-drafts.clearByClass') }}
                 </NButton>
               </NCard>
