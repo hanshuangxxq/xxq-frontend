@@ -21,6 +21,7 @@ import zhCNScore from '@/locales/zh-CN/score.json'
 import zhCNExam from '@/locales/zh-CN/exam.json'
 import zhCNNotification from '@/locales/zh-CN/notification.json'
 import zhCNAnalysis from '@/locales/zh-CN/analysis.json'
+import zhCNPractice from '@/locales/zh-CN/practice.json'
 import enCommon from '@/locales/en/common.json'
 import enAuth from '@/locales/en/auth.json'
 import enProfile from '@/locales/en/profile.json'
@@ -43,6 +44,7 @@ import enScore from '@/locales/en/score.json'
 import enExam from '@/locales/en/exam.json'
 import enNotification from '@/locales/en/notification.json'
 import enAnalysis from '@/locales/en/analysis.json'
+import enPractice from '@/locales/en/practice.json'
 
 export type SupportedLocale = 'zh-CN' | 'en'
 
@@ -76,6 +78,7 @@ const i18n = createI18n({
       exam: zhCNExam,
       notification: zhCNNotification,
       analysis: zhCNAnalysis,
+      practice: zhCNPractice,
     },
     en: {
       common: enCommon,
@@ -100,6 +103,7 @@ const i18n = createI18n({
       exam: enExam,
       notification: enNotification,
       analysis: enAnalysis,
+      practice: enPractice,
     },
   },
 })
