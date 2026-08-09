@@ -12,7 +12,6 @@ import {
   NDataTable,
   NPopconfirm,
   NSpin,
-  NEmpty,
   NTooltip,
   NTag,
   useMessage,
@@ -26,6 +25,7 @@ import {
   updateCampaign,
   fetchBindableCampaigns,
 } from '../api'
+import { useRemotePagination } from '@/shared/composables/useRemotePagination'
 import type { Campaign, CampaignStatus, SelectionGroup, SelectionGroupForm } from '../types'
 
 const props = defineProps<{
@@ -42,6 +42,7 @@ const message = useMessage()
 
 const loading = ref(false)
 const groups = ref<SelectionGroup[]>([])
+const { pagination } = useRemotePagination(loadGroups)
 
 const statusTagType: Record<CampaignStatus, 'default' | 'info' | 'warning' | 'success'> = {
   DRAFT: 'default',
@@ -57,8 +58,9 @@ function formatDateTime(s: string | null | undefined): string {
 async function loadGroups() {
   loading.value = true
   try {
-    const res = await fetchAllGroups()
-    groups.value = res.data
+    const res = await fetchAllGroups(pagination.page, pagination.pageSize)
+    groups.value = res.data.records
+    pagination.itemCount = res.data.total
   } catch (e) {
     message.error((e as Error).message || t('selection.loadFail'))
   } finally {
@@ -127,10 +129,8 @@ const groupColumns = computed<DataTableColumns<SelectionGroup>>(() => [
             {},
             {
               trigger: () =>
-                h(
-                  NButton,
-                  { size: 'small', type: 'error', disabled: true },
-                  () => t('selection.delete'),
+                h(NButton, { size: 'small', type: 'error', disabled: true }, () =>
+                  t('selection.delete'),
                 ),
               default: () => t('selection.groupHasBindings'),
             },
@@ -255,10 +255,8 @@ const bindingColumns = computed<DataTableColumns<Campaign>>(() => [
     width: 100,
     align: 'center',
     render(row) {
-      return h(
-        NTag,
-        { type: statusTagType[row.status], bordered: false },
-        () => t(`selection.${row.status}`),
+      return h(NTag, { type: statusTagType[row.status], bordered: false }, () =>
+        t(`selection.${row.status}`),
       )
     },
   },
@@ -270,15 +268,9 @@ const bindingColumns = computed<DataTableColumns<Campaign>>(() => [
     render(row) {
       const isBound = row.boundGroupId != null
       return isBound
-        ? h(
-            NTag,
-            { size: 'small', type: 'success', bordered: false },
-            () => t('selection.bound'),
-        )
-        : h(
-            NTag,
-            { size: 'small', type: 'default', bordered: false },
-            () => t('selection.notBound'),
+        ? h(NTag, { size: 'small', type: 'success', bordered: false }, () => t('selection.bound'))
+        : h(NTag, { size: 'small', type: 'default', bordered: false }, () =>
+            t('selection.notBound'),
           )
     },
   },
@@ -298,11 +290,7 @@ const bindingColumns = computed<DataTableColumns<Campaign>>(() => [
             {
               default: () => t('selection.unbindConfirm'),
               trigger: () =>
-                h(
-                  NButton,
-                  { size: 'small', type: 'warning' },
-                  () => t('selection.unbind'),
-                ),
+                h(NButton, { size: 'small', type: 'warning' }, () => t('selection.unbind')),
             },
           )
         }
@@ -311,11 +299,7 @@ const bindingColumns = computed<DataTableColumns<Campaign>>(() => [
           {},
           {
             trigger: () =>
-              h(
-                NButton,
-                { size: 'small', disabled: true },
-                () => t('selection.bound'),
-              ),
+              h(NButton, { size: 'small', disabled: true }, () => t('selection.bound')),
             default: () => t('selection.unbindOnlyDraft'),
           },
         )
@@ -373,12 +357,7 @@ async function handleUnbind(campaignId: number) {
       </NButton>
     </div>
     <NSpin :show="loading">
-      <NEmpty
-        v-if="!loading && groups.length === 0"
-        :description="$t('selection.groupEmpty')"
-      />
       <NDataTable
-        v-else
         :columns="groupColumns"
         :data="groups"
         :row-key="(r: SelectionGroup) => r.id"
@@ -386,13 +365,19 @@ async function handleUnbind(campaignId: number) {
         :bordered="false"
         :max-height="400"
         :scroll-x="1100"
-      />
+        remote
+        :pagination="pagination"
+      >
+        <template #empty>{{ $t('selection.groupEmpty') }}</template>
+      </NDataTable>
     </NSpin>
 
     <NModal
       v-model:show="showGroupForm"
       preset="card"
-      :title="groupFormMode === 'create' ? $t('selection.addGroupTitle') : $t('selection.editGroupTitle')"
+      :title="
+        groupFormMode === 'create' ? $t('selection.addGroupTitle') : $t('selection.editGroupTitle')
+      "
       class="group-form-modal"
     >
       <NForm :model="groupForm">
@@ -424,7 +409,11 @@ async function handleUnbind(campaignId: number) {
     <NModal
       v-model:show="showBindingModal"
       preset="card"
-      :title="bindingGroup ? `${$t('selection.manageBindings')} - ${bindingGroup.name}` : $t('selection.manageBindings')"
+      :title="
+        bindingGroup
+          ? `${$t('selection.manageBindings')} - ${bindingGroup.name}`
+          : $t('selection.manageBindings')
+      "
       class="binding-management-modal"
     >
       <NSpin :show="bindingLoading">
