@@ -19,6 +19,10 @@ export interface StudentQuery {
   major?: string
   unassigned?: boolean
   name?: string
+  /** 页码（从 1 开始） */
+  page?: number
+  /** 每页条数（上限 100） */
+  pageSize?: number
 }
 
 export interface StudentUpdateForm {
