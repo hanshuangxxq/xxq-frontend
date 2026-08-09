@@ -119,6 +119,10 @@ export interface WarningItemDto {
 export interface WarningQuery {
   semesterId?: number
   level?: WarningLevelCode | string
+  /** 页码（从 1 开始） */
+  page?: number
+  /** 每页条数（上限 100） */
+  pageSize?: number
 }
 
 // ---- #3 评教（模板驱动） ----
