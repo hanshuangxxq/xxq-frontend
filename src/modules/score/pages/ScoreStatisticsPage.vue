@@ -20,6 +20,7 @@ import { fetchScoreStatistics } from '../api'
 import { fetchCourses } from '@/modules/course/api'
 import { fetchAllSemesters } from '@/modules/curriculum/api'
 import { courseKey, parseCourseKey, isPublicCourse } from '@/modules/course/utils'
+import PagedSelect from '@/shared/components/PagedSelect.vue'
 import type { Course } from '@/modules/course/types'
 import type { Semester } from '@/modules/curriculum/types'
 import type { ScoreStatisticsDto } from '../types'
@@ -31,7 +32,6 @@ const message = useMessage()
 const loading = ref(false)
 const data = ref<ScoreStatisticsDto[]>([])
 
-const courseOptions = ref<Array<{ label: string; value: string }>>([])
 const semesterOptions = ref<Array<{ label: string; value: number }>>([])
 
 const filterCourseKey = ref<string | null>(null)
@@ -40,12 +40,7 @@ const filterSemesterId = ref<number | null>(null)
 
 async function loadDropdowns() {
   try {
-    const [courseRes, semRes] = await Promise.all([fetchCourses(), fetchAllSemesters()])
-    // 公选课与常规课 id 可能重复，用 (source:id) 复合值作 option value
-    courseOptions.value = courseRes.data.map((c: Course) => ({
-      label: isPublicCourse(c) ? `${c.courseName}（${t('common.publicTag')}）` : c.courseName,
-      value: courseKey(c.id, c.source),
-    }))
+    const semRes = await fetchAllSemesters()
     semesterOptions.value = semRes.data.map((s: Semester) => ({ label: s.name, value: s.id }))
   } catch {
     // 下拉数据加载失败不阻塞
@@ -234,13 +229,21 @@ onMounted(() => {
       <!-- 筛选 -->
       <NCard>
         <NSpace align="center" :size="12" wrap>
-          <NSelect
-            v-model:value="filterCourseKey"
-            :options="courseOptions"
+          <PagedSelect
+            :model-value="filterCourseKey"
+            :fetch-page="(page: number, pageSize: number) => fetchCourses(page, pageSize)"
+            :label-of="
+              (c: Course) =>
+                isPublicCourse(c) ? `${c.courseName}（${t('common.publicTag')}）` : c.courseName
+            "
+            :value-of="(c: Course) => courseKey(c.id, c.source)"
             :placeholder="$t('score.statAllCourse')"
             clearable
-            filterable
             style="width: 220px"
+            @update:model-value="
+              (v: string | number | null | Array<string | number>) =>
+                (filterCourseKey = (v as string) ?? null)
+            "
           />
           <NInput
             v-model:value="filterClassName"
