@@ -6,5 +6,12 @@
   "nav": {
     "home": "Home"
   },
+  "pagedSelect": {
+    "prev": "Prev",
+    "next": "Next",
+    "pageInfo": "Page {page}/{pages}",
+    "loading": "Loading…",
+    "empty": "No data"
+  },
   "publicTag": "Public"
 }
