@@ -1,9 +1,16 @@
 import { api } from '@/shared/api'
-import type { Result } from '@/shared/types'
+import type { PageResult, Result } from '@/shared/types'
 import type { Course, CourseForm, CourseSource } from './types'
 
-export function fetchCourses(): Promise<Result<Course[]>> {
-  return api.get('/courses')
+export function fetchCourses(
+  page?: number,
+  pageSize?: number,
+): Promise<Result<PageResult<Course>>> {
+  const params = new URLSearchParams()
+  if (page != null) params.set('page', String(page))
+  if (pageSize != null) params.set('pageSize', String(pageSize))
+  const qs = params.toString()
+  return api.get(`/courses${qs ? `?${qs}` : ''}`)
 }
 
 /**
