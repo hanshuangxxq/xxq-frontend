@@ -1,0 +1,13 @@
+.context-card {
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.content-card {
+  border-radius: 8px;
+}
+
+.unpublished-hint {
+  font-size: 13px;
+  color: #ad6800;
+}
