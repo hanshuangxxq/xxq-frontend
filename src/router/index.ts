@@ -146,16 +146,6 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/modules/analysis/pages/TeacherQualityPage.vue'),
       },
       {
-        path: 'practice/graduation',
-        name: 'PracticeGraduation',
-        component: () => import('@/modules/practice/pages/GraduationManagementPage.vue'),
-      },
-      {
-        path: 'practice/graduation/my',
-        name: 'PracticeGraduationMy',
-        component: () => import('@/modules/practice/pages/GraduationStudentPage.vue'),
-      },
-      {
         path: 'practice/internship',
         name: 'PracticeInternship',
         component: () => import('@/modules/practice/pages/InternshipManagementPage.vue'),
@@ -184,6 +174,158 @@ const routes: RouteRecordRaw[] = [
         path: 'practice/social-practice/my',
         name: 'PracticeSocialPracticeMy',
         component: () => import('@/modules/practice/pages/SocialPracticeStudentPage.vue'),
+      },
+      {
+        path: 'colleges',
+        name: 'CollegeManagement',
+        component: () => import('@/modules/college/pages/CollegeManagementPage.vue'),
+      },
+      // ===== 毕业设计与论文管理 =====
+      // 学生端
+      {
+        path: 'practice/graduation/student/campaigns',
+        name: 'GraduationStudentCampaigns',
+        component: () =>
+          import('@/modules/practice/graduation/pages/student/StudentCampaignsPage.vue'),
+      },
+      {
+        path: 'practice/graduation/student/proposals',
+        name: 'GraduationStudentProposals',
+        component: () => import('@/modules/practice/graduation/pages/student/MyProposalsPage.vue'),
+      },
+      {
+        path: 'practice/graduation/student/opening',
+        name: 'GraduationStudentOpening',
+        component: () =>
+          import('@/modules/practice/graduation/pages/student/OpeningReportPage.vue'),
+      },
+      {
+        path: 'practice/graduation/student/midterm',
+        name: 'GraduationStudentMidterm',
+        component: () => import('@/modules/practice/graduation/pages/student/MidtermPage.vue'),
+      },
+      {
+        path: 'practice/graduation/student/thesis',
+        name: 'GraduationStudentThesis',
+        component: () => import('@/modules/practice/graduation/pages/student/MyThesisPage.vue'),
+      },
+      {
+        path: 'practice/graduation/student/defense',
+        name: 'GraduationStudentDefense',
+        component: () => import('@/modules/practice/graduation/pages/student/DefenseInfoPage.vue'),
+      },
+      {
+        path: 'practice/graduation/student/score',
+        name: 'GraduationStudentScore',
+        component: () => import('@/modules/practice/graduation/pages/student/MyScorePage.vue'),
+      },
+      // 教师端
+      {
+        path: 'practice/graduation/teacher/pool',
+        name: 'GraduationTeacherPool',
+        component: () => import('@/modules/practice/graduation/pages/teacher/StudentPoolPage.vue'),
+      },
+      {
+        path: 'practice/graduation/teacher/students',
+        name: 'GraduationTeacherStudents',
+        component: () => import('@/modules/practice/graduation/pages/teacher/MyStudentsPage.vue'),
+      },
+      {
+        path: 'practice/graduation/teacher/opening-review',
+        name: 'GraduationTeacherOpeningReview',
+        component: () =>
+          import('@/modules/practice/graduation/pages/teacher/OpeningReviewPage.vue'),
+      },
+      {
+        path: 'practice/graduation/teacher/midterm-review',
+        name: 'GraduationTeacherMidtermReview',
+        component: () =>
+          import('@/modules/practice/graduation/pages/teacher/MidtermReviewPage.vue'),
+      },
+      {
+        path: 'practice/graduation/teacher/guidance',
+        name: 'GraduationTeacherGuidance',
+        component: () => import('@/modules/practice/graduation/pages/teacher/GuidanceLogPage.vue'),
+      },
+      {
+        path: 'practice/graduation/teacher/thesis-review',
+        name: 'GraduationTeacherThesisReview',
+        component: () => import('@/modules/practice/graduation/pages/teacher/ThesisReviewPage.vue'),
+      },
+      {
+        path: 'practice/graduation/teacher/scores',
+        name: 'GraduationTeacherScores',
+        component: () => import('@/modules/practice/graduation/pages/teacher/ScoreEntryPage.vue'),
+      },
+      // 院系端
+      {
+        path: 'practice/graduation/dept/proposal-review',
+        name: 'GraduationDeptProposalReview',
+        component: () => import('@/modules/practice/graduation/pages/dept/ProposalReviewPage.vue'),
+      },
+      {
+        path: 'practice/graduation/dept/allocate',
+        name: 'GraduationDeptAllocate',
+        component: () =>
+          import('@/modules/practice/graduation/pages/dept/StudentAllocationPage.vue'),
+      },
+      {
+        path: 'practice/graduation/dept/dashboard',
+        name: 'GraduationDeptDashboard',
+        component: () => import('@/modules/practice/graduation/pages/dept/DeptDashboardPage.vue'),
+      },
+      {
+        path: 'practice/graduation/dept/defense',
+        name: 'GraduationDeptDefense',
+        component: () => import('@/modules/practice/graduation/pages/dept/DefenseArrangePage.vue'),
+      },
+      {
+        path: 'practice/graduation/dept/scores',
+        name: 'GraduationDeptScores',
+        component: () => import('@/modules/practice/graduation/pages/dept/DefenseScoresPage.vue'),
+      },
+      // 教务端
+      {
+        path: 'practice/graduation/admin/campaigns',
+        name: 'GraduationAdminCampaigns',
+        component: () =>
+          import('@/modules/practice/graduation/pages/academic/CampaignManagementPage.vue'),
+      },
+      {
+        path: 'practice/graduation/admin/review',
+        name: 'GraduationAdminReview',
+        component: () =>
+          import('@/modules/practice/graduation/pages/academic/AcademicReviewPage.vue'),
+      },
+      {
+        path: 'practice/graduation/admin/overview',
+        name: 'GraduationAdminOverview',
+        component: () =>
+          import('@/modules/practice/graduation/pages/academic/AllocationOverviewPage.vue'),
+      },
+      {
+        path: 'practice/graduation/admin/dashboard',
+        name: 'GraduationAdminDashboard',
+        component: () =>
+          import('@/modules/practice/graduation/pages/academic/GlobalDashboardPage.vue'),
+      },
+      {
+        path: 'practice/graduation/admin/logs',
+        name: 'GraduationAdminLogs',
+        component: () =>
+          import('@/modules/practice/graduation/pages/academic/OperationLogPage.vue'),
+      },
+      {
+        path: 'practice/graduation/admin/theses',
+        name: 'GraduationAdminTheses',
+        component: () =>
+          import('@/modules/practice/graduation/pages/academic/ThesisDuplicatePage.vue'),
+      },
+      {
+        path: 'practice/graduation/admin/scores',
+        name: 'GraduationAdminScores',
+        component: () =>
+          import('@/modules/practice/graduation/pages/academic/ScoreOverviewPage.vue'),
       },
     ],
   },
