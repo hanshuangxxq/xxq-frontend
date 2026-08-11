@@ -40,11 +40,13 @@ import type {
   Teacher,
 } from '@/modules/curriculum/types'
 import { fetchClassNames } from '@/modules/class-names/api'
+import { fetchColleges } from '@/modules/college/api'
 import { fetchCourses } from '@/modules/course/api'
 import { isPublicCourse } from '@/modules/course/utils'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import PagedSelect from '@/shared/components/PagedSelect.vue'
 import type { ClassName } from '@/modules/class-names/types'
+import type { College } from '@/modules/college/types'
 import type { Course } from '@/modules/course/types'
 import type { ScheduledLesson } from '../types'
 
@@ -365,6 +367,24 @@ function toggleData() {
 }
 
 // ---- Draft management ----
+const colleges = ref<College[]>([])
+
+async function loadColleges() {
+  try {
+    const res = await fetchColleges()
+    colleges.value = res.data
+  } catch {
+    colleges.value = []
+  }
+}
+
+/** 班级下拉展示：班级名（院系名），院系缺失时仅班级名 */
+function classNameLabel(c: ClassName): string {
+  const name =
+    c.collegeId != null ? colleges.value.find((x) => x.id === c.collegeId)?.collegeName : null
+  return name ? `${c.className} (${name})` : c.className
+}
+
 async function loadDraftData() {
   draftLoading.value = true
   try {
@@ -383,6 +403,7 @@ function toggleDrafts() {
   if (showDrafts.value) {
     if (drafts.value.length === 0) loadDraftData()
     if (semesterOptions.value.length === 0) loadSemesters()
+    if (colleges.value.length === 0) loadColleges()
   }
 }
 
@@ -564,7 +585,7 @@ onUnmounted(() => {
             <PagedSelect
               :model-value="selectedClasses"
               :fetch-page="(page: number, pageSize: number) => fetchClassNames(page, pageSize)"
-              :label-of="(c: ClassName) => `${c.className} (${c.college})`"
+              :label-of="(c: ClassName) => classNameLabel(c)"
               :value-of="(c: ClassName) => c.className"
               :placeholder="$t('teach-drafts.classNamePlaceholder')"
               multiple
