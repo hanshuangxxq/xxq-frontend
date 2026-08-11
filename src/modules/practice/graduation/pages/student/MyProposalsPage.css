@@ -1,0 +1,56 @@
+.proposal-card {
+  border-radius: 8px;
+}
+
+.proposal-meta {
+  font-size: 13px;
+  color: #999;
+}
+
+.proposal-content {
+  font-size: 14px;
+  color: #333;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+.reject-reason {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: #fff1f0;
+  border: 1px solid #ffccc7;
+  border-radius: 6px;
+  color: #cf1322;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.flow-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+}
+
+.flow-line {
+  font-size: 13px;
+  color: #666;
+}
+
+.flow-comment {
+  margin-top: 4px;
+  font-size: 13px;
+  color: #333;
+  background: #f5f5f5;
+  padding: 6px 10px;
+  border-radius: 4px;
+}
+
+.char-count {
+  font-size: 12px;
+  color: #999;
+}
+
+.char-warn {
+  color: #e65100;
+  margin-left: 8px;
+}
