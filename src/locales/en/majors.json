@@ -1,6 +1,7 @@
 {
   "title": "Major Management",
   "majorName": "Major Name",
+  "college": "College",
   "add": "Add Major",
   "edit": "Edit",
   "delete": "Delete",
