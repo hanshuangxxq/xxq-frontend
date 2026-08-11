@@ -1,0 +1,26 @@
+.context-card {
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.content-card {
+  border-radius: 8px;
+}
+
+.review-detail {
+  padding: 4px 8px 8px 40px;
+}
+
+.detail-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.detail-content {
+  font-size: 14px;
+  color: #333;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
