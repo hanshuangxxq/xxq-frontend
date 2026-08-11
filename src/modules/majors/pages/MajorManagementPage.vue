@@ -10,6 +10,7 @@ import {
   NForm,
   NFormItem,
   NInput,
+  NSelect,
   NPopconfirm,
   NSpin,
   NEmpty,
@@ -17,7 +18,9 @@ import {
   type DataTableColumns,
 } from 'naive-ui'
 import { fetchMajors, createMajor, updateMajor, deleteMajor } from '../api'
+import { fetchColleges } from '@/modules/college/api'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
+import type { College } from '@/modules/college/types'
 import type { Major, MajorForm } from '../types'
 
 const { t } = useI18n()
@@ -27,14 +30,41 @@ const { isAcademicAdmin } = useRoleCheck()
 const loading = ref(false)
 const data = ref<Major[]>([])
 
-const baseColumns: DataTableColumns<Major> = [
+const colleges = ref<College[]>([])
+
+const collegeOptions = computed(() =>
+  colleges.value.map((c) => ({ label: c.collegeName, value: c.id })),
+)
+
+function collegeNameOf(id: number | null): string {
+  if (id == null) return '-'
+  return colleges.value.find((c) => c.id === id)?.collegeName ?? '-'
+}
+
+async function loadColleges() {
+  try {
+    const res = await fetchColleges()
+    colleges.value = res.data
+  } catch {
+    colleges.value = []
+  }
+}
+
+const baseColumns = computed<DataTableColumns<Major>>(() => [
   { title: t('majors.majorName'), key: 'majorName', width: 300, ellipsis: { tooltip: true } },
-]
+  {
+    title: t('majors.college'),
+    key: 'collegeId',
+    width: 200,
+    ellipsis: { tooltip: true },
+    render: (r) => collegeNameOf(r.collegeId),
+  },
+])
 
 const columns = computed<DataTableColumns<Major>>(() => {
-  if (!isAcademicAdmin.value) return baseColumns
+  if (!isAcademicAdmin.value) return baseColumns.value
   return [
-    ...baseColumns,
+    ...baseColumns.value,
     {
       title: t('majors.actions'),
       key: 'actions',
@@ -42,10 +72,14 @@ const columns = computed<DataTableColumns<Major>>(() => {
       render(row) {
         return h(NSpace, null, () => [
           h(NButton, { size: 'small', onClick: () => startEdit(row) }, () => t('majors.edit')),
-          h(NPopconfirm, { onPositiveClick: () => handleDelete(row.id) }, {
-            default: () => t('majors.deleteConfirm'),
-            trigger: () => h(NButton, { size: 'small', type: 'error' }, () => t('majors.delete')),
-          }),
+          h(
+            NPopconfirm,
+            { onPositiveClick: () => handleDelete(row.id) },
+            {
+              default: () => t('majors.deleteConfirm'),
+              trigger: () => h(NButton, { size: 'small', type: 'error' }, () => t('majors.delete')),
+            },
+          ),
         ])
       },
     },
@@ -71,7 +105,7 @@ const formMode = ref<'create' | 'edit'>('create')
 const editingId = ref<number | null>(null)
 const saving = ref(false)
 
-const emptyForm = (): MajorForm => ({ majorName: '' })
+const emptyForm = (): MajorForm => ({ majorName: '', collegeId: null })
 const form = ref<MajorForm>(emptyForm())
 
 function startCreate() {
@@ -84,7 +118,7 @@ function startCreate() {
 function startEdit(row: Major) {
   formMode.value = 'edit'
   editingId.value = row.id
-  form.value = { majorName: row.majorName }
+  form.value = { majorName: row.majorName, collegeId: row.collegeId }
   showForm.value = true
 }
 
@@ -116,7 +150,10 @@ async function handleDelete(id: number) {
   }
 }
 
-onMounted(loadData)
+onMounted(() => {
+  loadData()
+  loadColleges()
+})
 </script>
 
 <template>
@@ -149,6 +186,14 @@ onMounted(loadData)
       <NForm :model="form">
         <NFormItem :label="$t('majors.majorName')">
           <NInput v-model:value="form.majorName" />
+        </NFormItem>
+        <NFormItem :label="$t('majors.college')">
+          <NSelect
+            v-model:value="form.collegeId"
+            :options="collegeOptions"
+            clearable
+            :placeholder="$t('majors.college')"
+          />
         </NFormItem>
       </NForm>
       <template #footer>
