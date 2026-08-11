@@ -1,0 +1,23 @@
+{
+  "title": "院系管理",
+  "collegeName": "院系名称",
+  "collegeCode": "院系代码",
+  "collegeNo": "院系编号",
+  "createTime": "创建时间",
+  "actions": "操作",
+  "add": "新建院系",
+  "addTitle": "新建院系",
+  "editTitle": "编辑院系",
+  "edit": "编辑",
+  "delete": "删除",
+  "deleteConfirm": "确定删除该院系吗？",
+  "save": "保存",
+  "cancel": "取消",
+  "empty": "暂无院系",
+  "nameRequired": "请输入院系名称",
+  "loadFail": "加载失败",
+  "saveSuccess": "保存成功",
+  "saveFail": "保存失败",
+  "deleteSuccess": "删除成功",
+  "deleteFail": "删除失败"
+}
