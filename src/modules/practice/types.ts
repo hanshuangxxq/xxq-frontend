@@ -1,20 +1,5 @@
 // ===== 枚举（响应为中文描述，请求/查询传英文 code）=====
 
-/** 选题状态（中文） */
-export type TopicStatus = '草稿' | '开放' | '关闭'
-/** 选题状态 code */
-export type TopicStatusCode = 'DRAFT' | 'OPEN' | 'CLOSED'
-
-/** 选题申请状态（中文） */
-export type SelectionStatus = '待审核' | '已通过' | '已驳回'
-/** 选题申请状态 code */
-export type SelectionStatusCode = 'PENDING' | 'APPROVED' | 'REJECTED'
-
-/** 论文状态（中文） */
-export type ThesisStatus = '已提交' | '评审中' | '通过' | '未通过' | '需修改'
-/** 论文状态 code */
-export type ThesisStatusCode = 'SUBMITTED' | 'UNDER_REVIEW' | 'PASSED' | 'FAILED' | 'REVISION'
-
 /** 实习项目状态（中文） */
 export type InternshipStatus = '草稿' | '开放' | '关闭'
 /** 实习项目状态 code */
@@ -59,104 +44,6 @@ export type AwardCode = 'FIRST' | 'SECOND' | 'THIRD' | 'EXCELLENCE' | 'PARTICIPA
 export type SocialPracticeStatus = '草稿' | '开放' | '关闭'
 /** 社会实践项目状态 code */
 export type SocialPracticeStatusCode = 'DRAFT' | 'OPEN' | 'CLOSED'
-
-// ===== 毕业设计与论文 =====
-
-export interface TopicCreateRequest {
-  semesterId?: number | null
-  title: string
-  description?: string
-  requirements?: string
-  capacity: number
-}
-
-export interface TopicUpdateRequest {
-  title?: string
-  description?: string
-  requirements?: string
-  capacity?: number
-}
-
-export interface SelectionApplyRequest {
-  topicId: number
-  applyReason?: string
-}
-
-export interface SelectionReviewRequest {
-  approved: boolean
-  reviewComment?: string
-}
-
-export interface ThesisSubmitRequest {
-  selectionId: number
-  title: string
-  abstractText?: string
-}
-
-export interface ThesisReviewRequest {
-  status: ThesisStatusCode
-  reviewScore?: number
-  reviewComment?: string
-}
-
-export interface TopicResponse {
-  id: number
-  semesterId: number
-  teacherId: number
-  teacherName: string
-  title: string
-  description: string | null
-  requirements: string | null
-  capacity: number
-  selectedCount: number
-  status: TopicStatus
-  createTime: string
-}
-
-export interface SelectionResponse {
-  id: number
-  topicId: number
-  topicTitle: string
-  studentId: number
-  studentName: string
-  teacherId: number
-  teacherName: string
-  status: SelectionStatus
-  applyReason: string | null
-  selectTime: string
-  reviewTime: string | null
-  reviewComment: string | null
-}
-
-export interface ThesisResponse {
-  id: number
-  selectionId: number
-  studentId: number
-  studentName: string
-  teacherId: number
-  teacherName: string
-  title: string
-  abstractText: string | null
-  fileOriginal: string | null
-  submitTime: string
-  status: ThesisStatus
-  reviewScore: number | null
-  reviewComment: string | null
-  reviewTime: string | null
-}
-
-export interface TopicQuery {
-  teacherId?: number
-  status?: TopicStatusCode
-  page?: number
-  pageSize?: number
-}
-
-export interface ThesisQuery {
-  status?: ThesisStatusCode
-  page?: number
-  pageSize?: number
-}
 
 // ===== 实习与培训 =====
 
