@@ -21,6 +21,7 @@ import {
   NDatePicker,
   NRadioGroup,
   NRadio,
+  NResult,
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
@@ -73,15 +74,18 @@ import type {
 
 const { t } = useI18n()
 const message = useMessage()
-const { isTeacher, isAcademicAdmin } = useRoleCheck()
-const canManage = computed(() => isTeacher.value || isAcademicAdmin.value)
+const { isDepartment, isAcademicAdmin } = useRoleCheck()
+const canManage = computed(() => isDepartment.value || isAcademicAdmin.value)
 
 const activeTab = ref('internships')
 
 const projectStatusOptions = computed(() => [
   { label: t('practice.internship.internshipStatusDraft'), value: 'DRAFT' as InternshipStatusCode },
   { label: t('practice.internship.internshipStatusOpen'), value: 'OPEN' as InternshipStatusCode },
-  { label: t('practice.internship.internshipStatusClosed'), value: 'CLOSED' as InternshipStatusCode },
+  {
+    label: t('practice.internship.internshipStatusClosed'),
+    value: 'CLOSED' as InternshipStatusCode,
+  },
 ])
 const projectStatusDropdown = computed(() => [
   { label: t('practice.internship.internshipStatusDraft'), key: 'DRAFT' },
@@ -156,7 +160,6 @@ interface IntForm {
   title: string
   company: string
   description: string
-  supervisorId: number | null
   startTs: number | null
   endTs: number | null
   capacity: number | null
@@ -165,18 +168,16 @@ const showIntForm = ref(false)
 const intFormMode = ref<'create' | 'edit'>('create')
 const editingIntId = ref<number | null>(null)
 const savingInt = ref(false)
-const intSupervisorLabel = ref<string | undefined>(undefined)
 const intForm = ref<IntForm>(emptyIntForm())
 
 function emptyIntForm(): IntForm {
-  return { title: '', company: '', description: '', supervisorId: null, startTs: null, endTs: null, capacity: null }
+  return { title: '', company: '', description: '', startTs: null, endTs: null, capacity: null }
 }
 
 function startCreateInt() {
   intFormMode.value = 'create'
   editingIntId.value = null
   intForm.value = emptyIntForm()
-  intSupervisorLabel.value = undefined
   showIntForm.value = true
 }
 
@@ -187,12 +188,10 @@ function startEditInt(row: InternshipResponse) {
     title: row.title,
     company: row.company ?? '',
     description: row.description ?? '',
-    supervisorId: row.supervisorId || null,
     startTs: row.startTime ? new Date(row.startTime).getTime() : null,
     endTs: row.endTime ? new Date(row.endTime).getTime() : null,
     capacity: row.capacity,
   }
-  intSupervisorLabel.value = row.supervisorName ?? undefined
   showIntForm.value = true
 }
 
@@ -205,7 +204,6 @@ async function handleSaveInt() {
     title: f.title.trim(),
     company: f.company || undefined,
     description: f.description || undefined,
-    supervisorId: f.supervisorId,
     startTime: f.startTs != null ? tsToIso(f.startTs) : null,
     endTime: f.endTs != null ? tsToIso(f.endTs) : null,
     capacity: f.capacity,
@@ -219,7 +217,6 @@ async function handleSaveInt() {
         title: body.title,
         company: body.company,
         description: body.description,
-        supervisorId: body.supervisorId,
         startTime: body.startTime,
         endTime: body.endTime,
         capacity: body.capacity,
@@ -270,7 +267,10 @@ function openIntApps(row: InternshipResponse) {
 // 报名审核
 const showReviewIntApp = ref(false)
 const reviewingIntApp = ref<InternshipApplicationResponse | null>(null)
-const reviewIntAppForm = ref<{ approved: boolean; reviewComment: string }>({ approved: true, reviewComment: '' })
+const reviewIntAppForm = ref<{ approved: boolean; reviewComment: string }>({
+  approved: true,
+  reviewComment: '',
+})
 const savingReviewIntApp = ref(false)
 
 function startReviewIntApp(row: InternshipApplicationResponse) {
@@ -347,7 +347,10 @@ async function handleDeleteReport(id: number) {
 // 报告评审
 const showReviewReport = ref(false)
 const reviewingReport = ref<InternshipReportResponse | null>(null)
-const reviewReportForm = ref<{ score: number | null; feedback: string }>({ score: null, feedback: '' })
+const reviewReportForm = ref<{ score: number | null; feedback: string }>({
+  score: null,
+  feedback: '',
+})
 const savingReviewReport = ref(false)
 
 function startReviewReport(row: InternshipReportResponse) {
@@ -548,9 +551,25 @@ function onTabChange(name: string | number) {
 
 // ============ 列定义 ============
 const internshipColumns = computed<DataTableColumns<InternshipResponse>>(() => [
-  { title: t('practice.internship.internshipTitle'), key: 'title', minWidth: 180, ellipsis: { tooltip: true } },
-  { title: t('practice.common.company'), key: 'company', width: 130, ellipsis: { tooltip: true }, render: (r) => r.company || '-' },
-  { title: t('practice.internship.supervisor'), key: 'supervisorName', width: 110, render: (r) => r.supervisorName || '-' },
+  {
+    title: t('practice.internship.internshipTitle'),
+    key: 'title',
+    minWidth: 180,
+    ellipsis: { tooltip: true },
+  },
+  {
+    title: t('practice.common.company'),
+    key: 'company',
+    width: 130,
+    ellipsis: { tooltip: true },
+    render: (r) => r.company || '-',
+  },
+  {
+    title: t('practice.internship.supervisor'),
+    key: 'supervisorName',
+    width: 110,
+    render: (r) => r.supervisorName || '-',
+  },
   {
     title: t('practice.common.capacity'),
     key: 'capacity',
@@ -558,15 +577,29 @@ const internshipColumns = computed<DataTableColumns<InternshipResponse>>(() => [
     align: 'center',
     render: (r) => `${r.selectedCount} / ${r.capacity}`,
   },
-  { title: t('practice.common.startTime'), key: 'startTime', width: 150, render: (r) => formatDateTime(r.startTime) },
-  { title: t('practice.common.endTime'), key: 'endTime', width: 150, render: (r) => formatDateTime(r.endTime) },
+  {
+    title: t('practice.common.startTime'),
+    key: 'startTime',
+    width: 150,
+    render: (r) => formatDateTime(r.startTime),
+  },
+  {
+    title: t('practice.common.endTime'),
+    key: 'endTime',
+    width: 150,
+    render: (r) => formatDateTime(r.endTime),
+  },
   {
     title: t('practice.common.status'),
     key: 'status',
     width: 90,
     align: 'center',
     render: (r) =>
-      h(NTag, { type: projectStatusTagType(r.status), size: 'small', bordered: false }, () => r.status),
+      h(
+        NTag,
+        { type: projectStatusTagType(r.status), size: 'small', bordered: false },
+        () => r.status,
+      ),
   },
   {
     title: t('practice.common.actions'),
@@ -575,19 +608,27 @@ const internshipColumns = computed<DataTableColumns<InternshipResponse>>(() => [
     fixed: 'right',
     render: (row) =>
       h(NSpace, { size: 8 }, () => [
-        h(NButton, { size: 'small', onClick: () => startEditInt(row) }, () => t('practice.common.edit')),
+        h(NButton, { size: 'small', onClick: () => startEditInt(row) }, () =>
+          t('practice.common.edit'),
+        ),
         h(
           NDropdown,
-          { options: projectStatusDropdown.value, onSelect: (key: string) => handleIntStatusChange(row, key) },
+          {
+            options: projectStatusDropdown.value,
+            onSelect: (key: string) => handleIntStatusChange(row, key),
+          },
           () => h(NButton, { size: 'small' }, () => t('practice.common.status')),
         ),
-        h(NButton, { size: 'small', onClick: () => openIntApps(row) }, () => t('practice.internship.viewApplications')),
+        h(NButton, { size: 'small', onClick: () => openIntApps(row) }, () =>
+          t('practice.internship.viewApplications'),
+        ),
         h(
           NPopconfirm,
           { onPositiveClick: () => handleDeleteInternship(row.id) },
           {
             default: () => t('practice.common.deleteConfirm'),
-            trigger: () => h(NButton, { size: 'small', type: 'error' }, () => t('practice.common.delete')),
+            trigger: () =>
+              h(NButton, { size: 'small', type: 'error' }, () => t('practice.common.delete')),
           },
         ),
       ]),
@@ -596,42 +637,92 @@ const internshipColumns = computed<DataTableColumns<InternshipResponse>>(() => [
 
 const intAppColumns = computed<DataTableColumns<InternshipApplicationResponse>>(() => [
   { title: t('practice.common.student'), key: 'studentName', width: 110 },
-  { title: t('practice.internship.apply'), key: 'applyReason', minWidth: 150, ellipsis: { tooltip: true }, render: (r) => r.applyReason || '-' },
+  {
+    title: t('practice.internship.apply'),
+    key: 'applyReason',
+    minWidth: 150,
+    ellipsis: { tooltip: true },
+    render: (r) => r.applyReason || '-',
+  },
   {
     title: t('practice.common.status'),
     key: 'status',
     width: 90,
     align: 'center',
     render: (r) =>
-      h(NTag, { type: auditStatusTagType(r.status), size: 'small', bordered: false }, () => r.status),
+      h(
+        NTag,
+        { type: auditStatusTagType(r.status), size: 'small', bordered: false },
+        () => r.status,
+      ),
   },
-  { title: t('practice.common.applyTime'), key: 'applyTime', width: 150, render: (r) => formatDateTime(r.applyTime) },
-  { title: t('practice.common.reviewComment'), key: 'reviewComment', width: 150, ellipsis: { tooltip: true }, render: (r) => r.reviewComment || '-' },
+  {
+    title: t('practice.common.applyTime'),
+    key: 'applyTime',
+    width: 150,
+    render: (r) => formatDateTime(r.applyTime),
+  },
+  {
+    title: t('practice.common.reviewComment'),
+    key: 'reviewComment',
+    width: 150,
+    ellipsis: { tooltip: true },
+    render: (r) => r.reviewComment || '-',
+  },
   {
     title: t('practice.common.actions'),
     key: 'actions',
     width: 100,
     render: (row) =>
       row.status === '待审核'
-        ? h(NButton, { size: 'small', type: 'primary', onClick: () => startReviewIntApp(row) }, () => t('practice.internship.reviewApply'))
+        ? h(
+            NButton,
+            { size: 'small', type: 'primary', onClick: () => startReviewIntApp(row) },
+            () => t('practice.internship.reviewApply'),
+          )
         : '-',
   },
 ])
 
 const reportColumns = computed<DataTableColumns<InternshipReportResponse>>(() => [
   { title: t('practice.common.student'), key: 'studentName', width: 110 },
-  { title: t('practice.internship.internshipTitle'), key: 'internshipTitle', minWidth: 160, ellipsis: { tooltip: true } },
-  { title: t('practice.internship.reportTitle'), key: 'title', minWidth: 160, ellipsis: { tooltip: true } },
-  { title: t('practice.common.submitTime'), key: 'submitTime', width: 150, render: (r) => formatDateTime(r.submitTime) },
+  {
+    title: t('practice.internship.internshipTitle'),
+    key: 'internshipTitle',
+    minWidth: 160,
+    ellipsis: { tooltip: true },
+  },
+  {
+    title: t('practice.internship.reportTitle'),
+    key: 'title',
+    minWidth: 160,
+    ellipsis: { tooltip: true },
+  },
+  {
+    title: t('practice.common.submitTime'),
+    key: 'submitTime',
+    width: 150,
+    render: (r) => formatDateTime(r.submitTime),
+  },
   {
     title: t('practice.common.status'),
     key: 'status',
     width: 90,
     align: 'center',
     render: (r) =>
-      h(NTag, { type: reportStatusTagType(r.status), size: 'small', bordered: false }, () => r.status),
+      h(
+        NTag,
+        { type: reportStatusTagType(r.status), size: 'small', bordered: false },
+        () => r.status,
+      ),
   },
-  { title: t('practice.internship.reportScore'), key: 'score', width: 80, align: 'center', render: (r) => r.score ?? '-' },
+  {
+    title: t('practice.internship.reportScore'),
+    key: 'score',
+    width: 80,
+    align: 'center',
+    render: (r) => r.score ?? '-',
+  },
   {
     title: t('practice.common.actions'),
     key: 'actions',
@@ -639,19 +730,38 @@ const reportColumns = computed<DataTableColumns<InternshipReportResponse>>(() =>
     fixed: 'right',
     render: (row) =>
       h(NSpace, { size: 8 }, () => [
-        h(NButton, { size: 'small', type: 'primary', onClick: () => startReviewReport(row) }, () => t('practice.internship.reviewReport')),
-        h(NButton, { size: 'small', onClick: () => handleDownloadReport(row.id) }, () => t('practice.internship.downloadReport')),
-        h(NPopconfirm, { onPositiveClick: () => handleDeleteReport(row.id) }, {
-          default: () => t('practice.common.deleteConfirm'),
-          trigger: () => h(NButton, { size: 'small', type: 'error' }, () => t('practice.common.delete')),
-        }),
+        h(NButton, { size: 'small', type: 'primary', onClick: () => startReviewReport(row) }, () =>
+          t('practice.internship.reviewReport'),
+        ),
+        h(NButton, { size: 'small', onClick: () => handleDownloadReport(row.id) }, () =>
+          t('practice.internship.downloadReport'),
+        ),
+        h(
+          NPopconfirm,
+          { onPositiveClick: () => handleDeleteReport(row.id) },
+          {
+            default: () => t('practice.common.deleteConfirm'),
+            trigger: () =>
+              h(NButton, { size: 'small', type: 'error' }, () => t('practice.common.delete')),
+          },
+        ),
       ]),
   },
 ])
 
 const trainingColumns = computed<DataTableColumns<TrainingResponse>>(() => [
-  { title: t('practice.internship.trainingTitle'), key: 'title', minWidth: 180, ellipsis: { tooltip: true } },
-  { title: t('practice.common.teacher'), key: 'teacherName', width: 110, render: (r) => r.teacherName || '-' },
+  {
+    title: t('practice.internship.trainingTitle'),
+    key: 'title',
+    minWidth: 180,
+    ellipsis: { tooltip: true },
+  },
+  {
+    title: t('practice.common.teacher'),
+    key: 'teacherName',
+    width: 110,
+    render: (r) => r.teacherName || '-',
+  },
   {
     title: t('practice.common.enrolledCount'),
     key: 'capacity',
@@ -659,15 +769,29 @@ const trainingColumns = computed<DataTableColumns<TrainingResponse>>(() => [
     align: 'center',
     render: (r) => `${r.enrolledCount} / ${r.capacity}`,
   },
-  { title: t('practice.common.startTime'), key: 'startTime', width: 150, render: (r) => formatDateTime(r.startTime) },
-  { title: t('practice.common.endTime'), key: 'endTime', width: 150, render: (r) => formatDateTime(r.endTime) },
+  {
+    title: t('practice.common.startTime'),
+    key: 'startTime',
+    width: 150,
+    render: (r) => formatDateTime(r.startTime),
+  },
+  {
+    title: t('practice.common.endTime'),
+    key: 'endTime',
+    width: 150,
+    render: (r) => formatDateTime(r.endTime),
+  },
   {
     title: t('practice.common.status'),
     key: 'status',
     width: 90,
     align: 'center',
     render: (r) =>
-      h(NTag, { type: projectStatusTagType(r.status), size: 'small', bordered: false }, () => r.status),
+      h(
+        NTag,
+        { type: projectStatusTagType(r.status), size: 'small', bordered: false },
+        () => r.status,
+      ),
   },
   {
     title: t('practice.common.actions'),
@@ -676,19 +800,27 @@ const trainingColumns = computed<DataTableColumns<TrainingResponse>>(() => [
     fixed: 'right',
     render: (row) =>
       h(NSpace, { size: 8 }, () => [
-        h(NButton, { size: 'small', onClick: () => startEditTrain(row) }, () => t('practice.common.edit')),
+        h(NButton, { size: 'small', onClick: () => startEditTrain(row) }, () =>
+          t('practice.common.edit'),
+        ),
         h(
           NDropdown,
-          { options: trainingStatusDropdown.value, onSelect: (key: string) => handleTrainStatusChange(row, key) },
+          {
+            options: trainingStatusDropdown.value,
+            onSelect: (key: string) => handleTrainStatusChange(row, key),
+          },
           () => h(NButton, { size: 'small' }, () => t('practice.common.status')),
         ),
-        h(NButton, { size: 'small', onClick: () => openTrainEnrollments(row) }, () => t('practice.internship.viewEnrollments')),
+        h(NButton, { size: 'small', onClick: () => openTrainEnrollments(row) }, () =>
+          t('practice.internship.viewEnrollments'),
+        ),
         h(
           NPopconfirm,
           { onPositiveClick: () => handleDeleteTraining(row.id) },
           {
             default: () => t('practice.common.deleteConfirm'),
-            trigger: () => h(NButton, { size: 'small', type: 'error' }, () => t('practice.common.delete')),
+            trigger: () =>
+              h(NButton, { size: 'small', type: 'error' }, () => t('practice.common.delete')),
           },
         ),
       ]),
@@ -697,326 +829,408 @@ const trainingColumns = computed<DataTableColumns<TrainingResponse>>(() => [
 
 const enrollmentColumns = computed<DataTableColumns<TrainingEnrollmentResponse>>(() => [
   { title: t('practice.common.student'), key: 'studentName', width: 140 },
-  { title: t('practice.common.enrollTime'), key: 'enrollTime', width: 180, render: (r) => formatDateTime(r.enrollTime) },
+  {
+    title: t('practice.common.enrollTime'),
+    key: 'enrollTime',
+    width: 180,
+    render: (r) => formatDateTime(r.enrollTime),
+  },
   {
     title: t('practice.common.status'),
     key: 'status',
     width: 120,
     align: 'center',
     render: (r) =>
-      h(NTag, { type: enrollStatusTagType(r.status), size: 'small', bordered: false }, () => r.status),
+      h(
+        NTag,
+        { type: enrollStatusTagType(r.status), size: 'small', bordered: false },
+        () => r.status,
+      ),
   },
 ])
 
 onMounted(() => {
+  if (!canManage.value) return
   loadInternships()
 })
 </script>
 
 <template>
   <div class="practice-page">
-    <NTabs v-model:value="activeTab" type="line" animated @update:value="onTabChange">
-      <!-- 实习项目 -->
-      <NTabPane name="internships" :tab="$t('practice.internship.tabInternships')">
-        <NCard :title="$t('practice.internship.tabInternships')">
-          <template #header-extra>
-            <NSpace align="center">
-              <NSelect
-                v-model:value="filterIntStatus"
-                :options="projectStatusOptions"
-                :placeholder="$t('practice.common.allStatus')"
-                clearable
-                style="width: 150px"
-                @update:value="handleIntFilterChange"
-              />
-              <NButton type="primary" @click="loadInternships">{{ $t('practice.common.query') }}</NButton>
-              <NButton @click="handleIntFilterChange">{{ $t('practice.common.reset') }}</NButton>
-              <NButton v-if="canManage" type="primary" @click="startCreateInt">
-                {{ $t('practice.internship.addInternship') }}
-              </NButton>
-            </NSpace>
-          </template>
-          <NSpin :show="internshipLoading">
-            <NDataTable
-              :columns="internshipColumns"
-              :data="internships"
-              :row-key="(r: InternshipResponse) => r.id"
-              :single-line="false"
-              :bordered="false"
-              :scroll-x="1180"
-              remote
-              :pagination="intPagination"
-            >
-              <template #empty><EmptyState :description="$t('practice.common.empty')" /></template>
-            </NDataTable>
-          </NSpin>
-        </NCard>
-      </NTabPane>
+    <NResult
+      v-if="!canManage"
+      status="403"
+      :title="$t('practice.common.noPermission')"
+      :description="$t('practice.common.noPermissionDesc')"
+    />
+    <template v-else>
+      <NTabs v-model:value="activeTab" type="line" animated @update:value="onTabChange">
+        <!-- 实习项目 -->
+        <NTabPane name="internships" :tab="$t('practice.internship.tabInternships')">
+          <NCard :title="$t('practice.internship.tabInternships')">
+            <template #header-extra>
+              <NSpace align="center">
+                <NSelect
+                  v-model:value="filterIntStatus"
+                  :options="projectStatusOptions"
+                  :placeholder="$t('practice.common.allStatus')"
+                  clearable
+                  style="width: 150px"
+                  @update:value="handleIntFilterChange"
+                />
+                <NButton type="primary" @click="loadInternships">{{
+                  $t('practice.common.query')
+                }}</NButton>
+                <NButton @click="handleIntFilterChange">{{ $t('practice.common.reset') }}</NButton>
+                <NButton v-if="isDepartment" type="primary" @click="startCreateInt">
+                  {{ $t('practice.internship.addInternship') }}
+                </NButton>
+              </NSpace>
+            </template>
+            <NSpin :show="internshipLoading">
+              <NDataTable
+                :columns="internshipColumns"
+                :data="internships"
+                :row-key="(r: InternshipResponse) => r.id"
+                :single-line="false"
+                :bordered="false"
+                :scroll-x="1180"
+                remote
+                :pagination="intPagination"
+              >
+                <template #empty
+                  ><EmptyState :description="$t('practice.common.empty')"
+                /></template>
+              </NDataTable>
+            </NSpin>
+          </NCard>
+        </NTabPane>
 
-      <!-- 实习报告 -->
-      <NTabPane name="reports" :tab="$t('practice.internship.tabReports')">
-        <NCard :title="$t('practice.internship.tabReports')">
-          <template #header-extra>
-            <NSpace align="center">
-              <NSelect
-                v-model:value="filterReportStatus"
-                :options="reportStatusOptions"
-                :placeholder="$t('practice.common.allStatus')"
-                clearable
-                style="width: 150px"
-                @update:value="handleReportFilterChange"
-              />
-              <NButton type="primary" @click="loadReports">{{ $t('practice.common.query') }}</NButton>
-              <NButton @click="handleReportFilterChange">{{ $t('practice.common.reset') }}</NButton>
-            </NSpace>
-          </template>
-          <NSpin :show="reportLoading">
-            <NDataTable
-              :columns="reportColumns"
-              :data="reports"
-              :row-key="(r: InternshipReportResponse) => r.id"
-              :single-line="false"
-              :bordered="false"
-              :scroll-x="980"
-              remote
-              :pagination="reportPagination"
-            >
-              <template #empty><EmptyState :description="$t('practice.common.empty')" /></template>
-            </NDataTable>
-          </NSpin>
-        </NCard>
-      </NTabPane>
+        <!-- 实习报告 -->
+        <NTabPane name="reports" :tab="$t('practice.internship.tabReports')">
+          <NCard :title="$t('practice.internship.tabReports')">
+            <template #header-extra>
+              <NSpace align="center">
+                <NSelect
+                  v-model:value="filterReportStatus"
+                  :options="reportStatusOptions"
+                  :placeholder="$t('practice.common.allStatus')"
+                  clearable
+                  style="width: 150px"
+                  @update:value="handleReportFilterChange"
+                />
+                <NButton type="primary" @click="loadReports">{{
+                  $t('practice.common.query')
+                }}</NButton>
+                <NButton @click="handleReportFilterChange">{{
+                  $t('practice.common.reset')
+                }}</NButton>
+              </NSpace>
+            </template>
+            <NSpin :show="reportLoading">
+              <NDataTable
+                :columns="reportColumns"
+                :data="reports"
+                :row-key="(r: InternshipReportResponse) => r.id"
+                :single-line="false"
+                :bordered="false"
+                :scroll-x="980"
+                remote
+                :pagination="reportPagination"
+              >
+                <template #empty
+                  ><EmptyState :description="$t('practice.common.empty')"
+                /></template>
+              </NDataTable>
+            </NSpin>
+          </NCard>
+        </NTabPane>
 
-      <!-- 培训课程 -->
-      <NTabPane name="trainings" :tab="$t('practice.internship.tabTrainings')">
-        <NCard :title="$t('practice.internship.tabTrainings')">
-          <template #header-extra>
-            <NSpace align="center">
-              <NSelect
-                v-model:value="filterTrainStatus"
-                :options="trainingStatusOptions"
-                :placeholder="$t('practice.common.allStatus')"
-                clearable
-                style="width: 150px"
-                @update:value="handleTrainFilterChange"
-              />
-              <NButton type="primary" @click="loadTrainings">{{ $t('practice.common.query') }}</NButton>
-              <NButton @click="handleTrainFilterChange">{{ $t('practice.common.reset') }}</NButton>
-              <NButton v-if="canManage" type="primary" @click="startCreateTrain">
-                {{ $t('practice.internship.addTraining') }}
-              </NButton>
-            </NSpace>
-          </template>
-          <NSpin :show="trainingLoading">
-            <NDataTable
-              :columns="trainingColumns"
-              :data="trainings"
-              :row-key="(r: TrainingResponse) => r.id"
-              :single-line="false"
-              :bordered="false"
-              :scroll-x="1180"
-              remote
-              :pagination="trainPagination"
-            >
-              <template #empty><EmptyState :description="$t('practice.common.empty')" /></template>
-            </NDataTable>
-          </NSpin>
-        </NCard>
-      </NTabPane>
-    </NTabs>
+        <!-- 培训课程 -->
+        <NTabPane name="trainings" :tab="$t('practice.internship.tabTrainings')">
+          <NCard :title="$t('practice.internship.tabTrainings')">
+            <template #header-extra>
+              <NSpace align="center">
+                <NSelect
+                  v-model:value="filterTrainStatus"
+                  :options="trainingStatusOptions"
+                  :placeholder="$t('practice.common.allStatus')"
+                  clearable
+                  style="width: 150px"
+                  @update:value="handleTrainFilterChange"
+                />
+                <NButton type="primary" @click="loadTrainings">{{
+                  $t('practice.common.query')
+                }}</NButton>
+                <NButton @click="handleTrainFilterChange">{{
+                  $t('practice.common.reset')
+                }}</NButton>
+                <NButton v-if="canManage" type="primary" @click="startCreateTrain">
+                  {{ $t('practice.internship.addTraining') }}
+                </NButton>
+              </NSpace>
+            </template>
+            <NSpin :show="trainingLoading">
+              <NDataTable
+                :columns="trainingColumns"
+                :data="trainings"
+                :row-key="(r: TrainingResponse) => r.id"
+                :single-line="false"
+                :bordered="false"
+                :scroll-x="1180"
+                remote
+                :pagination="trainPagination"
+              >
+                <template #empty
+                  ><EmptyState :description="$t('practice.common.empty')"
+                /></template>
+              </NDataTable>
+            </NSpin>
+          </NCard>
+        </NTabPane>
+      </NTabs>
 
-    <!-- 实习表单 -->
-    <NModal
-      v-model:show="showIntForm"
-      preset="card"
-      :title="intFormMode === 'create' ? $t('practice.internship.addInternship') : $t('practice.internship.editInternship')"
-      class="practice-form-modal"
-    >
-      <NForm :model="intForm" label-placement="top">
-        <NFormItem :label="$t('practice.internship.internshipTitle')" required>
-          <NInput v-model:value="intForm.title" />
-        </NFormItem>
-        <NSpace :size="12" wrap>
-          <NFormItem :label="$t('practice.common.company')" style="width: 240px">
-            <NInput v-model:value="intForm.company" />
+      <!-- 实习表单 -->
+      <NModal
+        v-model:show="showIntForm"
+        preset="card"
+        :title="
+          intFormMode === 'create'
+            ? $t('practice.internship.addInternship')
+            : $t('practice.internship.editInternship')
+        "
+        class="practice-form-modal"
+      >
+        <NForm :model="intForm" label-placement="top">
+          <NFormItem :label="$t('practice.internship.internshipTitle')" required>
+            <NInput v-model:value="intForm.title" />
           </NFormItem>
-          <NFormItem :label="$t('practice.internship.supervisor')" style="width: 240px">
-            <PagedSelect
-              :model-value="intForm.supervisorId"
-              :fetch-page="(page: number, pageSize: number) => fetchTeachers(page, pageSize)"
-              :label-of="(tch: Teacher) => `${tch.name} (${tch.title})`"
-              :value-of="(tch: Teacher) => tch.id"
-              :initial-label="intSupervisorLabel"
-              clearable
-              filterable
-              @update:model-value="(v: string | number | null | Array<string | number>) => (intForm.supervisorId = v as number | null)"
+          <NSpace :size="12" wrap>
+            <NFormItem :label="$t('practice.common.company')" style="width: 240px">
+              <NInput v-model:value="intForm.company" />
+            </NFormItem>
+            <NFormItem :label="$t('practice.common.capacity')" required style="width: 160px">
+              <NInputNumber v-model:value="intForm.capacity" :min="1" style="width: 100%" />
+            </NFormItem>
+          </NSpace>
+          <NSpace :size="12" wrap>
+            <NFormItem :label="$t('practice.common.startTime')" style="width: 240px">
+              <NDatePicker
+                v-model:value="intForm.startTs"
+                type="datetime"
+                clearable
+                style="width: 100%"
+              />
+            </NFormItem>
+            <NFormItem :label="$t('practice.common.endTime')" style="width: 240px">
+              <NDatePicker
+                v-model:value="intForm.endTs"
+                type="datetime"
+                clearable
+                style="width: 100%"
+              />
+            </NFormItem>
+          </NSpace>
+          <NFormItem :label="$t('practice.common.description')">
+            <NInput
+              v-model:value="intForm.description"
+              type="textarea"
+              :autosize="{ minRows: 2, maxRows: 4 }"
             />
           </NFormItem>
-          <NFormItem :label="$t('practice.common.capacity')" required style="width: 160px">
-            <NInputNumber v-model:value="intForm.capacity" :min="1" style="width: 100%" />
+        </NForm>
+        <template #footer>
+          <NSpace justify="end">
+            <NButton @click="showIntForm = false">{{ $t('practice.common.cancel') }}</NButton>
+            <NButton type="primary" :loading="savingInt" @click="handleSaveInt">{{
+              $t('practice.common.save')
+            }}</NButton>
+          </NSpace>
+        </template>
+      </NModal>
+
+      <!-- 实习报名列表 -->
+      <NModal
+        v-model:show="showIntApps"
+        preset="card"
+        :title="$t('practice.internship.applicationsOf', { title: intAppsOf?.title ?? '' })"
+        class="practice-app-modal"
+      >
+        <NSpin :show="intAppLoading">
+          <NDataTable
+            :columns="intAppColumns"
+            :data="intApps"
+            :row-key="(r: InternshipApplicationResponse) => r.id"
+            :single-line="false"
+            :bordered="false"
+            :scroll-x="760"
+            remote
+            :pagination="intAppPagination"
+          >
+            <template #empty><EmptyState :description="$t('practice.common.empty')" /></template>
+          </NDataTable>
+        </NSpin>
+      </NModal>
+
+      <!-- 报名审核 -->
+      <NModal
+        v-model:show="showReviewIntApp"
+        preset="card"
+        :title="$t('practice.internship.reviewApply')"
+        class="practice-form-modal"
+      >
+        <NForm :model="reviewIntAppForm" label-placement="top">
+          <NFormItem :label="$t('practice.internship.approve')" required>
+            <NRadioGroup v-model:value="reviewIntAppForm.approved">
+              <NRadio :value="true">{{ $t('practice.internship.approve') }}</NRadio>
+              <NRadio :value="false">{{ $t('practice.internship.reject') }}</NRadio>
+            </NRadioGroup>
           </NFormItem>
-        </NSpace>
-        <NSpace :size="12" wrap>
-          <NFormItem :label="$t('practice.common.startTime')" style="width: 240px">
-            <NDatePicker v-model:value="intForm.startTs" type="datetime" clearable style="width: 100%" />
-          </NFormItem>
-          <NFormItem :label="$t('practice.common.endTime')" style="width: 240px">
-            <NDatePicker v-model:value="intForm.endTs" type="datetime" clearable style="width: 100%" />
-          </NFormItem>
-        </NSpace>
-        <NFormItem :label="$t('practice.common.description')">
-          <NInput v-model:value="intForm.description" type="textarea" :autosize="{ minRows: 2, maxRows: 4 }" />
-        </NFormItem>
-      </NForm>
-      <template #footer>
-        <NSpace justify="end">
-          <NButton @click="showIntForm = false">{{ $t('practice.common.cancel') }}</NButton>
-          <NButton type="primary" :loading="savingInt" @click="handleSaveInt">{{ $t('practice.common.save') }}</NButton>
-        </NSpace>
-      </template>
-    </NModal>
-
-    <!-- 实习报名列表 -->
-    <NModal
-      v-model:show="showIntApps"
-      preset="card"
-      :title="$t('practice.internship.applicationsOf', { title: intAppsOf?.title ?? '' })"
-      class="practice-app-modal"
-    >
-      <NSpin :show="intAppLoading">
-        <NDataTable
-          :columns="intAppColumns"
-          :data="intApps"
-          :row-key="(r: InternshipApplicationResponse) => r.id"
-          :single-line="false"
-          :bordered="false"
-          :scroll-x="760"
-          remote
-          :pagination="intAppPagination"
-        >
-          <template #empty><EmptyState :description="$t('practice.common.empty')" /></template>
-        </NDataTable>
-      </NSpin>
-    </NModal>
-
-    <!-- 报名审核 -->
-    <NModal
-      v-model:show="showReviewIntApp"
-      preset="card"
-      :title="$t('practice.internship.reviewApply')"
-      class="practice-form-modal"
-    >
-      <NForm :model="reviewIntAppForm" label-placement="top">
-        <NFormItem :label="$t('practice.internship.approve')" required>
-          <NRadioGroup v-model:value="reviewIntAppForm.approved">
-            <NRadio :value="true">{{ $t('practice.internship.approve') }}</NRadio>
-            <NRadio :value="false">{{ $t('practice.internship.reject') }}</NRadio>
-          </NRadioGroup>
-        </NFormItem>
-        <NFormItem :label="$t('practice.common.reviewComment')">
-          <NInput v-model:value="reviewIntAppForm.reviewComment" type="textarea" :autosize="{ minRows: 2, maxRows: 4 }" />
-        </NFormItem>
-      </NForm>
-      <template #footer>
-        <NSpace justify="end">
-          <NButton @click="showReviewIntApp = false">{{ $t('practice.common.cancel') }}</NButton>
-          <NButton type="primary" :loading="savingReviewIntApp" @click="handleSaveReviewIntApp">{{ $t('practice.common.confirm') }}</NButton>
-        </NSpace>
-      </template>
-    </NModal>
-
-    <!-- 报告评审 -->
-    <NModal
-      v-model:show="showReviewReport"
-      preset="card"
-      :title="$t('practice.internship.reviewReport')"
-      class="practice-form-modal"
-    >
-      <NForm :model="reviewReportForm" label-placement="top">
-        <NFormItem :label="$t('practice.internship.reportScore')">
-          <NInputNumber v-model:value="reviewReportForm.score" :min="0" :max="100" style="width: 100%" />
-        </NFormItem>
-        <NFormItem :label="$t('practice.common.feedback')">
-          <NInput v-model:value="reviewReportForm.feedback" type="textarea" :autosize="{ minRows: 2, maxRows: 4 }" />
-        </NFormItem>
-      </NForm>
-      <template #footer>
-        <NSpace justify="end">
-          <NButton @click="showReviewReport = false">{{ $t('practice.common.cancel') }}</NButton>
-          <NButton type="primary" :loading="savingReviewReport" @click="handleSaveReviewReport">{{ $t('practice.common.confirm') }}</NButton>
-        </NSpace>
-      </template>
-    </NModal>
-
-    <!-- 培训表单 -->
-    <NModal
-      v-model:show="showTrainForm"
-      preset="card"
-      :title="trainFormMode === 'create' ? $t('practice.internship.addTraining') : $t('practice.internship.editTraining')"
-      class="practice-form-modal"
-    >
-      <NForm :model="trainForm" label-placement="top">
-        <NFormItem :label="$t('practice.internship.trainingTitle')" required>
-          <NInput v-model:value="trainForm.title" />
-        </NFormItem>
-        <NSpace :size="12" wrap>
-          <NFormItem :label="$t('practice.common.teacher')" style="width: 240px">
-            <PagedSelect
-              :model-value="trainForm.teacherId"
-              :fetch-page="(page: number, pageSize: number) => fetchTeachers(page, pageSize)"
-              :label-of="(tch: Teacher) => `${tch.name} (${tch.title})`"
-              :value-of="(tch: Teacher) => tch.id"
-              :initial-label="trainTeacherLabel"
-              clearable
-              filterable
-              @update:model-value="(v: string | number | null | Array<string | number>) => (trainForm.teacherId = v as number | null)"
+          <NFormItem :label="$t('practice.common.reviewComment')">
+            <NInput
+              v-model:value="reviewIntAppForm.reviewComment"
+              type="textarea"
+              :autosize="{ minRows: 2, maxRows: 4 }"
             />
           </NFormItem>
-          <NFormItem :label="$t('practice.common.capacity')" required style="width: 160px">
-            <NInputNumber v-model:value="trainForm.capacity" :min="1" style="width: 100%" />
-          </NFormItem>
-        </NSpace>
-        <NSpace :size="12" wrap>
-          <NFormItem :label="$t('practice.common.startTime')" style="width: 240px">
-            <NDatePicker v-model:value="trainForm.startTs" type="datetime" clearable style="width: 100%" />
-          </NFormItem>
-          <NFormItem :label="$t('practice.common.endTime')" style="width: 240px">
-            <NDatePicker v-model:value="trainForm.endTs" type="datetime" clearable style="width: 100%" />
-          </NFormItem>
-        </NSpace>
-        <NFormItem :label="$t('practice.common.description')">
-          <NInput v-model:value="trainForm.description" type="textarea" :autosize="{ minRows: 2, maxRows: 4 }" />
-        </NFormItem>
-      </NForm>
-      <template #footer>
-        <NSpace justify="end">
-          <NButton @click="showTrainForm = false">{{ $t('practice.common.cancel') }}</NButton>
-          <NButton type="primary" :loading="savingTrain" @click="handleSaveTrain">{{ $t('practice.common.save') }}</NButton>
-        </NSpace>
-      </template>
-    </NModal>
+        </NForm>
+        <template #footer>
+          <NSpace justify="end">
+            <NButton @click="showReviewIntApp = false">{{ $t('practice.common.cancel') }}</NButton>
+            <NButton type="primary" :loading="savingReviewIntApp" @click="handleSaveReviewIntApp">{{
+              $t('practice.common.confirm')
+            }}</NButton>
+          </NSpace>
+        </template>
+      </NModal>
 
-    <!-- 培训报名列表 -->
-    <NModal
-      v-model:show="showTrainEnrollments"
-      preset="card"
-      :title="$t('practice.internship.enrollmentsOf', { title: trainEnrollOf?.title ?? '' })"
-      class="practice-app-modal"
-    >
-      <NSpin :show="enrollLoading">
-        <NDataTable
-          :columns="enrollmentColumns"
-          :data="enrollments"
-          :row-key="(r: TrainingEnrollmentResponse) => r.id"
-          :single-line="false"
-          :bordered="false"
-          remote
-          :pagination="enrollPagination"
-        >
-          <template #empty><EmptyState :description="$t('practice.common.empty')" /></template>
-        </NDataTable>
-      </NSpin>
-    </NModal>
+      <!-- 报告评审 -->
+      <NModal
+        v-model:show="showReviewReport"
+        preset="card"
+        :title="$t('practice.internship.reviewReport')"
+        class="practice-form-modal"
+      >
+        <NForm :model="reviewReportForm" label-placement="top">
+          <NFormItem :label="$t('practice.internship.reportScore')">
+            <NInputNumber
+              v-model:value="reviewReportForm.score"
+              :min="0"
+              :max="100"
+              style="width: 100%"
+            />
+          </NFormItem>
+          <NFormItem :label="$t('practice.common.feedback')">
+            <NInput
+              v-model:value="reviewReportForm.feedback"
+              type="textarea"
+              :autosize="{ minRows: 2, maxRows: 4 }"
+            />
+          </NFormItem>
+        </NForm>
+        <template #footer>
+          <NSpace justify="end">
+            <NButton @click="showReviewReport = false">{{ $t('practice.common.cancel') }}</NButton>
+            <NButton type="primary" :loading="savingReviewReport" @click="handleSaveReviewReport">{{
+              $t('practice.common.confirm')
+            }}</NButton>
+          </NSpace>
+        </template>
+      </NModal>
+
+      <!-- 培训表单 -->
+      <NModal
+        v-model:show="showTrainForm"
+        preset="card"
+        :title="
+          trainFormMode === 'create'
+            ? $t('practice.internship.addTraining')
+            : $t('practice.internship.editTraining')
+        "
+        class="practice-form-modal"
+      >
+        <NForm :model="trainForm" label-placement="top">
+          <NFormItem :label="$t('practice.internship.trainingTitle')" required>
+            <NInput v-model:value="trainForm.title" />
+          </NFormItem>
+          <NSpace :size="12" wrap>
+            <NFormItem :label="$t('practice.common.teacher')" style="width: 240px">
+              <PagedSelect
+                :model-value="trainForm.teacherId"
+                :fetch-page="(page: number, pageSize: number) => fetchTeachers(page, pageSize)"
+                :label-of="(tch: Teacher) => `${tch.name} (${tch.title})`"
+                :value-of="(tch: Teacher) => tch.userId"
+                :initial-label="trainTeacherLabel"
+                clearable
+                filterable
+                @update:model-value="
+                  (v: string | number | null | Array<string | number>) =>
+                    (trainForm.teacherId = v as number | null)
+                "
+              />
+            </NFormItem>
+            <NFormItem :label="$t('practice.common.capacity')" required style="width: 160px">
+              <NInputNumber v-model:value="trainForm.capacity" :min="1" style="width: 100%" />
+            </NFormItem>
+          </NSpace>
+          <NSpace :size="12" wrap>
+            <NFormItem :label="$t('practice.common.startTime')" style="width: 240px">
+              <NDatePicker
+                v-model:value="trainForm.startTs"
+                type="datetime"
+                clearable
+                style="width: 100%"
+              />
+            </NFormItem>
+            <NFormItem :label="$t('practice.common.endTime')" style="width: 240px">
+              <NDatePicker
+                v-model:value="trainForm.endTs"
+                type="datetime"
+                clearable
+                style="width: 100%"
+              />
+            </NFormItem>
+          </NSpace>
+          <NFormItem :label="$t('practice.common.description')">
+            <NInput
+              v-model:value="trainForm.description"
+              type="textarea"
+              :autosize="{ minRows: 2, maxRows: 4 }"
+            />
+          </NFormItem>
+        </NForm>
+        <template #footer>
+          <NSpace justify="end">
+            <NButton @click="showTrainForm = false">{{ $t('practice.common.cancel') }}</NButton>
+            <NButton type="primary" :loading="savingTrain" @click="handleSaveTrain">{{
+              $t('practice.common.save')
+            }}</NButton>
+          </NSpace>
+        </template>
+      </NModal>
+
+      <!-- 培训报名列表 -->
+      <NModal
+        v-model:show="showTrainEnrollments"
+        preset="card"
+        :title="$t('practice.internship.enrollmentsOf', { title: trainEnrollOf?.title ?? '' })"
+        class="practice-app-modal"
+      >
+        <NSpin :show="enrollLoading">
+          <NDataTable
+            :columns="enrollmentColumns"
+            :data="enrollments"
+            :row-key="(r: TrainingEnrollmentResponse) => r.id"
+            :single-line="false"
+            :bordered="false"
+            remote
+            :pagination="enrollPagination"
+          >
+            <template #empty><EmptyState :description="$t('practice.common.empty')" /></template>
+          </NDataTable>
+        </NSpin>
+      </NModal>
+    </template>
   </div>
 </template>
 
