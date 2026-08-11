@@ -74,11 +74,7 @@ export interface PublicCourseDto extends TeachInfoBase {
  * 课表课程（后端 CourseDto 多态序列化，按 category 区分子类）。
  * 按 category 收敛到对应子类型后可访问其专属字段（如公选课的选课活动信息）。
  */
-export type TeachInfo =
-  | RequiredCourseDto
-  | ElectiveCourseDto
-  | PracticeCourseDto
-  | PublicCourseDto
+export type TeachInfo = RequiredCourseDto | ElectiveCourseDto | PracticeCourseDto | PublicCourseDto
 
 export interface ClassCourse {
   courseName: string
@@ -145,11 +141,17 @@ export interface TeachInfoDraft {
 }
 
 export interface Teacher {
+  /** teacher 表主键 */
   id: number
+  /** 教师 user.id（毕业设计分配等场景使用） */
+  userId: number
   name: string
   teacherNo: string
   title: string
+  /** 院系名称（由 college_id 解析） */
   department: string
+  /** 所属院系 id（-> college.id） */
+  collegeId: number | null
 }
 
 export interface DraftClassSummary {
