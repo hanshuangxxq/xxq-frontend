@@ -103,9 +103,12 @@ function renderNotificationLabel() {
 }
 
 const menuOptions = computed(() => {
-  const items: Array<{ label: string; key: string; icon?: () => ReturnType<typeof h> }> = [
-    { label: t('profile.title'), key: '/profile', icon: renderSvgIcon(perInfoSvg) },
-  ]
+  const items: Array<{
+    label: string
+    key: string
+    icon?: () => ReturnType<typeof h>
+    children?: Array<{ label: string; key: string }>
+  }> = [{ label: t('profile.title'), key: '/profile', icon: renderSvgIcon(perInfoSvg) }]
   if (authStore.user?.userType === 'student' || authStore.user?.userType === 'teacher') {
     items.push({ label: t('curriculum.title'), key: '/curriculum', icon: renderSvgIcon(courseSvg) })
   }
@@ -161,6 +164,11 @@ const menuOptions = computed(() => {
       label: t('majors.title'),
       key: '/majors',
       icon: renderSvgIcon(majorSvg),
+    })
+    items.push({
+      label: t('college.title'),
+      key: '/colleges',
+      icon: renderSvgIcon(classSvg),
     })
     items.push({
       label: t('layout.semester'),
@@ -259,10 +267,12 @@ const menuOptions = computed(() => {
   // 实践与创新
   if (authStore.user?.userType === 'teacher') {
     items.push({
-      label: t('practice.graduation.mgTitle'),
-      key: '/practice/graduation',
-      icon: renderSvgIcon(reviewSvg),
+      label: t('practice.internship.mgTitle'),
+      key: '/practice/internship',
+      icon: renderSvgIcon(courseSvg),
     })
+  }
+  if (authStore.user?.userType === 'department') {
     items.push({
       label: t('practice.internship.mgTitle'),
       key: '/practice/internship',
@@ -270,11 +280,6 @@ const menuOptions = computed(() => {
     })
   }
   if (authStore.user?.userType === 'academic_admin') {
-    items.push({
-      label: t('practice.graduation.mgTitle'),
-      key: '/practice/graduation',
-      icon: renderSvgIcon(reviewSvg),
-    })
     items.push({
       label: t('practice.internship.mgTitle'),
       key: '/practice/internship',
@@ -293,11 +298,6 @@ const menuOptions = computed(() => {
   }
   if (authStore.user?.userType === 'student') {
     items.push({
-      label: t('practice.graduation.myTitle'),
-      key: '/practice/graduation/my',
-      icon: renderSvgIcon(reviewSvg),
-    })
-    items.push({
       label: t('practice.internship.myTitle'),
       key: '/practice/internship/my',
       icon: renderSvgIcon(courseSvg),
@@ -311,6 +311,86 @@ const menuOptions = computed(() => {
       label: t('practice.socialPractice.myTitle'),
       key: '/practice/social-practice/my',
       icon: renderSvgIcon(informationSvg),
+    })
+  }
+  // 毕业设计与论文
+  const graduationMenu: Record<string, Array<{ label: string; key: string }>> = {
+    student: [
+      {
+        label: t('graduation.student.campaignsTitle'),
+        key: '/practice/graduation/student/campaigns',
+      },
+      {
+        label: t('graduation.student.myProposalsTitle'),
+        key: '/practice/graduation/student/proposals',
+      },
+      { label: t('graduation.student.openingTitle'), key: '/practice/graduation/student/opening' },
+      { label: t('graduation.student.midtermTitle'), key: '/practice/graduation/student/midterm' },
+      { label: t('graduation.student.thesisTitle'), key: '/practice/graduation/student/thesis' },
+      { label: t('graduation.student.defenseTitle'), key: '/practice/graduation/student/defense' },
+      { label: t('graduation.student.myScoreTitle'), key: '/practice/graduation/student/score' },
+    ],
+    teacher: [
+      { label: t('graduation.teacher.poolTitle'), key: '/practice/graduation/teacher/pool' },
+      {
+        label: t('graduation.teacher.myStudentsTitle'),
+        key: '/practice/graduation/teacher/students',
+      },
+      {
+        label: t('graduation.teacher.openingReviewTitle'),
+        key: '/practice/graduation/teacher/opening-review',
+      },
+      {
+        label: t('graduation.teacher.midtermReviewTitle'),
+        key: '/practice/graduation/teacher/midterm-review',
+      },
+      {
+        label: t('graduation.teacher.guidanceTitle'),
+        key: '/practice/graduation/teacher/guidance',
+      },
+      {
+        label: t('graduation.teacher.thesisReviewTitle'),
+        key: '/practice/graduation/teacher/thesis-review',
+      },
+      {
+        label: t('graduation.teacher.scoreEntryTitle'),
+        key: '/practice/graduation/teacher/scores',
+      },
+    ],
+    department: [
+      {
+        label: t('graduation.dept.proposalReviewTitle'),
+        key: '/practice/graduation/dept/proposal-review',
+      },
+      { label: t('graduation.dept.allocateTitle'), key: '/practice/graduation/dept/allocate' },
+      { label: t('graduation.dept.dashboardTitle'), key: '/practice/graduation/dept/dashboard' },
+      { label: t('graduation.dept.defenseArrangeTitle'), key: '/practice/graduation/dept/defense' },
+      { label: t('graduation.dept.scoresPublishTitle'), key: '/practice/graduation/dept/scores' },
+    ],
+    academic_admin: [
+      {
+        label: t('graduation.academic.campaignMgmtTitle'),
+        key: '/practice/graduation/admin/campaigns',
+      },
+      { label: t('graduation.academic.reviewTitle'), key: '/practice/graduation/admin/review' },
+      { label: t('graduation.academic.overviewTitle'), key: '/practice/graduation/admin/overview' },
+      {
+        label: t('graduation.academic.globalDashboardTitle'),
+        key: '/practice/graduation/admin/dashboard',
+      },
+      { label: t('graduation.academic.operationLogTitle'), key: '/practice/graduation/admin/logs' },
+      { label: t('graduation.academic.thesisMgmtTitle'), key: '/practice/graduation/admin/theses' },
+      { label: t('graduation.academic.scoreTableTitle'), key: '/practice/graduation/admin/scores' },
+    ],
+  }
+  const userType = authStore.user?.userType
+  const graduationChildren = userType ? graduationMenu[userType] : undefined
+  if (graduationChildren?.length) {
+    items.push({
+      label: t('graduation.menuTitle'),
+      key: 'graduation',
+      icon: renderSvgIcon(courseSvg),
+      children: graduationChildren,
     })
   }
   return items
