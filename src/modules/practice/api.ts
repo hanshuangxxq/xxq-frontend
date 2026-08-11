@@ -1,17 +1,6 @@
 import { api } from '@/shared/api'
 import type { PageResult, Result } from '@/shared/types'
 import type {
-  TopicCreateRequest,
-  TopicUpdateRequest,
-  TopicResponse,
-  TopicQuery,
-  SelectionApplyRequest,
-  SelectionResponse,
-  SelectionReviewRequest,
-  ThesisSubmitRequest,
-  ThesisResponse,
-  ThesisReviewRequest,
-  ThesisQuery,
   InternshipCreateRequest,
   InternshipUpdateRequest,
   InternshipResponse,
@@ -52,108 +41,13 @@ import type {
 
 const BASE = '/practice'
 
-// ===== 毕业设计与论文 =====
-
-export function createTopic(body: TopicCreateRequest): Promise<Result<TopicResponse>> {
-  return api.post(`${BASE}/graduation/topics`, body)
-}
-
-export function updateTopic(id: number, body: TopicUpdateRequest): Promise<Result<TopicResponse>> {
-  return api.put(`${BASE}/graduation/topics/${id}`, body)
-}
-
-export function updateTopicStatus(id: number, status: string): Promise<Result<null>> {
-  return api.put(`${BASE}/graduation/topics/${id}/status?status=${status}`)
-}
-
-export function fetchTopics(query?: TopicQuery): Promise<Result<PageResult<TopicResponse>>> {
-  const params = new URLSearchParams()
-  if (query?.teacherId != null) params.set('teacherId', String(query.teacherId))
-  if (query?.status) params.set('status', query.status)
-  if (query?.page != null) params.set('page', String(query.page))
-  if (query?.pageSize != null) params.set('pageSize', String(query.pageSize))
-  const qs = params.toString()
-  return api.get(`${BASE}/graduation/topics${qs ? `?${qs}` : ''}`)
-}
-
-export function fetchTopic(id: number): Promise<Result<TopicResponse>> {
-  return api.get(`${BASE}/graduation/topics/${id}`)
-}
-
-export function fetchAvailableTopics(): Promise<Result<TopicResponse[]>> {
-  return api.get(`${BASE}/graduation/topics/available`)
-}
-
-export function deleteTopic(id: number): Promise<Result<null>> {
-  return api.delete(`${BASE}/graduation/topics/${id}`)
-}
-
-export function applyTopic(body: SelectionApplyRequest): Promise<Result<SelectionResponse>> {
-  return api.post(`${BASE}/graduation/topics/applications`, body)
-}
-
-export function revokeTopicApplication(id: number): Promise<Result<null>> {
-  return api.delete(`${BASE}/graduation/topics/applications/${id}`)
-}
-
-export function reviewTopicApplication(
-  id: number,
-  body: SelectionReviewRequest,
-): Promise<Result<SelectionResponse>> {
-  return api.post(`${BASE}/graduation/topics/applications/${id}/review`, body)
-}
-
-export function fetchMyTopicApplications(): Promise<Result<SelectionResponse[]>> {
-  return api.get(`${BASE}/graduation/topics/applications/my`)
-}
-
-export function fetchTopicApplications(
-  topicId: number,
-  page?: number,
-  pageSize?: number,
-): Promise<Result<PageResult<SelectionResponse>>> {
-  const params = new URLSearchParams()
-  if (page != null) params.set('page', String(page))
-  if (pageSize != null) params.set('pageSize', String(pageSize))
-  const qs = params.toString()
-  return api.get(`${BASE}/graduation/topics/${topicId}/applications${qs ? `?${qs}` : ''}`)
-}
-
-// ---- 论文 ----
-
-export function submitThesis(data: ThesisSubmitRequest, file: File): Promise<Result<ThesisResponse>> {
-  const fd = new FormData()
-  fd.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }))
-  fd.append('file', file)
-  return api.postForm(`${BASE}/graduation/theses`, fd)
-}
-
-export function fetchMyThesis(): Promise<Result<ThesisResponse | null>> {
-  return api.get(`${BASE}/graduation/theses/my`)
-}
-
-export function fetchTheses(query?: ThesisQuery): Promise<Result<PageResult<ThesisResponse>>> {
-  const params = new URLSearchParams()
-  if (query?.status) params.set('status', query.status)
-  if (query?.page != null) params.set('page', String(query.page))
-  if (query?.pageSize != null) params.set('pageSize', String(query.pageSize))
-  const qs = params.toString()
-  return api.get(`${BASE}/graduation/theses${qs ? `?${qs}` : ''}`)
-}
-
-export function reviewThesis(id: number, body: ThesisReviewRequest): Promise<Result<ThesisResponse>> {
-  return api.post(`${BASE}/graduation/theses/${id}/review`, body)
-}
-
-export function deleteThesis(id: number): Promise<Result<null>> {
-  return api.delete(`${BASE}/graduation/theses/${id}`)
-}
-
 // ===== 实习与培训 =====
 
 // ---- 实习项目 ----
 
-export function createInternship(body: InternshipCreateRequest): Promise<Result<InternshipResponse>> {
+export function createInternship(
+  body: InternshipCreateRequest,
+): Promise<Result<InternshipResponse>> {
   return api.post(`${BASE}/internships`, body)
 }
 
@@ -280,7 +174,9 @@ export function updateTrainingStatus(id: number, status: string): Promise<Result
   return api.put(`${BASE}/trainings/${id}/status?status=${status}`)
 }
 
-export function fetchTrainings(query?: TrainingQuery): Promise<Result<PageResult<TrainingResponse>>> {
+export function fetchTrainings(
+  query?: TrainingQuery,
+): Promise<Result<PageResult<TrainingResponse>>> {
   const params = new URLSearchParams()
   if (query?.teacherId != null) params.set('teacherId', String(query.teacherId))
   if (query?.status) params.set('status', query.status)
@@ -482,7 +378,9 @@ export function reviewSocialPracticeApplication(
   return api.post(`${BASE}/social-practices/applications/${id}/review`, body)
 }
 
-export function fetchMySocialPracticeApplications(): Promise<Result<SocialPracticeApplicationResponse[]>> {
+export function fetchMySocialPracticeApplications(): Promise<
+  Result<SocialPracticeApplicationResponse[]>
+> {
   return api.get(`${BASE}/social-practices/applications/my`)
 }
 
