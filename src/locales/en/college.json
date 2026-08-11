@@ -1,0 +1,23 @@
+{
+  "title": "Colleges",
+  "collegeName": "College Name",
+  "collegeCode": "College Code",
+  "collegeNo": "College No.",
+  "createTime": "Created At",
+  "actions": "Actions",
+  "add": "New College",
+  "addTitle": "New College",
+  "editTitle": "Edit College",
+  "edit": "Edit",
+  "delete": "Delete",
+  "deleteConfirm": "Delete this college?",
+  "save": "Save",
+  "cancel": "Cancel",
+  "empty": "No colleges",
+  "nameRequired": "College name required",
+  "loadFail": "Load failed",
+  "saveSuccess": "Saved",
+  "saveFail": "Save failed",
+  "deleteSuccess": "Deleted",
+  "deleteFail": "Delete failed"
+}
