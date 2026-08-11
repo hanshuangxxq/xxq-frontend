@@ -1,0 +1,12 @@
+.context-card {
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.content-card {
+  border-radius: 8px;
+}
+
+:deep(.free-row) {
+  background: #fffbe6 !important;
+}
