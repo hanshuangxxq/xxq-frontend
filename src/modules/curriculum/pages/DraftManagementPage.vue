@@ -28,12 +28,14 @@ import {
   fetchCurrentSemester,
 } from '../api'
 import { fetchClassNames } from '@/modules/class-names/api'
+import { fetchColleges } from '@/modules/college/api'
 import { fetchCourses } from '@/modules/course/api'
 import { isPublicCourse } from '@/modules/course/utils'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import PagedSelect from '@/shared/components/PagedSelect.vue'
 import type { DraftItem, DraftClassSummary, Semester } from '../types'
 import type { ClassName } from '@/modules/class-names/types'
+import type { College } from '@/modules/college/types'
 import type { Course } from '@/modules/course/types'
 import type { Teacher } from '@/modules/curriculum/types'
 
@@ -48,6 +50,24 @@ const { canManageDrafts } = useRoleCheck()
 const loading = ref(false)
 const drafts = ref<DraftItem[]>([])
 const summary = ref<DraftClassSummary | null>(null)
+
+const colleges = ref<College[]>([])
+
+async function loadColleges() {
+  try {
+    const res = await fetchColleges()
+    colleges.value = res.data
+  } catch {
+    colleges.value = []
+  }
+}
+
+/** 班级下拉展示：班级名（院系名），院系缺失时仅班级名 */
+function classNameLabel(c: ClassName): string {
+  const name =
+    c.collegeId != null ? colleges.value.find((x) => x.id === c.collegeId)?.collegeName : null
+  return name ? `${c.className} (${name})` : c.className
+}
 
 const selectedClasses = ref<string[]>([])
 const entries = ref<
@@ -214,7 +234,10 @@ async function handleDeleteSingle(row: DraftItem) {
   }
 }
 
-onMounted(loadData)
+onMounted(() => {
+  loadData()
+  loadColleges()
+})
 </script>
 
 <template>
@@ -232,7 +255,7 @@ onMounted(loadData)
           <PagedSelect
             :model-value="selectedClasses"
             :fetch-page="(page: number, pageSize: number) => fetchClassNames(page, pageSize)"
-            :label-of="(c: ClassName) => `${c.className} (${c.college})`"
+            :label-of="(c: ClassName) => classNameLabel(c)"
             :value-of="(c: ClassName) => c.className"
             :placeholder="$t('teach-drafts.classNamePlaceholder')"
             multiple
