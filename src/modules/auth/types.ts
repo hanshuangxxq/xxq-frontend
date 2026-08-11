@@ -46,7 +46,8 @@ export interface RefreshResult {
 export interface ClassNameInfo {
   id: number
   className: string
-  college: string
+  /** 所属院系 id（-> college.id） */
+  collegeId: number | null
 }
 
 /** 用户完整信息 */
