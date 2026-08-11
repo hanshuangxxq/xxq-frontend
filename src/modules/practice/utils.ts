@@ -64,18 +64,112 @@ export function auditStatusTagType(status: string): TagType {
   }
 }
 
-/** 论文状态 -> Tag 类型 */
+/** 毕设活动状态（草稿/进行中/已结束）-> Tag 类型 */
+export function campaignStatusTagType(status: string): TagType {
+  switch (status) {
+    case '进行中':
+      return 'success'
+    case '草稿':
+      return 'default'
+    case '已结束':
+      return 'info'
+    default:
+      return 'default'
+  }
+}
+
+/** 毕设选题状态（待院系初审/待教务终审/审批完毕/已驳回）-> Tag 类型 */
+export function proposalStatusTagType(status: string): TagType {
+  switch (status) {
+    case '待院系初审':
+    case '待教务终审':
+      return 'warning'
+    case '审批完毕':
+      return 'success'
+    case '已驳回':
+      return 'error'
+    default:
+      return 'default'
+  }
+}
+
+/** 开题状态（已提交/已通过/需修改）-> Tag 类型 */
+export function openingStatusTagType(status: string): TagType {
+  switch (status) {
+    case '已提交':
+      return 'warning'
+    case '已通过':
+      return 'success'
+    case '需修改':
+      return 'error'
+    default:
+      return 'default'
+  }
+}
+
+/** 中期结论（正常/警告/严重滞后）-> Tag 类型 */
+export function midtermConclusionTagType(conclusion: string): TagType {
+  switch (conclusion) {
+    case '正常':
+      return 'success'
+    case '警告':
+      return 'warning'
+    case '严重滞后':
+      return 'error'
+    default:
+      return 'default'
+  }
+}
+
+/** 论文状态（待形式审查/形式审查通过/形式审查退回/查重通过/查重不通过）-> Tag 类型 */
 export function thesisStatusTagType(status: string): TagType {
   switch (status) {
+    case '待形式审查':
+      return 'warning'
+    case '形式审查通过':
+      return 'info'
+    case '形式审查退回':
+    case '查重不通过':
+      return 'error'
+    case '查重通过':
+      return 'success'
+    default:
+      return 'default'
+  }
+}
+
+/** 查重结论（通过/不通过）-> Tag 类型 */
+export function duplicateResultTagType(result: string): TagType {
+  switch (result) {
     case '通过':
       return 'success'
-    case '未通过':
+    case '不通过':
       return 'error'
-    case '需修改':
-      return 'warning'
-    case '评审中':
+    default:
+      return 'default'
+  }
+}
+
+/** 毕设成绩状态（分项未齐备/已合成总评/已发布）-> Tag 类型 */
+export function scoreStatusTagType(status: string): TagType {
+  switch (status) {
+    case '分项未齐备':
+      return 'default'
+    case '已合成总评':
       return 'info'
-    case '已提交':
+    case '已发布':
+      return 'success'
+    default:
+      return 'default'
+  }
+}
+
+/** 匹配来源（教师自选/院系指定）-> Tag 类型 */
+export function assignmentSourceTagType(source: string): TagType {
+  switch (source) {
+    case '教师自选':
+      return 'info'
+    case '院系指定':
       return 'default'
     default:
       return 'default'
@@ -110,6 +204,15 @@ export function enrollStatusTagType(status: string): TagType {
 export function formatDateTime(iso?: string | null): string {
   if (!iso) return '-'
   return iso.slice(0, 16).replace('T', ' ')
+}
+
+/** 附件类型校验（论文/开题/中期，F-R-10）：类型仅 doc/docx/pdf/zip/rar 且 ≤20MB；返回 'type'|'size'|null */
+export function validateUploadFile(file: File): 'type' | 'size' | null {
+  const allowed = ['doc', 'docx', 'pdf', 'zip', 'rar']
+  const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
+  if (!allowed.includes(ext)) return 'type'
+  if (file.size > 20 * 1024 * 1024) return 'size'
+  return null
 }
 
 function pad(n: number): string {
