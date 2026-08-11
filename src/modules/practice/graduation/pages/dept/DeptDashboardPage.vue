@@ -1,0 +1,36 @@
+<script setup lang="ts">
+import { ref } from 'vue'
+import { NCard, NResult } from 'naive-ui'
+import CampaignContextSelector from '../../components/CampaignContextSelector.vue'
+import DashboardContent from '../../components/DashboardContent.vue'
+import { useRoleCheck } from '@/shared/composables/useRoleCheck'
+
+const { isDepartment } = useRoleCheck()
+
+const campaignId = ref<number | null>(null)
+</script>
+
+<template>
+  <div class="graduation-page">
+    <NResult
+      v-if="!isDepartment"
+      status="403"
+      :title="$t('graduation.common.noPermission')"
+      :description="$t('graduation.common.noPermissionDesc')"
+    />
+    <template v-else>
+      <NCard class="context-card">
+        <CampaignContextSelector v-model:campaign-id="campaignId" />
+      </NCard>
+
+      <NCard :title="$t('graduation.dept.dashboardTitle')" class="content-card">
+        <DashboardContent
+          :campaign-id="campaignId"
+          :scope-label="$t('graduation.dept.myCollegeScope')"
+        />
+      </NCard>
+    </template>
+  </div>
+</template>
+
+<style scoped src="./DeptDashboardPage.css"></style>
