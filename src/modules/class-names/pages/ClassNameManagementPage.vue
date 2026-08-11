@@ -10,14 +10,17 @@ import {
   NForm,
   NFormItem,
   NInput,
+  NSelect,
   NPopconfirm,
   NSpin,
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
 import { fetchClassNames, createClassName, updateClassName, deleteClassName } from '../api'
+import { fetchColleges } from '@/modules/college/api'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import { useRemotePagination } from '@/shared/composables/useRemotePagination'
+import type { College } from '@/modules/college/types'
 import type { ClassName, ClassNameForm } from '../types'
 
 const { t } = useI18n()
@@ -28,15 +31,41 @@ const loading = ref(false)
 const data = ref<ClassName[]>([])
 const { pagination } = useRemotePagination(loadData)
 
-const baseColumns: DataTableColumns<ClassName> = [
+const colleges = ref<College[]>([])
+
+const collegeOptions = computed(() =>
+  colleges.value.map((c) => ({ label: c.collegeName, value: c.id })),
+)
+
+function collegeNameOf(id: number | null): string {
+  if (id == null) return '-'
+  return colleges.value.find((c) => c.id === id)?.collegeName ?? '-'
+}
+
+async function loadColleges() {
+  try {
+    const res = await fetchColleges()
+    colleges.value = res.data
+  } catch {
+    colleges.value = []
+  }
+}
+
+const baseColumns = computed<DataTableColumns<ClassName>>(() => [
   { title: t('class-names.className'), key: 'className', width: 180, ellipsis: { tooltip: true } },
-  { title: t('class-names.college'), key: 'college', width: 180, ellipsis: { tooltip: true } },
-]
+  {
+    title: t('class-names.college'),
+    key: 'collegeId',
+    width: 180,
+    ellipsis: { tooltip: true },
+    render: (r) => collegeNameOf(r.collegeId),
+  },
+])
 
 const columns = computed<DataTableColumns<ClassName>>(() => {
-  if (!canManageClassNames.value) return baseColumns
+  if (!canManageClassNames.value) return baseColumns.value
   return [
-    ...baseColumns,
+    ...baseColumns.value,
     {
       title: t('class-names.actions'),
       key: 'actions',
@@ -77,7 +106,7 @@ const formMode = ref<'create' | 'edit'>('create')
 const editingId = ref<number | null>(null)
 const saving = ref(false)
 
-const emptyForm = (): ClassNameForm => ({ className: '', college: '' })
+const emptyForm = (): ClassNameForm => ({ className: '', collegeId: null })
 const form = ref<ClassNameForm>(emptyForm())
 
 function startCreate() {
@@ -90,7 +119,7 @@ function startCreate() {
 function startEdit(row: ClassName) {
   formMode.value = 'edit'
   editingId.value = row.id
-  form.value = { className: row.className, college: row.college }
+  form.value = { className: row.className, collegeId: row.collegeId }
   showForm.value = true
 }
 
@@ -122,7 +151,10 @@ async function handleDelete(id: number) {
   }
 }
 
-onMounted(loadData)
+onMounted(() => {
+  loadData()
+  loadColleges()
+})
 </script>
 
 <template>
@@ -159,7 +191,12 @@ onMounted(loadData)
           <NInput v-model:value="form.className" />
         </NFormItem>
         <NFormItem :label="$t('class-names.college')">
-          <NInput v-model:value="form.college" />
+          <NSelect
+            v-model:value="form.collegeId"
+            :options="collegeOptions"
+            clearable
+            :placeholder="$t('class-names.college')"
+          />
         </NFormItem>
       </NForm>
       <template #footer>
