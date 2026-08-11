@@ -14,6 +14,7 @@ import zhCNTeachDrafts from '@/locales/zh-CN/teach-drafts.json'
 import zhCNBatchImport from '@/locales/zh-CN/batch-import.json'
 import zhCNStudentManagement from '@/locales/zh-CN/student-management.json'
 import zhCNMajors from '@/locales/zh-CN/majors.json'
+import zhCNCollege from '@/locales/zh-CN/college.json'
 import zhCNSemester from '@/locales/zh-CN/semester.json'
 import zhCNSelection from '@/locales/zh-CN/selection.json'
 import zhCNGrades from '@/locales/zh-CN/grades.json'
@@ -22,6 +23,7 @@ import zhCNExam from '@/locales/zh-CN/exam.json'
 import zhCNNotification from '@/locales/zh-CN/notification.json'
 import zhCNAnalysis from '@/locales/zh-CN/analysis.json'
 import zhCNPractice from '@/locales/zh-CN/practice.json'
+import zhCNGraduation from '@/locales/zh-CN/graduation.json'
 import enCommon from '@/locales/en/common.json'
 import enAuth from '@/locales/en/auth.json'
 import enProfile from '@/locales/en/profile.json'
@@ -37,6 +39,7 @@ import enTeachDrafts from '@/locales/en/teach-drafts.json'
 import enBatchImport from '@/locales/en/batch-import.json'
 import enStudentManagement from '@/locales/en/student-management.json'
 import enMajors from '@/locales/en/majors.json'
+import enCollege from '@/locales/en/college.json'
 import enSemester from '@/locales/en/semester.json'
 import enSelection from '@/locales/en/selection.json'
 import enGrades from '@/locales/en/grades.json'
@@ -45,6 +48,7 @@ import enExam from '@/locales/en/exam.json'
 import enNotification from '@/locales/en/notification.json'
 import enAnalysis from '@/locales/en/analysis.json'
 import enPractice from '@/locales/en/practice.json'
+import enGraduation from '@/locales/en/graduation.json'
 
 export type SupportedLocale = 'zh-CN' | 'en'
 
@@ -71,6 +75,7 @@ const i18n = createI18n({
       'batch-import': zhCNBatchImport,
       'student-management': zhCNStudentManagement,
       majors: zhCNMajors,
+      college: zhCNCollege,
       semester: zhCNSemester,
       selection: zhCNSelection,
       grades: zhCNGrades,
@@ -79,6 +84,7 @@ const i18n = createI18n({
       notification: zhCNNotification,
       analysis: zhCNAnalysis,
       practice: zhCNPractice,
+      graduation: zhCNGraduation,
     },
     en: {
       common: enCommon,
@@ -96,6 +102,7 @@ const i18n = createI18n({
       'batch-import': enBatchImport,
       'student-management': enStudentManagement,
       majors: enMajors,
+      college: enCollege,
       semester: enSemester,
       selection: enSelection,
       grades: enGrades,
@@ -104,6 +111,7 @@ const i18n = createI18n({
       notification: enNotification,
       analysis: enAnalysis,
       practice: enPractice,
+      graduation: enGraduation,
     },
   },
 })
