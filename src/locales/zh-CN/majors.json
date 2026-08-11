@@ -1,6 +1,7 @@
 {
   "title": "专业管理",
   "majorName": "专业名称",
+  "college": "所属院系",
   "add": "新增专业",
   "edit": "修改",
   "delete": "删除",
