@@ -1,0 +1,13 @@
+.scope-label {
+  font-size: 13px;
+  color: #096dd9;
+}
+
+.export-hint {
+  font-size: 12px;
+  color: #999;
+}
+
+:deep(.warning-row) {
+  background: #fffbe6 !important;
+}
