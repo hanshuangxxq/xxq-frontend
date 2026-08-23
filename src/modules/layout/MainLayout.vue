@@ -17,6 +17,8 @@ import {
   NButton,
   NSelect,
   NBadge,
+  NBreadcrumb,
+  NBreadcrumbItem,
   useMessage,
 } from 'naive-ui'
 import { useAuthStore } from '@/stores/useAuthStore'
@@ -61,6 +63,13 @@ const authStore = useAuthStore()
 const localeStore = useLocaleStore()
 const notificationStore = useNotificationStore()
 const message = useMessage()
+
+/** 面包屑:取 matched 路由链上声明了 meta.titleKey 的记录 */
+const breadcrumbs = computed(() =>
+  route.matched
+    .filter((r) => typeof r.meta.titleKey === 'string')
+    .map((r) => ({ key: r.path, label: t(r.meta.titleKey as string) })),
+)
 
 const collapsed = ref(false)
 const showSettings = ref(false)
@@ -529,7 +538,18 @@ onUnmounted(() => {
     </NLayoutSider>
 
     <NLayoutContent class="main-content" :class="{ 'sidebar-collapsed': collapsed }">
-      <RouterView />
+      <div v-if="breadcrumbs.length" class="content-header">
+        <NBreadcrumb>
+          <NBreadcrumbItem v-for="item in breadcrumbs" :key="item.key">
+            {{ item.label }}
+          </NBreadcrumbItem>
+        </NBreadcrumb>
+      </div>
+      <RouterView v-slot="{ Component }">
+        <Transition name="fade-slide" mode="out-in">
+          <component :is="Component" />
+        </Transition>
+      </RouterView>
     </NLayoutContent>
   </NLayout>
 

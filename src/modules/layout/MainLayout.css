@@ -177,7 +177,9 @@
   cursor: pointer;
   font-size: 14px;
   color: #555;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .settings-nav-item:hover {
@@ -304,4 +306,32 @@
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+}
+
+/* 面包屑页眉:吸顶,充当页面标题栏 */
+.content-header {
+  padding: 12px 20px;
+  background: var(--app-card-bg);
+  border-bottom: 1px solid var(--app-border);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+/* 页面过渡:150ms 淡入微位移 */
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+}
+
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
 }
