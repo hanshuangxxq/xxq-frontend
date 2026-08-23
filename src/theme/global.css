@@ -1,0 +1,43 @@
+/* 全站语义化 CSS 变量:自定义样式(各组件 .css)只引用变量,不写死颜色 */
+:root {
+  --app-bg: #f5f6f8;
+  --app-card-bg: #ffffff;
+  --app-card-shadow: 0 2px 12px rgba(15, 35, 80, 0.06);
+  --app-sidebar-bg: #fafafa;
+  --app-sidebar-bottom-bg: #f0f1f3;
+  --app-sidebar-bottom-hover: #e8eaed;
+  --app-border: #ececf0;
+  --app-border-strong: #dcdfe5;
+  --app-text: #1f2329;
+  --app-text-secondary: #6b7280;
+  --app-hover-bg: #f4f6fa;
+  --app-active-bg: #eef4ff;
+  --app-primary: #2563eb;
+  --app-dropdown-bg: #ffffff;
+  --app-dropdown-hover: #f4f6fa;
+}
+
+/* useThemeStore 在 <html> 上同步 dark class */
+html.dark {
+  color-scheme: dark;
+  --app-bg: #101014;
+  --app-card-bg: #18181c;
+  --app-card-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  --app-sidebar-bg: #18181c;
+  --app-sidebar-bottom-bg: #1f1f24;
+  --app-sidebar-bottom-hover: #26262c;
+  --app-border: #2c2c32;
+  --app-border-strong: #3a3a42;
+  --app-text: #e5e7eb;
+  --app-text-secondary: #9ca3af;
+  --app-hover-bg: #232329;
+  --app-active-bg: #22304d;
+  --app-primary: #3b82f6;
+  --app-dropdown-bg: #232328;
+  --app-dropdown-hover: #2c2c33;
+}
+
+/* 避免暗色模式下页面边缘/加载前白闪 */
+html {
+  background: var(--app-bg);
+}
