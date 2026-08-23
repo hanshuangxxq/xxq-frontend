@@ -26,3 +26,9 @@ export interface PageQuery {
   /** 每页条数，上限 100 */
   pageSize?: number
 }
+
+/** StatusTag 组件的单状态定义:type 对应 NTag 类型,labelKey 为 i18n 键 */
+export interface StatusTagDef {
+  type: 'default' | 'info' | 'success' | 'warning' | 'error'
+  labelKey: string
+}
