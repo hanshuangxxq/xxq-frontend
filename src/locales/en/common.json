@@ -13,5 +13,10 @@
     "loading": "Loading…",
     "empty": "No data"
   },
-  "publicTag": "Public"
+  "publicTag": "Public",
+  "error": {
+    "network": "Network error, please check your connection",
+    "requestFailed": "Request failed",
+    "server": "Server error (HTTP {status})"
+  }
 }

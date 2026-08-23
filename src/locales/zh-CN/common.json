@@ -13,5 +13,10 @@
     "loading": "加载中…",
     "empty": "无数据"
   },
-  "publicTag": "公选"
+  "publicTag": "公选",
+  "error": {
+    "network": "网络异常，请检查网络连接",
+    "requestFailed": "请求失败",
+    "server": "服务器错误（HTTP {status}）"
+  }
 }
