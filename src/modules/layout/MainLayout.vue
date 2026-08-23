@@ -547,7 +547,7 @@ onUnmounted(() => {
       </div>
       <RouterView v-slot="{ Component }">
         <Transition name="fade-slide" mode="out-in">
-          <component :is="Component" />
+          <component :is="Component" :key="route.path" />
         </Transition>
       </RouterView>
     </NLayoutContent>
