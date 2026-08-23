@@ -247,7 +247,13 @@ const scoreBarOption = computed<EChartsOption>(() => {
           value: s.totalScore,
           itemStyle: { color: levelColor(s.scoreLevel), borderRadius: [0, 4, 4, 0] },
         })),
-        label: { show: true, position: 'right', formatter: '{c}', color: '#606266', fontSize: 12 },
+        label: {
+          show: true,
+          position: 'right',
+          formatter: '{c}',
+          color: tokens.value.axisTextStyle.color,
+          fontSize: 12,
+        },
         barMaxWidth: 22,
         markLine: {
           ...passLine,
@@ -306,8 +312,17 @@ const levelPieOption = computed<EChartsOption>(() => {
         minAngle: 5,
         data: pieData,
         // 外侧标签 + 引导线：小扇区也能完整显示名称与占比
-        label: { position: 'outside', formatter: '{b} {d}%', color: '#606266', fontSize: 12 },
-        labelLine: { length: 12, length2: 8, lineStyle: { color: '#c0c4cc' } },
+        label: {
+          position: 'outside',
+          formatter: '{b} {d}%',
+          color: tokens.value.axisTextStyle.color,
+          fontSize: 12,
+        },
+        labelLine: {
+          length: 12,
+          length2: 8,
+          lineStyle: { color: tokens.value.axisTextStyle.color },
+        },
       },
     ],
   }

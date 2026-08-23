@@ -5,6 +5,7 @@ export interface ChartThemeTokens {
   axisTextStyle: { color: string; fontSize: number }
   axisLine: { lineStyle: { color: string } }
   splitLine: { lineStyle: { color: string; width: number; type: 'solid' } }
+  splitAreaColors: [string, string]
   tooltip: {
     backgroundColor: string
     borderColor: string
@@ -19,6 +20,7 @@ const lightTokens: ChartThemeTokens = {
   axisTextStyle: { color: '#606266', fontSize: 12 },
   axisLine: { lineStyle: { color: '#dcdfe6' } },
   splitLine: { lineStyle: { color: '#ebeef5', width: 1, type: 'solid' } },
+  splitAreaColors: ['#fafafa', '#fff'],
   tooltip: {
     backgroundColor: 'rgba(255, 255, 255, 0.96)',
     borderColor: '#e4e7ed',
@@ -33,6 +35,7 @@ const darkTokens: ChartThemeTokens = {
   axisTextStyle: { color: '#9ca3af', fontSize: 12 },
   axisLine: { lineStyle: { color: '#3a3a42' } },
   splitLine: { lineStyle: { color: '#2c2c32', width: 1, type: 'solid' } },
+  splitAreaColors: ['#2c2c32', '#242428'],
   tooltip: {
     backgroundColor: 'rgba(24, 24, 28, 0.96)',
     borderColor: '#3a3a42',
