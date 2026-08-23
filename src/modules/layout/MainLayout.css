@@ -1,5 +1,5 @@
 .sidebar-container {
-  background: #e8eaed;
+  background: var(--app-sidebar-bg);
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -22,7 +22,7 @@
   left: 16px;
   font-size: 16px;
   font-weight: 600;
-  color: #333;
+  color: var(--app-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -43,6 +43,11 @@
   min-height: 0;
 }
 
+/* 菜单选中项左侧主色指示条(B 风) */
+.sidebar-menu :deep(.n-menu-item-content--selected) {
+  box-shadow: inset 2px 0 0 var(--app-primary);
+}
+
 .toggle-icon {
   width: 18px;
   height: 18px;
@@ -61,7 +66,8 @@
   align-items: center;
   padding: 8px 12px;
   margin-top: auto;
-  background: #dfe2e5;
+  background: var(--app-sidebar-bottom-bg);
+  border-top: 1px solid var(--app-border);
   flex-shrink: 0;
   min-height: 48px;
   max-width: 100%;
@@ -72,7 +78,7 @@
 }
 
 .sidebar-bottom:hover {
-  background: #d6dade;
+  background: var(--app-sidebar-bottom-hover);
 }
 
 .sidebar-bottom :deep(.n-avatar) {
@@ -91,7 +97,7 @@
   left: 52px;
   font-size: 13px;
   font-weight: 500;
-  color: #333;
+  color: var(--app-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -122,6 +128,14 @@
 .sidebar-bottom.collapsed .dropdown-arrow {
   opacity: 0;
   pointer-events: none;
+}
+
+/* 暗色下反转深色 SVG 图标亮度(侧边栏图标均为 <img> 引入的深色 SVG) */
+html.dark .sidebar-menu :deep(img),
+html.dark .toggle-icon,
+html.dark .dropdown-arrow,
+html.dark .settings-close-btn {
+  filter: invert(0.8);
 }
 
 .settings-layout {
@@ -158,7 +172,7 @@
 .settings-nav {
   width: 140px;
   min-width: 140px;
-  background: #e8eaed;
+  background: var(--app-sidebar-bg);
   padding: 0;
   flex-shrink: 0;
   overflow: hidden;
@@ -168,28 +182,28 @@
   padding: 12px 16px;
   font-size: 16px;
   font-weight: 600;
-  color: #333;
-  border-bottom: 1px solid #d6dade;
+  color: var(--app-text);
+  border-bottom: 1px solid var(--app-border);
 }
 
 .settings-nav-item {
   padding: 10px 16px;
   cursor: pointer;
   font-size: 14px;
-  color: #555;
+  color: var(--app-text-secondary);
   transition:
     background 0.15s,
     color 0.15s;
 }
 
 .settings-nav-item:hover {
-  background: #dfe2e5;
-  color: #333;
+  background: var(--app-hover-bg);
+  color: var(--app-text);
 }
 
 .settings-nav-item.active {
-  background: #d6dade;
-  color: #1a6fb5;
+  background: var(--app-active-bg);
+  color: var(--app-primary);
   font-weight: 500;
 }
 
@@ -203,7 +217,7 @@
   margin: 0 0 16px;
   font-size: 15px;
   font-weight: 500;
-  color: #333;
+  color: var(--app-text);
 }
 
 .main-layout {
@@ -221,6 +235,8 @@
 
 .main-content {
   margin-left: 220px;
+  background: var(--app-bg);
+  min-height: 100vh;
   transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -228,8 +244,32 @@
   margin-left: 64px;
 }
 
-.main-content :deep(> div) {
-  background: #fff;
+/* 面包屑页眉:吸顶,充当页面标题栏 */
+.content-header {
+  padding: 12px 20px;
+  background: var(--app-card-bg);
+  border-bottom: 1px solid var(--app-border);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+/* 页面过渡:150ms 淡入微位移 */
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+}
+
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
 }
 
 .settings-modal {
@@ -268,27 +308,27 @@
 
 /* Sidebar dropdown menu — global because NDropdown teleports to body */
 :global(.n-dropdown-menu) {
-  background: #edeeef;
+  background: var(--app-dropdown-bg);
   border-radius: 6px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   padding: 4px 0;
 }
 
 :global(.n-dropdown-option) {
-  color: #444;
+  color: var(--app-text);
   font-size: 13px;
   padding: 0;
   transition: background 0.12s;
 }
 
 :global(.n-dropdown-option:hover) {
-  background: #e3e5e8;
-  color: #333;
+  background: var(--app-dropdown-hover);
+  color: var(--app-text);
 }
 
 :global(.n-dropdown-divider) {
   margin: 4px 12px;
-  border-color: #dde0e3;
+  border-color: var(--app-border);
 }
 
 .logout-confirm-modal {
@@ -299,39 +339,11 @@
 .logout-confirm-message {
   margin: 0 0 20px;
   font-size: 14px;
-  color: #555;
+  color: var(--app-text-secondary);
 }
 
 .logout-confirm-actions {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-}
-
-/* 面包屑页眉:吸顶,充当页面标题栏 */
-.content-header {
-  padding: 12px 20px;
-  background: var(--app-card-bg);
-  border-bottom: 1px solid var(--app-border);
-  position: sticky;
-  top: 0;
-  z-index: 5;
-}
-
-/* 页面过渡:150ms 淡入微位移 */
-.fade-slide-enter-active,
-.fade-slide-leave-active {
-  transition:
-    opacity 0.15s ease,
-    transform 0.15s ease;
-}
-
-.fade-slide-enter-from {
-  opacity: 0;
-  transform: translateY(6px);
-}
-
-.fade-slide-leave-to {
-  opacity: 0;
-  transform: translateY(-4px);
 }

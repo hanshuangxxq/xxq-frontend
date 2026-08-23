@@ -17,5 +17,9 @@
   "close": "Close",
   "semester": "Semester",
   "logoutConfirmTitle": "Logout Confirmation",
-  "logoutConfirmMessage": "Are you sure you want to logout?"
+  "logoutConfirmMessage": "Are you sure you want to logout?",
+  "appearance": "Appearance",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "themeSystem": "System"
 }

@@ -1,22 +1,22 @@
 .stat-card {
   padding: 16px 20px;
-  background: #fff;
-  border: 1px solid #eceef0;
-  border-radius: 8px;
+  background: var(--app-card-bg);
+  border: 1px solid var(--app-border);
+  border-radius: 6px;
   transition:
     box-shadow 0.2s ease,
     border-color 0.2s ease;
 }
 
 .stat-card:hover {
-  border-color: #d6dce1;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  border-color: var(--app-border-strong);
+  box-shadow: var(--app-card-shadow);
 }
 
 /* NStatistic label/value 颜色由 tone 控制 */
 .stat-card :deep(.n-statistic__label) {
   font-size: 13px;
-  color: #8a8f99;
+  color: var(--app-text-secondary);
   margin-bottom: 4px;
 }
 
@@ -33,13 +33,14 @@
 }
 
 .stat-card--default :deep(.n-statistic-value) {
-  color: #333;
+  color: var(--app-text);
 }
 
 .stat-card--primary :deep(.n-statistic-value) {
-  color: #2080f0;
+  color: var(--app-primary);
 }
 
+/* 语义色(成功/警告/错误)在明暗两主题下均可读,保持固定值 */
 .stat-card--success :deep(.n-statistic-value) {
   color: #18a058;
 }

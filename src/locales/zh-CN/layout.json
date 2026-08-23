@@ -17,5 +17,9 @@
   "close": "关闭",
   "semester": "学期管理",
   "logoutConfirmTitle": "退出确认",
-  "logoutConfirmMessage": "确定要退出登录吗？"
+  "logoutConfirmMessage": "确定要退出登录吗？",
+  "appearance": "外观",
+  "themeLight": "浅色",
+  "themeDark": "深色",
+  "themeSystem": "跟随系统"
 }

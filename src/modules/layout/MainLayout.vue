@@ -19,10 +19,13 @@ import {
   NBadge,
   NBreadcrumb,
   NBreadcrumbItem,
+  NRadioGroup,
+  NRadioButton,
   useMessage,
 } from 'naive-ui'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useLocaleStore } from '@/stores/useLocaleStore'
+import { useThemeStore, type ThemeMode } from '@/stores/useThemeStore'
 import { useAvatar } from '@/shared/composables/useAvatar'
 import { authApi } from '@/modules/auth/api'
 import { useNotificationStore } from '@/stores/useNotificationStore'
@@ -75,7 +78,7 @@ const collapsed = ref(false)
 const showSettings = ref(false)
 const showLogoutConfirm = ref(false)
 const loggingOut = ref(false)
-const settingsTab = ref<'password' | 'language'>('language')
+const settingsTab = ref<'password' | 'language' | 'appearance'>('language')
 
 const avatarSrc = useAvatar(computed(() => authStore.user?.avatar ?? null))
 
@@ -87,6 +90,12 @@ const localeOptions = [
 const currentLocale = computed({
   get: () => localeStore.current,
   set: (v) => localeStore.setLocale(v as SupportedLocale),
+})
+
+const themeStore = useThemeStore()
+const themeMode = computed<ThemeMode>({
+  get: () => themeStore.mode,
+  set: (v) => themeStore.setMode(v),
 })
 
 function renderSvgIcon(svgSrc: string) {
@@ -579,6 +588,13 @@ onUnmounted(() => {
           >
             {{ t('layout.changePassword') }}
           </div>
+          <div
+            class="settings-nav-item"
+            :class="{ active: settingsTab === 'appearance' }"
+            @click="settingsTab = 'appearance'"
+          >
+            {{ t('layout.appearance') }}
+          </div>
         </div>
         <div class="settings-content">
           <template v-if="settingsTab === 'password'">
@@ -615,9 +631,17 @@ onUnmounted(() => {
               </NButton>
             </NForm>
           </template>
-          <template v-else>
+          <template v-else-if="settingsTab === 'language'">
             <h4 class="settings-section-title">{{ t('layout.switchLanguage') }}</h4>
             <NSelect v-model:value="currentLocale" :options="localeOptions" class="locale-select" />
+          </template>
+          <template v-else>
+            <h4 class="settings-section-title">{{ t('layout.appearance') }}</h4>
+            <NRadioGroup v-model:value="themeMode">
+              <NRadioButton value="light">{{ t('layout.themeLight') }}</NRadioButton>
+              <NRadioButton value="dark">{{ t('layout.themeDark') }}</NRadioButton>
+              <NRadioButton value="system">{{ t('layout.themeSystem') }}</NRadioButton>
+            </NRadioGroup>
           </template>
         </div>
       </div>
