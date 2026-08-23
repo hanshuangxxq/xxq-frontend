@@ -24,11 +24,13 @@ import { getMyTeacherQuality, fetchTeacherQualityList } from '../api'
 import { fetchAllSemesters } from '@/modules/curriculum/api'
 import type { Semester } from '@/modules/curriculum/types'
 import type { TeacherQualityDto } from '../types'
-import { useChartTheme } from '@/shared/chartTheme'
+import { useThemeStore } from '@/stores/useThemeStore'
+import { useChartTheme, type ChartThemeTokens } from '@/shared/chartTheme'
 
 const { t } = useI18n()
 const message = useMessage()
 const { isTeacher } = useRoleCheck()
+const themeStore = useThemeStore()
 const { tokens } = useChartTheme()
 
 const semesterOptions = ref<Array<{ label: string; value: number }>>([])
@@ -60,17 +62,21 @@ function hasItems(dto: TeacherQualityDto | null | undefined): boolean {
 }
 
 /** 雷达图：按 itemAverages 动态生成指标（指标名为后端快照名） */
-function radarOption(dto: TeacherQualityDto): EChartsOption {
+function radarOption(
+  dto: TeacherQualityDto,
+  tks: ChartThemeTokens,
+  isDark: boolean,
+): EChartsOption {
   const entries = Object.entries(dto.itemAverages ?? {})
   const chartMax = niceChartMax(...entries.map(([, v]) => v), dto.avgEvaluationScore)
   return {
-    tooltip: { ...tokens.value.tooltip },
+    tooltip: { ...tks.tooltip },
     radar: {
       indicator: entries.map(([name]) => ({ name, max: chartMax })),
-      axisName: { color: '#606266', fontSize: 12 },
-      splitLine: { lineStyle: { color: '#ebeef5' } },
-      splitArea: { areaStyle: { color: ['#fafafa', '#fff'] } },
-      axisLine: { lineStyle: { color: '#dcdfe6' } },
+      axisName: { color: tks.axisTextStyle.color, fontSize: tks.axisTextStyle.fontSize },
+      splitLine: { lineStyle: { color: tks.splitLine.lineStyle.color } },
+      splitArea: { areaStyle: { color: isDark ? ['#2c2c32', '#242428'] : ['#fafafa', '#fff'] } },
+      axisLine: { lineStyle: { color: tks.axisLine.lineStyle.color } },
     },
     series: [
       {
@@ -212,10 +218,10 @@ const showDetail = ref(false)
 const detail = ref<TeacherQualityDto | null>(null)
 
 const myRadarOption = computed<EChartsOption>(() =>
-  myQuality.value ? radarOption(myQuality.value) : {},
+  myQuality.value ? radarOption(myQuality.value, tokens.value, themeStore.isDark) : {},
 )
 const detailRadarOption = computed<EChartsOption>(() =>
-  detail.value ? radarOption(detail.value) : {},
+  detail.value ? radarOption(detail.value, tokens.value, themeStore.isDark) : {},
 )
 
 function openDetail(row: TeacherQualityDto) {
