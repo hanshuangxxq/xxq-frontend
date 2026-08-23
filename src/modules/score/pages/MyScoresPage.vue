@@ -23,14 +23,7 @@ import type { EChartsOption } from 'echarts'
 import BaseChart from '@/shared/components/BaseChart.vue'
 import StatCard from '@/shared/components/StatCard.vue'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
-import {
-  chartAxisTextStyle,
-  chartAxisLine,
-  chartSplitLine,
-  chartTooltip,
-  chartGrid,
-  passMarkLine,
-} from '@/shared/chartTheme'
+import { useChartTheme, passMarkLine } from '@/shared/chartTheme'
 import { fetchMyScores, fetchMyScoreSemesters, applyReview } from '../api'
 import { getMyProfile } from '@/modules/analysis/api'
 import type { StudentProfileDto } from '@/modules/analysis/types'
@@ -41,6 +34,7 @@ import { levelColor, levelTagType } from '../utils'
 const { t } = useI18n()
 const message = useMessage()
 const { isStudent } = useRoleCheck()
+const { tokens } = useChartTheme()
 
 const loading = ref(false)
 const scores = ref<ScoreView[]>([])
@@ -211,7 +205,7 @@ const scoreBarOption = computed<EChartsOption>(() => {
   const passLine = passMarkLine(t('score.myPassLine'), 'xAxis')
   return {
     tooltip: {
-      ...chartTooltip,
+      ...tokens.value.tooltip,
       trigger: 'axis',
       axisPointer: { type: 'shadow' },
       formatter: (params: unknown) => {
@@ -228,22 +222,22 @@ const scoreBarOption = computed<EChartsOption>(() => {
         ].join('<br/>')
       },
     },
-    grid: { top: 24, right: 40, bottom: manyCourses ? 44 : 24, left: 8, ...chartGrid },
+    grid: { top: 24, right: 40, bottom: manyCourses ? 44 : 24, left: 8, ...tokens.value.grid },
     xAxis: {
       type: 'value',
       min: 0,
       max: 100,
-      axisLabel: { formatter: (v: number) => String(v), ...chartAxisTextStyle },
-      axisLine: chartAxisLine,
-      splitLine: chartSplitLine,
+      axisLabel: { formatter: (v: number) => String(v), ...tokens.value.axisTextStyle },
+      axisLine: tokens.value.axisLine,
+      splitLine: tokens.value.splitLine,
     },
     yAxis: {
       type: 'category',
       data: barData.value.map((s) => s.courseName),
       inverse: true,
-      axisLabel: { width: 130, overflow: 'truncate', ...chartAxisTextStyle },
+      axisLabel: { width: 130, overflow: 'truncate', ...tokens.value.axisTextStyle },
       axisTick: { show: false },
-      axisLine: chartAxisLine,
+      axisLine: tokens.value.axisLine,
     },
     series: [
       {
@@ -298,11 +292,11 @@ const levelPieOption = computed<EChartsOption>(() => {
     .filter((d) => d.value > 0)
   return {
     tooltip: {
-      ...chartTooltip,
+      ...tokens.value.tooltip,
       trigger: 'item',
       formatter: '{b}：{c}（{d}%）',
     },
-    legend: { bottom: 0, type: 'scroll', textStyle: chartAxisTextStyle },
+    legend: { bottom: 0, type: 'scroll', textStyle: tokens.value.axisTextStyle },
     series: [
       {
         type: 'pie',
@@ -351,26 +345,26 @@ const rankText = computed(() => {
 const profileSubjectOption = computed<EChartsOption>(() => {
   const subjects = profile.value?.subjects ?? []
   return {
-    tooltip: { ...chartTooltip, trigger: 'axis' },
-    grid: { top: 24, right: 16, bottom: 8, left: 8, ...chartGrid },
+    tooltip: { ...tokens.value.tooltip, trigger: 'axis' },
+    grid: { top: 24, right: 16, bottom: 8, left: 8, ...tokens.value.grid },
     xAxis: {
       type: 'category',
       data: subjects.map((s) => s.courseName),
       axisLabel: {
-        ...chartAxisTextStyle,
+        ...tokens.value.axisTextStyle,
         rotate: subjects.length > 4 ? 25 : 0,
         interval: 0,
       },
-      axisLine: chartAxisLine,
+      axisLine: tokens.value.axisLine,
     },
     yAxis: {
       type: 'value',
       name: t('analysis.pfScore'),
       min: 0,
       max: 100,
-      axisLabel: chartAxisTextStyle,
-      splitLine: chartSplitLine,
-      axisLine: chartAxisLine,
+      axisLabel: tokens.value.axisTextStyle,
+      splitLine: tokens.value.splitLine,
+      axisLine: tokens.value.axisLine,
     },
     series: [
       {

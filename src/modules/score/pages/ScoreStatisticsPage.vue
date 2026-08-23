@@ -25,9 +25,11 @@ import type { Course } from '@/modules/course/types'
 import type { Semester } from '@/modules/curriculum/types'
 import type { ScoreStatisticsDto } from '../types'
 import { levelColor } from '../utils'
+import { useChartTheme } from '@/shared/chartTheme'
 
 const { t } = useI18n()
 const message = useMessage()
+const { tokens } = useChartTheme()
 
 const loading = ref(false)
 const data = ref<ScoreStatisticsDto[]>([])
@@ -115,15 +117,22 @@ const levelStackOption = computed<EChartsOption>(() => {
   // 过滤掉所有课程中总数均为 0 的等级，避免空系列在图表中阻挡
   const visibleLevels = levels.filter((lv) => sumCount(lv.key) > 0)
   return {
-    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-    legend: { top: 0 },
-    grid: { left: 8, right: 24, top: 40, bottom: 8, containLabel: true },
+    tooltip: { ...tokens.value.tooltip, trigger: 'axis', axisPointer: { type: 'shadow' } },
+    legend: { top: 0, textStyle: tokens.value.axisTextStyle },
+    grid: { left: 8, right: 24, top: 40, bottom: 8, ...tokens.value.grid },
     xAxis: {
       type: 'category',
       data: data.value.map((d) => d.courseName),
-      axisLabel: { rotate: 30, interval: 0, hideOverlap: false },
+      axisLabel: { ...tokens.value.axisTextStyle, rotate: 30, interval: 0, hideOverlap: false },
+      axisLine: tokens.value.axisLine,
     },
-    yAxis: { type: 'value', name: t('score.statTotalCount') },
+    yAxis: {
+      type: 'value',
+      name: t('score.statTotalCount'),
+      axisLabel: tokens.value.axisTextStyle,
+      splitLine: tokens.value.splitLine,
+      axisLine: tokens.value.axisLine,
+    },
     series: visibleLevels.map((lv) => ({
       name: lv.label,
       type: 'bar',
@@ -151,8 +160,8 @@ const levelPieOption = computed<EChartsOption>(() => {
     }))
     .filter((d) => d.value > 0)
   return {
-    tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
-    legend: { bottom: 8, type: 'scroll' },
+    tooltip: { ...tokens.value.tooltip, trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+    legend: { bottom: 8, type: 'scroll', textStyle: tokens.value.axisTextStyle },
     series: [
       {
         type: 'pie',
@@ -168,17 +177,34 @@ const levelPieOption = computed<EChartsOption>(() => {
 })
 
 const avgPassOption = computed<EChartsOption>(() => ({
-  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-  legend: { top: 0 },
-  grid: { left: 8, right: 8, top: 40, bottom: 8, containLabel: true },
+  tooltip: { ...tokens.value.tooltip, trigger: 'axis', axisPointer: { type: 'shadow' } },
+  legend: { top: 0, textStyle: tokens.value.axisTextStyle },
+  grid: { left: 8, right: 8, top: 40, bottom: 8, ...tokens.value.grid },
   xAxis: {
     type: 'category',
     data: data.value.map((d) => d.courseName),
-    axisLabel: { rotate: 30, interval: 0, hideOverlap: false },
+    axisLabel: { ...tokens.value.axisTextStyle, rotate: 30, interval: 0, hideOverlap: false },
+    axisLine: tokens.value.axisLine,
   },
   yAxis: [
-    { type: 'value', name: t('score.statAvg'), min: 0, max: 100 },
-    { type: 'value', name: t('score.statPassRate'), min: 0, max: 100 },
+    {
+      type: 'value',
+      name: t('score.statAvg'),
+      min: 0,
+      max: 100,
+      axisLabel: tokens.value.axisTextStyle,
+      splitLine: tokens.value.splitLine,
+      axisLine: tokens.value.axisLine,
+    },
+    {
+      type: 'value',
+      name: t('score.statPassRate'),
+      min: 0,
+      max: 100,
+      axisLabel: tokens.value.axisTextStyle,
+      splitLine: tokens.value.splitLine,
+      axisLine: tokens.value.axisLine,
+    },
   ],
   series: [
     {

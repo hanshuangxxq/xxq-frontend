@@ -1,32 +1,60 @@
+import { computed } from 'vue'
+import { useThemeStore } from '@/stores/useThemeStore'
+
+export interface ChartThemeTokens {
+  axisTextStyle: { color: string; fontSize: number }
+  axisLine: { lineStyle: { color: string } }
+  splitLine: { lineStyle: { color: string; width: number; type: 'solid' } }
+  tooltip: {
+    backgroundColor: string
+    borderColor: string
+    borderWidth: number
+    textStyle: { color: string; fontSize: number }
+    confine: boolean
+  }
+  grid: { containLabel: boolean }
+}
+
+const lightTokens: ChartThemeTokens = {
+  axisTextStyle: { color: '#606266', fontSize: 12 },
+  axisLine: { lineStyle: { color: '#dcdfe6' } },
+  splitLine: { lineStyle: { color: '#ebeef5', width: 1, type: 'solid' } },
+  tooltip: {
+    backgroundColor: 'rgba(255, 255, 255, 0.96)',
+    borderColor: '#e4e7ed',
+    borderWidth: 1,
+    textStyle: { color: '#303133', fontSize: 12 },
+    confine: true,
+  },
+  grid: { containLabel: true },
+}
+
+const darkTokens: ChartThemeTokens = {
+  axisTextStyle: { color: '#9ca3af', fontSize: 12 },
+  axisLine: { lineStyle: { color: '#3a3a42' } },
+  splitLine: { lineStyle: { color: '#2c2c32', width: 1, type: 'solid' } },
+  tooltip: {
+    backgroundColor: 'rgba(24, 24, 28, 0.96)',
+    borderColor: '#3a3a42',
+    borderWidth: 1,
+    textStyle: { color: '#e5e7eb', fontSize: 12 },
+    confine: true,
+  },
+  grid: { containLabel: true },
+}
+
 /**
- * 图表通用基底样式：浅色主题下统一轴文字、细网格线与 tooltip 外观，
- * 供各模块 ECharts option 复用，保证全站图表观感一致。
+ * 图表主题令牌,随明暗主题响应式切换。
+ * 消费处要求:传给 BaseChart 的 option 必须由 computed 产出(computed 内读取 tokens.value.*),
+ * 这样主题切换时 option 自动重建、ECharts 自动重渲染。
  */
-export const chartAxisTextStyle = {
-  color: '#606266',
-  fontSize: 12,
+export function useChartTheme() {
+  const themeStore = useThemeStore()
+  const tokens = computed<ChartThemeTokens>(() => (themeStore.isDark ? darkTokens : lightTokens))
+  return { tokens }
 }
 
-/** 坐标轴线：细、浅色 */
-export const chartAxisLine = {
-  lineStyle: { color: '#dcdfe6' },
-}
-
-/** 网格线：1px 实线浅灰（非虚线），弱化背景 */
-export const chartSplitLine = {
-  lineStyle: { color: '#ebeef5', width: 1, type: 'solid' as const },
-}
-
-/** tooltip 通用外观 */
-export const chartTooltip = {
-  backgroundColor: 'rgba(255, 255, 255, 0.96)',
-  borderColor: '#e4e7ed',
-  borderWidth: 1,
-  textStyle: { color: '#303133', fontSize: 12 },
-  confine: true,
-}
-
-/** 及格线（60 分）markLine 通用配置：细虚线红色参考线，axis 指定所依附的坐标轴 */
+/** 及格线(60 分)markLine 通用配置:细虚线红色参考线,axis 指定所依附的坐标轴 */
 export function passMarkLine(label: string, axis: 'xAxis' | 'yAxis' = 'yAxis') {
   return {
     symbol: 'none' as const,
@@ -38,9 +66,4 @@ export function passMarkLine(label: string, axis: 'xAxis' | 'yAxis' = 'yAxis') {
     },
     data: [{ [axis]: 60 }],
   }
-}
-
-/** 基础坐标轴结构，避免每个图表重复书写 */
-export const chartGrid = {
-  containLabel: true,
 }

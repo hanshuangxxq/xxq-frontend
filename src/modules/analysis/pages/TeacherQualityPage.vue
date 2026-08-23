@@ -24,17 +24,12 @@ import { getMyTeacherQuality, fetchTeacherQualityList } from '../api'
 import { fetchAllSemesters } from '@/modules/curriculum/api'
 import type { Semester } from '@/modules/curriculum/types'
 import type { TeacherQualityDto } from '../types'
-import {
-  chartAxisTextStyle,
-  chartAxisLine,
-  chartSplitLine,
-  chartTooltip,
-  chartGrid,
-} from '@/shared/chartTheme'
+import { useChartTheme } from '@/shared/chartTheme'
 
 const { t } = useI18n()
 const message = useMessage()
 const { isTeacher } = useRoleCheck()
+const { tokens } = useChartTheme()
 
 const semesterOptions = ref<Array<{ label: string; value: number }>>([])
 const filterSemesterId = ref<number | null>(null)
@@ -69,7 +64,7 @@ function radarOption(dto: TeacherQualityDto): EChartsOption {
   const entries = Object.entries(dto.itemAverages ?? {})
   const chartMax = niceChartMax(...entries.map(([, v]) => v), dto.avgEvaluationScore)
   return {
-    tooltip: { ...chartTooltip },
+    tooltip: { ...tokens.value.tooltip },
     radar: {
       indicator: entries.map(([name]) => ({ name, max: chartMax })),
       axisName: { color: '#606266', fontSize: 12 },
@@ -180,22 +175,26 @@ const comparisonChartMax = computed(() =>
 )
 
 const comparisonOption = computed<EChartsOption>(() => ({
-  tooltip: { ...chartTooltip, trigger: 'axis', axisPointer: { type: 'shadow' } },
-  grid: { top: 24, right: 24, bottom: 8, left: 8, ...chartGrid },
+  tooltip: { ...tokens.value.tooltip, trigger: 'axis', axisPointer: { type: 'shadow' } },
+  grid: { top: 24, right: 24, bottom: 8, left: 8, ...tokens.value.grid },
   xAxis: {
     type: 'category',
     data: list.value.map((d) => d.teacherName),
-    axisLabel: { ...chartAxisTextStyle, rotate: list.value.length > 6 ? 30 : 0, interval: 0 },
-    axisLine: chartAxisLine,
+    axisLabel: {
+      ...tokens.value.axisTextStyle,
+      rotate: list.value.length > 6 ? 30 : 0,
+      interval: 0,
+    },
+    axisLine: tokens.value.axisLine,
   },
   yAxis: {
     type: 'value',
     name: t('analysis.tqAvgEvaluationScore'),
     min: 0,
     max: comparisonChartMax.value,
-    axisLabel: chartAxisTextStyle,
-    splitLine: chartSplitLine,
-    axisLine: chartAxisLine,
+    axisLabel: tokens.value.axisTextStyle,
+    splitLine: tokens.value.splitLine,
+    axisLine: tokens.value.axisLine,
   },
   series: [
     {
@@ -211,6 +210,13 @@ const comparisonOption = computed<EChartsOption>(() => ({
 // ---- 详情弹窗 ----
 const showDetail = ref(false)
 const detail = ref<TeacherQualityDto | null>(null)
+
+const myRadarOption = computed<EChartsOption>(() =>
+  myQuality.value ? radarOption(myQuality.value) : {},
+)
+const detailRadarOption = computed<EChartsOption>(() =>
+  detail.value ? radarOption(detail.value) : {},
+)
 
 function openDetail(row: TeacherQualityDto) {
   detail.value = row
@@ -289,7 +295,7 @@ onMounted(() => {
             <NCard>
               <div class="chart-title">{{ $t('analysis.tqDimensionAverages') }}</div>
               <NEmpty v-if="!hasItems(myQuality)" :description="$t('analysis.tqNoItems')" />
-              <div v-else class="chart-box"><BaseChart :option="radarOption(myQuality)" /></div>
+              <div v-else class="chart-box"><BaseChart :option="myRadarOption" /></div>
             </NCard>
           </template>
         </NSpin>
@@ -353,7 +359,7 @@ onMounted(() => {
           {{ $t('analysis.tqDimensionAverages') }}
         </div>
         <NEmpty v-if="!hasItems(detail)" :description="$t('analysis.tqNoItems')" />
-        <div v-else class="chart-box"><BaseChart :option="radarOption(detail)" /></div>
+        <div v-else class="chart-box"><BaseChart :option="detailRadarOption" /></div>
       </template>
     </NModal>
   </div>
