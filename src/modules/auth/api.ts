@@ -1,6 +1,13 @@
 import { api } from '@/shared/api'
 import type { Result } from '@/shared/types'
-import type { ChangePasswordParams, LoginParams, RefreshResult, UpdateProfileParams, UserProfile, UserSession } from './types'
+import type {
+  ChangePasswordParams,
+  LoginParams,
+  RefreshResult,
+  UpdateProfileParams,
+  UserProfile,
+  UserSession,
+} from './types'
 
 export const authApi = {
   async login(params: LoginParams): Promise<UserSession> {
@@ -16,6 +23,8 @@ export const authApi = {
   async refresh(refreshToken: string): Promise<RefreshResult> {
     const result = await api.post<Result<RefreshResult>>(
       `/login/refresh?refreshToken=${encodeURIComponent(refreshToken)}`,
+      undefined,
+      { silent: true },
     )
     return result.data
   },
