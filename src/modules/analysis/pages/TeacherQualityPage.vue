@@ -295,7 +295,9 @@ onMounted(() => {
             <NCard>
               <div class="chart-title">{{ $t('analysis.tqDimensionAverages') }}</div>
               <NEmpty v-if="!hasItems(myQuality)" :description="$t('analysis.tqNoItems')" />
-              <div v-else class="chart-box"><BaseChart :option="myRadarOption" /></div>
+              <div v-else class="chart-box">
+                <BaseChart :option="myRadarOption" :loading="myLoading" />
+              </div>
             </NCard>
           </template>
         </NSpin>
@@ -303,9 +305,11 @@ onMounted(() => {
 
       <!-- 管理员/院系列表 -->
       <template v-else>
-        <NCard v-if="list.length > 0">
+        <NCard v-if="listLoading || list.length > 0">
           <div class="chart-title">{{ $t('analysis.tqComparison') }}</div>
-          <div class="chart-box"><BaseChart :option="comparisonOption" /></div>
+          <div class="chart-box">
+            <BaseChart :option="comparisonOption" :loading="listLoading" />
+          </div>
         </NCard>
         <NCard>
           <NSpin :show="listLoading">
