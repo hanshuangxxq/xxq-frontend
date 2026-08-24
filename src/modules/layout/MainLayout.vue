@@ -414,7 +414,8 @@ const menuOptions = computed(() => {
   return items
 })
 
-const activeKey = computed(() => route.path)
+/** 菜单高亮:参数化子路由(如 /selection/:id)高亮其父菜单项 */
+const activeKey = computed(() => (route.path.startsWith('/selection/') ? '/selection' : route.path))
 
 function handleMenuClick(key: string) {
   router.push(key)
@@ -475,8 +476,8 @@ async function handleChangePassword() {
     })
     message.success(t('layout.passwordChangeSuccess'))
     passwordForm.value = { oldPassword: '', newPassword: '', confirmNewPassword: '' }
-  } catch (e) {
-    message.error((e as Error).message || t('layout.passwordChangeFail'))
+  } catch {
+    // 错误消息已由 api 层统一提示
   } finally {
     changingPassword.value = false
   }

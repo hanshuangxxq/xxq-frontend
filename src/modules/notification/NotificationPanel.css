@@ -13,7 +13,7 @@
   line-height: 16px;
   font-size: 11px;
   /* 未读数为错误语义色,明暗主题下保持固定值(与 StatCard 语义色一致) */
-  color: #fff;
+  color: var(--app-on-primary);
   background: #d03050;
   border-radius: 8px;
 }

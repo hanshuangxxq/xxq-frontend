@@ -13,6 +13,7 @@
   --app-hover-bg: #f4f6fa;
   --app-active-bg: #eef4ff;
   --app-primary: #2563eb;
+  --app-on-primary: #ffffff;
   --app-dropdown-bg: #ffffff;
   --app-dropdown-hover: #f4f6fa;
 }
@@ -33,6 +34,7 @@ html.dark {
   --app-hover-bg: #232329;
   --app-active-bg: #22304d;
   --app-primary: #3b82f6;
+  --app-on-primary: #ffffff;
   --app-dropdown-bg: #232328;
   --app-dropdown-hover: #2c2c33;
 }
