@@ -15,7 +15,6 @@ import {
   NTag,
   NSpin,
   NPopconfirm,
-  NDropdown,
   NDatePicker,
   NRadioGroup,
   NRadio,
@@ -71,12 +70,14 @@ const statusOptions = computed(() => [
   { label: t('practice.competition.statusClosed'), value: 'CLOSED' as CompetitionStatusCode },
   { label: t('practice.competition.statusEnded'), value: 'ENDED' as CompetitionStatusCode },
 ])
-const statusDropdown = computed(() => [
-  { label: t('practice.competition.statusDraft'), key: 'DRAFT' },
-  { label: t('practice.competition.statusOpen'), key: 'OPEN' },
-  { label: t('practice.competition.statusClosed'), key: 'CLOSED' },
-  { label: t('practice.competition.statusEnded'), key: 'ENDED' },
-])
+
+/** 中文状态 -> 枚举 code（状态按钮排除当前状态用） */
+function statusCodeOf(status: string): string {
+  if (status === '草稿') return 'DRAFT'
+  if (status === '开放报名') return 'OPEN'
+  if (status === '报名关闭') return 'CLOSED'
+  return 'ENDED'
+}
 const levelOptions = computed(() => [
   { label: t('practice.competition.levelNational'), value: 'NATIONAL' as CompetitionLevelCode },
   { label: t('practice.competition.levelProvincial'), value: 'PROVINCIAL' as CompetitionLevelCode },
@@ -149,7 +150,15 @@ const saving = ref(false)
 const form = ref<CompForm>(emptyForm())
 
 function emptyForm(): CompForm {
-  return { name: '', description: '', organizer: '', level: 'SCHOOL', regStartTs: null, regEndTs: null, contestTs: null }
+  return {
+    name: '',
+    description: '',
+    organizer: '',
+    level: 'SCHOOL',
+    regStartTs: null,
+    regEndTs: null,
+    contestTs: null,
+  }
 }
 
 function startCreate() {
@@ -252,7 +261,10 @@ function openRegistrations(row: CompetitionResponse) {
 // 报名审核
 const showReviewReg = ref(false)
 const reviewingReg = ref<RegistrationResponse | null>(null)
-const reviewRegForm = ref<{ approved: boolean; reviewComment: string }>({ approved: true, reviewComment: '' })
+const reviewRegForm = ref<{ approved: boolean; reviewComment: string }>({
+  approved: true,
+  reviewComment: '',
+})
 const savingReviewReg = ref(false)
 
 function startReviewReg(row: RegistrationResponse) {
@@ -290,13 +302,20 @@ const approvedRegistrations = ref<RegistrationResponse[]>([])
 const registrationSelectOptions = computed(() => {
   const usedIds = new Set(results.value.map((r) => r.registrationId))
   // 已录入结果的可再次选中（更新），未录入的可新建
-  return approvedRegistrations.value.map((r) => ({
-    label: `${r.studentName}${r.teamName ? `（${r.teamName}）` : ''}`,
-    value: r.id,
-  })).filter((o) => !usedIds.has(o.value) || o.value === resultForm.value.registrationId)
+  return approvedRegistrations.value
+    .map((r) => ({
+      label: `${r.studentName}${r.teamName ? `（${r.teamName}）` : ''}`,
+      value: r.id,
+    }))
+    .filter((o) => !usedIds.has(o.value) || o.value === resultForm.value.registrationId)
 })
 
-const resultForm = ref<{ registrationId: number | null; award: AwardCode | null; score: number | null; comment: string }>({
+const resultForm = ref<{
+  registrationId: number | null
+  award: AwardCode | null
+  score: number | null
+  comment: string
+}>({
   registrationId: null,
   award: null,
   score: null,
@@ -363,43 +382,95 @@ async function handleDeleteResult(id: number) {
 
 // ---- 列定义 ----
 const columns = computed<DataTableColumns<CompetitionResponse>>(() => [
-  { title: t('practice.competition.competitionName'), key: 'name', minWidth: 200, ellipsis: { tooltip: true } },
+  {
+    title: t('practice.competition.competitionName'),
+    key: 'name',
+    minWidth: 200,
+    ellipsis: { tooltip: true },
+  },
   { title: t('practice.competition.level'), key: 'level', width: 90, align: 'center' },
-  { title: t('practice.common.organizer'), key: 'organizer', width: 130, ellipsis: { tooltip: true }, render: (r) => r.organizer || '-' },
-  { title: t('practice.competition.regStartTime'), key: 'regStartTime', width: 150, render: (r) => formatDateTime(r.regStartTime) },
-  { title: t('practice.competition.regEndTime'), key: 'regEndTime', width: 150, render: (r) => formatDateTime(r.regEndTime) },
-  { title: t('practice.competition.tabCompetitions'), key: 'contestTime', width: 150, render: (r) => formatDateTime(r.contestTime) },
+  {
+    title: t('practice.common.organizer'),
+    key: 'organizer',
+    width: 130,
+    ellipsis: { tooltip: true },
+    render: (r) => r.organizer || '-',
+  },
+  {
+    title: t('practice.competition.regStartTime'),
+    key: 'regStartTime',
+    width: 150,
+    render: (r) => formatDateTime(r.regStartTime),
+  },
+  {
+    title: t('practice.competition.regEndTime'),
+    key: 'regEndTime',
+    width: 150,
+    render: (r) => formatDateTime(r.regEndTime),
+  },
+  {
+    title: t('practice.competition.tabCompetitions'),
+    key: 'contestTime',
+    width: 150,
+    render: (r) => formatDateTime(r.contestTime),
+  },
   {
     title: t('practice.common.status'),
     key: 'status',
     width: 100,
     align: 'center',
-    render: (r) => h(NTag, { type: projectStatusTagType(r.status), size: 'small', bordered: false }, () => r.status),
+    render: (r) =>
+      h(
+        NTag,
+        { type: projectStatusTagType(r.status), size: 'small', bordered: false },
+        () => r.status,
+      ),
   },
   {
     title: t('practice.common.actions'),
     key: 'actions',
-    width: 300,
+    width: 660,
     fixed: 'right',
     render: (row) =>
       h(NSpace, { size: 8 }, () => [
-        h(NButton, { size: 'small', onClick: () => startEdit(row) }, () => t('practice.common.edit')),
-        h(NDropdown, { options: statusDropdown.value, onSelect: (key: string) => handleStatusChange(row, key) }, () =>
-          h(NButton, { size: 'small' }, () => t('practice.common.status')),
+        h(NButton, { size: 'small', onClick: () => startEdit(row) }, () =>
+          t('practice.common.edit'),
         ),
-        h(NButton, { size: 'small', onClick: () => openRegistrations(row) }, () => t('practice.competition.viewRegistrations')),
-        h(NButton, { size: 'small', type: 'primary', onClick: () => openResults(row) }, () => t('practice.competition.enterResult')),
-        h(NPopconfirm, { onPositiveClick: () => handleDelete(row.id) }, {
-          default: () => t('practice.common.deleteConfirm'),
-          trigger: () => h(NButton, { size: 'small', type: 'error' }, () => t('practice.common.delete')),
-        }),
+        // 状态变更：每个目标状态一个独立按钮（排除当前状态）
+        ...statusOptions.value
+          .filter((o) => o.value !== statusCodeOf(row.status))
+          .map((o) =>
+            h(NButton, { size: 'small', onClick: () => handleStatusChange(row, o.value) }, () =>
+              t('practice.common.setStatus', { status: o.label }),
+            ),
+          ),
+        h(NButton, { size: 'small', onClick: () => openRegistrations(row) }, () =>
+          t('practice.competition.viewRegistrations'),
+        ),
+        h(NButton, { size: 'small', type: 'primary', onClick: () => openResults(row) }, () =>
+          t('practice.competition.enterResult'),
+        ),
+        h(
+          NPopconfirm,
+          { onPositiveClick: () => handleDelete(row.id) },
+          {
+            default: () => t('practice.common.deleteConfirm'),
+            trigger: () =>
+              h(NButton, { size: 'small', type: 'error' }, () => t('practice.common.delete')),
+          },
+        ),
       ]),
   },
 ])
 
 const registrationColumns = computed<DataTableColumns<RegistrationResponse>>(() => [
   { title: t('practice.common.student'), key: 'studentName', width: 110 },
-  { title: t('practice.competition.teamName'), key: 'teamName', width: 120, render: (r) => r.teamName || '-' },
+  {
+    title: t('practice.competition.teamName'),
+    key: 'teamName',
+    width: 120,
+    render: (r) => r.teamName || '-',
+  },
   {
     title: t('practice.competition.members'),
     key: 'members',
@@ -415,17 +486,35 @@ const registrationColumns = computed<DataTableColumns<RegistrationResponse>>(() 
     key: 'status',
     width: 90,
     align: 'center',
-    render: (r) => h(NTag, { type: auditStatusTagType(r.status), size: 'small', bordered: false }, () => r.status),
+    render: (r) =>
+      h(
+        NTag,
+        { type: auditStatusTagType(r.status), size: 'small', bordered: false },
+        () => r.status,
+      ),
   },
-  { title: t('practice.common.registerTime'), key: 'registerTime', width: 150, render: (r) => formatDateTime(r.registerTime) },
-  { title: t('practice.common.reviewComment'), key: 'reviewComment', width: 150, ellipsis: { tooltip: true }, render: (r) => r.reviewComment || '-' },
+  {
+    title: t('practice.common.registerTime'),
+    key: 'registerTime',
+    width: 150,
+    render: (r) => formatDateTime(r.registerTime),
+  },
+  {
+    title: t('practice.common.reviewComment'),
+    key: 'reviewComment',
+    width: 150,
+    ellipsis: { tooltip: true },
+    render: (r) => r.reviewComment || '-',
+  },
   {
     title: t('practice.common.actions'),
     key: 'actions',
     width: 100,
     render: (row) =>
       row.status === '待审核'
-        ? h(NButton, { size: 'small', type: 'primary', onClick: () => startReviewReg(row) }, () => t('practice.competition.reviewRegistration'))
+        ? h(NButton, { size: 'small', type: 'primary', onClick: () => startReviewReg(row) }, () =>
+            t('practice.competition.reviewRegistration'),
+          )
         : '-',
   },
 ])
@@ -433,9 +522,26 @@ const registrationColumns = computed<DataTableColumns<RegistrationResponse>>(() 
 const resultColumns = computed<DataTableColumns<CompetitionResultResponse>>(() => [
   { title: t('practice.common.student'), key: 'studentName', width: 120 },
   { title: t('practice.competition.award'), key: 'award', width: 100, align: 'center' },
-  { title: t('practice.common.score'), key: 'score', width: 80, align: 'center', render: (r) => r.score ?? '-' },
-  { title: t('practice.common.comment'), key: 'comment', minWidth: 150, ellipsis: { tooltip: true }, render: (r) => r.comment || '-' },
-  { title: t('practice.competition.awardTime'), key: 'awardTime', width: 150, render: (r) => formatDateTime(r.awardTime) },
+  {
+    title: t('practice.common.score'),
+    key: 'score',
+    width: 80,
+    align: 'center',
+    render: (r) => r.score ?? '-',
+  },
+  {
+    title: t('practice.common.comment'),
+    key: 'comment',
+    minWidth: 150,
+    ellipsis: { tooltip: true },
+    render: (r) => r.comment || '-',
+  },
+  {
+    title: t('practice.competition.awardTime'),
+    key: 'awardTime',
+    width: 150,
+    render: (r) => formatDateTime(r.awardTime),
+  },
   {
     title: t('practice.common.actions'),
     key: 'actions',
@@ -447,7 +553,8 @@ const resultColumns = computed<DataTableColumns<CompetitionResultResponse>>(() =
         { onPositiveClick: () => handleDeleteResult(row.id) },
         {
           default: () => t('practice.common.deleteConfirm'),
-          trigger: () => h(NButton, { size: 'small', type: 'error' }, () => t('practice.common.delete')),
+          trigger: () =>
+            h(NButton, { size: 'small', type: 'error' }, () => t('practice.common.delete')),
         },
       ),
   },
@@ -468,164 +575,222 @@ onMounted(() => {
       :description="$t('practice.common.noPermissionDesc')"
     />
     <template v-else>
-    <NCard :title="$t('practice.competition.mgTitle')">
-      <template #header-extra>
-        <NSpace align="center">
-          <NSelect
-            v-model:value="filterStatus"
-            :options="statusOptions"
-            :placeholder="$t('practice.common.allStatus')"
-            clearable
-            style="width: 150px"
-            @update:value="handleFilterChange"
-          />
-          <NButton type="primary" @click="loadData">{{ $t('practice.common.query') }}</NButton>
-          <NButton @click="handleFilterChange">{{ $t('practice.common.reset') }}</NButton>
-          <NButton type="primary" @click="startCreate">{{ $t('practice.competition.addCompetition') }}</NButton>
-        </NSpace>
-      </template>
-      <NSpin :show="loading">
-        <NDataTable
-          :columns="columns"
-          :data="competitions"
-          :row-key="(r: CompetitionResponse) => r.id"
-          :single-line="false"
-          :bordered="false"
-          :scroll-x="1280"
-          remote
-          :pagination="pagination"
-        >
-          <template #empty><EmptyState :description="$t('practice.common.empty')" /></template>
-        </NDataTable>
-      </NSpin>
-    </NCard>
-
-    <!-- 竞赛表单 -->
-    <NModal
-      v-model:show="showForm"
-      preset="card"
-      :title="formMode === 'create' ? $t('practice.competition.addCompetition') : $t('practice.competition.editCompetition')"
-      class="practice-form-modal"
-    >
-      <NForm :model="form" label-placement="top">
-        <NFormItem :label="$t('practice.competition.competitionName')" required>
-          <NInput v-model:value="form.name" />
-        </NFormItem>
-        <NSpace :size="12" wrap>
-          <NFormItem :label="$t('practice.common.organizer')" style="width: 240px">
-            <NInput v-model:value="form.organizer" />
-          </NFormItem>
-          <NFormItem :label="$t('practice.competition.level')" style="width: 200px">
-            <NSelect v-model:value="form.level" :options="levelOptions" />
-          </NFormItem>
-        </NSpace>
-        <NSpace :size="12" wrap>
-          <NFormItem :label="$t('practice.competition.regStartTime')" style="width: 240px">
-            <NDatePicker v-model:value="form.regStartTs" type="datetime" clearable style="width: 100%" />
-          </NFormItem>
-          <NFormItem :label="$t('practice.competition.regEndTime')" style="width: 240px">
-            <NDatePicker v-model:value="form.regEndTs" type="datetime" clearable style="width: 100%" />
-          </NFormItem>
-          <NFormItem :label="$t('practice.competition.tabCompetitions')" style="width: 240px">
-            <NDatePicker v-model:value="form.contestTs" type="datetime" clearable style="width: 100%" />
-          </NFormItem>
-        </NSpace>
-        <NFormItem :label="$t('practice.common.description')">
-          <NInput v-model:value="form.description" type="textarea" :autosize="{ minRows: 2, maxRows: 4 }" />
-        </NFormItem>
-      </NForm>
-      <template #footer>
-        <NSpace justify="end">
-          <NButton @click="showForm = false">{{ $t('practice.common.cancel') }}</NButton>
-          <NButton type="primary" :loading="saving" @click="handleSave">{{ $t('practice.common.save') }}</NButton>
-        </NSpace>
-      </template>
-    </NModal>
-
-    <!-- 报名列表 -->
-    <NModal
-      v-model:show="showRegistrations"
-      preset="card"
-      :title="$t('practice.competition.registrationsOf', { name: registrationsOf?.name ?? '' })"
-      class="practice-app-modal"
-    >
-      <NSpin :show="regLoading">
-        <NDataTable
-          :columns="registrationColumns"
-          :data="registrations"
-          :row-key="(r: RegistrationResponse) => r.id"
-          :single-line="false"
-          :bordered="false"
-          :scroll-x="900"
-          remote
-          :pagination="regPagination"
-        >
-          <template #empty><EmptyState :description="$t('practice.common.empty')" /></template>
-        </NDataTable>
-      </NSpin>
-    </NModal>
-
-    <!-- 报名审核 -->
-    <NModal v-model:show="showReviewReg" preset="card" :title="$t('practice.competition.reviewRegistration')" class="practice-form-modal">
-      <NForm :model="reviewRegForm" label-placement="top">
-        <NFormItem :label="$t('practice.competition.approve')" required>
-          <NRadioGroup v-model:value="reviewRegForm.approved">
-            <NRadio :value="true">{{ $t('practice.competition.approve') }}</NRadio>
-            <NRadio :value="false">{{ $t('practice.competition.reject') }}</NRadio>
-          </NRadioGroup>
-        </NFormItem>
-        <NFormItem :label="$t('practice.common.reviewComment')">
-          <NInput v-model:value="reviewRegForm.reviewComment" type="textarea" :autosize="{ minRows: 2, maxRows: 4 }" />
-        </NFormItem>
-      </NForm>
-      <template #footer>
-        <NSpace justify="end">
-          <NButton @click="showReviewReg = false">{{ $t('practice.common.cancel') }}</NButton>
-          <NButton type="primary" :loading="savingReviewReg" @click="handleSaveReviewReg">{{ $t('practice.common.confirm') }}</NButton>
-        </NSpace>
-      </template>
-    </NModal>
-
-    <!-- 结果录入 -->
-    <NModal
-      v-model:show="showResults"
-      preset="card"
-      :title="$t('practice.competition.resultsOf', { name: resultsOf?.name ?? '' })"
-      class="practice-result-modal"
-    >
-      <NSpin :show="resultsLoading">
-        <EmptyState v-if="!resultsLoading && results.length === 0" :description="$t('practice.common.empty')" />
-        <NDataTable v-else :columns="resultColumns" :data="results" :row-key="(r: CompetitionResultResponse) => r.id" :single-line="false" :bordered="false" />
-      </NSpin>
-      <div class="result-form-title">{{ $t('practice.competition.enterResult') }}</div>
-      <NForm :model="resultForm" label-placement="top">
-        <NSpace :size="12" wrap>
-          <NFormItem :label="$t('practice.competition.registration')" required style="width: 260px">
+      <NCard :title="$t('practice.competition.mgTitle')">
+        <template #header-extra>
+          <NSpace align="center">
             <NSelect
-              v-model:value="resultForm.registrationId"
-              :options="registrationSelectOptions"
-              :placeholder="$t('practice.competition.registrationRequired')"
-              filterable
+              v-model:value="filterStatus"
+              :options="statusOptions"
+              :placeholder="$t('practice.common.allStatus')"
+              clearable
+              style="width: 150px"
+              @update:value="handleFilterChange"
+            />
+            <NButton type="primary" @click="loadData">{{ $t('practice.common.query') }}</NButton>
+            <NButton @click="handleFilterChange">{{ $t('practice.common.reset') }}</NButton>
+            <NButton type="primary" @click="startCreate">{{
+              $t('practice.competition.addCompetition')
+            }}</NButton>
+          </NSpace>
+        </template>
+        <NSpin :show="loading">
+          <NDataTable
+            :columns="columns"
+            :data="competitions"
+            :row-key="(r: CompetitionResponse) => r.id"
+            :single-line="false"
+            :bordered="false"
+            :scroll-x="1640"
+            remote
+            :pagination="pagination"
+          >
+            <template #empty><EmptyState :description="$t('practice.common.empty')" /></template>
+          </NDataTable>
+        </NSpin>
+      </NCard>
+
+      <!-- 竞赛表单 -->
+      <NModal
+        v-model:show="showForm"
+        preset="card"
+        :title="
+          formMode === 'create'
+            ? $t('practice.competition.addCompetition')
+            : $t('practice.competition.editCompetition')
+        "
+        class="practice-form-modal"
+      >
+        <NForm :model="form" label-placement="top">
+          <NFormItem :label="$t('practice.competition.competitionName')" required>
+            <NInput v-model:value="form.name" />
+          </NFormItem>
+          <NSpace :size="12" wrap>
+            <NFormItem :label="$t('practice.common.organizer')" style="width: 240px">
+              <NInput v-model:value="form.organizer" />
+            </NFormItem>
+            <NFormItem :label="$t('practice.competition.level')" style="width: 200px">
+              <NSelect v-model:value="form.level" :options="levelOptions" />
+            </NFormItem>
+          </NSpace>
+          <NSpace :size="12" wrap>
+            <NFormItem :label="$t('practice.competition.regStartTime')" style="width: 240px">
+              <NDatePicker
+                v-model:value="form.regStartTs"
+                type="datetime"
+                clearable
+                style="width: 100%"
+              />
+            </NFormItem>
+            <NFormItem :label="$t('practice.competition.regEndTime')" style="width: 240px">
+              <NDatePicker
+                v-model:value="form.regEndTs"
+                type="datetime"
+                clearable
+                style="width: 100%"
+              />
+            </NFormItem>
+            <NFormItem :label="$t('practice.competition.tabCompetitions')" style="width: 240px">
+              <NDatePicker
+                v-model:value="form.contestTs"
+                type="datetime"
+                clearable
+                style="width: 100%"
+              />
+            </NFormItem>
+          </NSpace>
+          <NFormItem :label="$t('practice.common.description')">
+            <NInput
+              v-model:value="form.description"
+              type="textarea"
+              :autosize="{ minRows: 2, maxRows: 4 }"
             />
           </NFormItem>
-          <NFormItem :label="$t('practice.competition.award')" required style="width: 160px">
-            <NSelect v-model:value="resultForm.award" :options="awardOptions" />
+        </NForm>
+        <template #footer>
+          <NSpace justify="end">
+            <NButton @click="showForm = false">{{ $t('practice.common.cancel') }}</NButton>
+            <NButton type="primary" :loading="saving" @click="handleSave">{{
+              $t('practice.common.save')
+            }}</NButton>
+          </NSpace>
+        </template>
+      </NModal>
+
+      <!-- 报名列表 -->
+      <NModal
+        v-model:show="showRegistrations"
+        preset="card"
+        :title="$t('practice.competition.registrationsOf', { name: registrationsOf?.name ?? '' })"
+        class="practice-app-modal"
+      >
+        <NSpin :show="regLoading">
+          <NDataTable
+            :columns="registrationColumns"
+            :data="registrations"
+            :row-key="(r: RegistrationResponse) => r.id"
+            :single-line="false"
+            :bordered="false"
+            :scroll-x="900"
+            remote
+            :pagination="regPagination"
+          >
+            <template #empty><EmptyState :description="$t('practice.common.empty')" /></template>
+          </NDataTable>
+        </NSpin>
+      </NModal>
+
+      <!-- 报名审核 -->
+      <NModal
+        v-model:show="showReviewReg"
+        preset="card"
+        :title="$t('practice.competition.reviewRegistration')"
+        class="practice-form-modal"
+      >
+        <NForm :model="reviewRegForm" label-placement="top">
+          <NFormItem :label="$t('practice.competition.approve')" required>
+            <NRadioGroup v-model:value="reviewRegForm.approved">
+              <NRadio :value="true">{{ $t('practice.competition.approve') }}</NRadio>
+              <NRadio :value="false">{{ $t('practice.competition.reject') }}</NRadio>
+            </NRadioGroup>
           </NFormItem>
-          <NFormItem :label="$t('practice.common.score')" style="width: 140px">
-            <NInputNumber v-model:value="resultForm.score" :min="0" style="width: 100%" />
+          <NFormItem :label="$t('practice.common.reviewComment')">
+            <NInput
+              v-model:value="reviewRegForm.reviewComment"
+              type="textarea"
+              :autosize="{ minRows: 2, maxRows: 4 }"
+            />
           </NFormItem>
-        </NSpace>
-        <NFormItem :label="$t('practice.common.comment')">
-          <NInput v-model:value="resultForm.comment" type="textarea" :autosize="{ minRows: 2, maxRows: 3 }" />
-        </NFormItem>
-      </NForm>
-      <template #footer>
-        <NSpace justify="end">
-          <NButton @click="showResults = false">{{ $t('practice.common.cancel') }}</NButton>
-          <NButton type="primary" :loading="savingResult" @click="handleSaveResult">{{ $t('practice.common.save') }}</NButton>
-        </NSpace>
-      </template>
-    </NModal>
+        </NForm>
+        <template #footer>
+          <NSpace justify="end">
+            <NButton @click="showReviewReg = false">{{ $t('practice.common.cancel') }}</NButton>
+            <NButton type="primary" :loading="savingReviewReg" @click="handleSaveReviewReg">{{
+              $t('practice.common.confirm')
+            }}</NButton>
+          </NSpace>
+        </template>
+      </NModal>
+
+      <!-- 结果录入 -->
+      <NModal
+        v-model:show="showResults"
+        preset="card"
+        :title="$t('practice.competition.resultsOf', { name: resultsOf?.name ?? '' })"
+        class="practice-result-modal"
+      >
+        <NSpin :show="resultsLoading">
+          <EmptyState
+            v-if="!resultsLoading && results.length === 0"
+            :description="$t('practice.common.empty')"
+          />
+          <NDataTable
+            v-else
+            :columns="resultColumns"
+            :data="results"
+            :row-key="(r: CompetitionResultResponse) => r.id"
+            :single-line="false"
+            :bordered="false"
+          />
+        </NSpin>
+        <div class="result-form-title">{{ $t('practice.competition.enterResult') }}</div>
+        <NForm :model="resultForm" label-placement="top">
+          <NSpace :size="12" wrap>
+            <NFormItem
+              :label="$t('practice.competition.registration')"
+              required
+              style="width: 260px"
+            >
+              <NSelect
+                v-model:value="resultForm.registrationId"
+                :options="registrationSelectOptions"
+                :placeholder="$t('practice.competition.registrationRequired')"
+                filterable
+              />
+            </NFormItem>
+            <NFormItem :label="$t('practice.competition.award')" required style="width: 160px">
+              <NSelect v-model:value="resultForm.award" :options="awardOptions" />
+            </NFormItem>
+            <NFormItem :label="$t('practice.common.score')" style="width: 140px">
+              <NInputNumber v-model:value="resultForm.score" :min="0" style="width: 100%" />
+            </NFormItem>
+          </NSpace>
+          <NFormItem :label="$t('practice.common.comment')">
+            <NInput
+              v-model:value="resultForm.comment"
+              type="textarea"
+              :autosize="{ minRows: 2, maxRows: 3 }"
+            />
+          </NFormItem>
+        </NForm>
+        <template #footer>
+          <NSpace justify="end">
+            <NButton @click="showResults = false">{{ $t('practice.common.cancel') }}</NButton>
+            <NButton type="primary" :loading="savingResult" @click="handleSaveResult">{{
+              $t('practice.common.save')
+            }}</NButton>
+          </NSpace>
+        </template>
+      </NModal>
     </template>
   </div>
 </template>
