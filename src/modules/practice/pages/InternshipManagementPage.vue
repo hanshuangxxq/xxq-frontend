@@ -15,7 +15,6 @@ import {
   NTag,
   NSpin,
   NPopconfirm,
-  NDropdown,
   NTabs,
   NTabPane,
   NDatePicker,
@@ -87,25 +86,22 @@ const projectStatusOptions = computed(() => [
     value: 'CLOSED' as InternshipStatusCode,
   },
 ])
-const projectStatusDropdown = computed(() => [
-  { label: t('practice.internship.internshipStatusDraft'), key: 'DRAFT' },
-  { label: t('practice.internship.internshipStatusOpen'), key: 'OPEN' },
-  { label: t('practice.internship.internshipStatusClosed'), key: 'CLOSED' },
-])
 const trainingStatusOptions = computed(() => [
   { label: t('practice.internship.trainingStatusDraft'), value: 'DRAFT' as TrainingStatusCode },
   { label: t('practice.internship.trainingStatusOpen'), value: 'OPEN' as TrainingStatusCode },
   { label: t('practice.internship.trainingStatusClosed'), value: 'CLOSED' as TrainingStatusCode },
 ])
-const trainingStatusDropdown = computed(() => [
-  { label: t('practice.internship.trainingStatusDraft'), key: 'DRAFT' },
-  { label: t('practice.internship.trainingStatusOpen'), key: 'OPEN' },
-  { label: t('practice.internship.trainingStatusClosed'), key: 'CLOSED' },
-])
 const reportStatusOptions = computed(() => [
   { label: t('practice.internship.reportStatusSubmitted'), value: 'SUBMITTED' as ReportStatusCode },
   { label: t('practice.internship.reportStatusReviewed'), value: 'REVIEWED' as ReportStatusCode },
 ])
+
+/** 中文状态 -> 枚举 code（状态按钮排除当前状态用；实习/培训状态文案一致） */
+function projectStatusCodeOf(status: string): string {
+  if (status === '草稿') return 'DRAFT'
+  if (status === '开放') return 'OPEN'
+  return 'CLOSED'
+}
 
 // ============ 实习项目 ============
 const internshipLoading = ref(false)
@@ -604,21 +600,21 @@ const internshipColumns = computed<DataTableColumns<InternshipResponse>>(() => [
   {
     title: t('practice.common.actions'),
     key: 'actions',
-    width: 250,
+    width: 400,
     fixed: 'right',
     render: (row) =>
       h(NSpace, { size: 8 }, () => [
         h(NButton, { size: 'small', onClick: () => startEditInt(row) }, () =>
           t('practice.common.edit'),
         ),
-        h(
-          NDropdown,
-          {
-            options: projectStatusDropdown.value,
-            onSelect: (key: string) => handleIntStatusChange(row, key),
-          },
-          () => h(NButton, { size: 'small' }, () => t('practice.common.status')),
-        ),
+        // 状态变更：每个目标状态一个独立按钮（排除当前状态）
+        ...projectStatusOptions.value
+          .filter((o) => o.value !== projectStatusCodeOf(row.status))
+          .map((o) =>
+            h(NButton, { size: 'small', onClick: () => handleIntStatusChange(row, o.value) }, () =>
+              t('practice.common.setStatus', { status: o.label }),
+            ),
+          ),
         h(NButton, { size: 'small', onClick: () => openIntApps(row) }, () =>
           t('practice.internship.viewApplications'),
         ),
@@ -796,21 +792,23 @@ const trainingColumns = computed<DataTableColumns<TrainingResponse>>(() => [
   {
     title: t('practice.common.actions'),
     key: 'actions',
-    width: 250,
+    width: 400,
     fixed: 'right',
     render: (row) =>
       h(NSpace, { size: 8 }, () => [
         h(NButton, { size: 'small', onClick: () => startEditTrain(row) }, () =>
           t('practice.common.edit'),
         ),
-        h(
-          NDropdown,
-          {
-            options: trainingStatusDropdown.value,
-            onSelect: (key: string) => handleTrainStatusChange(row, key),
-          },
-          () => h(NButton, { size: 'small' }, () => t('practice.common.status')),
-        ),
+        // 状态变更：每个目标状态一个独立按钮（排除当前状态）
+        ...trainingStatusOptions.value
+          .filter((o) => o.value !== projectStatusCodeOf(row.status))
+          .map((o) =>
+            h(
+              NButton,
+              { size: 'small', onClick: () => handleTrainStatusChange(row, o.value) },
+              () => t('practice.common.setStatus', { status: o.label }),
+            ),
+          ),
         h(NButton, { size: 'small', onClick: () => openTrainEnrollments(row) }, () =>
           t('practice.internship.viewEnrollments'),
         ),
@@ -894,7 +892,7 @@ onMounted(() => {
                 :row-key="(r: InternshipResponse) => r.id"
                 :single-line="false"
                 :bordered="false"
-                :scroll-x="1180"
+                :scroll-x="1330"
                 remote
                 :pagination="intPagination"
               >
@@ -977,7 +975,7 @@ onMounted(() => {
                 :row-key="(r: TrainingResponse) => r.id"
                 :single-line="false"
                 :bordered="false"
-                :scroll-x="1180"
+                :scroll-x="1330"
                 remote
                 :pagination="trainPagination"
               >
