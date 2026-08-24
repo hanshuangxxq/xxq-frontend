@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
@@ -25,7 +25,7 @@ import type { Course } from '@/modules/course/types'
 import type { Semester } from '@/modules/curriculum/types'
 import type { ScoreStatisticsDto } from '../types'
 import { levelColor } from '../utils'
-import { useChartTheme } from '@/shared/chartTheme'
+import { useChartTheme, pieSweepAnimation } from '@/shared/chartTheme'
 
 const { t } = useI18n()
 const message = useMessage()
@@ -106,6 +106,21 @@ const stats = computed(() => {
 })
 
 // ---- 图表 ----
+/**
+ * 堆叠柱入场动画开关：echarts 堆叠柱默认每个颜色段从自身的堆叠位置开始生长。
+ * 数据变化时先把柱值置 0 渲染一帧，再写入真实值，
+ * 让整根柱子的所有颜色统一从坐标轴底部生长
+ */
+const stackZeroed = ref(false)
+
+watch(data, (rows) => {
+  if (rows.length === 0) return
+  stackZeroed.value = true
+  nextTick(() => {
+    stackZeroed.value = false
+  })
+})
+
 const levelStackOption = computed<EChartsOption>(() => {
   const levels: Array<{ key: CountField; label: string; lv: string }> = [
     { key: 'excellentCount', label: t('score.statExcellent'), lv: '优' },
@@ -123,12 +138,21 @@ const levelStackOption = computed<EChartsOption>(() => {
     xAxis: {
       type: 'category',
       data: data.value.map((d) => d.courseName),
+      // 关闭轴自身的过渡动画:图表挂载时数据为空,数据到达后旋转标签出现,
+      // containLabel 会重算网格使坐标轴整体上移;若轴过渡开启,旧轴线会从
+      // 更低的位置向上滑动,表现为横坐标下方一根横线向上飘直到与横坐标重合
+      // (与下方 yAxis 同理;柱子生长走的是系列动画,不受影响)
+      animation: false,
       axisLabel: { ...tokens.value.axisTextStyle, rotate: 30, interval: 0, hideOverlap: false },
       axisLine: tokens.value.axisLine,
     },
     yAxis: {
       type: 'value',
       name: t('score.statTotalCount'),
+      // 关闭轴自身的过渡动画:两阶段渲染(先 0 值后真实值)之间轴刻度会
+      // 从 0~1 切换到真实范围,若轴过渡开启,网格线会沿纵轴滑动产生残影
+      // (柱子生长走的是系列动画,不受影响)
+      animation: false,
       axisLabel: tokens.value.axisTextStyle,
       splitLine: tokens.value.splitLine,
       axisLine: tokens.value.axisLine,
@@ -139,7 +163,7 @@ const levelStackOption = computed<EChartsOption>(() => {
       stack: 'total',
       itemStyle: { color: levelColor(lv.lv) },
       barMaxWidth: 40,
-      data: data.value.map((d) => d[lv.key]),
+      data: data.value.map((d) => (stackZeroed.value ? 0 : d[lv.key])),
     })),
   }
 })
@@ -169,6 +193,10 @@ const levelPieOption = computed<EChartsOption>(() => {
         center: ['50%', '46%'],
         minAngle: 5,
         avoidLabelOverlap: true,
+        ...pieSweepAnimation(
+          pieData.map((d) => d.value),
+          5,
+        ),
         data: pieData,
         label: { position: 'inside', formatter: '{d}%', color: '#fff', fontSize: 11 },
       },
@@ -296,16 +324,22 @@ onMounted(() => {
           <template v-else>
             <div class="chart-full">
               <div class="chart-title">{{ $t('score.statLevelDist') }}</div>
-              <div class="chart-box chart-box-tall"><BaseChart :option="levelStackOption" /></div>
+              <div class="chart-box chart-box-tall">
+                <BaseChart :option="levelStackOption" :loading="loading" />
+              </div>
             </div>
             <div class="chart-row">
               <div class="chart-card">
                 <div class="chart-title">{{ $t('score.statLevelPie') }}</div>
-                <div class="chart-box chart-box-tall"><BaseChart :option="levelPieOption" /></div>
+                <div class="chart-box chart-box-tall">
+                  <BaseChart :option="levelPieOption" :loading="loading" />
+                </div>
               </div>
               <div class="chart-card">
                 <div class="chart-title">{{ $t('score.statAvgPass') }}</div>
-                <div class="chart-box chart-box-tall"><BaseChart :option="avgPassOption" /></div>
+                <div class="chart-box chart-box-tall">
+                  <BaseChart :option="avgPassOption" :loading="loading" />
+                </div>
               </div>
             </div>
 
