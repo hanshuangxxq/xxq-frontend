@@ -24,6 +24,7 @@ import zhCNNotification from '@/locales/zh-CN/notification.json'
 import zhCNAnalysis from '@/locales/zh-CN/analysis.json'
 import zhCNPractice from '@/locales/zh-CN/practice.json'
 import zhCNGraduation from '@/locales/zh-CN/graduation.json'
+import zhCNNotFound from '@/locales/zh-CN/not-found.json'
 import enCommon from '@/locales/en/common.json'
 import enAuth from '@/locales/en/auth.json'
 import enProfile from '@/locales/en/profile.json'
@@ -49,6 +50,7 @@ import enNotification from '@/locales/en/notification.json'
 import enAnalysis from '@/locales/en/analysis.json'
 import enPractice from '@/locales/en/practice.json'
 import enGraduation from '@/locales/en/graduation.json'
+import enNotFound from '@/locales/en/not-found.json'
 
 export type SupportedLocale = 'zh-CN' | 'en'
 
@@ -85,6 +87,7 @@ const i18n = createI18n({
       analysis: zhCNAnalysis,
       practice: zhCNPractice,
       graduation: zhCNGraduation,
+      'not-found': zhCNNotFound,
     },
     en: {
       common: enCommon,
@@ -112,6 +115,7 @@ const i18n = createI18n({
       analysis: enAnalysis,
       practice: enPractice,
       graduation: enGraduation,
+      'not-found': enNotFound,
     },
   },
 })
