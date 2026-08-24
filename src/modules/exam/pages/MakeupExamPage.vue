@@ -444,7 +444,9 @@ onMounted(() => {
               :bordered="false"
             />
             <div class="chart-card">
-              <div class="chart-box"><BaseChart :option="failDistOption" /></div>
+              <div class="chart-box">
+                <BaseChart :option="failDistOption" :loading="loadingCand" />
+              </div>
             </div>
           </template>
         </NSpin>
