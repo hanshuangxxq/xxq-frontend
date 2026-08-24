@@ -25,9 +25,9 @@ async function handleLogin() {
       data: { account: form.value.account, password: form.value.password },
     })
     message.success(t('auth.login.success'))
-    router.push('/profile')
-  } catch (e) {
-    message.error((e as Error).message || t('auth.login.fail'))
+    router.push('/')
+  } catch {
+    // 错误消息已由 api 层统一提示
   } finally {
     loading.value = false
   }
@@ -49,12 +49,7 @@ async function handleLogin() {
             @keydown.enter="handleLogin"
           />
         </NFormItem>
-        <NButton
-          type="primary"
-          block
-          :loading="loading"
-          @click="handleLogin"
-        >
+        <NButton type="primary" block :loading="loading" @click="handleLogin">
           {{ $t('auth.login.submit') }}
         </NButton>
       </NForm>

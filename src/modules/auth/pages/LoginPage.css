@@ -3,10 +3,10 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: #f0f2f5;
+  background: var(--app-bg);
 }
 
 .login-card {
   width: 400px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--app-card-shadow);
 }
