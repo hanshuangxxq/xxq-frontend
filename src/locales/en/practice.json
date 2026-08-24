@@ -12,6 +12,7 @@
     "actions": "Actions",
     "status": "Status",
     "allStatus": "All",
+    "setStatus": "Set to {status}",
     "capacity": "Capacity",
     "selectedCount": "Applied",
     "enrolledCount": "Enrolled",
