@@ -12,8 +12,9 @@
   height: 16px;
   line-height: 16px;
   font-size: 11px;
-  color: var(--app-text);
-  background: var(--app-primary);
+  /* 未读数为错误语义色,明暗主题下保持固定值(与 StatCard 语义色一致) */
+  color: #fff;
+  background: #d03050;
   border-radius: 8px;
 }
 
@@ -62,7 +63,7 @@
 .item-content {
   font-size: 13px;
   line-height: 1.5;
-  color: var(--app-text);
+  color: var(--app-text-secondary);
   word-break: break-word;
 }
 
