@@ -17,6 +17,7 @@
     "campaignDraft": "Draft",
     "campaignOpen": "Open",
     "campaignClosed": "Closed",
+    "setStatus": "Set to {status}",
     "submit": "Submit",
     "resubmit": "Resubmit",
     "modifyResubmit": "Revise & resubmit",
