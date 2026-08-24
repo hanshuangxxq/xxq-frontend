@@ -18,5 +18,8 @@
     "network": "Network error, please check your connection",
     "requestFailed": "Request failed",
     "server": "Server error (HTTP {status})"
+  },
+  "version": {
+    "updating": "New version detected, updating…"
   }
 }
