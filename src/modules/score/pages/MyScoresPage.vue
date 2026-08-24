@@ -23,7 +23,7 @@ import type { EChartsOption } from 'echarts'
 import BaseChart from '@/shared/components/BaseChart.vue'
 import StatCard from '@/shared/components/StatCard.vue'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
-import { useChartTheme, passMarkLine } from '@/shared/chartTheme'
+import { useChartTheme, passMarkLine, pieSweepAnimation } from '@/shared/chartTheme'
 import { fetchMyScores, fetchMyScoreSemesters, applyReview } from '../api'
 import { getMyProfile } from '@/modules/analysis/api'
 import type { StudentProfileDto } from '@/modules/analysis/types'
@@ -310,6 +310,10 @@ const levelPieOption = computed<EChartsOption>(() => {
         center: ['50%', '44%'],
         avoidLabelOverlap: true,
         minAngle: 5,
+        ...pieSweepAnimation(
+          pieData.map((d) => d.value),
+          5,
+        ),
         data: pieData,
         // 外侧标签 + 引导线：小扇区也能完整显示名称与占比
         label: {
@@ -461,13 +465,13 @@ onMounted(() => {
                   <div class="chart-card">
                     <div class="chart-title">{{ $t('score.myScoreBar') }}</div>
                     <div class="chart-box chart-box-tall">
-                      <BaseChart :option="scoreBarOption" />
+                      <BaseChart :option="scoreBarOption" :loading="loading" />
                     </div>
                   </div>
                   <div class="chart-card">
                     <div class="chart-title">{{ $t('score.myLevelPie') }}</div>
                     <div class="chart-box chart-box-tall">
-                      <BaseChart :option="levelPieOption" />
+                      <BaseChart :option="levelPieOption" :loading="loading" />
                     </div>
                   </div>
                 </div>
@@ -510,7 +514,7 @@ onMounted(() => {
                 <div class="chart-title">{{ $t('analysis.pfSubjectTrend') }}</div>
                 <div class="chart-box chart-box-tall">
                   <NEmpty v-if="!hasProfileSubjects" :description="$t('analysis.pfEmpty')" />
-                  <BaseChart v-else :option="profileSubjectOption" />
+                  <BaseChart v-else :option="profileSubjectOption" :loading="profileLoading" />
                 </div>
               </template>
             </NSpin>
