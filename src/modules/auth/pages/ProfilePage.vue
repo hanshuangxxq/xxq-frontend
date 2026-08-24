@@ -17,6 +17,7 @@ import {
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useAvatar } from '@/shared/composables/useAvatar'
 import { refreshToken } from '@/shared/tokenManager'
+import { formatDateTime } from '@/shared/utils/format'
 import { authApi } from '../api'
 import type { UserProfile } from '../types'
 
@@ -34,6 +35,14 @@ const genderOptions = computed(() => [
   { label: t('profile.genderMale'), value: '男' },
   { label: t('profile.genderFemale'), value: '女' },
 ])
+
+/** 性别展示:后端存储中文枚举值,展示时按当前语言映射 */
+const genderLabel = computed(() => {
+  const gender = profile.value?.gender
+  if (gender === '男') return t('profile.genderMale')
+  if (gender === '女') return t('profile.genderFemale')
+  return t('profile.notSet')
+})
 
 const form = ref({
   email: '',
@@ -71,8 +80,8 @@ async function loadProfile() {
     profile.value = tokenId
       ? await authApi.getProfileWithToken(userId, tokenId)
       : await authApi.getProfile(userId)
-  } catch (e) {
-    message.error((e as Error).message || t('profile.loadFail'))
+  } catch {
+    // 错误消息已由 api 层统一提示
   }
 }
 
@@ -104,8 +113,8 @@ async function saveProfile() {
     message.success(t('profile.saveSuccess'))
     await loadProfile()
     editing.value = false
-  } catch (e) {
-    message.error((e as Error).message || t('profile.saveFail'))
+  } catch {
+    // 错误消息已由 api 层统一提示
   } finally {
     saving.value = false
   }
@@ -122,8 +131,8 @@ async function handleAvatarUpload(file: File) {
     }
     await loadProfile()
     message.success(t('profile.saveSuccess'))
-  } catch (e) {
-    message.error((e as Error).message || t('profile.saveFail'))
+  } catch {
+    // 错误消息已由 api 层统一提示
   } finally {
     uploading.value = false
   }
@@ -152,8 +161,7 @@ onMounted(loadProfile)
 
 <template>
   <div class="profile-page">
-    <NSpace justify="space-between" align="center" class="profile-header">
-      <h2 class="profile-title">{{ $t('profile.title') }}</h2>
+    <NSpace justify="end" class="profile-header">
       <NButton v-if="!editing" type="primary" @click="startEdit">
         {{ $t('profile.editProfile') }}
       </NButton>
@@ -162,16 +170,8 @@ onMounted(loadProfile)
     <NCard>
       <!-- Avatar section -->
       <div class="profile-avatar-section">
-        <div
-          class="profile-avatar-wrapper"
-          @click="triggerUpload"
-        >
-          <NAvatar
-            :size="80"
-            :src="avatarSrc"
-            round
-            :class="{ 'avatar-uploading': uploading }"
-          >
+        <div class="profile-avatar-wrapper" @click="triggerUpload">
+          <NAvatar :size="80" :src="avatarSrc" round :class="{ 'avatar-uploading': uploading }">
             <template v-if="!avatarSrc">{{ profile?.name?.charAt(0) }}</template>
             <template #fallback>{{ profile?.name?.charAt(0) }}</template>
           </NAvatar>
@@ -222,12 +222,8 @@ onMounted(loadProfile)
           </NGi>
           <NGi>
             <NFormItem :label="$t('profile.gender')">
-              <NSelect
-                v-if="editing"
-                v-model:value="form.gender"
-                :options="genderOptions"
-              />
-              <span v-else>{{ displayValue(profile.gender) }}</span>
+              <NSelect v-if="editing" v-model:value="form.gender" :options="genderOptions" />
+              <span v-else>{{ genderLabel }}</span>
             </NFormItem>
           </NGi>
 
@@ -345,12 +341,12 @@ onMounted(loadProfile)
 
           <NGi>
             <NFormItem :label="$t('profile.lastLoginTime')">
-              <span>{{ displayValue(profile.lastLoginTime) }}</span>
+              <span>{{ formatDateTime(profile.lastLoginTime) }}</span>
             </NFormItem>
           </NGi>
           <NGi>
             <NFormItem :label="$t('profile.createTime')">
-              <span>{{ displayValue(profile.createTime) }}</span>
+              <span>{{ formatDateTime(profile.createTime) }}</span>
             </NFormItem>
           </NGi>
         </NGrid>
@@ -363,7 +359,6 @@ onMounted(loadProfile)
         {{ $t('profile.save') }}
       </NButton>
     </NSpace>
-
   </div>
 </template>
 
