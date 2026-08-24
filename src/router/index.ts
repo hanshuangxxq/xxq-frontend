@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import authRoutes from '@/modules/auth/router'
 import { useAuthStore } from '@/stores/useAuthStore'
+import { rememberVisitedPath } from '@/shared/utils/lastVisitedPage'
 import MainLayout from '@/modules/layout/MainLayout.vue'
 
 const WHITELIST = ['/login']
@@ -396,6 +397,13 @@ const routes: RouteRecordRaw[] = [
           import('@/modules/practice/graduation/pages/academic/ScoreOverviewPage.vue'),
         meta: { titleKey: 'graduation.academic.scoreTableTitle' },
       },
+      // 404 兜底:放在子路由最后,未匹配的路径在主布局内展示 NotFound 页
+      {
+        path: ':pathMatch(.*)*',
+        name: 'NotFound',
+        component: () => import('@/shared/pages/NotFoundPage.vue'),
+        meta: { titleKey: 'not-found.title' },
+      },
     ],
   },
   ...authRoutes,
@@ -416,6 +424,14 @@ router.beforeEach((to) => {
   // 登出流程中允许已登录用户进入 /login(先跳转再清空会话,避免旧页面闪现无权限)
   if (authStore.isLoggedIn && WHITELIST.includes(to.path) && !authStore.isLoggingOut) {
     return '/'
+  }
+})
+
+// 记录每个非 404 页面的路径:整页刷新/地址栏直达 404 时,浏览器历史中没有应用内上一页,
+// 404 页的「返回上一页」依赖这份记录找回来源页(sessionStorage 随标签页关闭自动清除)
+router.afterEach((to) => {
+  if (to.name !== 'NotFound') {
+    rememberVisitedPath(to.fullPath)
   }
 })
 
