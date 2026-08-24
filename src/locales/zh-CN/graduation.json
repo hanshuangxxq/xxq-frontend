@@ -17,6 +17,7 @@
     "campaignDraft": "草稿",
     "campaignOpen": "进行中",
     "campaignClosed": "已结束",
+    "setStatus": "设为{status}",
     "submit": "提交",
     "resubmit": "重新提交",
     "modifyResubmit": "修改重提",
