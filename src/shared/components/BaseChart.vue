@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
@@ -32,14 +33,22 @@ use([
   ToolboxComponent,
 ])
 
-defineProps<{
+const props = defineProps<{
   option: EChartsOption
   loading?: boolean
 }>()
+
+// 统一放慢所有图表动画（echarts 默认入场 1000ms、数据更新 300ms）；
+// 页面 option 中若自带动画配置可覆盖这里的默认值
+const mergedOption = computed<EChartsOption>(() => ({
+  animationDuration: 2000,
+  animationDurationUpdate: 1200,
+  ...props.option,
+}))
 </script>
 
 <template>
-  <VChart class="base-chart" :option="option" :loading="loading" autoresize />
+  <VChart class="base-chart" :option="mergedOption" :loading="loading" autoresize />
 </template>
 
 <style scoped src="./BaseChart.css"></style>
