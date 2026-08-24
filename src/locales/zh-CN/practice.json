@@ -12,6 +12,7 @@
     "actions": "操作",
     "status": "状态",
     "allStatus": "全部状态",
+    "setStatus": "设为{status}",
     "capacity": "容量上限",
     "selectedCount": "已选人数",
     "enrolledCount": "已报名人数",
