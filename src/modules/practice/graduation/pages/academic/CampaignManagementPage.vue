@@ -16,7 +16,6 @@ import {
   NDatePicker,
   NTag,
   NSpace,
-  NDropdown,
   NDivider,
   NResult,
   useMessage,
@@ -349,22 +348,20 @@ const columns = computed<DataTableColumns<CampaignResponse>>(() => [
   {
     title: t('graduation.common.actions'),
     key: 'actions',
-    width: 160,
+    width: 270,
     render: (row) =>
       h(NSpace, { size: 8 }, () => [
         h(NButton, { size: 'small', onClick: () => startEdit(row) }, () =>
           t('graduation.common.edit'),
         ),
-        h(
-          NDropdown,
-          {
-            options: statusOptions.value
-              .filter((o) => o.value !== statusCodeOf(row.status))
-              .map((o) => ({ label: o.label, key: o.value })),
-            onSelect: (key: string) => requestStatusChange(row, key),
-          },
-          () => h(NButton, { size: 'small' }, () => t('graduation.academic.changeStatus')),
-        ),
+        // 状态变更：每个目标状态一个独立按钮（排除当前状态，F-R-43 二次确认）
+        ...statusOptions.value
+          .filter((o) => o.value !== statusCodeOf(row.status))
+          .map((o) =>
+            h(NButton, { size: 'small', onClick: () => requestStatusChange(row, o.value) }, () =>
+              t('graduation.common.setStatus', { status: o.label }),
+            ),
+          ),
       ]),
   },
 ])
@@ -410,7 +407,7 @@ onMounted(() => {
             :row-key="(r: CampaignResponse) => r.id"
             :single-line="false"
             :bordered="false"
-            :scroll-x="1120"
+            :scroll-x="1200"
             remote
             :pagination="pagination"
           >
