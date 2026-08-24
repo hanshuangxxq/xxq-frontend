@@ -18,5 +18,8 @@
     "network": "网络异常，请检查网络连接",
     "requestFailed": "请求失败",
     "server": "服务器错误（HTTP {status}）"
+  },
+  "version": {
+    "updating": "检测到新版本，正在自动更新…"
   }
 }
