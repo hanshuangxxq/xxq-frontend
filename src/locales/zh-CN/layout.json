@@ -21,5 +21,9 @@
   "appearance": "外观",
   "themeLight": "浅色",
   "themeDark": "深色",
-  "themeSystem": "跟随系统"
+  "themeSystem": "跟随系统",
+  "groupTeaching": "教学管理",
+  "groupScore": "成绩与考试",
+  "groupAnalysis": "学情分析",
+  "groupPractice": "实践与创新"
 }
