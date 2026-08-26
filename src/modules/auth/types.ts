@@ -1,5 +1,8 @@
+import type { ThemeMode } from '@/stores/useThemeStore'
+import type { SupportedLocale } from '@/i18n'
+
 /** 用户类型 */
-export type UserType = 'teacher' | 'student' | 'dean' | 'department' | 'academic_admin'
+export type UserType = 'teacher' | 'student' | 'department' | 'academic_admin'
 
 /** 登录渠道 */
 export type LoginChannel = 'account' | 'wechat' | 'qq' | 'alipay'
@@ -88,4 +91,14 @@ export interface UpdateProfileParams {
   gender?: string
   avatar?: string
   description?: string
+}
+
+/** 用户个性化偏好(后端顶层浅合并存储;新增 key 保持可选) */
+export interface UserPreferences {
+  /** 侧边栏是否收起 */
+  sidebarCollapsed?: boolean
+  /** 主题模式 */
+  theme?: ThemeMode
+  /** 界面语言 */
+  lang?: SupportedLocale
 }
