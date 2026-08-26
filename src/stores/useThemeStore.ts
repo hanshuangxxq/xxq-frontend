@@ -3,17 +3,14 @@ import { defineStore } from 'pinia'
 
 export type ThemeMode = 'light' | 'dark' | 'system'
 
-const STORAGE_KEY = 'xxq-theme'
 const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
 
-function loadFromStorage(): ThemeMode {
-  const stored = localStorage.getItem(STORAGE_KEY)
-  if (stored === 'light' || stored === 'dark' || stored === 'system') return stored
-  return 'system'
-}
-
+/**
+ * 主题模式。不做本地持久化:登录后由 usePreferenceStore 从后端拉取并 setMode,
+ * 用户修改也经 usePreferenceStore.setTheme 同步到后端。
+ */
 export const useThemeStore = defineStore('theme', () => {
-  const mode = ref<ThemeMode>(loadFromStorage())
+  const mode = ref<ThemeMode>('system')
   const systemDark = ref(mediaQuery.matches)
 
   mediaQuery.addEventListener('change', (e) => {
@@ -27,7 +24,6 @@ export const useThemeStore = defineStore('theme', () => {
 
   function setMode(next: ThemeMode) {
     mode.value = next
-    localStorage.setItem(STORAGE_KEY, next)
   }
 
   // 同步 <html> 的 dark class,驱动 global.css 的 CSS 变量切换
