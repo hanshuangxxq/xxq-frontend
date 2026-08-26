@@ -6,26 +6,13 @@ import MainLayout from '@/modules/layout/MainLayout.vue'
 
 const WHITELIST = ['/login']
 
-/** 各角色登录后的默认首页(访问 / 时重定向);未匹配到角色时回退 /profile */
-const ROLE_HOME: Record<string, string> = {
-  student: '/curriculum',
-  teacher: '/curriculum',
-  department: '/teach-drafts',
-  academic_admin: '/time-restrictions',
-}
-
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
     component: MainLayout,
     children: [
-      {
-        path: '',
-        redirect: () => {
-          const authStore = useAuthStore()
-          return ROLE_HOME[authStore.user?.userType ?? ''] ?? '/profile'
-        },
-      },
+      // 默认首页:所有角色登录后统一进入个人信息页
+      { path: '', redirect: '/profile' },
       {
         path: 'profile',
         name: 'Profile',
