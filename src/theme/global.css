@@ -4,8 +4,6 @@
   --app-card-bg: #ffffff;
   --app-card-shadow: 0 2px 12px rgba(15, 35, 80, 0.06);
   --app-sidebar-bg: #fafafa;
-  --app-sidebar-bottom-bg: #f0f1f3;
-  --app-sidebar-bottom-hover: #e8eaed;
   --app-border: #ececf0;
   --app-border-strong: #dcdfe5;
   --app-text: #1f2329;
@@ -25,8 +23,6 @@ html.dark {
   --app-card-bg: #18181c;
   --app-card-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
   --app-sidebar-bg: #18181c;
-  --app-sidebar-bottom-bg: #1f1f24;
-  --app-sidebar-bottom-hover: #26262c;
   --app-border: #2c2c32;
   --app-border-strong: #3a3a42;
   --app-text: #e5e7eb;
