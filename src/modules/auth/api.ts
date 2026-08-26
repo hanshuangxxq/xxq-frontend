@@ -5,6 +5,7 @@ import type {
   LoginParams,
   RefreshResult,
   UpdateProfileParams,
+  UserPreferences,
   UserProfile,
   UserSession,
 } from './types'
@@ -63,6 +64,20 @@ export const authApi = {
       `/user/avatar/upload?userId=${encodeURIComponent(userId)}`,
       formData,
     )
+    return result.data
+  },
+
+  /** 读取当前用户全部偏好;从未设置过时后端返回 {}。静默请求,失败不弹错误提示 */
+  async getPreferences(): Promise<UserPreferences> {
+    const result = await api.get<Result<UserPreferences>>('/preferences/me', { silent: true })
+    return result.data
+  },
+
+  /** 浅合并更新偏好,只传要改的字段;返回合并后的完整偏好。静默请求,失败不弹错误提示 */
+  async updatePreferences(patch: UserPreferences): Promise<UserPreferences> {
+    const result = await api.put<Result<UserPreferences>>('/preferences/me', patch, {
+      silent: true,
+    })
     return result.data
   },
 }
