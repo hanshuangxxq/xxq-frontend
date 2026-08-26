@@ -6,7 +6,6 @@ export function useRoleCheck() {
 
   const isAcademicAdmin = computed(() => authStore.user?.userType === 'academic_admin')
   const isDepartment = computed(() => authStore.user?.userType === 'department')
-  const isDean = computed(() => authStore.user?.userType === 'dean')
   const isTeacher = computed(() => authStore.user?.userType === 'teacher')
   const isStudent = computed(() => authStore.user?.userType === 'student')
 
@@ -33,7 +32,6 @@ export function useRoleCheck() {
   return {
     isAcademicAdmin,
     isDepartment,
-    isDean,
     isTeacher,
     isStudent,
     isAdmin,
