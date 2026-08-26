@@ -34,6 +34,8 @@ const cardBase = {
 }
 
 const menuBase = {
+  borderRadius: '8px',
+  itemHeight: '36px',
   itemColorHover: 'var(--app-hover-bg)',
   itemColorActive: 'var(--app-active-bg)',
   itemColorActiveHover: 'var(--app-active-bg)',
