@@ -1,0 +1,223 @@
+/* 悬浮卡片侧边栏:aside 为透明轨道(自身做过渡动画),内层卡片四边留白悬浮 */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 10;
+  width: 232px;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar.collapsed {
+  width: 72px;
+}
+
+.sidebar-card {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  background: var(--app-card-bg);
+  border: 1px solid var(--app-border);
+  border-radius: 14px;
+  box-shadow: var(--app-card-shadow);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-top {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 16px;
+  min-height: 50px;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.project-name {
+  position: absolute;
+  left: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--app-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+.sidebar-top.collapsed .project-name {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 折叠态下折叠/展开图标居中，与下方收起菜单的图标纵向对齐 */
+.sidebar-top.collapsed {
+  justify-content: center;
+  padding: 16px 0;
+}
+
+.toggle-icon {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+}
+
+.toggle-icon:hover {
+  opacity: 0.8;
+}
+
+.sidebar-menu {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  padding: 4px 8px;
+}
+
+/* 收起态:卡片 48px,菜单内边距收窄为 6px,菜单本体 36px 图标块紧凑居中 */
+.sidebar.collapsed .sidebar-menu {
+  padding: 4px 6px;
+}
+
+/* 选中项为圆角色块(圆角由 theme/index.ts 的 Menu.borderRadius 提供),菜单随卡片宽度居中 */
+.sidebar-menu :deep(.n-menu) {
+  margin: 0 auto;
+}
+
+.sidebar-bottom {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  margin-top: 4px;
+  border-top: 1px solid var(--app-border);
+  flex-shrink: 0;
+  min-height: 53px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.15s;
+}
+
+.sidebar-bottom:hover {
+  background: var(--app-hover-bg);
+}
+
+/* 收起态:内边距收窄为 8px,32px 头像在 48px 卡片内居中 */
+.sidebar-bottom.collapsed {
+  padding: 10px 8px;
+}
+
+.sidebar-bottom :deep(.n-avatar) {
+  flex-shrink: 0;
+}
+
+.dropdown-hitbox {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.username {
+  position: absolute;
+  left: 56px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--app-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 108px;
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+.sidebar-bottom.collapsed .username {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.dropdown-arrow {
+  position: absolute;
+  right: 16px;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+}
+
+.sidebar-bottom:hover .dropdown-arrow {
+  opacity: 0.8;
+}
+
+.sidebar-bottom.collapsed .dropdown-arrow {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 暗色下反转深色 SVG 图标亮度(侧边栏图标均为 <img> 引入的深色 SVG) */
+html.dark .sidebar-menu :deep(img),
+html.dark .toggle-icon,
+html.dark .dropdown-arrow {
+  filter: invert(0.8);
+}
+
+.logout-confirm-modal {
+  width: 360px;
+  max-width: 90vw;
+}
+
+.logout-confirm-message {
+  margin: 0 0 20px;
+  font-size: 14px;
+  color: var(--app-text-secondary);
+}
+
+.logout-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* Global overrides for teleported modal/dropdown elements */
+:global(.logout-confirm-modal) {
+  width: 360px !important;
+  max-width: 90vw !important;
+}
+
+/* Sidebar dropdown menu — global because NDropdown teleports to body */
+:global(.n-dropdown-menu) {
+  background: var(--app-dropdown-bg);
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 4px 0;
+}
+
+:global(.n-dropdown-option) {
+  color: var(--app-text);
+  font-size: 13px;
+  padding: 0;
+  transition: background 0.12s;
+}
+
+:global(.n-dropdown-option:hover) {
+  background: var(--app-dropdown-hover);
+  color: var(--app-text);
+}
+
+:global(.n-dropdown-divider) {
+  margin: 4px 12px;
+  border-color: var(--app-border);
+}
