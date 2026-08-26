@@ -55,7 +55,6 @@ const avatarSrc = useAvatar(computed(() => profile.value?.avatar ?? null))
 
 const isStudent = computed(() => profile.value?.userType === 'student')
 const isTeacher = computed(() => profile.value?.userType === 'teacher')
-const isDean = computed(() => profile.value?.userType === 'dean')
 const isDepartmentAdmin = computed(() => profile.value?.userType === 'department')
 const isAcademicAdmin = computed(() => profile.value?.userType === 'academic_admin')
 
@@ -63,7 +62,6 @@ const userTypeLabel = computed(() => {
   const type = profile.value?.userType
   if (type === 'student') return t('profile.student')
   if (type === 'teacher') return t('profile.teacher')
-  if (type === 'dean') return t('profile.dean')
   if (type === 'department') return t('profile.departmentAdmin')
   if (type === 'academic_admin') return t('profile.academicAdmin')
   return ''
@@ -271,25 +269,6 @@ onMounted(loadProfile)
             <NGi>
               <NFormItem :label="$t('profile.department')">
                 <span>{{ displayValue(profile.department) }}</span>
-              </NFormItem>
-            </NGi>
-          </template>
-
-          <!-- Dean fields -->
-          <template v-if="isDean">
-            <NGi>
-              <NFormItem :label="$t('profile.identifier')">
-                <span>{{ displayValue(profile.identifier) }}</span>
-              </NFormItem>
-            </NGi>
-            <NGi>
-              <NFormItem :label="$t('profile.department')">
-                <span>{{ displayValue(profile.department) }}</span>
-              </NFormItem>
-            </NGi>
-            <NGi>
-              <NFormItem :label="$t('profile.position')">
-                <span>{{ displayValue(profile.position) }}</span>
               </NFormItem>
             </NGi>
           </template>
