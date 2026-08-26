@@ -5,6 +5,18 @@
     <link rel="icon" href="/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>XXQ</title>
+    <style>
+      /* 应用挂载前的兜底背景,与 global.css 的 --app-bg 一致,避免加载期白闪;
+         跟随系统暗色,覆盖偏好加载完成前的空窗(挂载前会先拉取用户偏好) */
+      html {
+        background: #f5f6f8;
+      }
+      @media (prefers-color-scheme: dark) {
+        html {
+          background: #101014;
+        }
+      }
+    </style>
   </head>
   <body>
     <div id="app"></div>
