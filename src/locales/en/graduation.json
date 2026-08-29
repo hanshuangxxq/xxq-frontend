@@ -327,7 +327,7 @@
     "exporting": "Exporting…",
     "exportHint": "Exports can be used for third-party duplicate checking",
     "operatorName": "Operator",
-    "operatorType": "Role",
+    "operatorType": "Permission",
     "action": "Action",
     "target": "Target",
     "detail": "Detail",
