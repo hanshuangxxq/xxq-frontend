@@ -57,7 +57,7 @@ const columns = computed<DataTableColumns<OperationLogResponse>>(() => [
   {
     title: t('graduation.academic.operatorType'),
     key: 'operatorType',
-    width: 90,
+    width: 130,
     align: 'center',
     render: (r) => h(NTag, { size: 'small', bordered: false }, () => r.operatorType),
   },
@@ -113,7 +113,7 @@ const columns = computed<DataTableColumns<OperationLogResponse>>(() => [
             :row-key="operationLogRowKey"
             :single-line="false"
             :bordered="false"
-            :scroll-x="960"
+            :scroll-x="1000"
             remote
             :pagination="pagination"
           >
