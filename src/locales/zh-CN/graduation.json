@@ -327,7 +327,7 @@
     "exporting": "导出中",
     "exportHint": "导出后可用于第三方平台查重等操作",
     "operatorName": "操作人",
-    "operatorType": "角色",
+    "operatorType": "权限",
     "action": "动作",
     "target": "对象",
     "detail": "详情",
