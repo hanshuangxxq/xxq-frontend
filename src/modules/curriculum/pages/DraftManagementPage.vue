@@ -69,15 +69,27 @@ function classNameLabel(c: ClassName): string {
   return name ? `${c.className} (${name})` : c.className
 }
 
+const fetchClassNamesPage = (page: number, pageSize: number) => fetchClassNames(page, pageSize)
+const classNameLabelOf = (c: ClassName) => classNameLabel(c)
+const classNameValueOf = (c: ClassName) => c.className
+
 const selectedClasses = ref<string[]>([])
-const entries = ref<
-  {
-    courseId: number | null
-    teacherId: number | null
-    startWeek: number | null
-    endWeek: number | null
-  }[]
->([{ courseId: null, teacherId: null, startWeek: null, endWeek: null }])
+
+function onSelectedClassesChange(v: string | number | null | Array<string | number>) {
+  selectedClasses.value = v as string[]
+}
+
+/** 排课草稿表单条目 */
+interface DraftEntry {
+  courseId: number | null
+  teacherId: number | null
+  startWeek: number | null
+  endWeek: number | null
+}
+
+const entries = ref<DraftEntry[]>([
+  { courseId: null, teacherId: null, startWeek: null, endWeek: null },
+])
 const submitting = ref(false)
 
 /** 排课草稿仅用常规课（排除公选课）；端点不支持按 source 过滤，故按页客户端过滤 */
@@ -87,6 +99,13 @@ function fetchRegularCourses(page: number, pageSize: number) {
     data: { ...res.data, records: res.data.records.filter((c) => !isPublicCourse(c)) },
   }))
 }
+
+const courseLabelOf = (c: Course) => `${c.courseName} (${c.courseCode})`
+const courseValueOf = (c: Course) => c.id
+
+const fetchTeachersPage = (page: number, pageSize: number) => fetchTeachers(page, pageSize)
+const teacherLabelOf = (tch: Teacher) => `${tch.name} (${tch.title})`
+const teacherValueOf = (tch: Teacher) => tch.id
 
 // ---- Semester ----
 const semesterOptions = ref<{ label: string; value: number }[]>([])
@@ -180,6 +199,28 @@ function removeEntry(index: number) {
   }
 }
 
+function onEntryCourseChange(
+  entry: DraftEntry,
+  v: string | number | null | Array<string | number>,
+) {
+  entry.courseId = v as number | null
+}
+
+function onEntryTeacherChange(
+  entry: DraftEntry,
+  v: string | number | null | Array<string | number>,
+) {
+  entry.teacherId = v as number | null
+}
+
+function onEntryStartWeekChange(entry: DraftEntry, v: string) {
+  entry.startWeek = v ? parseInt(v, 10) : null
+}
+
+function onEntryEndWeekChange(entry: DraftEntry, v: string) {
+  entry.endWeek = v ? parseInt(v, 10) : null
+}
+
 async function handleSubmit() {
   if (selectedClasses.value.length === 0) {
     message.warning(t('teach-drafts.classNamePlaceholder'))
@@ -254,57 +295,48 @@ onMounted(() => {
           />
           <PagedSelect
             :model-value="selectedClasses"
-            :fetch-page="(page: number, pageSize: number) => fetchClassNames(page, pageSize)"
-            :label-of="(c: ClassName) => classNameLabel(c)"
-            :value-of="(c: ClassName) => c.className"
+            :fetch-page="fetchClassNamesPage"
+            :label-of="classNameLabelOf"
+            :value-of="classNameValueOf"
             :placeholder="$t('teach-drafts.classNamePlaceholder')"
             multiple
-            @update:model-value="
-              (v: string | number | null | Array<string | number>) =>
-                (selectedClasses = v as string[])
-            "
+            @update:model-value="onSelectedClassesChange"
           />
           <div v-for="(entry, index) in entries" :key="index">
             <NSpace align="center">
               <PagedSelect
                 :model-value="entry.courseId"
                 :fetch-page="fetchRegularCourses"
-                :label-of="(c: Course) => `${c.courseName} (${c.courseCode})`"
-                :value-of="(c: Course) => c.id"
+                :label-of="courseLabelOf"
+                :value-of="courseValueOf"
                 :placeholder="$t('teach-drafts.courseIdPlaceholder')"
                 class="draft-select-crs"
                 clearable
                 filterable
-                @update:model-value="
-                  (v: string | number | null | Array<string | number>) =>
-                    (entry.courseId = v as number | null)
-                "
+                @update:model-value="(v) => onEntryCourseChange(entry, v)"
               />
               <PagedSelect
                 :model-value="entry.teacherId"
-                :fetch-page="(page: number, pageSize: number) => fetchTeachers(page, pageSize)"
-                :label-of="(tch: Teacher) => `${tch.name} (${tch.title})`"
-                :value-of="(tch: Teacher) => tch.id"
+                :fetch-page="fetchTeachersPage"
+                :label-of="teacherLabelOf"
+                :value-of="teacherValueOf"
                 :placeholder="$t('teach-drafts.teacherIdPlaceholder')"
                 class="draft-select-tch"
                 clearable
                 filterable
-                @update:model-value="
-                  (v: string | number | null | Array<string | number>) =>
-                    (entry.teacherId = v as number | null)
-                "
+                @update:model-value="(v) => onEntryTeacherChange(entry, v)"
               />
               <NInput
                 :value="entry.startWeek !== null ? String(entry.startWeek) : ''"
                 :placeholder="$t('teach-drafts.startWeekPlaceholder')"
                 class="draft-input-num"
-                @update:value="(v: string) => (entry.startWeek = v ? parseInt(v, 10) : null)"
+                @update:value="(v) => onEntryStartWeekChange(entry, v)"
               />
               <NInput
                 :value="entry.endWeek !== null ? String(entry.endWeek) : ''"
                 :placeholder="$t('teach-drafts.endWeekPlaceholder')"
                 class="draft-input-num"
-                @update:value="(v: string) => (entry.endWeek = v ? parseInt(v, 10) : null)"
+                @update:value="(v) => onEntryEndWeekChange(entry, v)"
               />
               <NButton size="small" secondary @click="removeEntry(index)">
                 {{ $t('teach-drafts.removeCourse') }}

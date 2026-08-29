@@ -92,6 +92,19 @@ const form = ref<{
 })
 const saving = ref(false)
 
+const fetchTeachersPage = (page: number, pageSize: number) => fetchTeachers(page, pageSize)
+const reviewerLabelOf = (tch: Teacher) => `${tch.name}（${tch.department || '-'}）`
+const panelLabelOf = (tch: Teacher) => tch.name
+const teacherValueOf = (tch: Teacher) => tch.userId
+
+function onReviewerChange(v: string | number | null | Array<string | number>): void {
+  form.value.reviewerId = v as number | null
+}
+
+function onPanelChange(v: string | number | null | Array<string | number>): void {
+  form.value.panelIds = (v as Array<string | number>) ?? []
+}
+
 function startArrange(): void {
   editMode.value = false
   form.value = {
@@ -151,6 +164,8 @@ async function handleSave(): Promise<void> {
     saving.value = false
   }
 }
+
+const defenseRowKey = (row: DefenseResponse) => row.id
 
 const columns = computed<DataTableColumns<DefenseResponse>>(() => [
   { title: t('graduation.common.studentNo'), key: 'studentNo', width: 120 },
@@ -233,7 +248,7 @@ const columns = computed<DataTableColumns<DefenseResponse>>(() => [
             v-else
             :columns="columns"
             :data="list"
-            :row-key="(r: DefenseResponse) => r.id"
+            :row-key="defenseRowKey"
             :single-line="false"
             :bordered="false"
             :scroll-x="1080"
@@ -274,31 +289,25 @@ const columns = computed<DataTableColumns<DefenseResponse>>(() => [
             <NFormItem :label="$t('graduation.dept.reviewer')" style="width: 300px">
               <PagedSelect
                 :model-value="form.reviewerId"
-                :fetch-page="(page: number, pageSize: number) => fetchTeachers(page, pageSize)"
-                :label-of="(tch: Teacher) => `${tch.name}（${tch.department || '-'}）`"
-                :value-of="(tch: Teacher) => tch.userId"
+                :fetch-page="fetchTeachersPage"
+                :label-of="reviewerLabelOf"
+                :value-of="teacherValueOf"
                 :initial-label="form.reviewerLabel"
                 clearable
                 filterable
-                @update:model-value="
-                  (v: string | number | null | Array<string | number>) =>
-                    (form.reviewerId = v as number | null)
-                "
+                @update:model-value="onReviewerChange"
               />
             </NFormItem>
             <NFormItem :label="$t('graduation.dept.defenseTeacherGroup')" style="width: 420px">
               <PagedSelect
                 :model-value="form.panelIds"
-                :fetch-page="(page: number, pageSize: number) => fetchTeachers(page, pageSize)"
-                :label-of="(tch: Teacher) => tch.name"
-                :value-of="(tch: Teacher) => tch.userId"
+                :fetch-page="fetchTeachersPage"
+                :label-of="panelLabelOf"
+                :value-of="teacherValueOf"
                 :initial-label="form.panelLabel"
                 multiple
                 filterable
-                @update:model-value="
-                  (v: string | number | null | Array<string | number>) =>
-                    (form.panelIds = (v as Array<string | number>) ?? [])
-                "
+                @update:model-value="onPanelChange"
               />
             </NFormItem>
           </NSpace>

@@ -86,6 +86,8 @@ async function handleDownload(row: MidtermResponse): Promise<void> {
   }
 }
 
+const midtermRowKey = (row: MidtermResponse) => row.id
+
 const columns = computed<DataTableColumns<MidtermResponse>>(() => [
   {
     type: 'expand',
@@ -183,7 +185,7 @@ const columns = computed<DataTableColumns<MidtermResponse>>(() => [
             v-else
             :columns="columns"
             :data="list"
-            :row-key="(r: MidtermResponse) => r.id"
+            :row-key="midtermRowKey"
             :single-line="false"
             :bordered="false"
             :scroll-x="720"

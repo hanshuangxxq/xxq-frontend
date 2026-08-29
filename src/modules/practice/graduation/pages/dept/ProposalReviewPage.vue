@@ -75,6 +75,8 @@ async function handleReview(value: { approve?: boolean; comment?: string }): Pro
   }
 }
 
+const proposalRowKey = (row: ProposalResponse) => row.id
+
 const columns = computed<DataTableColumns<ProposalResponse>>(() => [
   {
     type: 'expand',
@@ -137,7 +139,7 @@ const columns = computed<DataTableColumns<ProposalResponse>>(() => [
             v-else
             :columns="columns"
             :data="list"
-            :row-key="(r: ProposalResponse) => r.id"
+            :row-key="proposalRowKey"
             :single-line="false"
             :bordered="false"
             :scroll-x="760"

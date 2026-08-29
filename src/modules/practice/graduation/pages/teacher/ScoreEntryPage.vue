@@ -133,6 +133,8 @@ async function handleSubmitScore(): Promise<void> {
 }
 
 // ===== 列定义 =====
+const scoreRowKey = (row: ScoreResponse) => row.id
+
 const advisorColumns = computed<DataTableColumns<ScoreResponse>>(() => [
   { title: t('graduation.common.student'), key: 'studentName', width: 110 },
   {
@@ -196,6 +198,8 @@ const reviewerRows = computed(() => {
   const myId = authStore.user?.userId
   return defenseList.value.filter((d) => d.reviewerId === myId)
 })
+
+const defenseRowKey = (row: DefenseResponse) => row.id
 
 const reviewerColumns = computed<DataTableColumns<DefenseResponse>>(() => [
   { title: t('graduation.common.studentNo'), key: 'studentNo', width: 120 },
@@ -270,7 +274,7 @@ const reviewerColumns = computed<DataTableColumns<DefenseResponse>>(() => [
                 v-else
                 :columns="advisorColumns"
                 :data="scores"
-                :row-key="(r: ScoreResponse) => r.id"
+                :row-key="scoreRowKey"
                 :single-line="false"
                 :bordered="false"
                 :scroll-x="720"
@@ -289,7 +293,7 @@ const reviewerColumns = computed<DataTableColumns<DefenseResponse>>(() => [
                 v-else
                 :columns="reviewerColumns"
                 :data="reviewerRows"
-                :row-key="(r: DefenseResponse) => r.id"
+                :row-key="defenseRowKey"
                 :single-line="false"
                 :bordered="false"
                 :scroll-x="620"

@@ -41,6 +41,8 @@ const collegeOptions = computed(() => colleges.value.map((c) => ({ label: c.name
 /** 未分配清单弹窗 */
 const showUnassigned = ref(false)
 
+const dashboardRowKey = (row: DashboardRow) => row.studentId
+
 const unassignedColumns = computed<DataTableColumns<DashboardRow>>(() => [
   { title: t('graduation.common.studentNo'), key: 'studentNo', width: 120 },
   { title: t('graduation.common.student'), key: 'studentName', width: 100 },
@@ -104,6 +106,8 @@ function onCollegeChange(): void {
 function rowClassName(row: AssignmentOverviewRow): string {
   return row.freeCount > 0 ? 'free-row' : ''
 }
+
+const overviewRowKey = (row: AssignmentOverviewRow) => row.teacherId
 
 const columns = computed<DataTableColumns<AssignmentOverviewRow>>(() => [
   { title: t('graduation.academic.teacherNo'), key: 'teacherNo', width: 110 },
@@ -192,7 +196,7 @@ const columns = computed<DataTableColumns<AssignmentOverviewRow>>(() => [
           <NDataTable
             :columns="columns"
             :data="rows"
-            :row-key="(r: AssignmentOverviewRow) => r.teacherId"
+            :row-key="overviewRowKey"
             :row-class-name="rowClassName"
             :single-line="false"
             :bordered="false"
@@ -219,7 +223,7 @@ const columns = computed<DataTableColumns<AssignmentOverviewRow>>(() => [
             v-else
             :columns="unassignedColumns"
             :data="unassignedDetail"
-            :row-key="(r: DashboardRow) => r.studentId"
+            :row-key="dashboardRowKey"
             :single-line="false"
             :bordered="false"
             :scroll-x="680"

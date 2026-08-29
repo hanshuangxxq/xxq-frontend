@@ -88,7 +88,7 @@ async function handleChangePassword() {
     class="settings-modal"
     content-style="padding: 0; margin: 0"
     :segmented="{ content: 'soft', footer: 'soft' }"
-    @update:show="(v: boolean) => emit('update:show', v)"
+    @update:show="(v) => emit('update:show', v)"
   >
     <div class="settings-layout">
       <img :src="closeSvg" class="settings-close-btn" @click="emit('update:show', false)" />

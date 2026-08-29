@@ -183,6 +183,12 @@ function getCourseAt(timeId: number, day: number): TeachInfo | undefined {
   return scheduleMap.value.get(`${timeId}-${day}`)
 }
 
+/** 点击课表单元格：仅当该格有课程时才打开详情（与原 && 短路行为一致） */
+function openCourseDetailAt(timeId: number, day: number) {
+  const c = getCourseAt(timeId, day)
+  if (c) openDetail(c)
+}
+
 const DAYS = [1, 2, 3, 4, 5, 6, 7]
 
 // ---- Teacher: My Courses ----
@@ -250,6 +256,8 @@ async function loadTeacherCourses() {
 // ---- Teacher: My Course Exams ----
 const examLoading = ref(false)
 const exams = ref<ExamView[]>([])
+
+const examRowKey = (row: ExamView) => row.id
 
 function examStatusTagType(status: string): 'success' | 'info' | 'warning' | 'error' | 'default' {
   switch (status) {
@@ -385,6 +393,8 @@ async function loadProgress() {
 }
 
 const hasProgress = computed(() => (progress.value?.courses?.length ?? 0) > 0)
+
+const progressRowKey = (row: CourseProgress) => row.teachInfoId
 
 const progressColumns = computed<DataTableColumns<CourseProgress>>(() => [
   {
@@ -554,20 +564,18 @@ onMounted(async () => {
                       :key="day"
                       class="timetable-cell"
                       :class="{ 'timetable-cell--filled': getCourseAt(slot.timeId, day) }"
-                      @click="
-                        getCourseAt(slot.timeId, day) && openDetail(getCourseAt(slot.timeId, day)!)
-                      "
+                      @click="openCourseDetailAt(slot.timeId, day)"
                     >
                       <template v-if="getCourseAt(slot.timeId, day)">
                         <div class="cell-course-name">
-                          {{ getCourseAt(slot.timeId, day)!.courseName }}
+                          {{ getCourseAt(slot.timeId, day)?.courseName }}
                         </div>
                         <div class="cell-teacher">
-                          {{ getCourseAt(slot.timeId, day)!.teacherName }}
+                          {{ getCourseAt(slot.timeId, day)?.teacherName }}
                         </div>
                         <div class="cell-location">
-                          {{ getCourseAt(slot.timeId, day)!.building }}
-                          {{ getCourseAt(slot.timeId, day)!.classroom }}
+                          {{ getCourseAt(slot.timeId, day)?.building }}
+                          {{ getCourseAt(slot.timeId, day)?.classroom }}
                         </div>
                       </template>
                     </td>
@@ -595,7 +603,7 @@ onMounted(async () => {
               <NDataTable
                 :columns="progressColumns"
                 :data="progress?.courses ?? []"
-                :row-key="(r: CourseProgress) => r.teachInfoId"
+                :row-key="progressRowKey"
                 :single-line="false"
                 :bordered="false"
                 :scroll-x="1000"
@@ -635,7 +643,7 @@ onMounted(async () => {
               v-else
               :columns="examColumns"
               :data="exams"
-              :row-key="(r: ExamView) => r.id"
+              :row-key="examRowKey"
               :single-line="false"
               :bordered="false"
               :scroll-x="1230"

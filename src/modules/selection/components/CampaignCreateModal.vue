@@ -78,6 +78,14 @@ watch(
   },
 )
 
+const fetchAllGroupsPage = (page: number, pageSize: number) => fetchAllGroups(page, pageSize)
+const groupLabelOf = (g: SelectionGroup) => g.name
+const groupValueOf = (g: SelectionGroup) => g.id
+
+function onGroupChange(v: string | number | null | Array<string | number>) {
+  form.value.groupId = v as number | null
+}
+
 function validate(): string | null {
   if (!form.value.name) return t('selection.nameRequired')
   if (!form.value.semesterId) return t('selection.semesterRequired')
@@ -150,7 +158,7 @@ async function handleSubmit() {
     preset="card"
     :title="$t('selection.addTitle')"
     class="campaign-create-modal"
-    @update:show="(v: boolean) => emit('update:show', v)"
+    @update:show="(v) => emit('update:show', v)"
   >
     <NForm :model="form" label-placement="top">
       <NDivider title-placement="left">{{ $t('selection.section.basicInfo') }}</NDivider>
@@ -251,15 +259,12 @@ async function handleSubmit() {
         <NFormItemGi :span="2" :label="$t('selection.group')">
           <PagedSelect
             :model-value="form.groupId ?? null"
-            :fetch-page="(page: number, pageSize: number) => fetchAllGroups(page, pageSize)"
-            :label-of="(g: SelectionGroup) => g.name"
-            :value-of="(g: SelectionGroup) => g.id"
+            :fetch-page="fetchAllGroupsPage"
+            :label-of="groupLabelOf"
+            :value-of="groupValueOf"
             :placeholder="$t('selection.groupNonePlaceholder')"
             clearable
-            @update:model-value="
-              (v: string | number | null | Array<string | number>) =>
-                (form.groupId = v as number | null)
-            "
+            @update:model-value="onGroupChange"
           />
         </NFormItemGi>
       </NGrid>

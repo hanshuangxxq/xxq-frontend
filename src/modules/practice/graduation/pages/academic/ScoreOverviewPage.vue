@@ -87,6 +87,8 @@ async function handleExport(): Promise<void> {
   }
 }
 
+const scoreRowKey = (row: ScoreResponse) => row.id
+
 const columns = computed<DataTableColumns<ScoreResponse>>(() => [
   {
     title: t('graduation.common.studentNo'),
@@ -190,7 +192,7 @@ const columns = computed<DataTableColumns<ScoreResponse>>(() => [
             v-else
             :columns="columns"
             :data="filteredRows"
-            :row-key="(r: ScoreResponse) => r.id"
+            :row-key="scoreRowKey"
             :single-line="false"
             :bordered="false"
             :scroll-x="980"

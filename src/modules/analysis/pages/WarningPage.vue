@@ -109,6 +109,8 @@ async function loadDashboard() {
   }
 }
 
+const warningRowKey = (row: WarningItemDto) => row.id
+
 const dashColumns = computed<DataTableColumns<WarningItemDto>>(() => [
   {
     title: t('analysis.wrnLevel'),
@@ -406,7 +408,7 @@ onMounted(() => {
                   v-else
                   :columns="dashColumns"
                   :data="dashWarnings"
-                  :row-key="(r: WarningItemDto) => r.id"
+                  :row-key="warningRowKey"
                   :single-line="false"
                   :bordered="false"
                   :scroll-x="1400"

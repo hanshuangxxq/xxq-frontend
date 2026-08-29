@@ -156,6 +156,14 @@ function handleReset() {
   loadData()
 }
 
+const fetchCoursesPage = (page: number, pageSize: number) => fetchCourses(page, pageSize)
+const courseLabelOf = (c: Course) =>
+  isPublicCourse(c) ? `${c.courseName}（${t('common.publicTag')}）` : c.courseName
+const courseValueOf = (c: Course) => courseKey(c.id, c.source)
+function onFilterCourseChange(v: string | number | null | Array<string | number>) {
+  filterCourseKey.value = (v as string) ?? null
+}
+
 // ---- 日期/时间转换 ----
 function pad(n: number): string {
   return String(n).padStart(2, '0')
@@ -260,6 +268,12 @@ async function onClassChange(classId: number | null) {
   await loadClassCourses(classId)
 }
 
+const classNameLabelOf = (c: ClassName) => c.className
+const classNameValueOf = (c: ClassName) => c.id
+function onClassModelChange(v: string | number | null | Array<string | number>) {
+  onClassChange(v as number | null)
+}
+
 function onCourseSelect(teachInfoId: number | null) {
   form.value.teachInfoId = teachInfoId
   const opt = classCourseOptions.value.find((o) => o.teachInfoId === teachInfoId)
@@ -270,6 +284,13 @@ function onCourseSelect(teachInfoId: number | null) {
     form.value.courseId = null
     form.value.semesterId = null
   }
+}
+
+const fetchLocalsPage = (page: number, pageSize: number) => fetchLocals({ page, pageSize })
+const localLabelOf = (l: Local) => `${l.building} ${l.classRoom}`
+const localValueOf = (l: Local) => l.id
+function onLocalChange(v: string | number | null | Array<string | number>) {
+  form.value.localId = v as number | null
 }
 
 function startCreate() {
@@ -380,6 +401,8 @@ async function handleDelete(id: number) {
   }
 }
 
+const examRowKey = (row: ExamView) => row.id
+
 const columns = computed<DataTableColumns<ExamView>>(() => [
   { title: t('exam.mgExamName'), key: 'examName', minWidth: 200, ellipsis: { tooltip: true } },
   { title: t('exam.mgCourse'), key: 'courseName', width: 140, ellipsis: { tooltip: true } },
@@ -458,19 +481,13 @@ onMounted(() => {
           />
           <PagedSelect
             :model-value="filterCourseKey"
-            :fetch-page="(page: number, pageSize: number) => fetchCourses(page, pageSize)"
-            :label-of="
-              (c: Course) =>
-                isPublicCourse(c) ? `${c.courseName}（${t('common.publicTag')}）` : c.courseName
-            "
-            :value-of="(c: Course) => courseKey(c.id, c.source)"
+            :fetch-page="fetchCoursesPage"
+            :label-of="courseLabelOf"
+            :value-of="courseValueOf"
             :placeholder="$t('exam.mgCourse')"
             clearable
             style="width: 180px"
-            @update:model-value="
-              (v: string | number | null | Array<string | number>) =>
-                (filterCourseKey = (v as string) ?? null)
-            "
+            @update:model-value="onFilterCourseChange"
           />
           <NSelect
             v-model:value="filterExamType"
@@ -491,7 +508,7 @@ onMounted(() => {
           <NDataTable
             :columns="columns"
             :data="data"
-            :row-key="(r: ExamView) => r.id"
+            :row-key="examRowKey"
             :single-line="false"
             :bordered="false"
             :scroll-x="1450"
@@ -518,14 +535,11 @@ onMounted(() => {
             <PagedSelect
               :model-value="form.classId"
               :fetch-page="fetchClassNamesTracked"
-              :label-of="(c: ClassName) => c.className"
-              :value-of="(c: ClassName) => c.id"
+              :label-of="classNameLabelOf"
+              :value-of="classNameValueOf"
               :placeholder="editingClassName || $t('exam.mgClassPlaceholder')"
               filterable
-              @update:model-value="
-                (v: string | number | null | Array<string | number>) =>
-                  onClassChange(v as number | null)
-              "
+              @update:model-value="onClassModelChange"
             />
           </NFormItem>
           <NFormItem :label="$t('exam.mgExamType')" required style="width: 160px">
@@ -578,17 +592,14 @@ onMounted(() => {
           <NFormItem :label="$t('exam.mgLocal')" style="width: 240px">
             <PagedSelect
               :model-value="form.localId"
-              :fetch-page="(page: number, pageSize: number) => fetchLocals({ page, pageSize })"
-              :label-of="(l: Local) => `${l.building} ${l.classRoom}`"
-              :value-of="(l: Local) => l.id"
+              :fetch-page="fetchLocalsPage"
+              :label-of="localLabelOf"
+              :value-of="localValueOf"
               :initial-label="editingLocalLabel"
               :placeholder="$t('exam.mgLocalPlaceholder')"
               clearable
               filterable
-              @update:model-value="
-                (v: string | number | null | Array<string | number>) =>
-                  (form.localId = v as number | null)
-              "
+              @update:model-value="onLocalChange"
             />
           </NFormItem>
           <NFormItem :label="$t('exam.mgStatus')" style="width: 180px">

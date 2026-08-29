@@ -122,6 +122,8 @@ function renderScoreCell(
   ])
 }
 
+const scoreRowKey = (row: ScoreResponse) => row.id
+
 const columns = computed<DataTableColumns<ScoreResponse>>(() => [
   { title: t('graduation.common.student'), key: 'studentName', width: 110 },
   {
@@ -226,7 +228,7 @@ const columns = computed<DataTableColumns<ScoreResponse>>(() => [
             v-else
             :columns="columns"
             :data="list"
-            :row-key="(r: ScoreResponse) => r.id"
+            :row-key="scoreRowKey"
             :single-line="false"
             :bordered="false"
             :scroll-x="1120"

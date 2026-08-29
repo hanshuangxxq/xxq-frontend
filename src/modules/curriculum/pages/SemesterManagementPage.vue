@@ -45,6 +45,8 @@ const statusTagType: Record<string, 'success' | 'default' | 'info'> = {
   FUTURE: 'info',
 }
 
+const semesterRowKey = (row: Semester) => row.id
+
 const columns: DataTableColumns<Semester> = [
   { title: t('semester.name'), key: 'name', width: 260, ellipsis: { tooltip: true } },
   {
@@ -139,6 +141,14 @@ const emptyForm = (): SemesterForm => ({
 })
 const form = ref<SemesterForm>(emptyForm())
 const originalForm = ref<SemesterForm>(emptyForm())
+
+function onStartWeekChange(v: string) {
+  form.value.startWeek = v ? parseInt(v, 10) : undefined
+}
+
+function onEndWeekChange(v: string) {
+  form.value.endWeek = v ? parseInt(v, 10) : undefined
+}
 
 function startCreate() {
   formMode.value = 'create'
@@ -240,7 +250,7 @@ onMounted(loadData)
             v-else
             :columns="allColumns"
             :data="data"
-            :row-key="(r: Semester) => r.id"
+            :row-key="semesterRowKey"
             :single-line="false"
             :bordered="false"
           />
@@ -269,7 +279,7 @@ onMounted(loadData)
                 ? String(originalForm.startWeek ?? '')
                 : $t('semester.startWeekPlaceholder')
             "
-            @update:value="(v: string) => (form.startWeek = v ? parseInt(v, 10) : undefined)"
+            @update:value="onStartWeekChange"
           />
         </NFormItem>
         <NFormItem :label="$t('semester.endWeek')">
@@ -280,7 +290,7 @@ onMounted(loadData)
                 ? String(originalForm.endWeek ?? '')
                 : $t('semester.endWeekPlaceholder')
             "
-            @update:value="(v: string) => (form.endWeek = v ? parseInt(v, 10) : undefined)"
+            @update:value="onEndWeekChange"
           />
         </NFormItem>
         <NFormItem :label="$t('semester.startDate')">

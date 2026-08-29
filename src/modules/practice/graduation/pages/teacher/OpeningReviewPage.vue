@@ -83,6 +83,8 @@ async function handleDownload(row: OpeningReportResponse): Promise<void> {
   }
 }
 
+const openingReportRowKey = (row: OpeningReportResponse) => row.id
+
 const columns = computed<DataTableColumns<OpeningReportResponse>>(() => [
   {
     type: 'expand',
@@ -172,7 +174,7 @@ const columns = computed<DataTableColumns<OpeningReportResponse>>(() => [
             v-else
             :columns="columns"
             :data="list"
-            :row-key="(r: OpeningReportResponse) => r.id"
+            :row-key="openingReportRowKey"
             :single-line="false"
             :bordered="false"
             :scroll-x="820"

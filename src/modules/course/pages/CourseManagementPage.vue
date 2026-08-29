@@ -31,6 +31,8 @@ const loading = ref(false)
 const data = ref<Course[]>([])
 const { pagination } = useRemotePagination(loadData)
 
+const courseRowKey = (row: Course) => row.id
+
 const baseColumns: DataTableColumns<Course> = [
   {
     title: t('course-management.courseName'),
@@ -101,6 +103,14 @@ const emptyForm = (): CourseForm => ({
 
 const form = ref<CourseForm>(emptyForm())
 
+function onCreditChange(v: string) {
+  form.value.credit = v ? parseInt(v, 10) : null
+}
+
+function onCourseHourChange(v: string) {
+  form.value.courseHour = v ? parseInt(v, 10) : null
+}
+
 function startCreate() {
   formMode.value = 'create'
   editingId.value = null
@@ -164,7 +174,7 @@ onMounted(loadData)
           <NDataTable
             :columns="columns"
             :data="data"
-            :row-key="(r: Course) => r.id"
+            :row-key="courseRowKey"
             :single-line="false"
             :bordered="false"
             remote
@@ -196,13 +206,13 @@ onMounted(loadData)
         <NFormItem :label="$t('course-management.credit')">
           <NInput
             :value="form.credit !== null ? String(form.credit) : ''"
-            @update:value="(v: string) => (form.credit = v ? parseInt(v, 10) : null)"
+            @update:value="onCreditChange"
           />
         </NFormItem>
         <NFormItem :label="$t('course-management.courseHour')">
           <NInput
             :value="form.courseHour !== null ? String(form.courseHour) : ''"
-            @update:value="(v: string) => (form.courseHour = v ? parseInt(v, 10) : null)"
+            @update:value="onCourseHourChange"
           />
         </NFormItem>
         <NFormItem :label="$t('course-management.courseType')">

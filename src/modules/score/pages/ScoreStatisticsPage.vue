@@ -40,6 +40,17 @@ const filterCourseKey = ref<string | null>(null)
 const filterClassName = ref('')
 const filterSemesterId = ref<number | null>(null)
 
+const fetchCoursesPage = (page: number, pageSize: number) => fetchCourses(page, pageSize)
+
+const courseLabelOf = (c: Course) =>
+  isPublicCourse(c) ? `${c.courseName}（${t('common.publicTag')}）` : c.courseName
+
+const courseValueOf = (c: Course) => courseKey(c.id, c.source)
+
+function onFilterCourseChange(v: string | number | null | Array<string | number>) {
+  filterCourseKey.value = (v as string) ?? null
+}
+
 async function loadDropdowns() {
   try {
     const semRes = await fetchAllSemesters()
@@ -74,6 +85,8 @@ function handleReset() {
   filterSemesterId.value = null
   loadData()
 }
+
+const statisticsRowKey = (row: ScoreStatisticsDto) => `${row.courseId}:${row.courseName}`
 
 const columns = computed<DataTableColumns<ScoreStatisticsDto>>(() => [
   { title: t('score.statCourse'), key: 'courseName', width: 160, ellipsis: { tooltip: true } },
@@ -285,19 +298,13 @@ onMounted(() => {
         <NSpace align="center" :size="12" wrap>
           <PagedSelect
             :model-value="filterCourseKey"
-            :fetch-page="(page: number, pageSize: number) => fetchCourses(page, pageSize)"
-            :label-of="
-              (c: Course) =>
-                isPublicCourse(c) ? `${c.courseName}（${t('common.publicTag')}）` : c.courseName
-            "
-            :value-of="(c: Course) => courseKey(c.id, c.source)"
+            :fetch-page="fetchCoursesPage"
+            :label-of="courseLabelOf"
+            :value-of="courseValueOf"
             :placeholder="$t('score.statAllCourse')"
             clearable
             style="width: 220px"
-            @update:model-value="
-              (v: string | number | null | Array<string | number>) =>
-                (filterCourseKey = (v as string) ?? null)
-            "
+            @update:model-value="onFilterCourseChange"
           />
           <NInput
             v-model:value="filterClassName"
@@ -347,7 +354,7 @@ onMounted(() => {
             <NDataTable
               :columns="columns"
               :data="data"
-              :row-key="(r: ScoreStatisticsDto) => `${r.courseId}:${r.courseName}`"
+              :row-key="statisticsRowKey"
               :single-line="false"
               :bordered="false"
               :scroll-x="1100"

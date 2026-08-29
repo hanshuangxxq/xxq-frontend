@@ -91,7 +91,7 @@ function handleSubmit(): void {
     preset="card"
     :title="title"
     class="graduation-review-modal"
-    @update:show="(v: boolean) => emit('update:show', v)"
+    @update:show="(v) => emit('update:show', v)"
   >
     <NForm label-placement="top">
       <NText v-if="hint" depth="3" style="font-size: 13px">{{ hint }}</NText>

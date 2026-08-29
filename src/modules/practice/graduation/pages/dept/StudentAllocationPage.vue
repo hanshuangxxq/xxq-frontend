@@ -111,12 +111,19 @@ function teacherLabelOf(teacher: Teacher): string {
   return `${teacher.name}（${count}/${supervisorCapacity.value ?? '-'}）`
 }
 
+const fetchTeachersPage = (page: number, pageSize: number) => fetchTeachers(page, pageSize)
+const teacherValueOf = (tch: Teacher) => tch.userId
+
 // ===== 指定分配弹窗 =====
 const showAllocate = ref(false)
 const allocating = ref<DashboardRow | null>(null)
 const allocateTeacherId = ref<number | null>(null)
 const allocateTeacherLabel = ref<string | undefined>(undefined)
 const savingAllocate = ref(false)
+
+function onAllocateTeacherChange(v: string | number | null | Array<string | number>): void {
+  allocateTeacherId.value = v as number | null
+}
 
 function startAllocate(row: DashboardRow): void {
   allocating.value = row
@@ -157,6 +164,10 @@ const newTeacherId = ref<number | null>(null)
 const newTeacherLabel = ref<string | undefined>(undefined)
 const reassignReason = ref('')
 const savingReassign = ref(false)
+
+function onNewTeacherChange(v: string | number | null | Array<string | number>): void {
+  newTeacherId.value = v as number | null
+}
 
 function startReassign(row: DashboardRow): void {
   reassigning.value = row
@@ -335,16 +346,12 @@ async function handleReassign(): Promise<void> {
           <NFormItem :label="$t('graduation.common.teacher')" required>
             <PagedSelect
               :model-value="allocateTeacherId"
-              :fetch-page="(page: number, pageSize: number) => fetchTeachers(page, pageSize)"
+              :fetch-page="fetchTeachersPage"
               :label-of="teacherLabelOf"
-              :value-of="(tch: Teacher) => tch.userId"
+              :value-of="teacherValueOf"
               :initial-label="allocateTeacherLabel"
               filterable
-              @update:model-value="
-                (v: string | number | null | Array<string | number>) => {
-                  allocateTeacherId = v as number | null
-                }
-              "
+              @update:model-value="onAllocateTeacherChange"
             />
           </NFormItem>
         </NForm>
@@ -369,16 +376,12 @@ async function handleReassign(): Promise<void> {
           <NFormItem :label="$t('graduation.dept.reassignNewTeacher')" required>
             <PagedSelect
               :model-value="newTeacherId"
-              :fetch-page="(page: number, pageSize: number) => fetchTeachers(page, pageSize)"
+              :fetch-page="fetchTeachersPage"
               :label-of="teacherLabelOf"
-              :value-of="(tch: Teacher) => tch.userId"
+              :value-of="teacherValueOf"
               :initial-label="newTeacherLabel"
               filterable
-              @update:model-value="
-                (v: string | number | null | Array<string | number>) => {
-                  newTeacherId = v as number | null
-                }
-              "
+              @update:model-value="onNewTeacherChange"
             />
           </NFormItem>
           <NFormItem :label="$t('graduation.dept.reassignReasonField')" required>

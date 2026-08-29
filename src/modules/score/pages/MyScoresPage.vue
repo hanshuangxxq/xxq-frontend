@@ -141,6 +141,8 @@ async function handleApply() {
   }
 }
 
+const scoreRowKey = (row: ScoreView) => row.id
+
 const columns = computed<DataTableColumns<ScoreView>>(() => {
   const cols: DataTableColumns<ScoreView> = [
     {
@@ -449,7 +451,7 @@ onMounted(() => {
                 v-else
                 :columns="columns"
                 :data="scores"
-                :row-key="(r: ScoreView) => r.id"
+                :row-key="scoreRowKey"
                 :single-line="false"
                 :bordered="false"
                 :scroll-x="900"

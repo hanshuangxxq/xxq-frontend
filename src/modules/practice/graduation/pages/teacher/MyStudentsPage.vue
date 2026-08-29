@@ -67,6 +67,8 @@ async function handleUnpick(row: AssignmentResponse): Promise<void> {
   }
 }
 
+const assignmentRowKey = (row: AssignmentResponse) => row.id
+
 const columns = computed<DataTableColumns<AssignmentResponse>>(() => [
   { title: t('graduation.common.studentNo'), key: 'studentNo', width: 120 },
   { title: t('graduation.common.student'), key: 'studentName', width: 100 },
@@ -152,7 +154,7 @@ const columns = computed<DataTableColumns<AssignmentResponse>>(() => [
             v-else
             :columns="columns"
             :data="list"
-            :row-key="(r: AssignmentResponse) => r.id"
+            :row-key="assignmentRowKey"
             :single-line="false"
             :bordered="false"
             :scroll-x="860"

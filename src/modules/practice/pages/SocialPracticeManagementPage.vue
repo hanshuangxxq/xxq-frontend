@@ -366,6 +366,8 @@ function onTabChange(name: string | number) {
 }
 
 // ============ 列定义 ============
+const socialPracticeRowKey = (row: SocialPracticeResponse) => row.id
+
 const practiceColumns = computed<DataTableColumns<SocialPracticeResponse>>(() => [
   {
     title: t('practice.socialPractice.practiceTitle'),
@@ -445,6 +447,8 @@ const practiceColumns = computed<DataTableColumns<SocialPracticeResponse>>(() =>
   },
 ])
 
+const socialPracticeApplicationRowKey = (row: SocialPracticeApplicationResponse) => row.id
+
 const appColumns = computed<DataTableColumns<SocialPracticeApplicationResponse>>(() => [
   { title: t('practice.common.student'), key: 'studentName', width: 110 },
   {
@@ -501,6 +505,8 @@ const appColumns = computed<DataTableColumns<SocialPracticeApplicationResponse>>
         : '-',
   },
 ])
+
+const socialPracticeReportRowKey = (row: SocialPracticeReportResponse) => row.id
 
 const reportColumns = computed<DataTableColumns<SocialPracticeReportResponse>>(() => [
   { title: t('practice.common.student'), key: 'studentName', width: 110 },
@@ -609,7 +615,7 @@ onMounted(() => {
               <NDataTable
                 :columns="practiceColumns"
                 :data="practices"
-                :row-key="(r: SocialPracticeResponse) => r.id"
+                :row-key="socialPracticeRowKey"
                 :single-line="false"
                 :bordered="false"
                 :scroll-x="1270"
@@ -649,7 +655,7 @@ onMounted(() => {
               <NDataTable
                 :columns="reportColumns"
                 :data="reports"
-                :row-key="(r: SocialPracticeReportResponse) => r.id"
+                :row-key="socialPracticeReportRowKey"
                 :single-line="false"
                 :bordered="false"
                 :scroll-x="980"
@@ -735,7 +741,7 @@ onMounted(() => {
           <NDataTable
             :columns="appColumns"
             :data="apps"
-            :row-key="(r: SocialPracticeApplicationResponse) => r.id"
+            :row-key="socialPracticeApplicationRowKey"
             :single-line="false"
             :bordered="false"
             :scroll-x="920"

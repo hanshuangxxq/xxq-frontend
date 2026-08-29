@@ -45,6 +45,8 @@ function onCampaignChange(id: number | null): void {
   if (id != null) void loadList()
 }
 
+const defenseRowKey = (row: DefenseResponse) => row.id
+
 const columns = computed<DataTableColumns<DefenseResponse>>(() => [
   {
     title: t('graduation.student.defenseGroup'),
@@ -110,7 +112,7 @@ const columns = computed<DataTableColumns<DefenseResponse>>(() => [
             v-else
             :columns="columns"
             :data="list"
-            :row-key="(r: DefenseResponse) => r.id"
+            :row-key="defenseRowKey"
             :single-line="false"
             :bordered="false"
             :scroll-x="760"

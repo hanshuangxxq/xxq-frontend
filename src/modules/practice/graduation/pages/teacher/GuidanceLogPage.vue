@@ -136,6 +136,8 @@ async function handleAddLog(): Promise<void> {
   }
 }
 
+const guidanceLogRowKey = (row: GuidanceLogResponse) => row.id
+
 const logColumns = computed<DataTableColumns<GuidanceLogResponse>>(() => [
   { title: t('graduation.common.student'), key: 'studentName', width: 100 },
   {
@@ -232,7 +234,7 @@ const logColumns = computed<DataTableColumns<GuidanceLogResponse>>(() => [
             v-else
             :columns="logColumns"
             :data="logs"
-            :row-key="(r: GuidanceLogResponse) => r.id"
+            :row-key="guidanceLogRowKey"
             :single-line="false"
             :bordered="false"
             :scroll-x="720"

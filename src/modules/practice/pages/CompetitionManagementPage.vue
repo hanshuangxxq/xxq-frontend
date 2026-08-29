@@ -381,6 +381,8 @@ async function handleDeleteResult(id: number) {
 }
 
 // ---- 列定义 ----
+const competitionRowKey = (row: CompetitionResponse) => row.id
+
 const columns = computed<DataTableColumns<CompetitionResponse>>(() => [
   {
     title: t('practice.competition.competitionName'),
@@ -463,6 +465,8 @@ const columns = computed<DataTableColumns<CompetitionResponse>>(() => [
   },
 ])
 
+const registrationRowKey = (row: RegistrationResponse) => row.id
+
 const registrationColumns = computed<DataTableColumns<RegistrationResponse>>(() => [
   { title: t('practice.common.student'), key: 'studentName', width: 110 },
   {
@@ -518,6 +522,8 @@ const registrationColumns = computed<DataTableColumns<RegistrationResponse>>(() 
         : '-',
   },
 ])
+
+const competitionResultRowKey = (row: CompetitionResultResponse) => row.id
 
 const resultColumns = computed<DataTableColumns<CompetitionResultResponse>>(() => [
   { title: t('practice.common.student'), key: 'studentName', width: 120 },
@@ -597,7 +603,7 @@ onMounted(() => {
           <NDataTable
             :columns="columns"
             :data="competitions"
-            :row-key="(r: CompetitionResponse) => r.id"
+            :row-key="competitionRowKey"
             :single-line="false"
             :bordered="false"
             :scroll-x="1640"
@@ -687,7 +693,7 @@ onMounted(() => {
           <NDataTable
             :columns="registrationColumns"
             :data="registrations"
-            :row-key="(r: RegistrationResponse) => r.id"
+            :row-key="registrationRowKey"
             :single-line="false"
             :bordered="false"
             :scroll-x="900"
@@ -747,7 +753,7 @@ onMounted(() => {
             v-else
             :columns="resultColumns"
             :data="results"
-            :row-key="(r: CompetitionResultResponse) => r.id"
+            :row-key="competitionResultRowKey"
             :single-line="false"
             :bordered="false"
           />

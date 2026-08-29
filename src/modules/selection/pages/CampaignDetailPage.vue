@@ -32,7 +32,7 @@ import {
 import { fetchTeachers } from '@/modules/curriculum/api'
 import PagedSelect from '@/shared/components/PagedSelect.vue'
 import type { Teacher } from '@/modules/curriculum/types'
-import type { Campaign, CampaignStatus, SelectionClass } from '../types'
+import type { Campaign, CampaignStatus, SelectionClass, StudentSelectionMember } from '../types'
 
 const { t } = useI18n()
 const message = useMessage()
@@ -91,16 +91,13 @@ async function loadAll() {
   }
 }
 
-const memberColumns: DataTableColumns<{
-  studentId: number
-  studentName: string
-  studentNo: string
-  className: string
-}> = [
+const memberColumns: DataTableColumns<StudentSelectionMember> = [
   { title: t('selection.studentNo'), key: 'studentNo', width: 120 },
   { title: t('selection.studentName'), key: 'studentName', width: 120 },
   { title: t('selection.className'), key: 'className', width: 160 },
 ]
+
+const memberRowKey = (row: StudentSelectionMember) => row.studentId
 
 async function handleClose() {
   try {
@@ -137,6 +134,18 @@ const editingClassId = ref<number | null>(null)
 const selectedTeacherId = ref<number | null>(null)
 /** 分配教师弹窗回显用（选中教师不在已加载页时兜底显示） */
 const assignInitialLabel = ref<string | undefined>(undefined)
+
+// PagedSelect 回调定义在 script 中：IDE 对模板内联 TS 注解支持不佳（报 TS1005/TS2693 等误报）
+const fetchTeachersPage = (page: number, pageSize: number) => fetchTeachers(page, pageSize)
+
+const teacherLabel = (tch: Teacher) =>
+  `${tch.name}（${tch.teacherNo}）${tch.title ? ` · ${tch.title}` : ''}`
+
+const teacherValue = (tch: Teacher) => tch.id
+
+function onTeacherChange(value: string | number | null | Array<string | number>) {
+  selectedTeacherId.value = value as number | null
+}
 
 async function openAssignTeacher(cls: SelectionClass) {
   editingClassId.value = cls.classId
@@ -315,7 +324,7 @@ onMounted(loadAll)
               <NDataTable
                 :columns="memberColumns"
                 :data="cls.members"
-                :row-key="(r: { studentId: number }) => r.studentId"
+                :row-key="memberRowKey"
                 :single-line="false"
                 :bordered="false"
                 size="small"
@@ -337,19 +346,13 @@ onMounted(loadAll)
         <NFormItem :label="$t('selection.teacher')">
           <PagedSelect
             :model-value="selectedTeacherId"
-            :fetch-page="(page: number, pageSize: number) => fetchTeachers(page, pageSize)"
-            :label-of="
-              (tch: Teacher) =>
-                `${tch.name}（${tch.teacherNo}）${tch.title ? ` · ${tch.title}` : ''}`
-            "
-            :value-of="(tch: Teacher) => tch.id"
+            :fetch-page="fetchTeachersPage"
+            :label-of="teacherLabel"
+            :value-of="teacherValue"
             :initial-label="assignInitialLabel"
             :placeholder="$t('selection.teacherPlaceholder')"
             clearable
-            @update:model-value="
-              (v: string | number | null | Array<string | number>) =>
-                (selectedTeacherId = v as number | null)
-            "
+            @update:model-value="onTeacherChange"
           />
         </NFormItem>
       </NForm>

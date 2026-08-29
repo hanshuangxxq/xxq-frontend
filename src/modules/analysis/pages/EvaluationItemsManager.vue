@@ -45,6 +45,8 @@ async function loadData() {
   }
 }
 
+const evaluationItemRowKey = (row: EvaluationItemDto) => row.id
+
 const columns = computed<DataTableColumns<EvaluationItemDto>>(() => [
   { title: t('analysis.evItemName'), key: 'name', minWidth: 140, ellipsis: { tooltip: true } },
   {
@@ -179,7 +181,7 @@ onMounted(loadData)
         v-else
         :columns="columns"
         :data="data"
-        :row-key="(r: EvaluationItemDto) => r.id"
+        :row-key="evaluationItemRowKey"
         :single-line="false"
         :bordered="false"
         :scroll-x="900"

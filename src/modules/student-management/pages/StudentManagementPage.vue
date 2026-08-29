@@ -41,6 +41,8 @@ const unassignedOptions = computed(() => [
   { label: t('student-management.unassignedYes'), value: 'true' },
 ])
 
+const studentRowKey = (row: Student) => row.studentId
+
 const columns: DataTableColumns<Student> = [
   { title: t('student-management.name'), key: 'name', width: 100, ellipsis: { tooltip: true } },
   {
@@ -126,6 +128,14 @@ const emptyForm = (): StudentUpdateForm => ({
 })
 const form = ref<StudentUpdateForm>(emptyForm())
 const originalForm = ref<StudentUpdateForm>(emptyForm())
+
+const fetchClassNamesPage = (page: number, pageSize: number) => fetchClassNames(page, pageSize)
+const classNameLabelOf = (c: ClassName) => c.className
+const classNameValueOf = (c: ClassName) => c.className
+
+function onClassNameChange(v: string | number | null | Array<string | number>) {
+  form.value.className = (v as string) ?? ''
+}
 
 function startEdit(row: Student) {
   editingStudentId.value = row.studentId
@@ -230,7 +240,7 @@ onMounted(() => {
           <NDataTable
             :columns="columns"
             :data="data"
-            :row-key="(r: Student) => r.studentId"
+            :row-key="studentRowKey"
             :single-line="false"
             :bordered="false"
             remote
@@ -260,16 +270,13 @@ onMounted(() => {
         <NFormItem :label="$t('student-management.className')">
           <PagedSelect
             :model-value="form.className || null"
-            :fetch-page="(page: number, pageSize: number) => fetchClassNames(page, pageSize)"
-            :label-of="(c: ClassName) => c.className"
-            :value-of="(c: ClassName) => c.className"
+            :fetch-page="fetchClassNamesPage"
+            :label-of="classNameLabelOf"
+            :value-of="classNameValueOf"
             :initial-label="originalForm.className || undefined"
             :placeholder="originalForm.className || $t('student-management.className')"
             clearable
-            @update:model-value="
-              (v: string | number | null | Array<string | number>) =>
-                (form.className = (v as string) ?? '')
-            "
+            @update:model-value="onClassNameChange"
           />
         </NFormItem>
         <NFormItem :label="$t('student-management.major')">

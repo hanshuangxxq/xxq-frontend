@@ -51,6 +51,8 @@ async function loadColleges() {
   }
 }
 
+const classNameRowKey = (row: ClassName) => row.id
+
 const baseColumns = computed<DataTableColumns<ClassName>>(() => [
   { title: t('class-names.className'), key: 'className', width: 180, ellipsis: { tooltip: true } },
   {
@@ -168,7 +170,7 @@ onMounted(() => {
           <NDataTable
             :columns="columns"
             :data="data"
-            :row-key="(r: ClassName) => r.id"
+            :row-key="classNameRowKey"
             :single-line="false"
             :bordered="false"
             remote

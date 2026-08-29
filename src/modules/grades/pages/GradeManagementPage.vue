@@ -31,6 +31,8 @@ function formatDateTime(s: string | null | undefined): string {
   return s ? s.replace('T', ' ') : '-'
 }
 
+const gradeRowKey = (row: Grade) => row.id
+
 const baseColumns: DataTableColumns<Grade> = [
   { title: t('grades.name'), key: 'name', width: 140 },
   {
@@ -166,7 +168,7 @@ onMounted(loadData)
             v-else
             :columns="columns"
             :data="data"
-            :row-key="(r: Grade) => r.id"
+            :row-key="gradeRowKey"
             :single-line="false"
             :bordered="false"
           />

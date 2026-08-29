@@ -209,6 +209,8 @@ async function loadMyEvaluations() {
   }
 }
 
+const myEvaluationRowKey = (row: TeachingEvaluationView) => row.id
+
 const myColumns = computed<DataTableColumns<TeachingEvaluationView>>(() => [
   {
     title: t('analysis.evCourseName'),
@@ -444,7 +446,7 @@ onMounted(() => {
               v-else
               :columns="myColumns"
               :data="myEvaluations"
-              :row-key="(r: TeachingEvaluationView) => r.id"
+              :row-key="myEvaluationRowKey"
               :single-line="false"
               :bordered="false"
               :scroll-x="1200"

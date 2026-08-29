@@ -228,6 +228,8 @@ async function handleExport() {
   }
 }
 
+const rosterRowKey = (row: RosterRow) => row.studentUserId
+
 const rosterColumns = computed<DataTableColumns<RosterRow>>(() => [
   { title: t('score.mgStudentNo'), key: 'studentNo', width: 130 },
   { title: t('score.mgStudentName'), key: 'studentName', width: 110 },
@@ -387,7 +389,7 @@ onMounted(loadExamOptions)
               v-else
               :columns="rosterColumns"
               :data="rosterRows"
-              :row-key="(r: RosterRow) => r.studentUserId"
+              :row-key="rosterRowKey"
               :single-line="false"
               :bordered="false"
               :max-height="460"

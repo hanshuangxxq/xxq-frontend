@@ -130,6 +130,8 @@ async function loadList() {
   }
 }
 
+const teacherQualityRowKey = (row: TeacherQualityDto) => row.teacherId
+
 const listColumns = computed<DataTableColumns<TeacherQualityDto>>(() => [
   { title: t('analysis.tqTeacherName'), key: 'teacherName', width: 100 },
   { title: t('analysis.tqDepartment'), key: 'department', width: 120, ellipsis: { tooltip: true } },
@@ -321,7 +323,7 @@ onMounted(() => {
               v-else
               :columns="listColumns"
               :data="list"
-              :row-key="(r: TeacherQualityDto) => r.teacherId"
+              :row-key="teacherQualityRowKey"
               :single-line="false"
               :bordered="false"
               :scroll-x="1000"

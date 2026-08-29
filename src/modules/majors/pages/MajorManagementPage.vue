@@ -50,6 +50,8 @@ async function loadColleges() {
   }
 }
 
+const majorRowKey = (row: Major) => row.id
+
 const baseColumns = computed<DataTableColumns<Major>>(() => [
   { title: t('majors.majorName'), key: 'majorName', width: 300, ellipsis: { tooltip: true } },
   {
@@ -169,7 +171,7 @@ onMounted(() => {
             v-else
             :columns="columns"
             :data="data"
-            :row-key="(r: Major) => r.id"
+            :row-key="majorRowKey"
             :single-line="false"
             :bordered="false"
           />

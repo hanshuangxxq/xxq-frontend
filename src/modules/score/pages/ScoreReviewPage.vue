@@ -412,6 +412,8 @@ const columns = computed<DataTableColumns<ReviewView>>(() => {
   return cols
 })
 
+const reviewRowKey = (row: ReviewView) => row.id
+
 const rowProps = (row: ReviewView) => ({
   style: 'cursor: pointer;',
   onClick: () => openDetail(row),
@@ -466,7 +468,7 @@ onMounted(() => {
             v-else
             :columns="columns"
             :data="filteredReviews"
-            :row-key="(r: ReviewView) => r.id"
+            :row-key="reviewRowKey"
             :row-props="rowProps"
             :single-line="false"
             :bordered="false"

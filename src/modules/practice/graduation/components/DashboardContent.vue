@@ -131,6 +131,8 @@ watch(
   { immediate: true },
 )
 
+const dashboardRowKey = (row: DashboardRow) => row.studentId
+
 const columns = computed<DataTableColumns<DashboardRow>>(() => [
   { title: t('graduation.common.studentNo'), key: 'studentNo', width: 110 },
   { title: t('graduation.common.student'), key: 'studentName', width: 90 },
@@ -267,7 +269,7 @@ function rowClassName(row: DashboardRow): string {
       <NDataTable
         :columns="columns"
         :data="rows"
-        :row-key="(r: DashboardRow) => r.studentId"
+        :row-key="dashboardRowKey"
         :row-class-name="rowClassName"
         :single-line="false"
         :bordered="false"

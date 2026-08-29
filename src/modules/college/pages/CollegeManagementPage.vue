@@ -33,6 +33,8 @@ function formatDateTime(s: string | null | undefined): string {
 const loading = ref(false)
 const data = ref<College[]>([])
 
+const collegeRowKey = (row: College) => row.id
+
 const baseColumns = computed<DataTableColumns<College>>(() => [
   {
     title: t('college.collegeName'),
@@ -180,7 +182,7 @@ onMounted(loadData)
             v-else
             :columns="columns"
             :data="data"
-            :row-key="(r: College) => r.id"
+            :row-key="collegeRowKey"
             :single-line="false"
             :bordered="false"
           />

@@ -52,6 +52,8 @@ async function loadData() {
   }
 }
 
+const evaluationTemplateRowKey = (row: EvaluationTemplateDto) => row.id
+
 const columns = computed<DataTableColumns<EvaluationTemplateDto>>(() => [
   { title: t('analysis.evTemplateName'), key: 'name', minWidth: 160, ellipsis: { tooltip: true } },
   {
@@ -327,7 +329,7 @@ onMounted(() => {
         v-else
         :columns="columns"
         :data="data"
-        :row-key="(r: EvaluationTemplateDto) => r.id"
+        :row-key="evaluationTemplateRowKey"
         :single-line="false"
         :bordered="false"
         :scroll-x="1000"

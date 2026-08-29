@@ -67,6 +67,8 @@ function getTimeLabel(timeId: number): string {
   return timeOptions.value.find((t) => t.value === timeId)?.label ?? String(timeId)
 }
 
+const timeRestrictionRowKey = (row: TimeRestriction) => row.id
+
 const columns: DataTableColumns<TimeRestriction> = [
   {
     title: t('time-restrictions.timeSlot'),
@@ -155,6 +157,10 @@ const emptyForm = (): TimeRestrictionForm => ({
 
 const form = ref<TimeRestrictionForm>(emptyForm())
 
+function onCourseIdChange(v: string) {
+  form.value.courseId = v ? parseInt(v, 10) : null
+}
+
 function startCreate() {
   formMode.value = 'create'
   editingId.value = null
@@ -231,7 +237,7 @@ onMounted(loadData)
             v-else
             :columns="isAcademicAdmin ? adminColumns : columns"
             :data="restrictions"
-            :row-key="(r: TimeRestriction) => r.id"
+            :row-key="timeRestrictionRowKey"
             :single-line="false"
             :bordered="false"
           />
@@ -279,7 +285,7 @@ onMounted(loadData)
           <NInput
             :value="form.courseId !== null ? String(form.courseId) : ''"
             :placeholder="$t('time-restrictions.courseId')"
-            @update:value="(v: string) => (form.courseId = v ? parseInt(v, 10) : null)"
+            @update:value="onCourseIdChange"
           />
         </NFormItem>
         <NFormItem :label="$t('time-restrictions.reason')">

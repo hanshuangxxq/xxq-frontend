@@ -439,6 +439,14 @@ const savingTrain = ref(false)
 const trainTeacherLabel = ref<string | undefined>(undefined)
 const trainForm = ref<TrainForm>(emptyTrainForm())
 
+const fetchTeachersPage = (page: number, pageSize: number) => fetchTeachers(page, pageSize)
+const trainTeacherLabelOf = (tch: Teacher) => `${tch.name} (${tch.title})`
+const teacherValueOf = (tch: Teacher) => tch.userId
+
+function onTrainTeacherChange(v: string | number | null | Array<string | number>): void {
+  trainForm.value.teacherId = v as number | null
+}
+
 function emptyTrainForm(): TrainForm {
   return { title: '', description: '', teacherId: null, startTs: null, endTs: null, capacity: null }
 }
@@ -546,6 +554,8 @@ function onTabChange(name: string | number) {
 }
 
 // ============ 列定义 ============
+const internshipRowKey = (row: InternshipResponse) => row.id
+
 const internshipColumns = computed<DataTableColumns<InternshipResponse>>(() => [
   {
     title: t('practice.internship.internshipTitle'),
@@ -631,6 +641,8 @@ const internshipColumns = computed<DataTableColumns<InternshipResponse>>(() => [
   },
 ])
 
+const internshipApplicationRowKey = (row: InternshipApplicationResponse) => row.id
+
 const intAppColumns = computed<DataTableColumns<InternshipApplicationResponse>>(() => [
   { title: t('practice.common.student'), key: 'studentName', width: 110 },
   {
@@ -679,6 +691,8 @@ const intAppColumns = computed<DataTableColumns<InternshipApplicationResponse>>(
         : '-',
   },
 ])
+
+const internshipReportRowKey = (row: InternshipReportResponse) => row.id
 
 const reportColumns = computed<DataTableColumns<InternshipReportResponse>>(() => [
   { title: t('practice.common.student'), key: 'studentName', width: 110 },
@@ -744,6 +758,8 @@ const reportColumns = computed<DataTableColumns<InternshipReportResponse>>(() =>
       ]),
   },
 ])
+
+const trainingRowKey = (row: TrainingResponse) => row.id
 
 const trainingColumns = computed<DataTableColumns<TrainingResponse>>(() => [
   {
@@ -825,6 +841,8 @@ const trainingColumns = computed<DataTableColumns<TrainingResponse>>(() => [
   },
 ])
 
+const trainingEnrollmentRowKey = (row: TrainingEnrollmentResponse) => row.id
+
 const enrollmentColumns = computed<DataTableColumns<TrainingEnrollmentResponse>>(() => [
   { title: t('practice.common.student'), key: 'studentName', width: 140 },
   {
@@ -889,7 +907,7 @@ onMounted(() => {
               <NDataTable
                 :columns="internshipColumns"
                 :data="internships"
-                :row-key="(r: InternshipResponse) => r.id"
+                :row-key="internshipRowKey"
                 :single-line="false"
                 :bordered="false"
                 :scroll-x="1330"
@@ -929,7 +947,7 @@ onMounted(() => {
               <NDataTable
                 :columns="reportColumns"
                 :data="reports"
-                :row-key="(r: InternshipReportResponse) => r.id"
+                :row-key="internshipReportRowKey"
                 :single-line="false"
                 :bordered="false"
                 :scroll-x="980"
@@ -972,7 +990,7 @@ onMounted(() => {
               <NDataTable
                 :columns="trainingColumns"
                 :data="trainings"
-                :row-key="(r: TrainingResponse) => r.id"
+                :row-key="trainingRowKey"
                 :single-line="false"
                 :bordered="false"
                 :scroll-x="1330"
@@ -1058,7 +1076,7 @@ onMounted(() => {
           <NDataTable
             :columns="intAppColumns"
             :data="intApps"
-            :row-key="(r: InternshipApplicationResponse) => r.id"
+            :row-key="internshipApplicationRowKey"
             :single-line="false"
             :bordered="false"
             :scroll-x="760"
@@ -1155,16 +1173,13 @@ onMounted(() => {
             <NFormItem :label="$t('practice.common.teacher')" style="width: 240px">
               <PagedSelect
                 :model-value="trainForm.teacherId"
-                :fetch-page="(page: number, pageSize: number) => fetchTeachers(page, pageSize)"
-                :label-of="(tch: Teacher) => `${tch.name} (${tch.title})`"
-                :value-of="(tch: Teacher) => tch.userId"
+                :fetch-page="fetchTeachersPage"
+                :label-of="trainTeacherLabelOf"
+                :value-of="teacherValueOf"
                 :initial-label="trainTeacherLabel"
                 clearable
                 filterable
-                @update:model-value="
-                  (v: string | number | null | Array<string | number>) =>
-                    (trainForm.teacherId = v as number | null)
-                "
+                @update:model-value="onTrainTeacherChange"
               />
             </NFormItem>
             <NFormItem :label="$t('practice.common.capacity')" required style="width: 160px">
@@ -1218,7 +1233,7 @@ onMounted(() => {
           <NDataTable
             :columns="enrollmentColumns"
             :data="enrollments"
-            :row-key="(r: TrainingEnrollmentResponse) => r.id"
+            :row-key="trainingEnrollmentRowKey"
             :single-line="false"
             :bordered="false"
             remote

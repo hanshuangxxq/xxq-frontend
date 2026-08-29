@@ -52,6 +52,8 @@ const filterType = ref<LocalTypeCode | null>(null)
 /** 管理者下拉编辑回显用（选中教师不在已加载页时兜底显示） */
 const managerInitialLabel = ref<string | undefined>(undefined)
 
+const localRowKey = (row: Local) => row.id
+
 const baseColumns: DataTableColumns<Local> = [
   { title: t('locals.building'), key: 'building', width: 200, ellipsis: { tooltip: true } },
   { title: t('locals.classroom'), key: 'classRoom', width: 120 },
@@ -123,6 +125,20 @@ const form = ref<LocalForm>(emptyForm())
 
 /** 实验室/机房必须指定管理者 */
 const managerRequired = computed(() => LOCAL_TYPE_REQUIRES_MANAGER.has(form.value.type))
+
+function onMaxChange(v: string) {
+  form.value.max = v ? parseInt(v, 10) : null
+}
+
+const fetchTeachersPage = (page: number, pageSize: number) => fetchTeachers(page, pageSize)
+
+const teacherLabelOf = (tch: Teacher) => `${tch.name} (${tch.title})`
+
+const teacherValueOf = (tch: Teacher) => tch.id
+
+function onManagerModelChange(v: string | number | null | Array<string | number>) {
+  form.value.managerId = v as number | null
+}
 
 function startCreate() {
   formMode.value = 'create'
@@ -206,7 +222,7 @@ onMounted(() => {
           <NDataTable
             :columns="columns"
             :data="data"
-            :row-key="(r: Local) => r.id"
+            :row-key="localRowKey"
             :single-line="false"
             :bordered="false"
             remote
@@ -234,7 +250,7 @@ onMounted(() => {
         <NFormItem :label="$t('locals.max')">
           <NInput
             :value="form.max !== null ? String(form.max) : ''"
-            @update:value="(v: string) => (form.max = v ? parseInt(v, 10) : null)"
+            @update:value="onMaxChange"
           />
         </NFormItem>
         <NFormItem :label="$t('locals.type')">
@@ -243,16 +259,13 @@ onMounted(() => {
         <NFormItem :label="$t('locals.manager')" :required="managerRequired">
           <PagedSelect
             :model-value="form.managerId"
-            :fetch-page="(page: number, pageSize: number) => fetchTeachers(page, pageSize)"
-            :label-of="(tch: Teacher) => `${tch.name} (${tch.title})`"
-            :value-of="(tch: Teacher) => tch.id"
+            :fetch-page="fetchTeachersPage"
+            :label-of="teacherLabelOf"
+            :value-of="teacherValueOf"
             :initial-label="managerInitialLabel"
             :placeholder="$t('locals.managerPlaceholder')"
             clearable
-            @update:model-value="
-              (v: string | number | null | Array<string | number>) =>
-                (form.managerId = v as number | null)
-            "
+            @update:model-value="onManagerModelChange"
           />
         </NFormItem>
       </NForm>

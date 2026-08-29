@@ -89,6 +89,16 @@ async function loadCandidates() {
   }
 }
 
+const fetchCoursesPage = (page: number, pageSize: number) => fetchCourses(page, pageSize)
+const filterCourseLabelOf = (c: Course) =>
+  isPublicCourse(c) ? `${c.courseName}（${t('common.publicTag')}）` : c.courseName
+const filterCourseValueOf = (c: Course) => courseKey(c.id, c.source)
+function onCandCourseChange(v: string | number | null | Array<string | number>) {
+  candCourseKey.value = (v as string) ?? null
+}
+
+const candidateRowKey = (r: MakeupCandidateDto) => r.studentUserId
+
 const candidateColumns = computed<DataTableColumns<MakeupCandidateDto>>(() => [
   { title: t('exam.mkStudentNo'), key: 'studentNo', width: 130 },
   { title: t('exam.mkStudentName'), key: 'studentName', width: 120 },
@@ -196,6 +206,19 @@ function tsToTimeStr(ts: number): string {
   const d = new Date(ts)
   // 选择器只精确到分，发送给后端时固定补秒 00（后端 LocalTime 为 HH:mm:ss）
   return `${pad(d.getHours())}:${pad(d.getMinutes())}:00`
+}
+
+const createCourseLabelOf = (c: Course) => c.courseName
+const createCourseValueOf = (c: Course) => c.id
+function onCreateCourseChange(v: string | number | null | Array<string | number>) {
+  createForm.value.courseId = v as number | null
+}
+
+const fetchLocalsPage = (page: number, pageSize: number) => fetchLocals({ page, pageSize })
+const localLabelOf = (l: Local) => `${l.building} ${l.classRoom}`
+const localValueOf = (l: Local) => l.id
+function onCreateLocalChange(v: string | number | null | Array<string | number>) {
+  createForm.value.localId = v as number | null
 }
 
 function openCreate() {
@@ -325,6 +348,8 @@ async function handleSaveGrades() {
   }
 }
 
+const gradeRowKey = (r: GradeRow) => r.studentUserId
+
 const gradeColumns = computed<DataTableColumns<GradeRow>>(() => [
   { title: t('exam.mkStudentNo'), key: 'studentNo', width: 130 },
   { title: t('exam.mkStudentName'), key: 'studentName', width: 120 },
@@ -346,6 +371,8 @@ const gradeColumns = computed<DataTableColumns<GradeRow>>(() => [
       }),
   },
 ])
+
+const examRowKey = (row: ExamView) => row.id
 
 const makeupListColumns = computed<DataTableColumns<ExamView>>(() => [
   { title: t('exam.mkExamName'), key: 'examName', minWidth: 200, ellipsis: { tooltip: true } },
@@ -407,18 +434,12 @@ onMounted(() => {
         <NSpace align="center" :size="12" wrap>
           <PagedSelect
             :model-value="candCourseKey"
-            :fetch-page="(page: number, pageSize: number) => fetchCourses(page, pageSize)"
-            :label-of="
-              (c: Course) =>
-                isPublicCourse(c) ? `${c.courseName}（${t('common.publicTag')}）` : c.courseName
-            "
-            :value-of="(c: Course) => courseKey(c.id, c.source)"
+            :fetch-page="fetchCoursesPage"
+            :label-of="filterCourseLabelOf"
+            :value-of="filterCourseValueOf"
             :placeholder="$t('exam.mkCandidateCoursePlaceholder')"
             style="width: 220px"
-            @update:model-value="
-              (v: string | number | null | Array<string | number>) =>
-                (candCourseKey = (v as string) ?? null)
-            "
+            @update:model-value="onCandCourseChange"
           />
           <NSelect
             v-model:value="candSemesterId"
@@ -439,7 +460,7 @@ onMounted(() => {
             <NDataTable
               :columns="candidateColumns"
               :data="candidates"
-              :row-key="(r: MakeupCandidateDto) => r.studentUserId"
+              :row-key="candidateRowKey"
               :single-line="false"
               :bordered="false"
             />
@@ -472,7 +493,7 @@ onMounted(() => {
             v-else
             :columns="makeupListColumns"
             :data="makeupExams"
-            :row-key="(r: ExamView) => r.id"
+            :row-key="examRowKey"
             :single-line="false"
             :bordered="false"
             :scroll-x="1130"
@@ -500,12 +521,9 @@ onMounted(() => {
             <PagedSelect
               :model-value="createForm.courseId"
               :fetch-page="fetchRegularCourses"
-              :label-of="(c: Course) => c.courseName"
-              :value-of="(c: Course) => c.id"
-              @update:model-value="
-                (v: string | number | null | Array<string | number>) =>
-                  (createForm.courseId = v as number | null)
-              "
+              :label-of="createCourseLabelOf"
+              :value-of="createCourseValueOf"
+              @update:model-value="onCreateCourseChange"
             />
           </NFormItem>
           <NFormItem :label="$t('exam.mkExamType')" required style="width: 140px">
@@ -548,15 +566,12 @@ onMounted(() => {
         <NFormItem :label="$t('exam.mkLocal')">
           <PagedSelect
             :model-value="createForm.localId"
-            :fetch-page="(page: number, pageSize: number) => fetchLocals({ page, pageSize })"
-            :label-of="(l: Local) => `${l.building} ${l.classRoom}`"
-            :value-of="(l: Local) => l.id"
+            :fetch-page="fetchLocalsPage"
+            :label-of="localLabelOf"
+            :value-of="localValueOf"
             clearable
             style="width: 240px"
-            @update:model-value="
-              (v: string | number | null | Array<string | number>) =>
-                (createForm.localId = v as number | null)
-            "
+            @update:model-value="onCreateLocalChange"
           />
         </NFormItem>
         <NFormItem :label="$t('exam.mkNotes')">
@@ -593,7 +608,7 @@ onMounted(() => {
           v-else
           :columns="gradeColumns"
           :data="gradeRows"
-          :row-key="(r: GradeRow) => r.studentUserId"
+          :row-key="gradeRowKey"
           :single-line="false"
           :bordered="false"
           :max-height="420"

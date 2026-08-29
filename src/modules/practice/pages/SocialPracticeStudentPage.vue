@@ -85,6 +85,10 @@ const applyForm = ref<{
 }>({ teamMode: 'individual', teamName: '', members: [], applyReason: '' })
 const savingApply = ref(false)
 
+const fetchStudentsPage = (page: number, pageSize: number) => fetchStudents({ page, pageSize })
+const studentLabelOf = (s: Student) => s.name
+const studentValueOf = (s: Student) => s.userId
+
 function startApply(row: SocialPracticeResponse) {
   applyingItem.value = row
   applyForm.value = { teamMode: 'individual', teamName: '', members: [], applyReason: '' }
@@ -118,6 +122,8 @@ async function handleApply() {
     savingApply.value = false
   }
 }
+
+const socialPracticeRowKey = (row: SocialPracticeResponse) => row.id
 
 const availableColumns = computed<DataTableColumns<SocialPracticeResponse>>(() => [
   { title: t('practice.socialPractice.practiceTitle'), key: 'title', minWidth: 180, ellipsis: { tooltip: true } },
@@ -158,6 +164,8 @@ async function handleRevoke(id: number) {
     message.error((e as Error).message || t('practice.common.revokeFail'))
   }
 }
+
+const socialPracticeApplicationRowKey = (row: SocialPracticeApplicationResponse) => row.id
 
 const myAppColumns = computed<DataTableColumns<SocialPracticeApplicationResponse>>(() => [
   { title: t('practice.socialPractice.practiceTitle'), key: 'practiceTitle', minWidth: 180, ellipsis: { tooltip: true } },
@@ -276,6 +284,8 @@ async function handleDeleteReport(id: number) {
   }
 }
 
+const socialPracticeReportRowKey = (row: SocialPracticeReportResponse) => row.id
+
 const reportColumns = computed<DataTableColumns<SocialPracticeReportResponse>>(() => [
   { title: t('practice.socialPractice.practiceTitle'), key: 'practiceTitle', minWidth: 160, ellipsis: { tooltip: true } },
   { title: t('practice.socialPractice.reportTitle'), key: 'title', minWidth: 160, ellipsis: { tooltip: true } },
@@ -331,7 +341,7 @@ onMounted(() => {
       <NTabPane name="available" :tab="$t('practice.socialPractice.tabAvailable')">
         <NCard>
           <NSpin :show="availLoading">
-            <NDataTable :columns="availableColumns" :data="available" :row-key="(r: SocialPracticeResponse) => r.id" :single-line="false" :bordered="false" :scroll-x="880">
+            <NDataTable :columns="availableColumns" :data="available" :row-key="socialPracticeRowKey" :single-line="false" :bordered="false" :scroll-x="880">
               <template #empty><EmptyState :description="$t('practice.common.empty')" /></template>
             </NDataTable>
           </NSpin>
@@ -342,7 +352,7 @@ onMounted(() => {
       <NTabPane name="myApplications" :tab="$t('practice.socialPractice.tabMyApplications')">
         <NCard>
           <NSpin :show="myAppLoading">
-            <NDataTable :columns="myAppColumns" :data="myApplications" :row-key="(r: SocialPracticeApplicationResponse) => r.id" :single-line="false" :bordered="false" :scroll-x="1120">
+            <NDataTable :columns="myAppColumns" :data="myApplications" :row-key="socialPracticeApplicationRowKey" :single-line="false" :bordered="false" :scroll-x="1120">
               <template #empty><EmptyState :description="$t('practice.common.empty')" /></template>
             </NDataTable>
           </NSpin>
@@ -359,7 +369,7 @@ onMounted(() => {
           </template>
           <NSpin :show="reportLoading">
             <EmptyState v-if="!reportLoading && myReports.length === 0" :description="$t('practice.common.empty')" />
-            <NDataTable v-else :columns="reportColumns" :data="myReports" :row-key="(r: SocialPracticeReportResponse) => r.id" :single-line="false" :bordered="false" :scroll-x="1000">
+            <NDataTable v-else :columns="reportColumns" :data="myReports" :row-key="socialPracticeReportRowKey" :single-line="false" :bordered="false" :scroll-x="1000">
               <template #empty><EmptyState :description="$t('practice.common.empty')" /></template>
             </NDataTable>
           </NSpin>
@@ -383,9 +393,9 @@ onMounted(() => {
           <NFormItem :label="$t('practice.socialPractice.members')">
             <PagedSelect
               v-model="applyForm.members"
-              :fetch-page="(page: number, pageSize: number) => fetchStudents({ page, pageSize })"
-              :label-of="(s: Student) => s.name"
-              :value-of="(s: Student) => s.userId"
+              :fetch-page="fetchStudentsPage"
+              :label-of="studentLabelOf"
+              :value-of="studentValueOf"
               multiple
               filterable
               :placeholder="$t('practice.common.membersPlaceholder')"

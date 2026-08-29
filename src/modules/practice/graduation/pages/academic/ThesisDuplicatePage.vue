@@ -168,6 +168,8 @@ async function handleExportPackage(): Promise<void> {
   }
 }
 
+const thesisRowKey = (row: ThesisResponse) => row.id
+
 const columns = computed<DataTableColumns<ThesisResponse>>(() => [
   {
     type: 'expand',
@@ -300,7 +302,7 @@ const columns = computed<DataTableColumns<ThesisResponse>>(() => [
             v-else
             :columns="columns"
             :data="list"
-            :row-key="(r: ThesisResponse) => r.id"
+            :row-key="thesisRowKey"
             :single-line="false"
             :bordered="false"
             :scroll-x="920"

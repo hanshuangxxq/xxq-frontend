@@ -117,6 +117,8 @@ async function handleSubmit() {
   }
 }
 
+const batchImportDetailRowKey = (row: BatchImportDetail) => row.index
+
 const resultColumns: DataTableColumns<BatchImportDetail> = [
   { title: t('batch-import.index'), key: 'index', width: 60 },
   { title: t('batch-import.username'), key: 'username', width: 120, ellipsis: { tooltip: true } },
@@ -218,7 +220,7 @@ function getDepartmentLabel(userType: 'student' | 'teacher'): string {
         <NDataTable
           :columns="resultColumns"
           :data="importResult.details"
-          :row-key="(r: BatchImportDetail) => r.index"
+          :row-key="batchImportDetailRowKey"
           :bordered="false"
           :single-line="false"
           size="small"

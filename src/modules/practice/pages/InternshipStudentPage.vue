@@ -104,6 +104,8 @@ async function handleApply() {
   }
 }
 
+const internshipRowKey = (row: InternshipResponse) => row.id
+
 const availableColumns = computed<DataTableColumns<InternshipResponse>>(() => [
   { title: t('practice.internship.internshipTitle'), key: 'title', minWidth: 180, ellipsis: { tooltip: true } },
   { title: t('practice.common.company'), key: 'company', width: 130, ellipsis: { tooltip: true }, render: (r) => r.company || '-' },
@@ -156,6 +158,8 @@ async function handleRevoke(id: number) {
     message.error((e as Error).message || t('practice.common.revokeFail'))
   }
 }
+
+const internshipApplicationRowKey = (row: InternshipApplicationResponse) => row.id
 
 const myAppColumns = computed<DataTableColumns<InternshipApplicationResponse>>(() => [
   { title: t('practice.internship.internshipTitle'), key: 'internshipTitle', minWidth: 180, ellipsis: { tooltip: true } },
@@ -264,6 +268,8 @@ async function handleDeleteReport(id: number) {
   }
 }
 
+const internshipReportRowKey = (row: InternshipReportResponse) => row.id
+
 const reportColumns = computed<DataTableColumns<InternshipReportResponse>>(() => [
   { title: t('practice.internship.internshipTitle'), key: 'internshipTitle', minWidth: 160, ellipsis: { tooltip: true } },
   { title: t('practice.internship.reportTitle'), key: 'title', minWidth: 160, ellipsis: { tooltip: true } },
@@ -323,6 +329,8 @@ async function handleEnroll(row: TrainingResponse) {
   }
 }
 
+const trainingRowKey = (row: TrainingResponse) => row.id
+
 const availTrainColumns = computed<DataTableColumns<TrainingResponse>>(() => [
   { title: t('practice.internship.trainingTitle'), key: 'title', minWidth: 180, ellipsis: { tooltip: true } },
   { title: t('practice.common.teacher'), key: 'teacherName', width: 110, render: (r) => r.teacherName || '-' },
@@ -362,6 +370,8 @@ async function handleCancelEnroll(id: number) {
     message.error((e as Error).message || t('practice.common.operationFail'))
   }
 }
+
+const trainingEnrollmentRowKey = (row: TrainingEnrollmentResponse) => row.id
 
 const myTrainColumns = computed<DataTableColumns<TrainingEnrollmentResponse>>(() => [
   { title: t('practice.internship.trainingTitle'), key: 'courseTitle', minWidth: 180, ellipsis: { tooltip: true } },
@@ -411,7 +421,7 @@ onMounted(() => {
       <NTabPane name="available" :tab="$t('practice.internship.tabAvailable')">
         <NCard>
           <NSpin :show="availLoading">
-            <NDataTable :columns="availableColumns" :data="available" :row-key="(r: InternshipResponse) => r.id" :single-line="false" :bordered="false" :scroll-x="980">
+            <NDataTable :columns="availableColumns" :data="available" :row-key="internshipRowKey" :single-line="false" :bordered="false" :scroll-x="980">
               <template #empty><EmptyState :description="$t('practice.common.empty')" /></template>
             </NDataTable>
           </NSpin>
@@ -422,7 +432,7 @@ onMounted(() => {
       <NTabPane name="myApplications" :tab="$t('practice.internship.tabMyApplications')">
         <NCard>
           <NSpin :show="myAppLoading">
-            <NDataTable :columns="myAppColumns" :data="myApplications" :row-key="(r: InternshipApplicationResponse) => r.id" :single-line="false" :bordered="false" :scroll-x="1080">
+            <NDataTable :columns="myAppColumns" :data="myApplications" :row-key="internshipApplicationRowKey" :single-line="false" :bordered="false" :scroll-x="1080">
               <template #empty><EmptyState :description="$t('practice.common.empty')" /></template>
             </NDataTable>
           </NSpin>
@@ -439,7 +449,7 @@ onMounted(() => {
           </template>
           <NSpin :show="reportLoading">
             <EmptyState v-if="!reportLoading && myReports.length === 0" :description="$t('practice.common.empty')" />
-            <NDataTable v-else :columns="reportColumns" :data="myReports" :row-key="(r: InternshipReportResponse) => r.id" :single-line="false" :bordered="false" :scroll-x="1000">
+            <NDataTable v-else :columns="reportColumns" :data="myReports" :row-key="internshipReportRowKey" :single-line="false" :bordered="false" :scroll-x="1000">
               <template #empty><EmptyState :description="$t('practice.common.empty')" /></template>
             </NDataTable>
           </NSpin>
@@ -450,7 +460,7 @@ onMounted(() => {
       <NTabPane name="availableTrainings" :tab="$t('practice.internship.tabAvailableTrainings')">
         <NCard>
           <NSpin :show="availTrainLoading">
-            <NDataTable :columns="availTrainColumns" :data="availableTrainings" :row-key="(r: TrainingResponse) => r.id" :single-line="false" :bordered="false" :scroll-x="920">
+            <NDataTable :columns="availTrainColumns" :data="availableTrainings" :row-key="trainingRowKey" :single-line="false" :bordered="false" :scroll-x="920">
               <template #empty><EmptyState :description="$t('practice.common.empty')" /></template>
             </NDataTable>
           </NSpin>
@@ -461,7 +471,7 @@ onMounted(() => {
       <NTabPane name="myTrainings" :tab="$t('practice.internship.tabMyTrainings')">
         <NCard>
           <NSpin :show="myTrainLoading">
-            <NDataTable :columns="myTrainColumns" :data="myTrainings" :row-key="(r: TrainingEnrollmentResponse) => r.id" :single-line="false" :bordered="false" :scroll-x="700">
+            <NDataTable :columns="myTrainColumns" :data="myTrainings" :row-key="trainingEnrollmentRowKey" :single-line="false" :bordered="false" :scroll-x="700">
               <template #empty><EmptyState :description="$t('practice.common.empty')" /></template>
             </NDataTable>
           </NSpin>

@@ -96,6 +96,8 @@ function goDetail(id: number) {
   router.push(`/selection/${id}`)
 }
 
+const campaignRowKey = (row: Campaign) => row.id
+
 const columns = computed<DataTableColumns<Campaign>>(() => [
   { title: t('selection.name'), key: 'name', width: 220, ellipsis: { tooltip: true } },
   { title: t('selection.courseCode'), key: 'courseCode', width: 120 },
@@ -230,6 +232,14 @@ const emptyForm = (): CampaignForm => ({
 })
 
 const form = ref<CampaignForm>(emptyForm())
+
+const fetchAllGroupsPage = (page: number, pageSize: number) => fetchAllGroups(page, pageSize)
+const groupLabelOf = (g: SelectionGroup) => g.name
+const groupValueOf = (g: SelectionGroup) => g.id
+
+function onGroupChange(v: string | number | null | Array<string | number>) {
+  form.value.groupId = v as number | null
+}
 
 function startCreate() {
   showCreateModal.value = true
@@ -399,7 +409,7 @@ onMounted(loadData)
           <NDataTable
             :columns="columns"
             :data="data"
-            :row-key="(r: Campaign) => r.id"
+            :row-key="campaignRowKey"
             :single-line="false"
             :bordered="false"
             :scroll-x="1500"
@@ -517,15 +527,12 @@ onMounted(loadData)
           <NFormItemGi :span="2" :label="$t('selection.group')">
             <PagedSelect
               :model-value="form.groupId ?? null"
-              :fetch-page="(page: number, pageSize: number) => fetchAllGroups(page, pageSize)"
-              :label-of="(g: SelectionGroup) => g.name"
-              :value-of="(g: SelectionGroup) => g.id"
+              :fetch-page="fetchAllGroupsPage"
+              :label-of="groupLabelOf"
+              :value-of="groupValueOf"
               :placeholder="$t('selection.groupKeepBindingPlaceholder')"
               clearable
-              @update:model-value="
-                (v: string | number | null | Array<string | number>) =>
-                  (form.groupId = v as number | null)
-              "
+              @update:model-value="onGroupChange"
             />
           </NFormItemGi>
         </NGrid>

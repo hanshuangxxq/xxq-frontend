@@ -292,6 +292,8 @@ async function handleSave(): Promise<void> {
   }
 }
 
+const campaignRowKey = (row: CampaignResponse) => row.id
+
 const columns = computed<DataTableColumns<CampaignResponse>>(() => [
   {
     title: t('graduation.academic.campaignName'),
@@ -404,7 +406,7 @@ onMounted(() => {
           <NDataTable
             :columns="columns"
             :data="campaigns"
-            :row-key="(r: CampaignResponse) => r.id"
+            :row-key="campaignRowKey"
             :single-line="false"
             :bordered="false"
             :scroll-x="1200"

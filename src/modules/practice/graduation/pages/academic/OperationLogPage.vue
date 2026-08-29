@@ -50,6 +50,8 @@ function onCampaignChange(id: number | null): void {
   }
 }
 
+const operationLogRowKey = (row: OperationLogResponse) => row.id
+
 const columns = computed<DataTableColumns<OperationLogResponse>>(() => [
   { title: t('graduation.academic.operatorName'), key: 'operatorName', width: 100 },
   {
@@ -108,7 +110,7 @@ const columns = computed<DataTableColumns<OperationLogResponse>>(() => [
             v-else
             :columns="columns"
             :data="logs"
-            :row-key="(r: OperationLogResponse) => r.id"
+            :row-key="operationLogRowKey"
             :single-line="false"
             :bordered="false"
             :scroll-x="960"

@@ -238,6 +238,8 @@ const recordStatusTagType: Record<string, 'success' | 'default'> = {
   DROPPED: 'default',
 }
 
+const recordRowKey = (row: SelectionRecord) => row.id
+
 const recordColumns = computed<DataTableColumns<SelectionRecord>>(() => [
   {
     title: t('selection.name'),
@@ -510,7 +512,7 @@ onMounted(loadAll)
             v-else
             :columns="recordColumns"
             :data="records"
-            :row-key="(r: SelectionRecord) => r.id"
+            :row-key="recordRowKey"
             :single-line="false"
             :bordered="false"
             :scroll-x="1100"

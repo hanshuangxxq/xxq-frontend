@@ -78,6 +78,10 @@ const registerForm = ref<{
 }>({ teamMode: 'individual', teamName: '', members: [] })
 const savingRegister = ref(false)
 
+const fetchStudentsPage = (page: number, pageSize: number) => fetchStudents({ page, pageSize })
+const studentLabelOf = (s: Student) => s.name
+const studentValueOf = (s: Student) => s.userId
+
 function startRegister(row: CompetitionResponse) {
   registeringComp.value = row
   registerForm.value = { teamMode: 'individual', teamName: '', members: [] }
@@ -107,6 +111,8 @@ async function handleRegister() {
     savingRegister.value = false
   }
 }
+
+const competitionRowKey = (row: CompetitionResponse) => row.id
 
 const availableColumns = computed<DataTableColumns<CompetitionResponse>>(() => [
   { title: t('practice.competition.competitionName'), key: 'name', minWidth: 200, ellipsis: { tooltip: true } },
@@ -148,6 +154,8 @@ async function handleRevoke(id: number) {
     message.error((e as Error).message || t('practice.common.revokeFail'))
   }
 }
+
+const registrationRowKey = (row: RegistrationResponse) => row.id
 
 const myRegColumns = computed<DataTableColumns<RegistrationResponse>>(() => [
   { title: t('practice.competition.competitionName'), key: 'competitionName', minWidth: 200, ellipsis: { tooltip: true } },
@@ -244,7 +252,7 @@ onMounted(() => {
       <NTabPane name="available" :tab="$t('practice.competition.tabAvailable')">
         <NCard>
           <NSpin :show="availLoading">
-            <NDataTable :columns="availableColumns" :data="available" :row-key="(r: CompetitionResponse) => r.id" :single-line="false" :bordered="false" :scroll-x="1000">
+            <NDataTable :columns="availableColumns" :data="available" :row-key="competitionRowKey" :single-line="false" :bordered="false" :scroll-x="1000">
               <template #empty><EmptyState :description="$t('practice.common.empty')" /></template>
             </NDataTable>
           </NSpin>
@@ -255,7 +263,7 @@ onMounted(() => {
       <NTabPane name="myRegistrations" :tab="$t('practice.competition.tabMyRegistrations')">
         <NCard>
           <NSpin :show="myRegLoading">
-            <NDataTable :columns="myRegColumns" :data="myRegistrations" :row-key="(r: RegistrationResponse) => r.id" :single-line="false" :bordered="false" :scroll-x="980">
+            <NDataTable :columns="myRegColumns" :data="myRegistrations" :row-key="registrationRowKey" :single-line="false" :bordered="false" :scroll-x="980">
               <template #empty><EmptyState :description="$t('practice.common.empty')" /></template>
             </NDataTable>
           </NSpin>
@@ -266,7 +274,7 @@ onMounted(() => {
       <NTabPane name="myResults" :tab="$t('practice.competition.tabMyResults')">
         <NCard>
           <NSpin :show="myRegLoading">
-            <NDataTable :columns="myResultColumns" :data="myRegistrations" :row-key="(r: RegistrationResponse) => r.id" :single-line="false" :bordered="false">
+            <NDataTable :columns="myResultColumns" :data="myRegistrations" :row-key="registrationRowKey" :single-line="false" :bordered="false">
               <template #empty><EmptyState :description="$t('practice.common.empty')" /></template>
             </NDataTable>
           </NSpin>
@@ -290,9 +298,9 @@ onMounted(() => {
           <NFormItem :label="$t('practice.competition.members')">
             <PagedSelect
               v-model="registerForm.members"
-              :fetch-page="(page: number, pageSize: number) => fetchStudents({ page, pageSize })"
-              :label-of="(s: Student) => s.name"
-              :value-of="(s: Student) => s.userId"
+              :fetch-page="fetchStudentsPage"
+              :label-of="studentLabelOf"
+              :value-of="studentValueOf"
               multiple
               filterable
               :placeholder="$t('practice.common.membersPlaceholder')"

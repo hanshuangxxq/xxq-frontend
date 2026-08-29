@@ -172,6 +172,8 @@ function renderDuplicateHistory(checks: DuplicateCheckResponse[]): ReturnType<ty
   return h('div', null, rows)
 }
 
+const thesisRowKey = (row: ThesisResponse) => row.id
+
 const thesisColumns = computed<DataTableColumns<ThesisResponse>>(() => [
   {
     type: 'expand',
@@ -299,7 +301,7 @@ const thesisColumns = computed<DataTableColumns<ThesisResponse>>(() => [
             v-else
             :columns="thesisColumns"
             :data="theses"
-            :row-key="(r: ThesisResponse) => r.id"
+            :row-key="thesisRowKey"
             :single-line="false"
             :bordered="false"
             :scroll-x="1080"

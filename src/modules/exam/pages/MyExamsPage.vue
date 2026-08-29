@@ -48,6 +48,8 @@ async function loadData() {
   }
 }
 
+const examRowKey = (row: ExamView) => row.id
+
 const columns = computed<DataTableColumns<ExamView>>(() => [
   { title: t('exam.myExamName'), key: 'examName', minWidth: 220, ellipsis: { tooltip: true } },
   { title: t('exam.myCourse'), key: 'courseName', width: 150, ellipsis: { tooltip: true } },
@@ -105,7 +107,7 @@ onMounted(loadData)
               v-else
               :columns="columns"
               :data="normalExams"
-              :row-key="(r: ExamView) => r.id"
+              :row-key="examRowKey"
               :single-line="false"
               :bordered="false"
               :scroll-x="1230"
@@ -121,7 +123,7 @@ onMounted(loadData)
               v-else
               :columns="columns"
               :data="makeupExams"
-              :row-key="(r: ExamView) => r.id"
+              :row-key="examRowKey"
               :single-line="false"
               :bordered="false"
               :scroll-x="1230"
@@ -137,7 +139,7 @@ onMounted(loadData)
               v-else
               :columns="columns"
               :data="retakeExams"
-              :row-key="(r: ExamView) => r.id"
+              :row-key="examRowKey"
               :single-line="false"
               :bordered="false"
               :scroll-x="1230"

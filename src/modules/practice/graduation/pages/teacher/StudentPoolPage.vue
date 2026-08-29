@@ -94,6 +94,8 @@ async function handlePick(row: TeacherPickPoolRow): Promise<void> {
   }
 }
 
+const poolRowKey = (row: TeacherPickPoolRow) => row.studentId
+
 const poolColumns = computed<DataTableColumns<TeacherPickPoolRow>>(() => [
   { title: t('graduation.common.studentNo'), key: 'studentNo', width: 120 },
   { title: t('graduation.common.student'), key: 'studentName', width: 100 },
@@ -203,7 +205,7 @@ const poolColumns = computed<DataTableColumns<TeacherPickPoolRow>>(() => [
             v-else
             :columns="poolColumns"
             :data="pool"
-            :row-key="(r: TeacherPickPoolRow) => r.studentId"
+            :row-key="poolRowKey"
             :single-line="false"
             :bordered="false"
             :scroll-x="1080"

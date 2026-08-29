@@ -77,6 +77,8 @@ watch(
   },
 )
 
+const groupRowKey = (row: SelectionGroup) => row.id
+
 const groupColumns = computed<DataTableColumns<SelectionGroup>>(() => [
   { title: t('selection.groupName'), key: 'name', width: 220, ellipsis: { tooltip: true } },
   {
@@ -246,6 +248,8 @@ async function loadBindableCampaigns(groupId: number) {
   }
 }
 
+const campaignRowKey = (row: Campaign) => row.id
+
 const bindingColumns = computed<DataTableColumns<Campaign>>(() => [
   { title: t('selection.name'), key: 'name', width: 200, ellipsis: { tooltip: true } },
   { title: t('selection.semester'), key: 'semesterName', width: 160, ellipsis: { tooltip: true } },
@@ -349,7 +353,7 @@ async function handleUnbind(campaignId: number) {
     preset="card"
     :title="$t('selection.configGroups')"
     class="group-management-modal"
-    @update:show="(v: boolean) => emit('update:show', v)"
+    @update:show="(v) => emit('update:show', v)"
   >
     <div class="group-management-toolbar">
       <NButton type="primary" @click="openCreateGroup">
@@ -360,7 +364,7 @@ async function handleUnbind(campaignId: number) {
       <NDataTable
         :columns="groupColumns"
         :data="groups"
-        :row-key="(r: SelectionGroup) => r.id"
+        :row-key="groupRowKey"
         :single-line="false"
         :bordered="false"
         :max-height="400"
@@ -425,7 +429,7 @@ async function handleUnbind(campaignId: number) {
           v-else
           :columns="bindingColumns"
           :data="bindableCampaigns"
-          :row-key="(r: Campaign) => r.id"
+          :row-key="campaignRowKey"
           :single-line="false"
           :bordered="false"
           :max-height="420"
