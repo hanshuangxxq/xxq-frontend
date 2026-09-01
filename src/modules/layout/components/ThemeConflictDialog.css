@@ -1,0 +1,19 @@
+.conflict-message {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--app-text-secondary);
+}
+
+.conflict-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+/* Global overrides for teleported modal elements */
+:global(.theme-conflict-dialog) {
+  width: 400px !important;
+  max-width: 90vw !important;
+}
