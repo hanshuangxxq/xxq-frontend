@@ -25,5 +25,9 @@
   "groupTeaching": "Teaching",
   "groupScore": "Scores & Exams",
   "groupAnalysis": "Analysis",
-  "groupPractice": "Practice"
+  "groupPractice": "Practice",
+  "themeConflictTitle": "Theme Mismatch",
+  "themeConflictMessage": "The theme on this device differs from your other devices (this device: {local}; other devices: {remote}). Which theme should be applied?",
+  "themeConflictUseLocal": "Use this device's theme ({theme})",
+  "themeConflictUseRemote": "Use other devices' theme ({theme})"
 }
