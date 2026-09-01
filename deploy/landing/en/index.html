@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XXQ — Academic Affairs Management System for Universities</title>
+    <meta
+      name="description"
+      content="XXQ is an all-in-one academic affairs management system for universities, covering course selection, class scheduling, curriculum planning, grade entry and statistics, exams and make-up exams, the full graduation project workflow, internships, competitions and social practice, academic early warnings, teaching evaluations, and foundational data management."
+    >
+    <meta
+      name="keywords"
+      content="academic affairs management system, university administration, course selection, class scheduling, curriculum management, grade management, exam management, graduation project, thesis defense, internship management, academic early warning, teaching evaluation, XXQ"
+    >
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://example.com/en/">
+    <link rel="alternate" hreflang="zh-CN" href="https://example.com/">
+    <link rel="alternate" hreflang="en" href="https://example.com/en/">
+    <link rel="alternate" hreflang="x-default" href="https://example.com/">
+    <meta property="og:title" content="XXQ — Academic Affairs Management System for Universities">
+    <meta
+      property="og:description"
+      content="An all-in-one academic affairs platform for universities: course selection, scheduling, curricula, grades and exams, the full graduation project workflow, practical education, academic analytics, and master data."
+    >
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://example.com/en/">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="zh_CN">
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/landing.css">
+    <script>
+      // Signed-in users go straight to the app; fall back to the landing page if localStorage is unavailable
+      try {
+        if (localStorage.getItem('xxq-access-token')) {
+          location.replace('/profile')
+        }
+      } catch (e) {
+        /* ignore and render the landing page */
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "name": "XXQ",
+            "url": "https://example.com/",
+            "inLanguage": ["zh-CN", "en"]
+          },
+          {
+            "@type": "SoftwareApplication",
+            "name": "XXQ Academic Affairs Management System",
+            "alternateName": "XXQ 高校教务管理系统",
+            "applicationCategory": "EducationalApplication",
+            "operatingSystem": "Web",
+            "url": "https://example.com/en/",
+            "inLanguage": ["zh-CN", "en"],
+            "description": "XXQ is an all-in-one academic affairs management system for universities, covering course selection, scheduling, curricula, grades and exams, the full graduation project workflow, internships, competitions and social practice, academic early warnings, teaching evaluations, and foundational data management.",
+            "featureList": [
+              "Course selection and enrollment campaigns",
+              "Class scheduling and teaching assignments",
+              "Curriculum (cultivation plan) management",
+              "Grade entry, statistics and review appeals",
+              "Exam and make-up exam management",
+              "Full graduation project workflow (topic selection, proposal, midterm, thesis, defense, grading)",
+              "Internship, competition and social practice management",
+              "Academic early warnings and teaching evaluations",
+              "Master data for students, majors, colleges, grade levels and classes, with batch import"
+            ]
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav container" aria-label="Main navigation">
+        <a class="brand" href="/en/">XXQ</a>
+        <div class="nav-actions">
+          <a class="lang-switch" href="/" hreflang="zh-CN" lang="zh-CN">中文</a>
+          <a class="btn btn-primary" href="/login">Sign In</a>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <h1>XXQ Academic Affairs Management System</h1>
+        <p class="hero-sub">
+          An all-in-one teaching management platform for universities — from course selection,
+          scheduling and curricula to grades, exams, graduation projects and practical education,
+          with students, faculty, departments and academic affairs working together in one place.
+        </p>
+        <a class="btn btn-primary btn-lg" href="/login">Sign In</a>
+      </section>
+
+      <section class="features container" aria-labelledby="features-title">
+        <h2 id="features-title">Feature Overview</h2>
+        <div class="feature-grid">
+          <article class="card">
+            <h3>Teaching Operations</h3>
+            <p>
+              Enrollment campaigns with course selection and withdrawal, smart class scheduling and
+              teaching assignments, curriculum planning, and course administration — the entire
+              teaching operation online.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Grades &amp; Exams</h3>
+            <p>
+              Grade entry and statistical analysis, exam and make-up exam scheduling, and student
+              grade review requests — fully traceable grade data.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Practical Education</h3>
+            <p>
+              Unified management of internships, competitions and social practice; graduation
+              projects cover the full workflow from topic selection, proposal and midterm review to
+              thesis evaluation, defense arrangement and grade publication.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Analytics &amp; Master Data</h3>
+            <p>
+              Academic early warnings, teaching evaluations and teaching-quality analytics;
+              centralized management of students, majors, colleges, grade levels and classes, with
+              batch import.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="roles container" aria-labelledby="roles-title">
+        <h2 id="roles-title">Four Roles, One Platform</h2>
+        <ul class="role-list">
+          <li class="card">
+            <h3>Students</h3>
+            <p>
+              Enroll in and drop courses, view timetables and exam schedules, check grades and
+              request reviews, select graduation project topics and submit theses, and register for
+              internships, competitions and social practice.
+            </p>
+          </li>
+          <li class="card">
+            <h3>Faculty</h3>
+            <p>
+              View teaching assignments, enter grades, advise graduation projects and review
+              proposals, midterms and theses, keep guidance logs, and see teaching evaluation
+              results.
+            </p>
+          </li>
+          <li class="card">
+            <h3>Departments</h3>
+            <p>
+              Review graduation project topics, allocate students, arrange defenses and publish
+              results, manage internships, and monitor progress with department dashboards.
+            </p>
+          </li>
+          <li class="card">
+            <h3>Academic Affairs</h3>
+            <p>
+              Manage curricula and scheduling, run enrollment campaigns and exam arrangements,
+              monitor academic warnings and teaching evaluations, maintain master data with batch
+              import, and oversee graduation projects on global dashboards.
+            </p>
+          </li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>
+        © 2026 XXQ Academic Affairs Management System ·
+        <a href="/" hreflang="zh-CN" lang="zh-CN">中文</a>
+      </p>
+    </footer>
+  </body>
+</html>
