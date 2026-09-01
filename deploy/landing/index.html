@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XXQ — 高校教务管理系统 | 一体化教学管理平台</title>
+    <meta
+      name="description"
+      content="XXQ 是面向高校的一体化教务管理系统,覆盖选课、排课、培养方案、成绩录入与统计、考试与补考、成绩复核、毕业设计全流程(选题/开题/中期/论文/答辩/成绩)、实习/竞赛/社会实践、学业预警与教学评价、学生/专业/学院/年级/班级基础数据管理与批量导入。"
+    >
+    <meta
+      name="keywords"
+      content="教务管理系统,高校教务,选课系统,排课系统,培养方案,成绩管理,考试管理,补考,成绩复核,毕业设计管理,实习管理,竞赛管理,社会实践,学业预警,教学评价,XXQ"
+    >
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://example.com/">
+    <link rel="alternate" hreflang="zh-CN" href="https://example.com/">
+    <link rel="alternate" hreflang="en" href="https://example.com/en/">
+    <link rel="alternate" hreflang="x-default" href="https://example.com/">
+    <meta property="og:title" content="XXQ — 高校教务管理系统 | 一体化教学管理平台">
+    <meta
+      property="og:description"
+      content="面向高校的一体化教务管理系统:选课、排课、培养方案、成绩与考试、毕业设计全流程、实践教学、学业预警与评教、基础数据管理。"
+    >
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://example.com/">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:locale:alternate" content="en_US">
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/landing.css">
+    <script>
+      // 已登录用户直达应用,跳过落地页;localStorage 不可用时静默降级为正常展示
+      try {
+        if (localStorage.getItem('xxq-access-token')) {
+          location.replace('/profile')
+        }
+      } catch (e) {
+        /* 忽略,继续渲染落地页 */
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "name": "XXQ",
+            "url": "https://example.com/",
+            "inLanguage": ["zh-CN", "en"]
+          },
+          {
+            "@type": "SoftwareApplication",
+            "name": "XXQ 高校教务管理系统",
+            "alternateName": "XXQ Academic Affairs Management System",
+            "applicationCategory": "EducationalApplication",
+            "operatingSystem": "Web",
+            "url": "https://example.com/",
+            "inLanguage": ["zh-CN", "en"],
+            "description": "XXQ 是面向高校的一体化教务管理系统,覆盖选课、排课、培养方案、成绩与考试、毕业设计全流程、实习/竞赛/社会实践、学业预警与教学评价、基础数据管理。",
+            "featureList": [
+              "选课与选课活动管理",
+              "智能排课与教学任务",
+              "培养方案管理",
+              "成绩录入、统计与复核",
+              "考试与补考管理",
+              "毕业设计全流程(选题、开题、中期、论文、答辩、成绩)",
+              "实习、竞赛与社会实践管理",
+              "学业预警与教学评价",
+              "学生/专业/学院/年级/班级基础数据管理与批量导入"
+            ]
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav container" aria-label="主导航">
+        <a class="brand" href="/">XXQ</a>
+        <div class="nav-actions">
+          <a class="lang-switch" href="/en/" hreflang="en" lang="en">English</a>
+          <a class="btn btn-primary" href="/login">进入系统</a>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <h1>XXQ 高校教务管理系统</h1>
+        <p class="hero-sub">
+          面向高校的一体化教学管理平台:从选课、排课、培养方案到成绩、考试、毕业设计与实践教学,学生、教师、院系、教务四端协同,教学事务一站完成。
+        </p>
+        <a class="btn btn-primary btn-lg" href="/login">进入系统</a>
+      </section>
+
+      <section class="features container" aria-labelledby="features-title">
+        <h2 id="features-title">功能总览</h2>
+        <div class="feature-grid">
+          <article class="card">
+            <h3>教学运行</h3>
+            <p>
+              覆盖选课活动与选课退课、智能排课与教学任务、培养方案维护、课程管理,教学运行全流程线上化。
+            </p>
+          </article>
+          <article class="card">
+            <h3>成绩与考试</h3>
+            <p>
+              成绩录入与统计分析、考试与补考安排、学生成绩复核申请与处理,成绩数据全程可追溯。
+            </p>
+          </article>
+          <article class="card">
+            <h3>实践教学</h3>
+            <p>
+              实习、竞赛、社会实践统一管理;毕业设计覆盖选题、开题、中期检查、论文评阅、答辩安排与成绩发布全流程。
+            </p>
+          </article>
+          <article class="card">
+            <h3>学业分析与基础数据</h3>
+            <p>
+              学业预警、教学评价与教师教学质量分析;学生、专业、学院、年级、班级基础数据集中维护,支持批量导入。
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="roles container" aria-labelledby="roles-title">
+        <h2 id="roles-title">四端角色协同</h2>
+        <ul class="role-list">
+          <li class="card">
+            <h3>学生</h3>
+            <p>
+              选课退课、课表与考试查询、成绩查询与复核申请、毕业设计选题与论文提交、实习/竞赛/社会实践报名。
+            </p>
+          </li>
+          <li class="card">
+            <h3>教师</h3>
+            <p>
+              教学任务查看、成绩录入、毕业设计指导与开题/中期/论文评阅、指导日志记录、教学评价结果查看。
+            </p>
+          </li>
+          <li class="card">
+            <h3>院系</h3>
+            <p>
+              毕业设计题目审核与学生分配、答辩安排与成绩发布、实习管理、院系进度看板与数据总览。
+            </p>
+          </li>
+          <li class="card">
+            <h3>教务</h3>
+            <p>
+              培养方案与排课、选课活动与考试/补考安排、学业预警与教学评价、基础数据与批量导入、毕业设计全局看板。
+            </p>
+          </li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>
+        © 2026 XXQ 高校教务管理系统 · <a href="/en/" hreflang="en" lang="en">English</a>
+      </p>
+    </footer>
+  </body>
+</html>
