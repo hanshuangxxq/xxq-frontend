@@ -25,7 +25,8 @@ async function handleLogin() {
       data: { account: form.value.account, password: form.value.password },
     })
     message.success(t('auth.login.success'))
-    router.push('/')
+    // 线上 / 由 Nginx 直接返回 SEO 落地页,登录后必须显式进入应用内页面
+    router.push('/profile')
   } catch {
     // 错误消息已由 api 层统一提示
   } finally {
