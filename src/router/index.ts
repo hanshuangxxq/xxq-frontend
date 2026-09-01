@@ -409,8 +409,9 @@ router.beforeEach((to) => {
   }
 
   // 登出流程中允许已登录用户进入 /login(先跳转再清空会话,避免旧页面闪现无权限)
+  // 注意不能回 /:线上 / 由 Nginx 返回 SEO 落地页,SPA 的 / 路由已不可达
   if (authStore.isLoggedIn && WHITELIST.includes(to.path) && !authStore.isLoggingOut) {
-    return '/'
+    return '/profile'
   }
 })
 
