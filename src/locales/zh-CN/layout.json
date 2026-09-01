@@ -25,5 +25,9 @@
   "groupTeaching": "教学管理",
   "groupScore": "成绩与考试",
   "groupAnalysis": "学情分析",
-  "groupPractice": "实践与创新"
+  "groupPractice": "实践与创新",
+  "themeConflictTitle": "主题设置不一致",
+  "themeConflictMessage": "检测到本设备的主题设置与其他设备不同（本设备：{local}；其他设备：{remote}）。请选择本次加载使用哪种主题：",
+  "themeConflictUseLocal": "使用本设备主题（{theme}）",
+  "themeConflictUseRemote": "使用其他设备主题（{theme}）"
 }
