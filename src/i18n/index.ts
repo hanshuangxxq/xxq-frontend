@@ -56,9 +56,14 @@ export type SupportedLocale = 'zh-CN' | 'en'
 
 export const SUPPORTED_LOCALES: SupportedLocale[] = ['zh-CN', 'en']
 
+/** 探测系统语言:浏览器语言为中文则 zh-CN,否则 en(当前仅支持这两种语言) */
+export function detectSystemLocale(): SupportedLocale {
+  return navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en'
+}
+
 const i18n = createI18n({
   legacy: false,
-  locale: 'zh-CN',
+  locale: detectSystemLocale(),
   fallbackLocale: 'zh-CN',
   messages: {
     'zh-CN': {
