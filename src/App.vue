@@ -4,6 +4,7 @@ import { NConfigProvider, NMessageProvider, darkTheme } from 'naive-ui'
 import { useLocaleStore } from '@/stores/useLocaleStore'
 import { useThemeStore } from '@/stores/useThemeStore'
 import { darkThemeOverrides, lightThemeOverrides } from '@/theme'
+import ThemeConflictDialog from '@/modules/layout/components/ThemeConflictDialog.vue'
 
 const localeStore = useLocaleStore()
 const themeStore = useThemeStore()
@@ -23,6 +24,7 @@ const themeOverrides = computed(() =>
   >
     <NMessageProvider>
       <RouterView />
+      <ThemeConflictDialog />
     </NMessageProvider>
   </NConfigProvider>
 </template>
