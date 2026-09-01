@@ -1,0 +1,224 @@
+/* XXQ SEO 落地页样式(中英两版共用)
+   与项目浅色主题对齐:背景 #f0f2f5、白色卡片、主色 #2563eb(同 src/theme) */
+
+:root {
+  --landing-bg: #f0f2f5;
+  --landing-card-bg: #ffffff;
+  --landing-card-shadow: 0 2px 12px rgba(15, 35, 80, 0.06);
+  --landing-border: #ececf0;
+  --landing-text: #1f2329;
+  --landing-text-secondary: #6b7280;
+  --landing-primary: #2563eb;
+  --landing-primary-hover: #4472ee;
+  --landing-primary-active: #1d4fd7;
+  --landing-on-primary: #ffffff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--landing-bg);
+}
+
+body {
+  margin: 0;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    'PingFang SC',
+    'Hiragino Sans GB',
+    'Microsoft YaHei',
+    sans-serif;
+  background: var(--landing-bg);
+  color: var(--landing-text);
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main {
+  flex: 1;
+}
+
+.container {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+a {
+  color: var(--landing-primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* ===== 顶部导航 ===== */
+.site-header {
+  background: var(--landing-card-bg);
+  border-bottom: 1px solid var(--landing-border);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+}
+
+.brand {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--landing-text);
+}
+
+.brand:hover {
+  text-decoration: none;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.lang-switch {
+  color: var(--landing-text-secondary);
+}
+
+/* ===== 按钮 ===== */
+.btn {
+  display: inline-block;
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  transition: background-color 0.2s ease;
+}
+
+.btn-primary {
+  background: var(--landing-primary);
+  color: var(--landing-on-primary);
+}
+
+.btn-primary:hover {
+  background: var(--landing-primary-hover);
+  text-decoration: none;
+}
+
+.btn-primary:active {
+  background: var(--landing-primary-active);
+}
+
+.btn-lg {
+  padding: 12px 36px;
+  font-size: 17px;
+}
+
+/* ===== Hero ===== */
+.hero {
+  text-align: center;
+  padding: 96px 24px 72px;
+}
+
+.hero h1 {
+  margin: 0 0 16px;
+  font-size: 40px;
+  line-height: 1.25;
+}
+
+.hero-sub {
+  margin: 0 auto 32px;
+  max-width: 760px;
+  font-size: 18px;
+  color: var(--landing-text-secondary);
+}
+
+/* ===== 功能与角色区 ===== */
+.features,
+.roles {
+  padding: 24px 24px 48px;
+}
+
+.features h2,
+.roles h2 {
+  margin: 0 0 32px;
+  font-size: 28px;
+  text-align: center;
+}
+
+.feature-grid,
+.role-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.role-list {
+  list-style: none;
+  margin: 0;
+  padding-left: 0;
+}
+
+.card {
+  background: var(--landing-card-bg);
+  border: 1px solid var(--landing-border);
+  border-radius: 8px;
+  box-shadow: var(--landing-card-shadow);
+  padding: 24px;
+}
+
+.card h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.card p {
+  margin: 0;
+  color: var(--landing-text-secondary);
+}
+
+/* ===== 页脚 ===== */
+.site-footer {
+  margin-top: 24px;
+  padding: 24px;
+  background: var(--landing-card-bg);
+  border-top: 1px solid var(--landing-border);
+  text-align: center;
+  font-size: 14px;
+  color: var(--landing-text-secondary);
+}
+
+.site-footer p {
+  margin: 0;
+}
+
+/* ===== 响应式 ===== */
+@media (max-width: 720px) {
+  .hero {
+    padding: 64px 20px 48px;
+  }
+
+  .hero h1 {
+    font-size: 28px;
+  }
+
+  .hero-sub {
+    font-size: 16px;
+  }
+
+  .feature-grid,
+  .role-list {
+    grid-template-columns: 1fr;
+  }
+}
