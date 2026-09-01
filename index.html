@@ -7,16 +7,31 @@
     <title>XXQ</title>
     <style>
       /* 应用挂载前的兜底背景,与 global.css 的 --app-bg 一致,避免加载期白闪;
-         跟随系统暗色,覆盖偏好加载完成前的空窗(挂载前会先拉取用户偏好) */
+         暗色由下方内联脚本按本机存储的主题(无则跟随系统)预设 .dark 类决定 */
       html {
         background: #f5f6f8;
       }
-      @media (prefers-color-scheme: dark) {
-        html {
-          background: #101014;
-        }
+      html.dark {
+        background: #101014;
       }
     </style>
+    <script>
+      // 首帧防闪屏:样式与业务脚本加载前,按 localStorage 中用户主动设置的主题
+      // (未设置则跟随系统)预设 <html> 的 dark 类,与 useThemeStore 保持一致
+      ;(function () {
+        try {
+          var m = localStorage.getItem('xxq-theme')
+          var dark =
+            m === 'dark' ||
+            (m !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+          if (dark) document.documentElement.classList.add('dark')
+        } catch (e) {
+          if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark')
+          }
+        }
+      })()
+    </script>
   </head>
   <body>
     <div id="app"></div>
