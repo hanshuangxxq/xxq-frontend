@@ -222,3 +222,105 @@ a:hover {
     grid-template-columns: 1fr;
   }
 }
+
+/* ===== 登录态显隐 =====
+   head 内联脚本在渲染前给 <html> 加 logged-in 类,此处据此切换访客/已登录元素 */
+.user-only {
+  display: none;
+}
+
+html.logged-in .user-only {
+  display: block;
+}
+
+html.logged-in .guest-only {
+  display: none;
+}
+
+/* ===== 用户头像菜单 ===== */
+.user-menu {
+  position: relative;
+}
+
+.avatar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--landing-border);
+  border-radius: 50%;
+  background: var(--landing-card-bg);
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+}
+
+.avatar-btn:hover {
+  border-color: var(--landing-primary);
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--landing-primary);
+  color: var(--landing-on-primary);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* 显隐由 hidden 属性控制,本类不设 display,避免与 hidden 冲突 */
+.user-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 160px;
+  padding: 12px;
+  background: var(--landing-card-bg);
+  border: 1px solid var(--landing-border);
+  border-radius: 8px;
+  box-shadow: var(--landing-card-shadow);
+  z-index: 10;
+}
+
+.user-name {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-block {
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+
+.btn-ghost {
+  border: none;
+  background: transparent;
+  color: var(--landing-text-secondary);
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.btn-ghost:hover {
+  background: var(--landing-bg);
+  text-decoration: none;
+}
+
+.user-dropdown .btn + .btn {
+  margin-top: 8px;
+}
