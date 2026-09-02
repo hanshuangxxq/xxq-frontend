@@ -29,13 +29,15 @@
     <link rel="icon" href="/favicon.ico">
     <link rel="stylesheet" href="/landing.css">
     <script>
-      // 已登录用户直达应用,跳过落地页;localStorage 不可用时静默降级为正常展示
+      // 渲染前检测登录态并给 <html> 打类:CSS 据此显隐访客/已登录元素,避免闪烁。
+      // 登录态依据 xxq-user(与 SPA useAuthStore 一致);localStorage 不可用或数据损坏时按访客态渲染
       try {
-        if (localStorage.getItem('xxq-access-token')) {
-          location.replace('/profile')
+        var landingUser = localStorage.getItem('xxq-user')
+        if (landingUser && JSON.parse(landingUser).userId) {
+          document.documentElement.classList.add('logged-in')
         }
       } catch (e) {
-        /* 忽略,继续渲染落地页 */
+        /* 忽略,按访客态渲染 */
       }
     </script>
     <script type="application/ld+json">
@@ -79,7 +81,24 @@
         <a class="brand" href="/">XXQ</a>
         <div class="nav-actions">
           <a class="lang-switch" href="/en/" hreflang="en" lang="en">English</a>
-          <a class="btn btn-primary" href="/login">进入系统</a>
+          <a class="btn btn-primary guest-only" href="/login">登录</a>
+          <div class="user-menu user-only">
+            <button
+              type="button"
+              class="avatar-btn"
+              aria-haspopup="true"
+              aria-expanded="false"
+              aria-label="用户菜单"
+            >
+              <img class="avatar-img" alt="" hidden>
+              <span class="avatar-fallback" hidden></span>
+            </button>
+            <div class="user-dropdown" hidden>
+              <p class="user-name"></p>
+              <a class="btn btn-primary btn-block" href="/profile">进入系统</a>
+              <button type="button" class="btn btn-ghost btn-block" data-logout>退出登录</button>
+            </div>
+          </div>
         </div>
       </nav>
     </header>
@@ -90,7 +109,7 @@
         <p class="hero-sub">
           面向高校的一体化教学管理平台:从选课、排课、培养方案到成绩、考试、毕业设计与实践教学,学生、教师、院系、教务四端协同,教学事务一站完成。
         </p>
-        <a class="btn btn-primary btn-lg" href="/login">进入系统</a>
+        <a class="btn btn-primary btn-lg guest-only" href="/login">进入系统</a>
       </section>
 
       <section class="features container" aria-labelledby="features-title">
@@ -159,5 +178,95 @@
         © 2026 XXQ 高校教务管理系统 · <a href="/en/" hreflang="en" lang="en">English</a>
       </p>
     </footer>
+
+    <script>
+      // 已登录时填充头像/用户名并绑定下拉交互;访客态下无事可做
+      ;(function () {
+        if (!document.documentElement.classList.contains('logged-in')) return
+
+        var user = null
+        try {
+          user = JSON.parse(localStorage.getItem('xxq-user'))
+        } catch (e) {
+          user = null
+        }
+        if (!user) return
+
+        // 头像:文件名拼 /api/avatar/ 前缀(与 SPA avatarUrl() 同规则),无头像用姓名首字符占位
+        var avatarImg = document.querySelector('.avatar-img')
+        var avatarFallback = document.querySelector('.avatar-fallback')
+        var avatar = user.avatar
+        if (avatar) {
+          var src = avatar
+          if (!/^(https?:)?\/\//.test(avatar)) {
+            src = '/api/avatar/' + avatar.replace(/^\/api\/avatar\//, '')
+          }
+          avatarImg.src = src
+          avatarImg.hidden = false
+        } else {
+          avatarFallback.textContent = (user.name || '?').charAt(0)
+          avatarFallback.hidden = false
+        }
+        document.querySelector('.user-name').textContent = user.name || ''
+
+        // 下拉开关:点头像切换,点外部或 Esc 关闭
+        var avatarBtn = document.querySelector('.avatar-btn')
+        var dropdown = document.querySelector('.user-dropdown')
+        function closeDropdown() {
+          dropdown.hidden = true
+          avatarBtn.setAttribute('aria-expanded', 'false')
+        }
+        avatarBtn.addEventListener('click', function (e) {
+          e.stopPropagation()
+          var opening = dropdown.hidden
+          dropdown.hidden = !opening
+          avatarBtn.setAttribute('aria-expanded', String(opening))
+        })
+        document.addEventListener('click', function (e) {
+          if (!dropdown.hidden && !dropdown.contains(e.target)) closeDropdown()
+        })
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape' && !dropdown.hidden) closeDropdown()
+        })
+
+        // 退出登录:尽力通知后端,本地会话无论如何都清空
+        document.querySelector('[data-logout]').addEventListener('click', function () {
+          var finish = function () {
+            try {
+              localStorage.removeItem('xxq-access-token')
+              localStorage.removeItem('xxq-refresh-token')
+              localStorage.removeItem('xxq-user-id')
+              localStorage.removeItem('xxq-user')
+            } catch (e) {
+              /* 忽略 */
+            }
+            location.reload()
+          }
+          var token = null
+          try {
+            token = localStorage.getItem('xxq-access-token')
+          } catch (e) {
+            token = null
+          }
+          if (!token) {
+            finish()
+            return
+          }
+          fetch('/api/login/logout', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer ' + token,
+            },
+          })
+            .catch(function () {
+              /* 后端不可达也继续本地登出 */
+            })
+            .finally(function () {
+              finish()
+            })
+        })
+      })()
+    </script>
   </body>
 </html>
