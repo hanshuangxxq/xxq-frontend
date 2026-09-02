@@ -29,13 +29,15 @@
     <link rel="icon" href="/favicon.ico">
     <link rel="stylesheet" href="/landing.css">
     <script>
-      // Signed-in users go straight to the app; fall back to the landing page if localStorage is unavailable
+      // Tag <html> with the signed-in state before render; CSS shows/hides guest vs user elements without flicker.
+      // The xxq-user session object is the source of truth (same as the SPA auth store); fall back to guest on any error
       try {
-        if (localStorage.getItem('xxq-access-token')) {
-          location.replace('/profile')
+        var landingUser = localStorage.getItem('xxq-user')
+        if (landingUser && JSON.parse(landingUser).userId) {
+          document.documentElement.classList.add('logged-in')
         }
       } catch (e) {
-        /* ignore and render the landing page */
+        /* ignore and render as guest */
       }
     </script>
     <script type="application/ld+json">
@@ -79,7 +81,24 @@
         <a class="brand" href="/en/">XXQ</a>
         <div class="nav-actions">
           <a class="lang-switch" href="/" hreflang="zh-CN" lang="zh-CN">中文</a>
-          <a class="btn btn-primary" href="/login">Sign In</a>
+          <a class="btn btn-primary guest-only" href="/login">Sign In</a>
+          <div class="user-menu user-only">
+            <button
+              type="button"
+              class="avatar-btn"
+              aria-haspopup="true"
+              aria-expanded="false"
+              aria-label="User menu"
+            >
+              <img class="avatar-img" alt="" hidden>
+              <span class="avatar-fallback" hidden></span>
+            </button>
+            <div class="user-dropdown" hidden>
+              <p class="user-name"></p>
+              <a class="btn btn-primary btn-block" href="/profile">Enter System</a>
+              <button type="button" class="btn btn-ghost btn-block" data-logout>Sign Out</button>
+            </div>
+          </div>
         </div>
       </nav>
     </header>
@@ -92,7 +111,7 @@
           scheduling and curricula to grades, exams, graduation projects and practical education,
           with students, faculty, departments and academic affairs working together in one place.
         </p>
-        <a class="btn btn-primary btn-lg" href="/login">Sign In</a>
+        <a class="btn btn-primary btn-lg guest-only" href="/login">Sign In</a>
       </section>
 
       <section class="features container" aria-labelledby="features-title">
@@ -176,5 +195,96 @@
         <a href="/" hreflang="zh-CN" lang="zh-CN">中文</a>
       </p>
     </footer>
+
+    <script>
+      // Fill avatar/name and wire the dropdown when signed in; nothing to do for guests
+      ;(function () {
+        if (!document.documentElement.classList.contains('logged-in')) return
+
+        var user = null
+        try {
+          user = JSON.parse(localStorage.getItem('xxq-user'))
+        } catch (e) {
+          user = null
+        }
+        if (!user) return
+
+        // Avatar: prefix the filename with /api/avatar/ (same rule as the SPA avatarUrl());
+        // fall back to the first character of the user's name
+        var avatarImg = document.querySelector('.avatar-img')
+        var avatarFallback = document.querySelector('.avatar-fallback')
+        var avatar = user.avatar
+        if (avatar) {
+          var src = avatar
+          if (!/^(https?:)?\/\//.test(avatar)) {
+            src = '/api/avatar/' + avatar.replace(/^\/api\/avatar\//, '')
+          }
+          avatarImg.src = src
+          avatarImg.hidden = false
+        } else {
+          avatarFallback.textContent = (user.name || '?').charAt(0)
+          avatarFallback.hidden = false
+        }
+        document.querySelector('.user-name').textContent = user.name || ''
+
+        // Dropdown: click avatar to toggle, click outside or press Esc to close
+        var avatarBtn = document.querySelector('.avatar-btn')
+        var dropdown = document.querySelector('.user-dropdown')
+        function closeDropdown() {
+          dropdown.hidden = true
+          avatarBtn.setAttribute('aria-expanded', 'false')
+        }
+        avatarBtn.addEventListener('click', function (e) {
+          e.stopPropagation()
+          var opening = dropdown.hidden
+          dropdown.hidden = !opening
+          avatarBtn.setAttribute('aria-expanded', String(opening))
+        })
+        document.addEventListener('click', function (e) {
+          if (!dropdown.hidden && !dropdown.contains(e.target)) closeDropdown()
+        })
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape' && !dropdown.hidden) closeDropdown()
+        })
+
+        // Sign out: best-effort notify the backend, always clear the local session
+        document.querySelector('[data-logout]').addEventListener('click', function () {
+          var finish = function () {
+            try {
+              localStorage.removeItem('xxq-access-token')
+              localStorage.removeItem('xxq-refresh-token')
+              localStorage.removeItem('xxq-user-id')
+              localStorage.removeItem('xxq-user')
+            } catch (e) {
+              /* ignore */
+            }
+            location.reload()
+          }
+          var token = null
+          try {
+            token = localStorage.getItem('xxq-access-token')
+          } catch (e) {
+            token = null
+          }
+          if (!token) {
+            finish()
+            return
+          }
+          fetch('/api/login/logout', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer ' + token,
+            },
+          })
+            .catch(function () {
+              /* backend unreachable: continue local sign-out anyway */
+            })
+            .finally(function () {
+              finish()
+            })
+        })
+      })()
+    </script>
   </body>
 </html>
