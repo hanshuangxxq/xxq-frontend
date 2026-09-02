@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { NForm, NFormItem, NInput, NButton, NCard, useMessage } from 'naive-ui'
 import { useAuthStore } from '@/stores/useAuthStore'
 
 const { t } = useI18n()
-const router = useRouter()
 const authStore = useAuthStore()
 const message = useMessage()
 
@@ -25,8 +23,9 @@ async function handleLogin() {
       data: { account: form.value.account, password: form.value.password },
     })
     message.success(t('auth.login.success'))
-    // 线上 / 由 Nginx 直接返回 SEO 落地页,登录后必须显式进入应用内页面
-    router.push('/profile')
+    // 登录后回到落地页(线上 / 由 Nginx 返回 SEO 页,展示已登录头像菜单);
+    // 必须整页跳转:router.push('/') 只会命中 SPA 内部 redirect 到 /profile
+    location.replace('/')
   } catch {
     // 错误消息已由 api 层统一提示
   } finally {
