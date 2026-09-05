@@ -7,11 +7,11 @@ import {
   NEmpty,
   NButton,
   NDataTable,
-  NResult,
   NTag,
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
+import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import CampaignContextSelector from '../../components/CampaignContextSelector.vue'
 import ReviewModal from '../../components/ReviewModal.vue'
 import { fetchPendingAcademicProposals, reviewProposalAcademic } from '../../api'
@@ -127,12 +127,7 @@ const columns = computed<DataTableColumns<ProposalResponse>>(() => [
 
 <template>
   <div class="graduation-page">
-    <NResult
-      v-if="!isAcademicAdmin"
-      status="403"
-      :title="$t('graduation.common.noPermission')"
-      :description="$t('graduation.common.noPermissionDesc')"
-    />
+    <ForbiddenState v-if="!isAcademicAdmin" />
     <template v-else>
       <NCard class="context-card">
         <CampaignContextSelector
