@@ -1,16 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
-import {
-  NCard,
-  NSpin,
-  NEmpty,
-  NDataTable,
-  NResult,
-  NTag,
-  useMessage,
-  type DataTableColumns,
-} from 'naive-ui'
+import { NCard, NSpin, NEmpty, NDataTable, NTag, useMessage, type DataTableColumns } from 'naive-ui'
+import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import CampaignContextSelector from '../../components/CampaignContextSelector.vue'
 import { fetchOperationLogs } from '../../api'
 import { useRemotePagination } from '@/shared/composables/useRemotePagination'
@@ -86,12 +78,7 @@ const columns = computed<DataTableColumns<OperationLogResponse>>(() => [
 
 <template>
   <div class="graduation-page">
-    <NResult
-      v-if="!isAcademicAdmin"
-      status="403"
-      :title="$t('graduation.common.noPermission')"
-      :description="$t('graduation.common.noPermissionDesc')"
-    />
+    <ForbiddenState v-if="!isAcademicAdmin" />
     <template v-else>
       <NCard class="context-card">
         <CampaignContextSelector
