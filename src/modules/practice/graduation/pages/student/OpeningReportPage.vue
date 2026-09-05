@@ -11,12 +11,12 @@ import {
   NFormItem,
   NInput,
   NUpload,
-  NResult,
   NTag,
   NSpace,
   useMessage,
   type UploadFileInfo,
 } from 'naive-ui'
+import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import CampaignContextSelector from '../../components/CampaignContextSelector.vue'
 import {
   fetchMyOpeningReport,
@@ -159,12 +159,7 @@ async function handleDownload(): Promise<void> {
 
 <template>
   <div class="graduation-page">
-    <NResult
-      v-if="!isStudent"
-      status="403"
-      :title="$t('graduation.common.noPermission')"
-      :description="$t('graduation.common.noPermissionDesc')"
-    />
+    <ForbiddenState v-if="!isStudent" />
     <template v-else>
       <NCard class="context-card">
         <CampaignContextSelector
