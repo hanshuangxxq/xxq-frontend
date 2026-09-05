@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { NCard, NResult } from 'naive-ui'
+import { NCard } from 'naive-ui'
+import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import CampaignContextSelector from '../../components/CampaignContextSelector.vue'
 import DashboardContent from '../../components/DashboardContent.vue'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
@@ -12,12 +13,7 @@ const campaignId = ref<number | null>(null)
 
 <template>
   <div class="graduation-page">
-    <NResult
-      v-if="!isDepartment"
-      status="403"
-      :title="$t('graduation.common.noPermission')"
-      :description="$t('graduation.common.noPermissionDesc')"
-    />
+    <ForbiddenState v-if="!isDepartment" />
     <template v-else>
       <NCard class="context-card">
         <CampaignContextSelector v-model:campaign-id="campaignId" />
