@@ -63,8 +63,6 @@
     "operationSuccess": "操作成功",
     "operationFail": "操作失败",
     "empty": "暂无数据",
-    "noPermission": "权限不足",
-    "noPermissionDesc": "您没有权限访问此页面",
     "required": "必填项不能为空",
     "reviewScore": "评审分数",
     "membersPlaceholder": "选择团队成员（个人赛留空）"
