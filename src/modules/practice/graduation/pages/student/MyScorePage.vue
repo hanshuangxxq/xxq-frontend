@@ -5,13 +5,13 @@ import {
   NCard,
   NSpin,
   NEmpty,
-  NResult,
   NTag,
   NSpace,
   NDescriptions,
   NDescriptionsItem,
   useMessage,
 } from 'naive-ui'
+import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import CampaignContextSelector from '../../components/CampaignContextSelector.vue'
 import { fetchMyScore } from '../../api'
 import { scoreStatusTagType, formatDateTime } from '@/modules/practice/utils'
@@ -56,12 +56,7 @@ const showTotal = computed(
 
 <template>
   <div class="graduation-page">
-    <NResult
-      v-if="!isStudent"
-      status="403"
-      :title="$t('graduation.common.noPermission')"
-      :description="$t('graduation.common.noPermissionDesc')"
-    />
+    <ForbiddenState v-if="!isStudent" />
     <template v-else>
       <NCard class="context-card">
         <CampaignContextSelector
