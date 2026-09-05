@@ -9,12 +9,12 @@ import {
   NDataTable,
   NModal,
   NSelect,
-  NResult,
   NTag,
   NSpace,
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
+import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import CampaignContextSelector from '../../components/CampaignContextSelector.vue'
 import { fetchAssignmentOverview, fetchUnassignedStudentIds, fetchDashboard } from '../../api'
 import { fetchColleges } from '@/modules/college/api'
@@ -159,12 +159,7 @@ const columns = computed<DataTableColumns<AssignmentOverviewRow>>(() => [
 
 <template>
   <div class="graduation-page">
-    <NResult
-      v-if="!isAcademicAdmin"
-      status="403"
-      :title="$t('graduation.common.noPermission')"
-      :description="$t('graduation.common.noPermissionDesc')"
-    />
+    <ForbiddenState v-if="!isAcademicAdmin" />
     <template v-else>
       <NCard class="context-card">
         <CampaignContextSelector
