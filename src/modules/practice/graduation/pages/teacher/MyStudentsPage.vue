@@ -7,12 +7,12 @@ import {
   NEmpty,
   NButton,
   NDataTable,
-  NResult,
   NTag,
   NPopconfirm,
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
+import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import CampaignContextSelector from '../../components/CampaignContextSelector.vue'
 import { fetchMyAssignments, unpickStudent } from '../../api'
 import { assignmentSourceTagType, formatDateTime } from '@/modules/practice/utils'
@@ -129,12 +129,7 @@ const columns = computed<DataTableColumns<AssignmentResponse>>(() => [
 
 <template>
   <div class="graduation-page">
-    <NResult
-      v-if="!isTeacher"
-      status="403"
-      :title="$t('graduation.common.noPermission')"
-      :description="$t('graduation.common.noPermissionDesc')"
-    />
+    <ForbiddenState v-if="!isTeacher" />
     <template v-else>
       <NCard class="context-card">
         <CampaignContextSelector
