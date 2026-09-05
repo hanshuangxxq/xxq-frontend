@@ -14,12 +14,12 @@ import {
   NDatePicker,
   NRadioGroup,
   NRadio,
-  NResult,
   NTag,
   NSpace,
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
+import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import CampaignContextSelector from '../../components/CampaignContextSelector.vue'
 import { fetchMyAssignments, fetchGuidanceLogs, createGuidanceLog } from '../../api'
 import { tsToIso, formatDateTime } from '@/modules/practice/utils'
@@ -170,12 +170,7 @@ const logColumns = computed<DataTableColumns<GuidanceLogResponse>>(() => [
 
 <template>
   <div class="graduation-page">
-    <NResult
-      v-if="!isTeacher"
-      status="403"
-      :title="$t('graduation.common.noPermission')"
-      :description="$t('graduation.common.noPermissionDesc')"
-    />
+    <ForbiddenState v-if="!isTeacher" />
     <template v-else>
       <NCard class="context-card">
         <CampaignContextSelector
