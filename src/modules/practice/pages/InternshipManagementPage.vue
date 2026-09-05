@@ -20,10 +20,10 @@ import {
   NDatePicker,
   NRadioGroup,
   NRadio,
-  NResult,
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
+import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import EmptyState from '@/shared/components/EmptyState.vue'
 import {
   fetchInternships,
@@ -873,12 +873,7 @@ onMounted(() => {
 
 <template>
   <div class="practice-page">
-    <NResult
-      v-if="!canManage"
-      status="403"
-      :title="$t('practice.common.noPermission')"
-      :description="$t('practice.common.noPermissionDesc')"
-    />
+    <ForbiddenState v-if="!canManage" />
     <template v-else>
       <NTabs v-model:value="activeTab" type="line" animated @update:value="onTabChange">
         <!-- 实习项目 -->
