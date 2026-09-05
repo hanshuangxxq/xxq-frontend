@@ -12,9 +12,9 @@ import {
   NInput,
   NSpace,
   NTag,
-  NResult,
   useMessage,
 } from 'naive-ui'
+import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import {
   fetchAvailableCampaigns,
   fetchMyProposals,
@@ -146,12 +146,7 @@ onMounted(() => {
 
 <template>
   <div class="graduation-page">
-    <NResult
-      v-if="!isStudent"
-      status="403"
-      :title="$t('graduation.common.noPermission')"
-      :description="$t('graduation.common.noPermissionDesc')"
-    />
+    <ForbiddenState v-if="!isStudent" />
     <template v-else>
       <NSpin :show="loading">
         <NEmpty
