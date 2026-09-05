@@ -10,12 +10,12 @@ import {
   NForm,
   NFormItem,
   NInput,
-  NResult,
   NTag,
   NSpace,
   NAlert,
   useMessage,
 } from 'naive-ui'
+import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import CampaignContextSelector from '../../components/CampaignContextSelector.vue'
 import {
   fetchUnassignedStudentIds,
@@ -230,12 +230,7 @@ async function handleReassign(): Promise<void> {
 
 <template>
   <div class="graduation-page">
-    <NResult
-      v-if="!isDepartment"
-      status="403"
-      :title="$t('graduation.common.noPermission')"
-      :description="$t('graduation.common.noPermissionDesc')"
-    />
+    <ForbiddenState v-if="!isDepartment" />
     <template v-else>
       <NCard class="context-card">
         <NSpace align="center" :size="16">
