@@ -13,12 +13,12 @@ import {
   NInput,
   NSelect,
   NDatePicker,
-  NResult,
   NSpace,
   NTag,
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
+import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import CampaignContextSelector from '../../components/CampaignContextSelector.vue'
 import { fetchDefenseList, arrangeDefense, fetchDashboard } from '../../api'
 import { fetchTeachers } from '@/modules/curriculum/api'
@@ -219,12 +219,7 @@ const columns = computed<DataTableColumns<DefenseResponse>>(() => [
 
 <template>
   <div class="graduation-page">
-    <NResult
-      v-if="!isDepartment"
-      status="403"
-      :title="$t('graduation.common.noPermission')"
-      :description="$t('graduation.common.noPermissionDesc')"
-    />
+    <ForbiddenState v-if="!isDepartment" />
     <template v-else>
       <NCard class="context-card">
         <CampaignContextSelector
