@@ -18,10 +18,10 @@ import {
   NDatePicker,
   NRadioGroup,
   NRadio,
-  NResult,
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
+import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import EmptyState from '@/shared/components/EmptyState.vue'
 import {
   fetchCompetitions,
@@ -574,12 +574,7 @@ onMounted(() => {
 
 <template>
   <div class="practice-page">
-    <NResult
-      v-if="!isAcademicAdmin"
-      status="403"
-      :title="$t('practice.common.noPermission')"
-      :description="$t('practice.common.noPermissionDesc')"
-    />
+    <ForbiddenState v-if="!isAcademicAdmin" />
     <template v-else>
       <NCard :title="$t('practice.competition.mgTitle')">
         <template #header-extra>
