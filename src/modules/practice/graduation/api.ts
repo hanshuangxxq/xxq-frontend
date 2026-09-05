@@ -370,8 +370,18 @@ export function submitAdvisorScore(body: ScoreSubmitRequest): Promise<Result<Sco
   return api.post(`${BASE}/defense/scores/advisor`, body)
 }
 
+/** 指导评分录入列表：教师名下学生（含未生成成绩记录的骨架行） */
+export function fetchAdvisorScoreEntries(campaignId: number): Promise<Result<ScoreResponse[]>> {
+  return api.get(`${BASE}/defense/scores/advisor?campaignId=${campaignId}`)
+}
+
 export function submitReviewerScore(body: ScoreSubmitRequest): Promise<Result<ScoreResponse>> {
   return api.post(`${BASE}/defense/scores/reviewer`, body)
+}
+
+/** 评阅评分录入列表：本人为评阅人的学生（含答辩组） */
+export function fetchReviewerScoreEntries(campaignId: number): Promise<Result<ScoreResponse[]>> {
+  return api.get(`${BASE}/defense/scores/reviewer?campaignId=${campaignId}`)
 }
 
 export function submitDefenseScore(body: ScoreSubmitRequest): Promise<Result<ScoreResponse>> {
