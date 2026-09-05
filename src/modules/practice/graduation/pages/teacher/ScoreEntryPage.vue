@@ -11,7 +11,6 @@ import {
   NForm,
   NFormItem,
   NInputNumber,
-  NResult,
   NTag,
   NSpace,
   NTabs,
@@ -19,29 +18,28 @@ import {
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
-import { useAuthStore } from '@/stores/useAuthStore'
+import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import CampaignContextSelector from '../../components/CampaignContextSelector.vue'
 import {
-  fetchScores,
+  fetchAdvisorScoreEntries,
+  fetchReviewerScoreEntries,
   fetchTeacherTheses,
-  fetchDefenseList,
   submitAdvisorScore,
   submitReviewerScore,
 } from '../../api'
 import { scoreStatusTagType, formatDateTime } from '@/modules/practice/utils'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
-import type { ScoreResponse, DefenseResponse, ThesisResponse } from '../../types'
+import type { ScoreResponse, ThesisResponse } from '../../types'
 
 const { t } = useI18n()
 const message = useMessage()
 const { isTeacher } = useRoleCheck()
-const authStore = useAuthStore()
 
 const activeTab = ref('advisor')
 const campaignId = ref<number | null>(null)
-const scores = ref<ScoreResponse[]>([])
+const advisorRows = ref<ScoreResponse[]>([])
+const reviewerRows = ref<ScoreResponse[]>([])
 const theses = ref<ThesisResponse[]>([])
-const defenseList = ref<DefenseResponse[]>([])
 const loading = ref(false)
 
 /** 学生 id -> 最新版论文状态（用于 F-R-27 预判） */
@@ -61,14 +59,14 @@ async function loadData(): Promise<void> {
   if (campaignId.value == null) return
   loading.value = true
   try {
-    const [sRes, thRes, dRes] = await Promise.all([
-      fetchScores(campaignId.value),
+    const [aRes, rRes, thRes] = await Promise.all([
+      fetchAdvisorScoreEntries(campaignId.value),
+      fetchReviewerScoreEntries(campaignId.value),
       fetchTeacherTheses(campaignId.value),
-      fetchDefenseList(campaignId.value),
     ])
-    scores.value = sRes.data ?? []
+    advisorRows.value = aRes.data ?? []
+    reviewerRows.value = rRes.data ?? []
     theses.value = thRes.data ?? []
-    defenseList.value = dRes.data ?? []
   } catch (e) {
     message.error((e as Error).message || t('graduation.common.loadFail'))
   } finally {
@@ -78,9 +76,9 @@ async function loadData(): Promise<void> {
 
 function onCampaignChange(id: number | null): void {
   campaignId.value = id
-  scores.value = []
+  advisorRows.value = []
+  reviewerRows.value = []
   theses.value = []
-  defenseList.value = []
   if (id != null) void loadData()
 }
 
@@ -94,16 +92,13 @@ const scoreFor = ref<{
 const scoreValue = ref<number | null>(null)
 const saving = ref(false)
 
-function startScore(row: ScoreResponse | DefenseResponse, mode: 'advisor' | 'reviewer'): void {
+function startScore(row: ScoreResponse, mode: 'advisor' | 'reviewer'): void {
   scoreFor.value = {
     studentId: row.studentId,
     studentName: row.studentName,
     mode,
   }
-  scoreValue.value =
-    mode === 'advisor'
-      ? ((row as ScoreResponse).advisorScore ?? null)
-      : ((row as ScoreResponse).reviewerScore ?? null)
+  scoreValue.value = mode === 'advisor' ? (row.advisorScore ?? null) : (row.reviewerScore ?? null)
   showScore.value = true
 }
 
@@ -133,7 +128,7 @@ async function handleSubmitScore(): Promise<void> {
 }
 
 // ===== 列定义 =====
-const scoreRowKey = (row: ScoreResponse) => row.id
+const scoreRowKey = (row: ScoreResponse) => row.studentId
 
 const advisorColumns = computed<DataTableColumns<ScoreResponse>>(() => [
   { title: t('graduation.common.student'), key: 'studentName', width: 110 },
@@ -161,12 +156,14 @@ const advisorColumns = computed<DataTableColumns<ScoreResponse>>(() => [
     key: 'status',
     width: 110,
     align: 'center',
-    render: (r) =>
-      h(
+    render: (r) => {
+      if (!r.status) return '-'
+      return h(
         NTag,
         { type: scoreStatusTagType(r.status), size: 'small', bordered: false },
         () => r.status,
-      ),
+      )
+    },
   },
   {
     title: t('graduation.common.actions'),
@@ -193,15 +190,8 @@ const advisorColumns = computed<DataTableColumns<ScoreResponse>>(() => [
   },
 ])
 
-/** 评阅评分：本人为评阅人的学生（答辩安排 reviewerId = 当前教师） */
-const reviewerRows = computed(() => {
-  const myId = authStore.user?.userId
-  return defenseList.value.filter((d) => d.reviewerId === myId)
-})
-
-const defenseRowKey = (row: DefenseResponse) => row.id
-
-const reviewerColumns = computed<DataTableColumns<DefenseResponse>>(() => [
+/** 评阅评分：本人为评阅人的学生（由 /scores/reviewer 录入列表返回） */
+const reviewerColumns = computed<DataTableColumns<ScoreResponse>>(() => [
   { title: t('graduation.common.studentNo'), key: 'studentNo', width: 120 },
   { title: t('graduation.common.student'), key: 'studentName', width: 110 },
   {
@@ -215,18 +205,14 @@ const reviewerColumns = computed<DataTableColumns<DefenseResponse>>(() => [
     key: 'reviewerScore',
     width: 90,
     align: 'center',
-    render: (r) => {
-      const sc = scores.value.find((s) => s.studentId === r.studentId)
-      return sc?.reviewerScore ?? '-'
-    },
+    render: (r) => r.reviewerScore ?? '-',
   },
   {
     title: t('graduation.common.actions'),
     key: 'actions',
     width: 150,
     render: (row) => {
-      const sc = scores.value.find((s) => s.studentId === row.studentId)
-      if (sc?.status === '已发布') {
+      if (row.status === '已发布') {
         return h(NTag, { size: 'small', type: 'default', bordered: false }, () =>
           t('graduation.teacher.publishedReadonly'),
         )
@@ -248,12 +234,7 @@ const reviewerColumns = computed<DataTableColumns<DefenseResponse>>(() => [
 
 <template>
   <div class="graduation-page">
-    <NResult
-      v-if="!isTeacher"
-      status="403"
-      :title="$t('graduation.common.noPermission')"
-      :description="$t('graduation.common.noPermissionDesc')"
-    />
+    <ForbiddenState v-if="!isTeacher" />
     <template v-else>
       <NCard class="context-card">
         <CampaignContextSelector
@@ -267,13 +248,13 @@ const reviewerColumns = computed<DataTableColumns<DefenseResponse>>(() => [
           <NTabPane name="advisor" :tab="$t('graduation.teacher.advisorTab')">
             <NSpin :show="loading">
               <NEmpty
-                v-if="!loading && !scores.length"
+                v-if="!loading && !advisorRows.length"
                 :description="$t('graduation.common.empty')"
               />
               <NDataTable
                 v-else
                 :columns="advisorColumns"
-                :data="scores"
+                :data="advisorRows"
                 :row-key="scoreRowKey"
                 :single-line="false"
                 :bordered="false"
@@ -293,7 +274,7 @@ const reviewerColumns = computed<DataTableColumns<DefenseResponse>>(() => [
                 v-else
                 :columns="reviewerColumns"
                 :data="reviewerRows"
-                :row-key="defenseRowKey"
+                :row-key="scoreRowKey"
                 :single-line="false"
                 :bordered="false"
                 :scroll-x="620"
