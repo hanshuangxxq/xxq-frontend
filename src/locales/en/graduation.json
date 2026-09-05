@@ -71,8 +71,6 @@
     "saveFail": "Save failed",
     "loadFail": "Load failed",
     "empty": "No data",
-    "noPermission": "Permission denied",
-    "noPermissionDesc": "You do not have permission to access this page",
     "required": "This field is required",
     "approvalFlow": "Approval flow",
     "approvalStage": "Stage",
