@@ -12,13 +12,13 @@ import {
   NInput,
   NUpload,
   NDataTable,
-  NResult,
   NTag,
   NSpace,
   useMessage,
   type UploadFileInfo,
   type DataTableColumns,
 } from 'naive-ui'
+import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import CampaignContextSelector from '../../components/CampaignContextSelector.vue'
 import { fetchMyTheses, submitThesis, downloadThesis, fetchMyOpeningReport } from '../../api'
 import {
@@ -251,12 +251,7 @@ const thesisColumns = computed<DataTableColumns<ThesisResponse>>(() => [
 
 <template>
   <div class="graduation-page">
-    <NResult
-      v-if="!isStudent"
-      status="403"
-      :title="$t('graduation.common.noPermission')"
-      :description="$t('graduation.common.noPermissionDesc')"
-    />
+    <ForbiddenState v-if="!isStudent" />
     <template v-else>
       <NCard class="context-card">
         <CampaignContextSelector
