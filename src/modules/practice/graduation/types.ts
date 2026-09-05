@@ -437,6 +437,10 @@ export interface ScoreResponse {
   campaignId: number
   studentId: number
   studentName: string
+  /** 学号：仅教师录入列表（/scores/advisor、/scores/reviewer GET）填充 */
+  studentNo: string | null
+  /** 答辩组：仅评阅录入列表填充 */
+  groupName: string | null
   advisorScore: number | null
   advisorBy: number | null
   advisorName: string | null
