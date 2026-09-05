@@ -63,8 +63,6 @@
     "operationSuccess": "Done",
     "operationFail": "Operation failed",
     "empty": "No data",
-    "noPermission": "No permission",
-    "noPermissionDesc": "You do not have permission to access this page",
     "required": "Required field is empty",
     "reviewScore": "Review score",
     "membersPlaceholder": "Select team members (empty for individual)"
