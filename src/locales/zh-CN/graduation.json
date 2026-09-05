@@ -71,8 +71,6 @@
     "saveFail": "保存失败",
     "loadFail": "加载失败",
     "empty": "暂无数据",
-    "noPermission": "权限不足",
-    "noPermissionDesc": "您没有权限访问此页面",
     "required": "必填项不能为空",
     "approvalFlow": "审批流水",
     "approvalStage": "审批环节",
