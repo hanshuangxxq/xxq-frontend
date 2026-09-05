@@ -1,0 +1,282 @@
+/* 权限不足(403)守卫页:门禁扫描终端视觉。深色屏幕在浅色/深色主题下均成立 */
+.forbidden-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 62vh;
+}
+
+.forbidden-visual {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 380px;
+  max-width: 86vw;
+  padding: 28px 0 4px;
+}
+
+/* 终端后方的红色警戒光晕 */
+.forbidden-visual::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(229, 72, 77, 0.14) 0%, rgba(229, 72, 77, 0) 62%);
+  pointer-events: none;
+}
+
+/* 背景 403 水印数字 */
+.forbidden-code {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 168px;
+  font-weight: 800;
+  letter-spacing: 10px;
+  color: var(--app-text);
+  opacity: 0.05;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* ---- 门禁终端 ---- */
+.forbidden-terminal {
+  position: relative;
+  width: 312px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #141821;
+  border: 1px solid rgba(126, 146, 180, 0.28);
+  box-shadow:
+    0 18px 40px rgba(10, 16, 32, 0.28),
+    0 2px 8px rgba(10, 16, 32, 0.2);
+  animation: forbidden-bob 4.6s ease-in-out infinite;
+}
+
+.terminal-screen {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 196px;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    radial-gradient(120% 90% at 50% 0%, #202839 0%, #161b26 58%, #12161f 100%);
+  background-size:
+    22px 22px,
+    22px 22px,
+    100% 100%;
+}
+
+/* 屏幕左上角终端风格状态行(避开四角取景框) */
+.terminal-tag {
+  position: absolute;
+  top: 12px;
+  left: 34px;
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: #ff8f86;
+  opacity: 0.9;
+}
+
+.terminal-cursor {
+  display: inline-block;
+  width: 6px;
+  height: 11px;
+  margin-left: 4px;
+  vertical-align: -1px;
+  background: currentColor;
+  animation: forbidden-blink 1s steps(1) infinite;
+}
+
+/* 屏幕四角取景框 */
+.corner {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.32);
+}
+
+.corner-tl {
+  top: 9px;
+  left: 9px;
+  border-right: none;
+  border-bottom: none;
+  border-top-left-radius: 4px;
+}
+
+.corner-tr {
+  top: 9px;
+  right: 9px;
+  border-left: none;
+  border-bottom: none;
+  border-top-right-radius: 4px;
+}
+
+.corner-bl {
+  bottom: 9px;
+  left: 9px;
+  border-right: none;
+  border-top: none;
+  border-bottom-left-radius: 4px;
+}
+
+.corner-br {
+  bottom: 9px;
+  right: 9px;
+  border-left: none;
+  border-top: none;
+  border-bottom-right-radius: 4px;
+}
+
+/* 被扫描的工牌/证件卡 */
+.terminal-card {
+  width: 132px;
+  transform: rotate(-6deg);
+  filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.35));
+}
+
+/* 红色扫描线,在屏幕内往复扫动 */
+.scan-line {
+  position: absolute;
+  top: 16px;
+  left: 12px;
+  right: 12px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 92, 92, 0),
+    rgba(255, 92, 92, 0.95) 50%,
+    rgba(255, 92, 92, 0)
+  );
+  box-shadow: 0 0 12px rgba(255, 92, 92, 0.8);
+  animation: forbidden-scan 2.6s ease-in-out infinite alternate;
+}
+
+/* 拒绝徽章:压在证件卡右下角,红色脉冲 */
+.deny-badge {
+  position: absolute;
+  top: 126px;
+  right: 82px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #e5484d;
+  border: 3px solid #141821;
+  animation: forbidden-pulse 2s ease-out infinite;
+}
+
+.deny-badge svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* 终端底座:一颗红色 LED 闪烁 + 两颗熄灭 */
+.terminal-base {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  height: 26px;
+  background: #10141c;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.led {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2b3342;
+}
+
+.led-red {
+  background: #ff5a5a;
+  box-shadow: 0 0 8px rgba(255, 90, 90, 0.9);
+  animation: forbidden-led 1.1s ease-in-out infinite;
+}
+
+/* 底部黄黑警示条纹 */
+.hazard-strip {
+  height: 8px;
+  background: repeating-linear-gradient(-45deg, #f6c344 0 10px, #1c202a 10px 20px);
+}
+
+.forbidden-state :deep(.n-result-icon) {
+  margin-bottom: 20px;
+}
+
+@keyframes forbidden-scan {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(152px);
+  }
+}
+
+@keyframes forbidden-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(229, 72, 77, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgba(229, 72, 77, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(229, 72, 77, 0);
+  }
+}
+
+@keyframes forbidden-led {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@keyframes forbidden-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes forbidden-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .forbidden-terminal,
+  .scan-line,
+  .deny-badge,
+  .led-red,
+  .terminal-cursor {
+    animation: none;
+  }
+}
