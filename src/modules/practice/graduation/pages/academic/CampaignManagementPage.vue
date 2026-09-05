@@ -17,10 +17,10 @@ import {
   NTag,
   NSpace,
   NDivider,
-  NResult,
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
+import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import { fetchCampaigns, createCampaign, updateCampaign, updateCampaignStatus } from '../../api'
 import { fetchGrades } from '@/modules/grades/api'
 import { useRemotePagination } from '@/shared/composables/useRemotePagination'
@@ -379,12 +379,7 @@ onMounted(() => {
 
 <template>
   <div class="graduation-page">
-    <NResult
-      v-if="!isAcademicAdmin"
-      status="403"
-      :title="$t('graduation.common.noPermission')"
-      :description="$t('graduation.common.noPermissionDesc')"
-    />
+    <ForbiddenState v-if="!isAcademicAdmin" />
     <template v-else>
       <NCard :title="$t('graduation.academic.campaignMgmtTitle')">
         <template #header-extra>
