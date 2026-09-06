@@ -7,7 +7,7 @@ import scoreStatisticsSvg from '@/icons/scoreStatistics.svg'
 import teachingQualitySvg from '@/icons/teachingQuality.svg'
 import informationSvg from '@/icons/information.svg'
 
-/** 菜单叶子项:key 即路由路径;roles 为可见角色 */
+/** 菜单叶子项:key 即路由路径;roles 为可见角色(仅控制显隐,强制校验在路由 meta.roles,两处需保持一致) */
 export interface MenuLeaf {
   key: string
   labelKey: string
@@ -126,7 +126,8 @@ export const MENU_GROUPS: MenuGroup[] = [
       {
         key: '/practice/internship',
         labelKey: 'practice.internship.mgTitle',
-        roles: ['teacher', 'department', 'academic_admin'],
+        // 后端约定:实习与培训子域仅院系管理者+教务,教师不参与(报名/报告等为学生端)
+        roles: ['department', 'academic_admin'],
       },
       {
         key: '/practice/competition',
