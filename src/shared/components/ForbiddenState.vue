@@ -68,8 +68,10 @@ defineProps<{ title?: string; description?: string }>()
           </div>
         </div>
       </template>
+      <template v-if="$slots.footer" #footer>
+        <slot name="footer" />
+      </template>
     </NResult>
   </div>
 </template>
-
 <style scoped src="./ForbiddenState.css"></style>
