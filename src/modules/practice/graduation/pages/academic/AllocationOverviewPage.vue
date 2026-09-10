@@ -19,6 +19,8 @@ import CampaignContextSelector from '../../components/CampaignContextSelector.vu
 import { fetchAssignmentOverview, fetchUnassignedStudentIds, fetchDashboard } from '../../api'
 import { fetchColleges } from '@/modules/college/api'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import type { AssignmentOverviewRow, DashboardRow } from '../../types'
 
 const { t } = useI18n()
@@ -27,7 +29,7 @@ const { isAcademicAdmin } = useRoleCheck()
 
 const campaignId = ref<number | null>(null)
 const rows = ref<AssignmentOverviewRow[]>([])
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 const collegeId = ref<number | null>(null)
 const colleges = ref<{ id: number; name: string }[]>([])
 const unassignedCount = ref(0)
@@ -58,24 +60,24 @@ const unassignedColumns = computed<DataTableColumns<DashboardRow>>(() => [
   },
 ])
 
-async function loadData(): Promise<void> {
-  if (campaignId.value == null) return
-  loading.value = true
-  try {
-    const [oRes, uRes, dRes] = await Promise.all([
-      fetchAssignmentOverview(campaignId.value),
-      fetchUnassignedStudentIds(campaignId.value, collegeId.value),
-      fetchDashboard(campaignId.value, { page: 1, pageSize: 100 }),
-    ])
-    rows.value = oRes.data ?? []
-    unassignedIds.value = uRes.data ?? []
-    unassignedCount.value = unassignedIds.value.length
-    dashboardRows.value = dRes.data.records
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.loadFail'))
-  } finally {
-    loading.value = false
-  }
+function loadData(): Promise<void> {
+  return withLoading(async () => {
+    if (campaignId.value == null) return
+    try {
+      const [oRes, uRes, dRes] = await Promise.all([
+        fetchAssignmentOverview(campaignId.value),
+        fetchUnassignedStudentIds(campaignId.value, collegeId.value),
+        fetchDashboard(campaignId.value, { page: 1, pageSize: 100 }),
+      ])
+      rows.value = oRes.data ?? []
+      unassignedIds.value = uRes.data ?? []
+      unassignedCount.value = unassignedIds.value.length
+      dashboardRows.value = dRes.data.records
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('graduation.common.loadFail'))
+    }
+  })
 }
 
 /** 未分配学生明细（看板合并姓名/班级/院系，F-R-38 口径） */
