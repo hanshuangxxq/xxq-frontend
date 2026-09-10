@@ -39,6 +39,8 @@ export class BusinessError extends Error {
 export interface RequestOptions {
   /** 为 true 时错误消息不在 api 层弹出,由调用方自行处理 */
   silent?: boolean
+  /** 附加请求头(如登录请求携带的客户端私网 IP) */
+  headers?: Record<string, string>
 }
 
 async function request<T>(url: string, options?: RequestInit & RequestOptions): Promise<T> {
