@@ -1,14 +1,18 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { NForm, NFormItem, NInput, NButton, NCard, useMessage } from 'naive-ui'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useLoginGuard } from '@/modules/auth/useLoginGuard'
+import { startClientIpDetection } from '@/shared/utils/clientIp'
 
 const { t } = useI18n()
 const authStore = useAuthStore()
 const message = useMessage()
 const { isLocked, lockedSeconds, recordFailure, recordSuccess } = useLoginGuard()
+
+// 进入登录页即开始探测私网 IP,用户输入凭据期间即可完成,提交登录时无需等待
+onMounted(startClientIpDetection)
 
 const form = ref({
   account: '',
