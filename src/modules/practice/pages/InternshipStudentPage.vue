@@ -21,8 +21,10 @@ import {
   type DataTableColumns,
   type UploadFileInfo,
 } from 'naive-ui'
+import { isReportedError } from '@/shared/api'
 import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import EmptyState from '@/shared/components/EmptyState.vue'
+import { useLoading } from '@/shared/composables/useLoading'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import {
   fetchAvailableInternships,
@@ -60,25 +62,24 @@ const activeTab = ref('available')
 const MAX_SIZE = 20 * 1024 * 1024
 
 // ---- 可报名实习 ----
-const availLoading = ref(false)
+const { loading: availLoading, withLoading: withAvailLoading } = useLoading()
 const available = ref<InternshipResponse[]>([])
 
-async function loadAvailable() {
-  availLoading.value = true
-  try {
-    const res = await fetchAvailableInternships()
-    available.value = res.data
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.loadFail'))
-  } finally {
-    availLoading.value = false
-  }
+function loadAvailable() {
+  return withAvailLoading(async () => {
+    try {
+      const res = await fetchAvailableInternships()
+      available.value = res.data
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+    }
+  })
 }
 
 const showApply = ref(false)
 const applyingItem = ref<InternshipResponse | null>(null)
 const applyForm = ref<{ applyReason: string }>({ applyReason: '' })
-const savingApply = ref(false)
+const { loading: savingApply, withLoading: withSavingApply } = useLoading()
 
 function startApply(row: InternshipResponse) {
   applyingItem.value = row
@@ -86,22 +87,23 @@ function startApply(row: InternshipResponse) {
   showApply.value = true
 }
 
-async function handleApply() {
-  if (!applyingItem.value) return
-  savingApply.value = true
-  try {
-    await applyInternship({
-      internshipId: applyingItem.value.id,
-      applyReason: applyForm.value.applyReason || undefined,
-    })
-    message.success(t('practice.common.operationSuccess'))
-    showApply.value = false
-    await loadMyApplications()
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.operationFail'))
-  } finally {
-    savingApply.value = false
-  }
+function handleApply() {
+  const item = applyingItem.value
+  if (!item) return
+  return withSavingApply(async () => {
+    try {
+      await applyInternship({
+        internshipId: item.id,
+        applyReason: applyForm.value.applyReason || undefined,
+      })
+      message.success(t('practice.common.operationSuccess'))
+      showApply.value = false
+      await loadMyApplications()
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('practice.common.operationFail'))
+    }
+  })
 }
 
 const internshipRowKey = (row: InternshipResponse) => row.id
@@ -166,19 +168,18 @@ const availableColumns = computed<DataTableColumns<InternshipResponse>>(() => [
 ])
 
 // ---- 我的报名 ----
-const myAppLoading = ref(false)
+const { loading: myAppLoading, withLoading: withMyAppLoading } = useLoading()
 const myApplications = ref<InternshipApplicationResponse[]>([])
 
-async function loadMyApplications() {
-  myAppLoading.value = true
-  try {
-    const res = await fetchMyInternshipApplications()
-    myApplications.value = res.data
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.loadFail'))
-  } finally {
-    myAppLoading.value = false
-  }
+function loadMyApplications() {
+  return withMyAppLoading(async () => {
+    try {
+      const res = await fetchMyInternshipApplications()
+      myApplications.value = res.data
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+    }
+  })
 }
 
 async function handleRevoke(id: number) {
@@ -187,7 +188,7 @@ async function handleRevoke(id: number) {
     message.success(t('practice.common.revokeSuccess'))
     await loadMyApplications()
   } catch (e) {
-    message.error((e as Error).message || t('practice.common.revokeFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.revokeFail'))
   }
 }
 
@@ -260,19 +261,18 @@ const myAppColumns = computed<DataTableColumns<InternshipApplicationResponse>>((
 ])
 
 // ---- 我的实习报告 ----
-const reportLoading = ref(false)
+const { loading: reportLoading, withLoading: withReportLoading } = useLoading()
 const myReports = ref<InternshipReportResponse[]>([])
 
-async function loadMyReports() {
-  reportLoading.value = true
-  try {
-    const res = await fetchMyInternshipReports()
-    myReports.value = res.data
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.loadFail'))
-  } finally {
-    reportLoading.value = false
-  }
+function loadMyReports() {
+  return withReportLoading(async () => {
+    try {
+      const res = await fetchMyInternshipReports()
+      myReports.value = res.data
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+    }
+  })
 }
 
 const approvedInternships = computed(() =>
@@ -290,7 +290,7 @@ const reportForm = ref<{ internshipId: number | null; title: string; summary: st
   summary: '',
 })
 const fileList = ref<UploadFileInfo[]>([])
-const savingReport = ref(false)
+const { loading: savingReport, withLoading: withSavingReport } = useLoading()
 
 function startSubmitReport() {
   reportFormMode.value = 'create'
@@ -310,34 +310,35 @@ function startResubmitReport(row: InternshipReportResponse) {
   showReportForm.value = true
 }
 
-async function handleSubmitReport() {
+function handleSubmitReport() {
   const f = reportForm.value
   if (f.internshipId == null) return message.warning(t('practice.internship.internshipRequired'))
   if (!f.title.trim()) return message.warning(t('practice.internship.titleRequired'))
   const file = fileList.value[0]?.file
   if (!file) return message.warning(t('practice.common.fileRequired'))
   if (file.size > MAX_SIZE) return message.warning(t('practice.common.fileTooLarge'))
-  savingReport.value = true
-  try {
-    await submitInternshipReport(
-      { internshipId: f.internshipId, title: f.title.trim(), summary: f.summary || undefined },
-      file,
-    )
-    message.success(t('practice.internship.submitSuccess'))
-    showReportForm.value = false
-    await loadMyReports()
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.saveFail'))
-  } finally {
-    savingReport.value = false
-  }
+  const internshipId = f.internshipId
+  return withSavingReport(async () => {
+    try {
+      await submitInternshipReport(
+        { internshipId, title: f.title.trim(), summary: f.summary || undefined },
+        file,
+      )
+      message.success(t('practice.internship.submitSuccess'))
+      showReportForm.value = false
+      await loadMyReports()
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.saveFail'))
+    }
+  })
 }
 
 async function handleDownloadReport(id: number) {
   try {
     await downloadPracticeFile(`/practice/internship-reports/${id}/download`)
   } catch (e) {
-    message.error((e as Error).message || t('practice.common.operationFail'))
+    if (!isReportedError(e))
+      message.error((e as Error).message || t('practice.common.operationFail'))
   }
 }
 
@@ -347,7 +348,7 @@ async function handleDeleteReport(id: number) {
     message.success(t('practice.common.deleteSuccess'))
     await loadMyReports()
   } catch (e) {
-    message.error((e as Error).message || t('practice.common.deleteFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.deleteFail'))
   }
 }
 
@@ -430,19 +431,18 @@ const reportColumns = computed<DataTableColumns<InternshipReportResponse>>(() =>
 ])
 
 // ---- 可报名培训 ----
-const availTrainLoading = ref(false)
+const { loading: availTrainLoading, withLoading: withAvailTrainLoading } = useLoading()
 const availableTrainings = ref<TrainingResponse[]>([])
 
-async function loadAvailableTrainings() {
-  availTrainLoading.value = true
-  try {
-    const res = await fetchAvailableTrainings()
-    availableTrainings.value = res.data
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.loadFail'))
-  } finally {
-    availTrainLoading.value = false
-  }
+function loadAvailableTrainings() {
+  return withAvailTrainLoading(async () => {
+    try {
+      const res = await fetchAvailableTrainings()
+      availableTrainings.value = res.data
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+    }
+  })
 }
 
 async function handleEnroll(row: TrainingResponse) {
@@ -451,7 +451,8 @@ async function handleEnroll(row: TrainingResponse) {
     message.success(t('practice.common.operationSuccess'))
     await loadMyTrainings()
   } catch (e) {
-    message.error((e as Error).message || t('practice.common.operationFail'))
+    if (!isReportedError(e))
+      message.error((e as Error).message || t('practice.common.operationFail'))
   }
 }
 
@@ -501,19 +502,18 @@ const availTrainColumns = computed<DataTableColumns<TrainingResponse>>(() => [
 ])
 
 // ---- 我的培训 ----
-const myTrainLoading = ref(false)
+const { loading: myTrainLoading, withLoading: withMyTrainLoading } = useLoading()
 const myTrainings = ref<TrainingEnrollmentResponse[]>([])
 
-async function loadMyTrainings() {
-  myTrainLoading.value = true
-  try {
-    const res = await fetchMyTrainingEnrollments()
-    myTrainings.value = res.data
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.loadFail'))
-  } finally {
-    myTrainLoading.value = false
-  }
+function loadMyTrainings() {
+  return withMyTrainLoading(async () => {
+    try {
+      const res = await fetchMyTrainingEnrollments()
+      myTrainings.value = res.data
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+    }
+  })
 }
 
 async function handleCancelEnroll(id: number) {
@@ -522,7 +522,8 @@ async function handleCancelEnroll(id: number) {
     message.success(t('practice.common.operationSuccess'))
     await loadMyTrainings()
   } catch (e) {
-    message.error((e as Error).message || t('practice.common.operationFail'))
+    if (!isReportedError(e))
+      message.error((e as Error).message || t('practice.common.operationFail'))
   }
 }
 

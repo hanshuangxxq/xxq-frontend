@@ -12,6 +12,8 @@ let lastCheckAt = 0
 
 async function fetchServerVersion(signal?: AbortSignal): Promise<string | null> {
   try {
+    // version.json 是前端自身的静态资源(非后端 API),刻意不走 @/shared/api 封装:
+    // 无需认证、无需全局加载条,且必须绕过一切缓存
     // cache: 'no-store' + 时间戳参数双保险,绕过浏览器与中间代理的缓存
     const res = await fetch(`${import.meta.env.BASE_URL}version.json?t=${Date.now()}`, {
       cache: 'no-store',

@@ -30,6 +30,8 @@ import {
   assignClassTeacher,
 } from '../api'
 import { fetchTeachers } from '@/modules/curriculum/api'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import PagedSelect from '@/shared/components/PagedSelect.vue'
 import type { Teacher } from '@/modules/curriculum/types'
 import type { Campaign, CampaignStatus, SelectionClass, StudentSelectionMember } from '../types'
@@ -41,7 +43,7 @@ const router = useRouter()
 
 const campaignId = computed(() => Number(route.params.id))
 
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 const campaign = ref<Campaign | null>(null)
 const classes = ref<SelectionClass[]>([])
 
@@ -66,7 +68,7 @@ async function loadCampaign() {
     const res = await fetchCampaign(campaignId.value)
     campaign.value = res.data
   } catch (e) {
-    message.error((e as Error).message || t('selection.loadFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('selection.loadFail'))
   }
 }
 
@@ -75,20 +77,17 @@ async function loadClasses() {
     const res = await fetchCampaignClasses(campaignId.value)
     classes.value = res.data
   } catch (e) {
-    message.error((e as Error).message || t('selection.loadFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('selection.loadFail'))
   }
 }
 
-async function loadAll() {
-  loading.value = true
-  try {
+function loadAll() {
+  return withLoading(async () => {
     await loadCampaign()
     if (campaign.value?.status === 'FINALIZED') {
       await loadClasses()
     }
-  } finally {
-    loading.value = false
-  }
+  })
 }
 
 const memberColumns: DataTableColumns<StudentSelectionMember> = [
@@ -105,7 +104,7 @@ async function handleClose() {
     message.success(t('selection.close'))
     if (campaign.value) campaign.value.status = 'CLOSED'
   } catch (e) {
-    message.error((e as Error).message || t('selection.saveFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('selection.saveFail'))
   }
 }
 
@@ -119,7 +118,7 @@ async function handleFinalize() {
     if (campaign.value) campaign.value.status = 'FINALIZED'
     await loadClasses()
   } catch (e) {
-    message.error((e as Error).message || t('selection.saveFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('selection.saveFail'))
   }
 }
 
@@ -129,7 +128,7 @@ function goBack() {
 
 // ---- Teacher assignment ----
 const showTeacherModal = ref(false)
-const savingTeacher = ref(false)
+const { loading: savingTeacher, withLoading: withSavingTeacher } = useLoading()
 const editingClassId = ref<number | null>(null)
 const selectedTeacherId = ref<number | null>(null)
 /** 分配教师弹窗回显用（选中教师不在已加载页时兜底显示） */
@@ -154,7 +153,7 @@ async function openAssignTeacher(cls: SelectionClass) {
   showTeacherModal.value = true
 }
 
-async function handleSaveTeacher() {
+function handleSaveTeacher() {
   if (editingClassId.value == null) return
   const classId = editingClassId.value
   const target = classes.value.find((c) => c.classId === classId)
@@ -162,20 +161,20 @@ async function handleSaveTeacher() {
     showTeacherModal.value = false
     return
   }
-  savingTeacher.value = true
-  try {
-    const res = await assignClassTeacher(campaignId.value, classId, selectedTeacherId.value)
-    const idx = classes.value.findIndex((c) => c.classId === classId)
-    if (idx >= 0) {
-      classes.value[idx] = res.data
+  return withSavingTeacher(async () => {
+    try {
+      const res = await assignClassTeacher(campaignId.value, classId, selectedTeacherId.value)
+      const idx = classes.value.findIndex((c) => c.classId === classId)
+      if (idx >= 0) {
+        classes.value[idx] = res.data
+      }
+      message.success(t('selection.assignTeacherSuccess'))
+      showTeacherModal.value = false
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('selection.assignTeacherFail'))
     }
-    message.success(t('selection.assignTeacherSuccess'))
-    showTeacherModal.value = false
-  } catch (e) {
-    message.error((e as Error).message || t('selection.assignTeacherFail'))
-  } finally {
-    savingTeacher.value = false
-  }
+  })
 }
 
 async function handleUnassignTeacher(cls: SelectionClass) {
@@ -187,10 +186,9 @@ async function handleUnassignTeacher(cls: SelectionClass) {
     }
     message.success(t('selection.unassignTeacherSuccess'))
   } catch (e) {
-    message.error((e as Error).message || t('selection.assignTeacherFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('selection.assignTeacherFail'))
   }
 }
-
 onMounted(loadAll)
 </script>
 

@@ -12,6 +12,7 @@ import {
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
+import { isReportedError } from '@/shared/api'
 import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import CampaignContextSelector from '../../components/CampaignContextSelector.vue'
 import ReviewModal from '../../components/ReviewModal.vue'
@@ -21,6 +22,7 @@ import {
   duplicateResultTagType,
   formatDateTime,
 } from '@/modules/practice/utils'
+import { useLoading } from '@/shared/composables/useLoading'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import type { ThesisResponse } from '../../types'
 
@@ -30,20 +32,22 @@ const { isTeacher } = useRoleCheck()
 
 const campaignId = ref<number | null>(null)
 const list = ref<ThesisResponse[]>([])
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 
-async function loadList(): Promise<void> {
+function loadList() {
   if (campaignId.value == null) return
-  loading.value = true
-  try {
-    const res = await fetchTeacherTheses(campaignId.value)
-    // 最新版优先展示
-    list.value = (res.data ?? []).sort((a, b) => b.isLatest - a.isLatest || b.version - a.version)
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.loadFail'))
-  } finally {
-    loading.value = false
-  }
+  const id = campaignId.value
+  return withLoading(async () => {
+    try {
+      const res = await fetchTeacherTheses(id)
+      // 最新版优先展示
+      list.value = (res.data ?? []).sort((a, b) => b.isLatest - a.isLatest || b.version - a.version)
+    } catch (e) {
+      if (!isReportedError(e)) {
+        message.error((e as Error).message || t('graduation.common.loadFail'))
+      }
+    }
+  })
 }
 
 function onCampaignChange(id: number | null): void {
@@ -55,7 +59,7 @@ function onCampaignChange(id: number | null): void {
 // ===== 审查弹窗 =====
 const showReview = ref(false)
 const reviewing = ref<ThesisResponse | null>(null)
-const submitting = ref(false)
+const { loading: submitting, withLoading: withSubmitting } = useLoading()
 
 /** 仅最新版状态为「待形式审查」时可审查（其余只读） */
 function canReview(row: ThesisResponse): boolean {
@@ -67,29 +71,33 @@ function startReview(row: ThesisResponse): void {
   showReview.value = true
 }
 
-async function handleReview(value: { approve?: boolean; comment?: string }): Promise<void> {
+function handleReview(value: { approve?: boolean; comment?: string }) {
   if (!reviewing.value) return
-  submitting.value = true
-  try {
-    await reviewThesis(reviewing.value.id, {
-      approve: value.approve ?? false,
-      comment: value.comment,
-    })
-    message.success(t('graduation.common.operationSuccess'))
-    showReview.value = false
-    await loadList()
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.operationFail'))
-  } finally {
-    submitting.value = false
-  }
+  const target = reviewing.value
+  return withSubmitting(async () => {
+    try {
+      await reviewThesis(target.id, {
+        approve: value.approve ?? false,
+        comment: value.comment,
+      })
+      message.success(t('graduation.common.operationSuccess'))
+      showReview.value = false
+      await loadList()
+    } catch (e) {
+      if (!isReportedError(e)) {
+        message.error((e as Error).message || t('graduation.common.operationFail'))
+      }
+    }
+  })
 }
 
 async function handleDownload(row: ThesisResponse): Promise<void> {
   try {
     await downloadThesis(row.id)
   } catch (e) {
-    message.error((e as Error).message || t('graduation.common.operationFail'))
+    if (!isReportedError(e)) {
+      message.error((e as Error).message || t('graduation.common.operationFail'))
+    }
   }
 }
 

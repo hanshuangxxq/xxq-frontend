@@ -27,6 +27,8 @@ import { fetchTeachers } from '@/modules/curriculum/api'
 import PagedSelect from '@/shared/components/PagedSelect.vue'
 import { formatDateTime } from '@/modules/practice/utils'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import type { DashboardRow, CampaignResponse } from '../../types'
 import type { Teacher } from '@/modules/curriculum/types'
 
@@ -38,7 +40,7 @@ const campaignId = ref<number | null>(null)
 const topicEndTs = ref<number | null>(null)
 const rows = ref<DashboardRow[]>([])
 const unassignedIds = ref<number[]>([])
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 
 /** F-R-28：指定分配/改派仅在选题截止后开放 */
 const allocationOpen = computed(() => topicEndTs.value != null && Date.now() > topicEndTs.value)
@@ -75,21 +77,21 @@ const assignedStudents = computed(() =>
 
 const supervisorCapacity = ref<number | null>(null)
 
-async function loadData(): Promise<void> {
-  if (campaignId.value == null) return
-  loading.value = true
-  try {
-    const [dRes, uRes] = await Promise.all([
-      fetchDashboard(campaignId.value, { page: 1, pageSize: 100 }),
-      fetchUnassignedStudentIds(campaignId.value),
-    ])
-    rows.value = dRes.data.records
-    unassignedIds.value = uRes.data ?? []
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.loadFail'))
-  } finally {
-    loading.value = false
-  }
+function loadData(): Promise<void> {
+  return withLoading(async () => {
+    if (campaignId.value == null) return
+    try {
+      const [dRes, uRes] = await Promise.all([
+        fetchDashboard(campaignId.value, { page: 1, pageSize: 100 }),
+        fetchUnassignedStudentIds(campaignId.value),
+      ])
+      rows.value = dRes.data.records
+      unassignedIds.value = uRes.data ?? []
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('graduation.common.loadFail'))
+    }
+  })
 }
 
 function onCampaignChange(id: number | null): void {
@@ -119,7 +121,7 @@ const showAllocate = ref(false)
 const allocating = ref<DashboardRow | null>(null)
 const allocateTeacherId = ref<number | null>(null)
 const allocateTeacherLabel = ref<string | undefined>(undefined)
-const savingAllocate = ref(false)
+const { loading: savingAllocate, withLoading: withSavingAllocate } = useLoading()
 
 function onAllocateTeacherChange(v: string | number | null | Array<string | number>): void {
   allocateTeacherId.value = v as number | null
@@ -132,29 +134,29 @@ function startAllocate(row: DashboardRow): void {
   showAllocate.value = true
 }
 
-async function handleAllocate(): Promise<void> {
-  if (!allocating.value || campaignId.value == null) return
-  if (allocateTeacherId.value == null) {
-    message.warning(t('graduation.dept.chooseTeacher'))
-    return
-  }
-  savingAllocate.value = true
-  try {
-    await allocateStudent({
-      campaignId: campaignId.value,
-      studentId: allocating.value.studentId,
-      teacherId: allocateTeacherId.value,
-    })
-    message.success(t('graduation.common.operationSuccess'))
-    showAllocate.value = false
-    await loadData()
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.operationFail'))
-    // 409（名额满/已被选择）后刷新
-    await loadData()
-  } finally {
-    savingAllocate.value = false
-  }
+function handleAllocate(): Promise<void> {
+  return withSavingAllocate(async () => {
+    if (!allocating.value || campaignId.value == null) return
+    if (allocateTeacherId.value == null) {
+      message.warning(t('graduation.dept.chooseTeacher'))
+      return
+    }
+    try {
+      await allocateStudent({
+        campaignId: campaignId.value,
+        studentId: allocating.value.studentId,
+        teacherId: allocateTeacherId.value,
+      })
+      message.success(t('graduation.common.operationSuccess'))
+      showAllocate.value = false
+      await loadData()
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('graduation.common.operationFail'))
+      // 409（名额满/已被选择）后刷新
+      await loadData()
+    }
+  })
 }
 
 // ===== 改派弹窗 =====
@@ -163,7 +165,7 @@ const reassigning = ref<DashboardRow | null>(null)
 const newTeacherId = ref<number | null>(null)
 const newTeacherLabel = ref<string | undefined>(undefined)
 const reassignReason = ref('')
-const savingReassign = ref(false)
+const { loading: savingReassign, withLoading: withSavingReassign } = useLoading()
 
 function onNewTeacherChange(v: string | number | null | Array<string | number>): void {
   newTeacherId.value = v as number | null
@@ -186,45 +188,45 @@ const lastReassign = ref<{
   time: string | null
 } | null>(null)
 
-async function handleReassign(): Promise<void> {
-  if (!reassigning.value || campaignId.value == null) return
-  if (newTeacherId.value == null) {
-    message.warning(t('graduation.dept.chooseTeacher'))
-    return
-  }
-  if (newTeacherId.value === reassigning.value.teacherId) {
-    message.warning(t('graduation.dept.sameTeacherError'))
-    return
-  }
-  if (!reassignReason.value.trim()) {
-    message.warning(t('graduation.dept.reassignReasonRequired'))
-    return
-  }
-  savingReassign.value = true
-  try {
-    const res = await reassignStudent({
-      campaignId: campaignId.value,
-      studentId: reassigning.value.studentId,
-      newTeacherId: newTeacherId.value,
-      reason: reassignReason.value.trim(),
-    })
-    const a = res.data
-    lastReassign.value = {
-      studentName: a?.studentName ?? reassigning.value.studentName,
-      newTeacherName: a?.teacherName ?? '',
-      prevTeacherName: a?.prevTeacherName ?? null,
-      reason: a?.reassignReason ?? null,
-      time: a?.reassignTime ?? null,
+function handleReassign(): Promise<void> {
+  return withSavingReassign(async () => {
+    if (!reassigning.value || campaignId.value == null) return
+    if (newTeacherId.value == null) {
+      message.warning(t('graduation.dept.chooseTeacher'))
+      return
     }
-    message.success(t('graduation.common.operationSuccess'))
-    showReassign.value = false
-    await loadData()
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.operationFail'))
-    await loadData()
-  } finally {
-    savingReassign.value = false
-  }
+    if (newTeacherId.value === reassigning.value.teacherId) {
+      message.warning(t('graduation.dept.sameTeacherError'))
+      return
+    }
+    if (!reassignReason.value.trim()) {
+      message.warning(t('graduation.dept.reassignReasonRequired'))
+      return
+    }
+    try {
+      const res = await reassignStudent({
+        campaignId: campaignId.value,
+        studentId: reassigning.value.studentId,
+        newTeacherId: newTeacherId.value,
+        reason: reassignReason.value.trim(),
+      })
+      const a = res.data
+      lastReassign.value = {
+        studentName: a?.studentName ?? reassigning.value.studentName,
+        newTeacherName: a?.teacherName ?? '',
+        prevTeacherName: a?.prevTeacherName ?? null,
+        reason: a?.reassignReason ?? null,
+        time: a?.reassignTime ?? null,
+      }
+      message.success(t('graduation.common.operationSuccess'))
+      showReassign.value = false
+      await loadData()
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('graduation.common.operationFail'))
+      await loadData()
+    }
+  })
 }
 </script>
 

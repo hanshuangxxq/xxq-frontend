@@ -18,6 +18,7 @@ import {
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
+import { isReportedError } from '@/shared/api'
 import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import CampaignContextSelector from '../../components/CampaignContextSelector.vue'
 import {
@@ -28,6 +29,7 @@ import {
   submitReviewerScore,
 } from '../../api'
 import { scoreStatusTagType, formatDateTime } from '@/modules/practice/utils'
+import { useLoading } from '@/shared/composables/useLoading'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import type { ScoreResponse, ThesisResponse } from '../../types'
 
@@ -40,7 +42,7 @@ const campaignId = ref<number | null>(null)
 const advisorRows = ref<ScoreResponse[]>([])
 const reviewerRows = ref<ScoreResponse[]>([])
 const theses = ref<ThesisResponse[]>([])
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 
 /** 学生 id -> 最新版论文状态（用于 F-R-27 预判） */
 const thesisStatusOf = computed(() => {
@@ -55,23 +57,25 @@ function isDuplicatePassed(studentId: number): boolean {
   return thesisStatusOf.value.get(studentId) === '查重通过'
 }
 
-async function loadData(): Promise<void> {
+function loadData() {
   if (campaignId.value == null) return
-  loading.value = true
-  try {
-    const [aRes, rRes, thRes] = await Promise.all([
-      fetchAdvisorScoreEntries(campaignId.value),
-      fetchReviewerScoreEntries(campaignId.value),
-      fetchTeacherTheses(campaignId.value),
-    ])
-    advisorRows.value = aRes.data ?? []
-    reviewerRows.value = rRes.data ?? []
-    theses.value = thRes.data ?? []
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.loadFail'))
-  } finally {
-    loading.value = false
-  }
+  const id = campaignId.value
+  return withLoading(async () => {
+    try {
+      const [aRes, rRes, thRes] = await Promise.all([
+        fetchAdvisorScoreEntries(id),
+        fetchReviewerScoreEntries(id),
+        fetchTeacherTheses(id),
+      ])
+      advisorRows.value = aRes.data ?? []
+      reviewerRows.value = rRes.data ?? []
+      theses.value = thRes.data ?? []
+    } catch (e) {
+      if (!isReportedError(e)) {
+        message.error((e as Error).message || t('graduation.common.loadFail'))
+      }
+    }
+  })
 }
 
 function onCampaignChange(id: number | null): void {
@@ -90,7 +94,7 @@ const scoreFor = ref<{
   mode: 'advisor' | 'reviewer'
 } | null>(null)
 const scoreValue = ref<number | null>(null)
-const saving = ref(false)
+const { loading: saving, withLoading: withSaving } = useLoading()
 
 function startScore(row: ScoreResponse, mode: 'advisor' | 'reviewer'): void {
   scoreFor.value = {
@@ -102,29 +106,32 @@ function startScore(row: ScoreResponse, mode: 'advisor' | 'reviewer'): void {
   showScore.value = true
 }
 
-async function handleSubmitScore(): Promise<void> {
+function handleSubmitScore() {
   if (!scoreFor.value || campaignId.value == null) return
+  const target = scoreFor.value
+  const cid = campaignId.value
   const s = scoreValue.value
   if (s == null || !Number.isInteger(s) || s < 0 || s > 100) {
     message.warning(t('graduation.teacher.scoreRange'))
     return
   }
-  saving.value = true
-  try {
-    const body = { campaignId: campaignId.value, studentId: scoreFor.value.studentId, score: s }
-    if (scoreFor.value.mode === 'advisor') {
-      await submitAdvisorScore(body)
-    } else {
-      await submitReviewerScore(body)
+  return withSaving(async () => {
+    try {
+      const body = { campaignId: cid, studentId: target.studentId, score: s }
+      if (target.mode === 'advisor') {
+        await submitAdvisorScore(body)
+      } else {
+        await submitReviewerScore(body)
+      }
+      message.success(t('graduation.common.operationSuccess'))
+      showScore.value = false
+      await loadData()
+    } catch (e) {
+      if (!isReportedError(e)) {
+        message.error((e as Error).message || t('graduation.common.operationFail'))
+      }
     }
-    message.success(t('graduation.common.operationSuccess'))
-    showScore.value = false
-    await loadData()
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.operationFail'))
-  } finally {
-    saving.value = false
-  }
+  })
 }
 
 // ===== 列定义 =====

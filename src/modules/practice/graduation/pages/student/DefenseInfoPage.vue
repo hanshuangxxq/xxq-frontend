@@ -11,10 +11,12 @@ import {
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
+import { isReportedError } from '@/shared/api'
 import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import CampaignContextSelector from '../../components/CampaignContextSelector.vue'
 import { fetchDefenseList } from '../../api'
 import { formatDateTime } from '@/modules/practice/utils'
+import { useLoading } from '@/shared/composables/useLoading'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import type { DefenseResponse } from '../../types'
 
@@ -24,19 +26,21 @@ const { isStudent } = useRoleCheck()
 
 const campaignId = ref<number | null>(null)
 const list = ref<DefenseResponse[]>([])
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 
-async function loadList(): Promise<void> {
+function loadList() {
   if (campaignId.value == null) return
-  loading.value = true
-  try {
-    const res = await fetchDefenseList(campaignId.value)
-    list.value = res.data ?? []
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.loadFail'))
-  } finally {
-    loading.value = false
-  }
+  const id = campaignId.value
+  return withLoading(async () => {
+    try {
+      const res = await fetchDefenseList(id)
+      list.value = res.data ?? []
+    } catch (e) {
+      if (!isReportedError(e)) {
+        message.error((e as Error).message || t('graduation.common.loadFail'))
+      }
+    }
+  })
 }
 
 function onCampaignChange(id: number | null): void {

@@ -22,6 +22,8 @@ import CampaignContextSelector from '../../components/CampaignContextSelector.vu
 import { fetchScores, submitDefenseScore, confirmScore } from '../../api'
 import { scoreStatusTagType, formatDateTime } from '@/modules/practice/utils'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import type { ScoreResponse } from '../../types'
 
 const { t } = useI18n()
@@ -30,19 +32,19 @@ const { isDepartment } = useRoleCheck()
 
 const campaignId = ref<number | null>(null)
 const list = ref<ScoreResponse[]>([])
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 
-async function loadList(): Promise<void> {
-  if (campaignId.value == null) return
-  loading.value = true
-  try {
-    const res = await fetchScores(campaignId.value)
-    list.value = res.data ?? []
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.loadFail'))
-  } finally {
-    loading.value = false
-  }
+function loadList(): Promise<void> {
+  return withLoading(async () => {
+    if (campaignId.value == null) return
+    try {
+      const res = await fetchScores(campaignId.value)
+      list.value = res.data ?? []
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('graduation.common.loadFail'))
+    }
+  })
 }
 
 function onCampaignChange(id: number | null): void {
@@ -64,7 +66,7 @@ function missingItems(r: ScoreResponse): string[] {
 const showScore = ref(false)
 const scoreFor = ref<ScoreResponse | null>(null)
 const scoreValue = ref<number | null>(null)
-const saving = ref(false)
+const { loading: saving, withLoading: withSaving } = useLoading()
 
 function startScore(row: ScoreResponse): void {
   scoreFor.value = row
@@ -72,29 +74,29 @@ function startScore(row: ScoreResponse): void {
   showScore.value = true
 }
 
-async function handleSubmitScore(): Promise<void> {
-  if (!scoreFor.value || campaignId.value == null) return
-  const s = scoreValue.value
-  if (s == null || !Number.isInteger(s) || s < 0 || s > 100) {
-    message.warning(t('graduation.teacher.scoreRange'))
-    return
-  }
-  saving.value = true
-  try {
-    await submitDefenseScore({
-      campaignId: campaignId.value,
-      studentId: scoreFor.value.studentId,
-      score: s,
-    })
-    message.success(t('graduation.common.operationSuccess'))
-    showScore.value = false
-    await loadList()
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.operationFail'))
-    await loadList()
-  } finally {
-    saving.value = false
-  }
+function handleSubmitScore(): Promise<void> {
+  return withSaving(async () => {
+    if (!scoreFor.value || campaignId.value == null) return
+    const s = scoreValue.value
+    if (s == null || !Number.isInteger(s) || s < 0 || s > 100) {
+      message.warning(t('graduation.teacher.scoreRange'))
+      return
+    }
+    try {
+      await submitDefenseScore({
+        campaignId: campaignId.value,
+        studentId: scoreFor.value.studentId,
+        score: s,
+      })
+      message.success(t('graduation.common.operationSuccess'))
+      showScore.value = false
+      await loadList()
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('graduation.common.operationFail'))
+      await loadList()
+    }
+  })
 }
 
 // ===== 确认发布（F-R-33：仅 COMPLETE 可发布，发布后不可修改）=====
@@ -105,7 +107,8 @@ async function handleConfirm(row: ScoreResponse): Promise<void> {
     message.success(t('graduation.common.operationSuccess'))
     await loadList()
   } catch (e) {
-    message.error((e as Error).message || t('graduation.common.operationFail'))
+    if (!isReportedError(e))
+      message.error((e as Error).message || t('graduation.common.operationFail'))
     await loadList()
   }
 }

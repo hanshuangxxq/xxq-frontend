@@ -20,6 +20,8 @@ import {
 import { fetchMajors, createMajor, updateMajor, deleteMajor } from '../api'
 import { fetchColleges } from '@/modules/college/api'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import type { College } from '@/modules/college/types'
 import type { Major, MajorForm } from '../types'
 
@@ -27,7 +29,7 @@ const { t } = useI18n()
 const message = useMessage()
 const { isAcademicAdmin } = useRoleCheck()
 
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 const data = ref<Major[]>([])
 
 const colleges = ref<College[]>([])
@@ -88,24 +90,23 @@ const columns = computed<DataTableColumns<Major>>(() => {
   ]
 })
 
-async function loadData() {
-  loading.value = true
-  try {
-    const res = await fetchMajors()
-    data.value = res.data.sort((a, b) =>
-      a.majorName.localeCompare(b.majorName, 'zh-CN', { numeric: true }),
-    )
-  } catch (e) {
-    message.error((e as Error).message || t('majors.loadFail'))
-  } finally {
-    loading.value = false
-  }
+function loadData() {
+  return withLoading(async () => {
+    try {
+      const res = await fetchMajors()
+      data.value = res.data.sort((a, b) =>
+        a.majorName.localeCompare(b.majorName, 'zh-CN', { numeric: true }),
+      )
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('majors.loadFail'))
+    }
+  })
 }
 
 const showForm = ref(false)
 const formMode = ref<'create' | 'edit'>('create')
 const editingId = ref<number | null>(null)
-const saving = ref(false)
+const { loading: saving, withLoading: withSaving } = useLoading()
 
 const emptyForm = (): MajorForm => ({ majorName: '', collegeId: null })
 const form = ref<MajorForm>(emptyForm())
@@ -124,22 +125,21 @@ function startEdit(row: Major) {
   showForm.value = true
 }
 
-async function handleSave() {
-  saving.value = true
-  try {
-    if (formMode.value === 'create') {
-      await createMajor(form.value)
-    } else {
-      await updateMajor(editingId.value!, form.value)
+function handleSave() {
+  return withSaving(async () => {
+    try {
+      if (formMode.value === 'create') {
+        await createMajor(form.value)
+      } else {
+        await updateMajor(editingId.value!, form.value)
+      }
+      message.success(t('majors.saveSuccess'))
+      showForm.value = false
+      await loadData()
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('majors.saveFail'))
     }
-    message.success(t('majors.saveSuccess'))
-    showForm.value = false
-    await loadData()
-  } catch (e) {
-    message.error((e as Error).message || t('majors.saveFail'))
-  } finally {
-    saving.value = false
-  }
+  })
 }
 
 async function handleDelete(id: number) {
@@ -148,7 +148,7 @@ async function handleDelete(id: number) {
     message.success(t('majors.deleteSuccess'))
     await loadData()
   } catch (e) {
-    message.error((e as Error).message || t('majors.deleteFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('majors.deleteFail'))
   }
 }
 

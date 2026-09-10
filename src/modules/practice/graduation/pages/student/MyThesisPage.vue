@@ -18,6 +18,7 @@ import {
   type UploadFileInfo,
   type DataTableColumns,
 } from 'naive-ui'
+import { isReportedError } from '@/shared/api'
 import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import CampaignContextSelector from '../../components/CampaignContextSelector.vue'
 import { fetchMyTheses, submitThesis, downloadThesis, fetchMyOpeningReport } from '../../api'
@@ -27,6 +28,7 @@ import {
   validateUploadFile,
   formatDateTime,
 } from '@/modules/practice/utils'
+import { useLoading } from '@/shared/composables/useLoading'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import type { ThesisResponse, DuplicateCheckResponse, CampaignResponse } from '../../types'
 
@@ -36,7 +38,7 @@ const { isStudent } = useRoleCheck()
 
 const campaignId = ref<number | null>(null)
 const theses = ref<ThesisResponse[]>([])
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 
 /** 门禁预判：开题已通过（F-R-41，后端 409 兜底） */
 const gateOpen = ref(false)
@@ -74,17 +76,18 @@ async function checkGate(): Promise<void> {
   }
 }
 
-async function loadTheses(): Promise<void> {
+function loadTheses() {
   if (campaignId.value == null) return
-  loading.value = true
-  try {
-    const res = await fetchMyTheses(campaignId.value)
-    theses.value = res.data ?? []
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.loadFail'))
-  } finally {
-    loading.value = false
-  }
+  return withLoading(async () => {
+    try {
+      const res = await fetchMyTheses(campaignId.value)
+      theses.value = res.data ?? []
+    } catch (e) {
+      if (!isReportedError(e)) {
+        message.error((e as Error).message || t('graduation.common.loadFail'))
+      }
+    }
+  })
 }
 
 function onCampaignChange(id: number | null): void {
@@ -102,7 +105,7 @@ function onCampaignChange(id: number | null): void {
 const showForm = ref(false)
 const form = ref({ title: '' })
 const fileList = ref<UploadFileInfo[]>([])
-const saving = ref(false)
+const { loading: saving, withLoading: withSaving } = useLoading()
 
 function startSubmit(): void {
   form.value = { title: latest.value?.title ?? '' }
@@ -110,8 +113,9 @@ function startSubmit(): void {
   showForm.value = true
 }
 
-async function handleSubmit(): Promise<void> {
+function handleSubmit() {
   if (campaignId.value == null) return
+  const id = campaignId.value
   if (!form.value.title.trim()) {
     message.warning(t('graduation.student.titleRequired'))
     return
@@ -130,24 +134,27 @@ async function handleSubmit(): Promise<void> {
     message.warning(t('graduation.common.fileTooLarge'))
     return
   }
-  saving.value = true
-  try {
-    await submitThesis({ campaignId: campaignId.value, title: form.value.title.trim() }, raw)
-    message.success(t('graduation.common.operationSuccess'))
-    showForm.value = false
-    await loadTheses()
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.operationFail'))
-  } finally {
-    saving.value = false
-  }
+  return withSaving(async () => {
+    try {
+      await submitThesis({ campaignId: id, title: form.value.title.trim() }, raw)
+      message.success(t('graduation.common.operationSuccess'))
+      showForm.value = false
+      await loadTheses()
+    } catch (e) {
+      if (!isReportedError(e)) {
+        message.error((e as Error).message || t('graduation.common.operationFail'))
+      }
+    }
+  })
 }
 
 async function handleDownload(row: ThesisResponse): Promise<void> {
   try {
     await downloadThesis(row.id)
   } catch (e) {
-    message.error((e as Error).message || t('graduation.common.operationFail'))
+    if (!isReportedError(e)) {
+      message.error((e as Error).message || t('graduation.common.operationFail'))
+    }
   }
 }
 

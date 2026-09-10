@@ -32,24 +32,25 @@ import {
 } from '../api'
 import type { EvaluationTemplateDto, EvaluationItemDto, TemplateStatusCode } from '../types'
 import { formatDateTime } from '../utils'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 
 const { t } = useI18n()
 const message = useMessage()
 
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 const data = ref<EvaluationTemplateDto[]>([])
 
-async function loadData() {
-  loading.value = true
-  try {
-    const res = await fetchEvaluationTemplates()
-    data.value = res.data
-  } catch (e) {
-    message.error((e as Error).message || t('analysis.evLoadFail'))
-    data.value = []
-  } finally {
-    loading.value = false
-  }
+function loadData() {
+  return withLoading(async () => {
+    try {
+      const res = await fetchEvaluationTemplates()
+      data.value = res.data
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('analysis.evLoadFail'))
+      data.value = []
+    }
+  })
 }
 
 const evaluationTemplateRowKey = (row: EvaluationTemplateDto) => row.id
@@ -150,7 +151,7 @@ async function handleSetDefault(id: number) {
     message.success(t('analysis.evSetDefaultSuccess'))
     await loadData()
   } catch (e) {
-    message.error((e as Error).message || t('analysis.evStatusUpdateFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('analysis.evStatusUpdateFail'))
   }
 }
 
@@ -160,7 +161,7 @@ async function handleToggleStatus(id: number, status: TemplateStatusCode) {
     message.success(t('analysis.evStatusUpdateSuccess'))
     await loadData()
   } catch (e) {
-    message.error((e as Error).message || t('analysis.evStatusUpdateFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('analysis.evStatusUpdateFail'))
   }
 }
 
@@ -170,7 +171,8 @@ async function handleDelete(id: number) {
     message.success(t('analysis.evTemplateDeleteSuccess'))
     await loadData()
   } catch (e) {
-    message.error((e as Error).message || t('analysis.evTemplateDeleteFail'))
+    if (!isReportedError(e))
+      message.error((e as Error).message || t('analysis.evTemplateDeleteFail'))
   }
 }
 
@@ -179,7 +181,7 @@ const allItems = ref<EvaluationItemDto[]>([])
 const showForm = ref(false)
 const formMode = ref<'create' | 'edit'>('create')
 const editingId = ref<number | null>(null)
-const saving = ref(false)
+const { loading: saving, withLoading: withSaving } = useLoading()
 
 interface TemplateItemRow {
   itemId: number
@@ -263,7 +265,7 @@ function startEdit(row: EvaluationTemplateDto) {
   showForm.value = true
 }
 
-async function handleSave() {
+function handleSave() {
   const name = form.value.name.trim()
   if (!name) {
     message.warning(t('analysis.evTemplateNameRequired'))
@@ -273,34 +275,34 @@ async function handleSave() {
     message.warning(t('analysis.evTemplateNoItems'))
     return
   }
-  saving.value = true
-  try {
-    const items = form.value.items.map((it) => ({
-      itemId: it.itemId,
-      sortOrder: it.sortOrder,
-      required: it.required ? 1 : 0,
-    }))
-    if (formMode.value === 'create') {
-      await createEvaluationTemplate({
-        name,
-        description: form.value.description.trim() || undefined,
-        items,
-      })
-    } else {
-      await updateEvaluationTemplate(editingId.value!, {
-        name,
-        description: form.value.description.trim() || undefined,
-        items,
-      })
+  return withSaving(async () => {
+    try {
+      const items = form.value.items.map((it) => ({
+        itemId: it.itemId,
+        sortOrder: it.sortOrder,
+        required: it.required ? 1 : 0,
+      }))
+      if (formMode.value === 'create') {
+        await createEvaluationTemplate({
+          name,
+          description: form.value.description.trim() || undefined,
+          items,
+        })
+      } else {
+        await updateEvaluationTemplate(editingId.value!, {
+          name,
+          description: form.value.description.trim() || undefined,
+          items,
+        })
+      }
+      message.success(t('analysis.evSubmitSuccess'))
+      showForm.value = false
+      await loadData()
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('analysis.evTemplateSaveFail'))
     }
-    message.success(t('analysis.evSubmitSuccess'))
-    showForm.value = false
-    await loadData()
-  } catch (e) {
-    message.error((e as Error).message || t('analysis.evTemplateSaveFail'))
-  } finally {
-    saving.value = false
-  }
+  })
 }
 
 async function loadItems() {

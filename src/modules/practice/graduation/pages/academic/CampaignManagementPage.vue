@@ -24,6 +24,8 @@ import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import { fetchCampaigns, createCampaign, updateCampaign, updateCampaignStatus } from '../../api'
 import { fetchGrades } from '@/modules/grades/api'
 import { useRemotePagination } from '@/shared/composables/useRemotePagination'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import { campaignStatusTagType, formatDateTime, tsToIso } from '@/modules/practice/utils'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import type {
@@ -38,7 +40,7 @@ const message = useMessage()
 const { isAcademicAdmin } = useRoleCheck()
 
 const campaigns = ref<CampaignResponse[]>([])
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 const { pagination, reset } = useRemotePagination(loadCampaigns)
 const filterStatus = ref<CampaignStatusCode | null>(null)
 
@@ -50,21 +52,21 @@ const statusOptions = computed(() => [
   { label: t('graduation.common.campaignClosed'), value: 'CLOSED' as CampaignStatusCode },
 ])
 
-async function loadCampaigns(): Promise<void> {
-  loading.value = true
-  try {
-    const res = await fetchCampaigns({
-      status: filterStatus.value ?? undefined,
-      page: pagination.page,
-      pageSize: pagination.pageSize,
-    })
-    campaigns.value = res.data.records
-    pagination.itemCount = res.data.total
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.loadFail'))
-  } finally {
-    loading.value = false
-  }
+function loadCampaigns(): Promise<void> {
+  return withLoading(async () => {
+    try {
+      const res = await fetchCampaigns({
+        status: filterStatus.value ?? undefined,
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+      })
+      campaigns.value = res.data.records
+      pagination.itemCount = res.data.total
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('graduation.common.loadFail'))
+    }
+  })
 }
 
 function handleFilterChange(): void {
@@ -86,7 +88,7 @@ const pendingStatus = ref<{
   code: CampaignStatusCode
   label: string
 } | null>(null)
-const changingStatus = ref(false)
+const { loading: changingStatus, withLoading: withChangingStatus } = useLoading()
 
 function requestStatusChange(row: CampaignResponse, code: string): void {
   const target = statusOptions.value.find((o) => o.value === code)
@@ -95,20 +97,20 @@ function requestStatusChange(row: CampaignResponse, code: string): void {
   showStatusConfirm.value = true
 }
 
-async function handleStatusChange(): Promise<void> {
-  const p = pendingStatus.value
-  if (!p) return
-  changingStatus.value = true
-  try {
-    await updateCampaignStatus(p.row.id, p.code)
-    message.success(t('graduation.common.operationSuccess'))
-    showStatusConfirm.value = false
-    await loadCampaigns()
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.operationFail'))
-  } finally {
-    changingStatus.value = false
-  }
+function handleStatusChange(): Promise<void> {
+  return withChangingStatus(async () => {
+    const p = pendingStatus.value
+    if (!p) return
+    try {
+      await updateCampaignStatus(p.row.id, p.code)
+      message.success(t('graduation.common.operationSuccess'))
+      showStatusConfirm.value = false
+      await loadCampaigns()
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('graduation.common.operationFail'))
+    }
+  })
 }
 
 // ===== 创建/编辑表单 =====
@@ -133,7 +135,7 @@ interface CampaignForm {
 const showForm = ref(false)
 const formMode = ref<'create' | 'edit'>('create')
 const editingId = ref<number | null>(null)
-const saving = ref(false)
+const { loading: saving, withLoading: withSaving } = useLoading()
 /** 选题开始后编辑受限（F-R-36） */
 const locked = ref(false)
 const originalTopicEndTs = ref<number | null>(null)
@@ -256,40 +258,39 @@ function bodyOf(): CampaignCreateRequest {
   }
 }
 
-async function handleSave(): Promise<void> {
-  nameError.value = ''
-  gradeError.value = ''
-  const err = validateForm()
-  if (err) {
-    message.warning(err)
-    return
-  }
-  saving.value = true
-  try {
-    if (formMode.value === 'create') {
-      await createCampaign(bodyOf())
-    } else {
-      // F-R-36：选题开始后仅传允许改的字段
-      const b: CampaignUpdateRequest = { ...bodyOf() }
-      if (locked.value) {
-        delete b.name
-        delete b.allowedGradeIds
-        delete b.topicStartTime
-      }
-      await updateCampaign(editingId.value!, b)
+function handleSave(): Promise<void> {
+  return withSaving(async () => {
+    nameError.value = ''
+    gradeError.value = ''
+    const err = validateForm()
+    if (err) {
+      message.warning(err)
+      return
     }
-    message.success(t('graduation.common.saveSuccess'))
-    showForm.value = false
-    await loadCampaigns()
-  } catch (e) {
-    const msg = (e as Error).message || ''
-    message.error(msg || t('graduation.common.saveFail'))
-    // F-R-37：409 冲突在对应字段附近提示
-    if (msg.includes('同名')) nameError.value = msg
-    if (msg.includes('同年级')) gradeError.value = msg
-  } finally {
-    saving.value = false
-  }
+    try {
+      if (formMode.value === 'create') {
+        await createCampaign(bodyOf())
+      } else {
+        // F-R-36：选题开始后仅传允许改的字段
+        const b: CampaignUpdateRequest = { ...bodyOf() }
+        if (locked.value) {
+          delete b.name
+          delete b.allowedGradeIds
+          delete b.topicStartTime
+        }
+        await updateCampaign(editingId.value!, b)
+      }
+      message.success(t('graduation.common.saveSuccess'))
+      showForm.value = false
+      await loadCampaigns()
+    } catch (e) {
+      const msg = (e as Error).message || ''
+      if (!isReportedError(e)) message.error(msg || t('graduation.common.saveFail'))
+      // F-R-37：409 冲突在对应字段附近提示
+      if (msg.includes('同名')) nameError.value = msg
+      if (msg.includes('同年级')) gradeError.value = msg
+    }
+  })
 }
 
 const campaignRowKey = (row: CampaignResponse) => row.id

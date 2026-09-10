@@ -18,6 +18,8 @@ import CampaignContextSelector from '../../components/CampaignContextSelector.vu
 import { fetchScores, exportScores, fetchDashboard } from '../../api'
 import { scoreStatusTagType, formatDateTime } from '@/modules/practice/utils'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import type { ScoreResponse } from '../../types'
 
 const { t } = useI18n()
@@ -26,8 +28,8 @@ const { isAcademicAdmin } = useRoleCheck()
 
 const campaignId = ref<number | null>(null)
 const list = ref<ScoreResponse[]>([])
-const loading = ref(false)
-const exporting = ref(false)
+const { loading, withLoading } = useLoading()
+const { loading: exporting, withLoading: withExporting } = useLoading()
 const collegeFilter = ref<string | null>(null)
 
 /** 学号/院系来自看板行合并（ScoreResponse 不含学号/院系） */
@@ -46,25 +48,25 @@ const filteredRows = computed(() => {
   )
 })
 
-async function loadData(): Promise<void> {
-  if (campaignId.value == null) return
-  loading.value = true
-  try {
-    const [sRes, dRes] = await Promise.all([
-      fetchScores(campaignId.value),
-      fetchDashboard(campaignId.value, { page: 1, pageSize: 100 }),
-    ])
-    list.value = sRes.data ?? []
-    const meta = new Map<number, { studentNo: string; collegeName: string }>()
-    for (const r of dRes.data.records) {
-      meta.set(r.studentId, { studentNo: r.studentNo, collegeName: r.collegeName })
+function loadData(): Promise<void> {
+  return withLoading(async () => {
+    if (campaignId.value == null) return
+    try {
+      const [sRes, dRes] = await Promise.all([
+        fetchScores(campaignId.value),
+        fetchDashboard(campaignId.value, { page: 1, pageSize: 100 }),
+      ])
+      list.value = sRes.data ?? []
+      const meta = new Map<number, { studentNo: string; collegeName: string }>()
+      for (const r of dRes.data.records) {
+        meta.set(r.studentId, { studentNo: r.studentNo, collegeName: r.collegeName })
+      }
+      studentMeta.value = meta
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('graduation.common.loadFail'))
     }
-    studentMeta.value = meta
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.loadFail'))
-  } finally {
-    loading.value = false
-  }
+  })
 }
 
 function onCampaignChange(id: number | null): void {
@@ -75,16 +77,16 @@ function onCampaignChange(id: number | null): void {
   if (id != null) void loadData()
 }
 
-async function handleExport(): Promise<void> {
-  if (campaignId.value == null) return
-  exporting.value = true
-  try {
-    await exportScores(campaignId.value)
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.operationFail'))
-  } finally {
-    exporting.value = false
-  }
+function handleExport(): Promise<void> {
+  return withExporting(async () => {
+    if (campaignId.value == null) return
+    try {
+      await exportScores(campaignId.value)
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('graduation.common.operationFail'))
+    }
+  })
 }
 
 const scoreRowKey = (row: ScoreResponse) => row.id

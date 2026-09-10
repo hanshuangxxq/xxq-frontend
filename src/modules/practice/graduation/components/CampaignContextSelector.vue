@@ -5,6 +5,7 @@ import { NSelect, NTag, NSpace, NText, NDivider } from 'naive-ui'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { fetchAvailableCampaigns, fetchCampaigns, fetchSelectorCampaigns } from '../api'
 import { fetchAllPages } from '@/shared/pagination'
+import { useLoading } from '@/shared/composables/useLoading'
 import { campaignStatusTagType } from '@/modules/practice/utils'
 import type { CampaignResponse } from '../types'
 
@@ -29,7 +30,7 @@ const { t } = useI18n()
 const authStore = useAuthStore()
 
 const campaigns = ref<CampaignResponse[]>([])
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 
 const isStudent = computed(() => authStore.user?.userType === 'student')
 const isAcademic = computed(() => authStore.user?.userType === 'academic_admin')
@@ -102,37 +103,36 @@ const processWindow = computed<{
   return { label, start, end, open, text }
 })
 
-async function loadCampaigns(): Promise<void> {
-  loading.value = true
-  try {
-    if (isStudent.value) {
-      const res = await fetchAvailableCampaigns()
-      campaigns.value = res.data ?? []
-    } else if (isAcademic.value) {
-      // 教务无 /selector 权限，走分页列表拉全量；过滤草稿与 /selector 语义对齐
-      const all = await fetchAllPages((page, pageSize) => fetchCampaigns({ page, pageSize }))
-      campaigns.value = all.filter((c) => c.status !== '草稿')
-    } else {
-      const res = await fetchSelectorCampaigns()
-      campaigns.value = res.data ?? []
+function loadCampaigns(): Promise<void> {
+  return withLoading(async () => {
+    try {
+      if (isStudent.value) {
+        const res = await fetchAvailableCampaigns()
+        campaigns.value = res.data ?? []
+      } else if (isAcademic.value) {
+        // 教务无 /selector 权限，走分页列表拉全量；过滤草稿与 /selector 语义对齐
+        const all = await fetchAllPages((page, pageSize) => fetchCampaigns({ page, pageSize }))
+        campaigns.value = all.filter((c) => c.status !== '草稿')
+      } else {
+        const res = await fetchSelectorCampaigns()
+        campaigns.value = res.data ?? []
+      }
+      // 优先恢复记忆的活动，否则默认选第一个（最新）
+      const remembered = localStorage.getItem(storageKey.value)
+      const hit =
+        campaigns.value.find((c) => String(c.id) === remembered) ?? campaigns.value[0] ?? null
+      if (hit && hit.id !== props.campaignId) {
+        emit('update:campaignId', hit.id)
+        emit('update:campaign', hit)
+        localStorage.setItem(storageKey.value, String(hit.id))
+      } else if (!hit) {
+        emit('update:campaignId', null)
+        emit('update:campaign', null)
+      }
+    } catch {
+      campaigns.value = []
     }
-    // 优先恢复记忆的活动，否则默认选第一个（最新）
-    const remembered = localStorage.getItem(storageKey.value)
-    const hit =
-      campaigns.value.find((c) => String(c.id) === remembered) ?? campaigns.value[0] ?? null
-    if (hit && hit.id !== props.campaignId) {
-      emit('update:campaignId', hit.id)
-      emit('update:campaign', hit)
-      localStorage.setItem(storageKey.value, String(hit.id))
-    } else if (!hit) {
-      emit('update:campaignId', null)
-      emit('update:campaign', null)
-    }
-  } catch {
-    campaigns.value = []
-  } finally {
-    loading.value = false
-  }
+  })
 }
 
 function handleChange(id: number | null): void {

@@ -11,10 +11,12 @@ import {
   NDescriptionsItem,
   useMessage,
 } from 'naive-ui'
+import { isReportedError } from '@/shared/api'
 import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import CampaignContextSelector from '../../components/CampaignContextSelector.vue'
 import { fetchMyScore } from '../../api'
 import { scoreStatusTagType, formatDateTime } from '@/modules/practice/utils'
+import { useLoading } from '@/shared/composables/useLoading'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import type { ScoreResponse } from '../../types'
 
@@ -24,19 +26,21 @@ const { isStudent } = useRoleCheck()
 
 const campaignId = ref<number | null>(null)
 const score = ref<ScoreResponse | null>(null)
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 
-async function loadScore(): Promise<void> {
+function loadScore() {
   if (campaignId.value == null) return
-  loading.value = true
-  try {
-    const res = await fetchMyScore(campaignId.value)
-    score.value = res.data
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.loadFail'))
-  } finally {
-    loading.value = false
-  }
+  const id = campaignId.value
+  return withLoading(async () => {
+    try {
+      const res = await fetchMyScore(id)
+      score.value = res.data
+    } catch (e) {
+      if (!isReportedError(e)) {
+        message.error((e as Error).message || t('graduation.common.loadFail'))
+      }
+    }
+  })
 }
 
 function onCampaignChange(id: number | null): void {

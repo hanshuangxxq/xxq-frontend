@@ -2,6 +2,7 @@
 import { ref, shallowRef, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { NSelect, NButton } from 'naive-ui'
+import { useLoading } from '@/shared/composables/useLoading'
 import type { PageResult, Result } from '@/shared/types'
 
 const props = defineProps<{
@@ -37,27 +38,26 @@ const { t } = useI18n()
 const page = ref(1)
 const pages = ref(0)
 const items = shallowRef<T[]>([])
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 /** value -> label 缓存，用于选中项不在当前页时的回显 */
 const labelCache = ref<Record<string, string>>({})
 
-async function loadPage(p: number): Promise<void> {
-  loading.value = true
-  try {
-    const res = await props.fetchPage(p, props.pageSize ?? 20)
-    const pr = res.data
-    items.value = pr.records
-    page.value = pr.page || p
-    pages.value = pr.pages
-    for (const it of pr.records) {
-      labelCache.value[String(props.valueOf(it))] = props.labelOf(it)
+function loadPage(p: number) {
+  return withLoading(async () => {
+    try {
+      const res = await props.fetchPage(p, props.pageSize ?? 20)
+      const pr = res.data
+      items.value = pr.records
+      page.value = pr.page || p
+      pages.value = pr.pages
+      for (const it of pr.records) {
+        labelCache.value[String(props.valueOf(it))] = props.labelOf(it)
+      }
+    } catch {
+      items.value = []
+      pages.value = 0
     }
-  } catch {
-    items.value = []
-    pages.value = 0
-  } finally {
-    loading.value = false
-  }
+  })
 }
 
 function onShow(show: boolean): void {

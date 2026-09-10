@@ -23,6 +23,7 @@ import {
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
+import { isReportedError } from '@/shared/api'
 import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import EmptyState from '@/shared/components/EmptyState.vue'
 import {
@@ -45,6 +46,7 @@ import {
 } from '../api'
 import { fetchTeachers } from '@/modules/curriculum/api'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
+import { useLoading } from '@/shared/composables/useLoading'
 import { useRemotePagination } from '@/shared/composables/useRemotePagination'
 import PagedSelect from '@/shared/components/PagedSelect.vue'
 import {
@@ -104,26 +106,25 @@ function projectStatusCodeOf(status: string): string {
 }
 
 // ============ 实习项目 ============
-const internshipLoading = ref(false)
+const { loading: internshipLoading, withLoading: withInternshipLoading } = useLoading()
 const internships = ref<InternshipResponse[]>([])
 const { pagination: intPagination, reset: resetInt } = useRemotePagination(loadInternships)
 const filterIntStatus = ref<InternshipStatusCode | null>(null)
 
-async function loadInternships() {
-  internshipLoading.value = true
-  try {
-    const res = await fetchInternships({
-      status: filterIntStatus.value ?? undefined,
-      page: intPagination.page,
-      pageSize: intPagination.pageSize,
-    })
-    internships.value = res.data.records
-    intPagination.itemCount = res.data.total
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.loadFail'))
-  } finally {
-    internshipLoading.value = false
-  }
+function loadInternships() {
+  return withInternshipLoading(async () => {
+    try {
+      const res = await fetchInternships({
+        status: filterIntStatus.value ?? undefined,
+        page: intPagination.page,
+        pageSize: intPagination.pageSize,
+      })
+      internships.value = res.data.records
+      intPagination.itemCount = res.data.total
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+    }
+  })
 }
 
 function handleIntFilterChange() {
@@ -137,7 +138,8 @@ async function handleIntStatusChange(row: InternshipResponse, code: string) {
     message.success(t('practice.common.operationSuccess'))
     await loadInternships()
   } catch (e) {
-    message.error((e as Error).message || t('practice.common.operationFail'))
+    if (!isReportedError(e))
+      message.error((e as Error).message || t('practice.common.operationFail'))
   }
 }
 
@@ -147,7 +149,7 @@ async function handleDeleteInternship(id: number) {
     message.success(t('practice.common.deleteSuccess'))
     await loadInternships()
   } catch (e) {
-    message.error((e as Error).message || t('practice.common.deleteFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.deleteFail'))
   }
 }
 
@@ -163,7 +165,7 @@ interface IntForm {
 const showIntForm = ref(false)
 const intFormMode = ref<'create' | 'edit'>('create')
 const editingIntId = ref<number | null>(null)
-const savingInt = ref(false)
+const { loading: savingInt, withLoading: withSavingInt } = useLoading()
 const intForm = ref<IntForm>(emptyIntForm())
 
 function emptyIntForm(): IntForm {
@@ -191,7 +193,7 @@ function startEditInt(row: InternshipResponse) {
   showIntForm.value = true
 }
 
-async function handleSaveInt() {
+function handleSaveInt() {
   const f = intForm.value
   if (!f.title.trim()) return message.warning(t('practice.internship.titleRequired'))
   if (f.capacity == null || f.capacity <= 0)
@@ -204,53 +206,52 @@ async function handleSaveInt() {
     endTime: f.endTs != null ? tsToIso(f.endTs) : null,
     capacity: f.capacity,
   }
-  savingInt.value = true
-  try {
-    if (intFormMode.value === 'create') {
-      await createInternship(body)
-    } else {
-      await updateInternship(editingIntId.value!, {
-        title: body.title,
-        company: body.company,
-        description: body.description,
-        startTime: body.startTime,
-        endTime: body.endTime,
-        capacity: body.capacity,
-      })
+  return withSavingInt(async () => {
+    try {
+      if (intFormMode.value === 'create') {
+        await createInternship(body)
+      } else {
+        await updateInternship(editingIntId.value!, {
+          title: body.title,
+          company: body.company,
+          description: body.description,
+          startTime: body.startTime,
+          endTime: body.endTime,
+          capacity: body.capacity,
+        })
+      }
+      message.success(t('practice.common.saveSuccess'))
+      showIntForm.value = false
+      await loadInternships()
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.saveFail'))
     }
-    message.success(t('practice.common.saveSuccess'))
-    showIntForm.value = false
-    await loadInternships()
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.saveFail'))
-  } finally {
-    savingInt.value = false
-  }
+  })
 }
 
 // 实习报名列表
 const showIntApps = ref(false)
 const intAppsOf = ref<InternshipResponse | null>(null)
 const intApps = ref<InternshipApplicationResponse[]>([])
-const intAppLoading = ref(false)
+const { loading: intAppLoading, withLoading: withIntAppLoading } = useLoading()
 const { pagination: intAppPagination, reset: resetIntApp } = useRemotePagination(loadIntApps)
 
-async function loadIntApps() {
-  if (!intAppsOf.value) return
-  intAppLoading.value = true
-  try {
-    const res = await fetchInternshipApplications(
-      intAppsOf.value.id,
-      intAppPagination.page,
-      intAppPagination.pageSize,
-    )
-    intApps.value = res.data.records
-    intAppPagination.itemCount = res.data.total
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.loadFail'))
-  } finally {
-    intAppLoading.value = false
-  }
+function loadIntApps() {
+  const item = intAppsOf.value
+  if (!item) return
+  return withIntAppLoading(async () => {
+    try {
+      const res = await fetchInternshipApplications(
+        item.id,
+        intAppPagination.page,
+        intAppPagination.pageSize,
+      )
+      intApps.value = res.data.records
+      intAppPagination.itemCount = res.data.total
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+    }
+  })
 }
 
 function openIntApps(row: InternshipResponse) {
@@ -267,7 +268,7 @@ const reviewIntAppForm = ref<{ approved: boolean; reviewComment: string }>({
   approved: true,
   reviewComment: '',
 })
-const savingReviewIntApp = ref(false)
+const { loading: savingReviewIntApp, withLoading: withSavingReviewIntApp } = useLoading()
 
 function startReviewIntApp(row: InternshipApplicationResponse) {
   reviewingIntApp.value = row
@@ -275,46 +276,46 @@ function startReviewIntApp(row: InternshipApplicationResponse) {
   showReviewIntApp.value = true
 }
 
-async function handleSaveReviewIntApp() {
-  if (!reviewingIntApp.value) return
-  savingReviewIntApp.value = true
-  try {
-    await reviewInternshipApplication(reviewingIntApp.value.id, {
-      approved: reviewIntAppForm.value.approved,
-      reviewComment: reviewIntAppForm.value.reviewComment || undefined,
-    })
-    message.success(t('practice.common.operationSuccess'))
-    showReviewIntApp.value = false
-    await loadIntApps()
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.operationFail'))
-  } finally {
-    savingReviewIntApp.value = false
-  }
+function handleSaveReviewIntApp() {
+  const app = reviewingIntApp.value
+  if (!app) return
+  return withSavingReviewIntApp(async () => {
+    try {
+      await reviewInternshipApplication(app.id, {
+        approved: reviewIntAppForm.value.approved,
+        reviewComment: reviewIntAppForm.value.reviewComment || undefined,
+      })
+      message.success(t('practice.common.operationSuccess'))
+      showReviewIntApp.value = false
+      await loadIntApps()
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('practice.common.operationFail'))
+    }
+  })
 }
 
 // ============ 实习报告 ============
-const reportLoading = ref(false)
+const { loading: reportLoading, withLoading: withReportLoading } = useLoading()
 const reports = ref<InternshipReportResponse[]>([])
 const { pagination: reportPagination, reset: resetReport } = useRemotePagination(loadReports)
 const filterReportStatus = ref<ReportStatusCode | null>(null)
 let reportsLoaded = false
 
-async function loadReports() {
-  reportLoading.value = true
-  try {
-    const res = await fetchInternshipReports({
-      status: filterReportStatus.value ?? undefined,
-      page: reportPagination.page,
-      pageSize: reportPagination.pageSize,
-    })
-    reports.value = res.data.records
-    reportPagination.itemCount = res.data.total
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.loadFail'))
-  } finally {
-    reportLoading.value = false
-  }
+function loadReports() {
+  return withReportLoading(async () => {
+    try {
+      const res = await fetchInternshipReports({
+        status: filterReportStatus.value ?? undefined,
+        page: reportPagination.page,
+        pageSize: reportPagination.pageSize,
+      })
+      reports.value = res.data.records
+      reportPagination.itemCount = res.data.total
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+    }
+  })
 }
 
 function handleReportFilterChange() {
@@ -326,7 +327,8 @@ async function handleDownloadReport(id: number) {
   try {
     await downloadPracticeFile(`/practice/internship-reports/${id}/download`)
   } catch (e) {
-    message.error((e as Error).message || t('practice.common.operationFail'))
+    if (!isReportedError(e))
+      message.error((e as Error).message || t('practice.common.operationFail'))
   }
 }
 
@@ -336,7 +338,7 @@ async function handleDeleteReport(id: number) {
     message.success(t('practice.common.deleteSuccess'))
     await loadReports()
   } catch (e) {
-    message.error((e as Error).message || t('practice.common.deleteFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.deleteFail'))
   }
 }
 
@@ -347,7 +349,7 @@ const reviewReportForm = ref<{ score: number | null; feedback: string }>({
   score: null,
   feedback: '',
 })
-const savingReviewReport = ref(false)
+const { loading: savingReviewReport, withLoading: withSavingReviewReport } = useLoading()
 
 function startReviewReport(row: InternshipReportResponse) {
   reviewingReport.value = row
@@ -355,47 +357,47 @@ function startReviewReport(row: InternshipReportResponse) {
   showReviewReport.value = true
 }
 
-async function handleSaveReviewReport() {
-  if (!reviewingReport.value) return
+function handleSaveReviewReport() {
+  const report = reviewingReport.value
+  if (!report) return
   const body: InternshipReportReviewRequest = {
     score: reviewReportForm.value.score ?? undefined,
     feedback: reviewReportForm.value.feedback || undefined,
   }
-  savingReviewReport.value = true
-  try {
-    await reviewInternshipReport(reviewingReport.value.id, body)
-    message.success(t('practice.common.operationSuccess'))
-    showReviewReport.value = false
-    await loadReports()
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.operationFail'))
-  } finally {
-    savingReviewReport.value = false
-  }
+  return withSavingReviewReport(async () => {
+    try {
+      await reviewInternshipReport(report.id, body)
+      message.success(t('practice.common.operationSuccess'))
+      showReviewReport.value = false
+      await loadReports()
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('practice.common.operationFail'))
+    }
+  })
 }
 
 // ============ 培训课程 ============
-const trainingLoading = ref(false)
+const { loading: trainingLoading, withLoading: withTrainingLoading } = useLoading()
 const trainings = ref<TrainingResponse[]>([])
 const { pagination: trainPagination, reset: resetTrain } = useRemotePagination(loadTrainings)
 const filterTrainStatus = ref<TrainingStatusCode | null>(null)
 let trainingsLoaded = false
 
-async function loadTrainings() {
-  trainingLoading.value = true
-  try {
-    const res = await fetchTrainings({
-      status: filterTrainStatus.value ?? undefined,
-      page: trainPagination.page,
-      pageSize: trainPagination.pageSize,
-    })
-    trainings.value = res.data.records
-    trainPagination.itemCount = res.data.total
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.loadFail'))
-  } finally {
-    trainingLoading.value = false
-  }
+function loadTrainings() {
+  return withTrainingLoading(async () => {
+    try {
+      const res = await fetchTrainings({
+        status: filterTrainStatus.value ?? undefined,
+        page: trainPagination.page,
+        pageSize: trainPagination.pageSize,
+      })
+      trainings.value = res.data.records
+      trainPagination.itemCount = res.data.total
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+    }
+  })
 }
 
 function handleTrainFilterChange() {
@@ -409,7 +411,8 @@ async function handleTrainStatusChange(row: TrainingResponse, code: string) {
     message.success(t('practice.common.operationSuccess'))
     await loadTrainings()
   } catch (e) {
-    message.error((e as Error).message || t('practice.common.operationFail'))
+    if (!isReportedError(e))
+      message.error((e as Error).message || t('practice.common.operationFail'))
   }
 }
 
@@ -419,7 +422,7 @@ async function handleDeleteTraining(id: number) {
     message.success(t('practice.common.deleteSuccess'))
     await loadTrainings()
   } catch (e) {
-    message.error((e as Error).message || t('practice.common.deleteFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.deleteFail'))
   }
 }
 
@@ -435,7 +438,7 @@ interface TrainForm {
 const showTrainForm = ref(false)
 const trainFormMode = ref<'create' | 'edit'>('create')
 const editingTrainId = ref<number | null>(null)
-const savingTrain = ref(false)
+const { loading: savingTrain, withLoading: withSavingTrain } = useLoading()
 const trainTeacherLabel = ref<string | undefined>(undefined)
 const trainForm = ref<TrainForm>(emptyTrainForm())
 
@@ -474,7 +477,7 @@ function startEditTrain(row: TrainingResponse) {
   showTrainForm.value = true
 }
 
-async function handleSaveTrain() {
+function handleSaveTrain() {
   const f = trainForm.value
   if (!f.title.trim()) return message.warning(t('practice.internship.titleRequired'))
   if (f.capacity == null || f.capacity <= 0)
@@ -487,53 +490,52 @@ async function handleSaveTrain() {
     endTime: f.endTs != null ? tsToIso(f.endTs) : null,
     capacity: f.capacity,
   }
-  savingTrain.value = true
-  try {
-    if (trainFormMode.value === 'create') {
-      await createTraining(body)
-    } else {
-      await updateTraining(editingTrainId.value!, {
-        title: body.title,
-        description: body.description,
-        teacherId: body.teacherId,
-        startTime: body.startTime,
-        endTime: body.endTime,
-        capacity: body.capacity,
-      })
+  return withSavingTrain(async () => {
+    try {
+      if (trainFormMode.value === 'create') {
+        await createTraining(body)
+      } else {
+        await updateTraining(editingTrainId.value!, {
+          title: body.title,
+          description: body.description,
+          teacherId: body.teacherId,
+          startTime: body.startTime,
+          endTime: body.endTime,
+          capacity: body.capacity,
+        })
+      }
+      message.success(t('practice.common.saveSuccess'))
+      showTrainForm.value = false
+      await loadTrainings()
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.saveFail'))
     }
-    message.success(t('practice.common.saveSuccess'))
-    showTrainForm.value = false
-    await loadTrainings()
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.saveFail'))
-  } finally {
-    savingTrain.value = false
-  }
+  })
 }
 
 // 培训报名列表（仅查看）
 const showTrainEnrollments = ref(false)
 const trainEnrollOf = ref<TrainingResponse | null>(null)
 const enrollments = ref<TrainingEnrollmentResponse[]>([])
-const enrollLoading = ref(false)
+const { loading: enrollLoading, withLoading: withEnrollLoading } = useLoading()
 const { pagination: enrollPagination, reset: resetEnroll } = useRemotePagination(loadEnrollments)
 
-async function loadEnrollments() {
-  if (!trainEnrollOf.value) return
-  enrollLoading.value = true
-  try {
-    const res = await fetchTrainingEnrollments(
-      trainEnrollOf.value.id,
-      enrollPagination.page,
-      enrollPagination.pageSize,
-    )
-    enrollments.value = res.data.records
-    enrollPagination.itemCount = res.data.total
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.loadFail'))
-  } finally {
-    enrollLoading.value = false
-  }
+function loadEnrollments() {
+  const train = trainEnrollOf.value
+  if (!train) return
+  return withEnrollLoading(async () => {
+    try {
+      const res = await fetchTrainingEnrollments(
+        train.id,
+        enrollPagination.page,
+        enrollPagination.pageSize,
+      )
+      enrollments.value = res.data.records
+      enrollPagination.itemCount = res.data.total
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+    }
+  })
 }
 
 function openTrainEnrollments(row: TrainingResponse) {

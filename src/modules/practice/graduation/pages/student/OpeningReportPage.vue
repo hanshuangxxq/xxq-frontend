@@ -16,6 +16,7 @@ import {
   useMessage,
   type UploadFileInfo,
 } from 'naive-ui'
+import { isReportedError } from '@/shared/api'
 import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import CampaignContextSelector from '../../components/CampaignContextSelector.vue'
 import {
@@ -26,6 +27,7 @@ import {
   fetchMyAssignments,
 } from '../../api'
 import { openingStatusTagType, validateUploadFile, formatDateTime } from '@/modules/practice/utils'
+import { useLoading } from '@/shared/composables/useLoading'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import type { OpeningReportResponse, CampaignResponse } from '../../types'
 
@@ -35,7 +37,7 @@ const { isStudent } = useRoleCheck()
 
 const campaignId = ref<number | null>(null)
 const report = ref<OpeningReportResponse | null>(null)
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 
 /** 门禁预判：选题审批完毕 + 已有指导教师（F-R-17 / F-R-41，后端 409 兜底） */
 const gateOpen = ref(false)
@@ -68,17 +70,19 @@ async function checkGate(): Promise<void> {
   }
 }
 
-async function loadReport(): Promise<void> {
+function loadReport() {
   if (campaignId.value == null) return
-  loading.value = true
-  try {
-    const res = await fetchMyOpeningReport(campaignId.value)
-    report.value = res.data
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.loadFail'))
-  } finally {
-    loading.value = false
-  }
+  const id = campaignId.value
+  return withLoading(async () => {
+    try {
+      const res = await fetchMyOpeningReport(id)
+      report.value = res.data
+    } catch (e) {
+      if (!isReportedError(e)) {
+        message.error((e as Error).message || t('graduation.common.loadFail'))
+      }
+    }
+  })
 }
 
 function onCampaignChange(id: number | null): void {
@@ -96,7 +100,7 @@ function onCampaignChange(id: number | null): void {
 const showForm = ref(false)
 const form = ref({ title: '', content: '' })
 const fileList = ref<UploadFileInfo[]>([])
-const saving = ref(false)
+const { loading: saving, withLoading: withSaving } = useLoading()
 
 function startSubmit(): void {
   form.value = {
@@ -107,8 +111,9 @@ function startSubmit(): void {
   showForm.value = true
 }
 
-async function handleSubmit(): Promise<void> {
+function handleSubmit() {
   if (campaignId.value == null) return
+  const id = campaignId.value
   const f = form.value
   if (!f.title.trim()) {
     message.warning(t('graduation.student.titleRequired'))
@@ -130,21 +135,22 @@ async function handleSubmit(): Promise<void> {
       return
     }
   }
-  saving.value = true
-  try {
-    await submitOpeningReport(
-      { campaignId: campaignId.value, title: f.title.trim(), content: f.content.trim() },
-      raw,
-    )
-    message.success(t('graduation.common.operationSuccess'))
-    showForm.value = false
-    await loadReport()
-    await checkGate()
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.operationFail'))
-  } finally {
-    saving.value = false
-  }
+  return withSaving(async () => {
+    try {
+      await submitOpeningReport(
+        { campaignId: id, title: f.title.trim(), content: f.content.trim() },
+        raw,
+      )
+      message.success(t('graduation.common.operationSuccess'))
+      showForm.value = false
+      await loadReport()
+      await checkGate()
+    } catch (e) {
+      if (!isReportedError(e)) {
+        message.error((e as Error).message || t('graduation.common.operationFail'))
+      }
+    }
+  })
 }
 
 async function handleDownload(): Promise<void> {
@@ -152,7 +158,9 @@ async function handleDownload(): Promise<void> {
   try {
     await downloadOpeningReport(report.value.id)
   } catch (e) {
-    message.error((e as Error).message || t('graduation.common.operationFail'))
+    if (!isReportedError(e)) {
+      message.error((e as Error).message || t('graduation.common.operationFail'))
+    }
   }
 }
 </script>

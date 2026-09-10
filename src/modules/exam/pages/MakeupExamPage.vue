@@ -31,6 +31,8 @@ import { fetchCourses } from '@/modules/course/api'
 import { courseKey, parseCourseKey, isPublicCourse } from '@/modules/course/utils'
 import { fetchAllSemesters } from '@/modules/curriculum/api'
 import { fetchLocals } from '@/modules/locals/api'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import PagedSelect from '@/shared/components/PagedSelect.vue'
 import type { Course } from '@/modules/course/types'
 import type { Semester } from '@/modules/curriculum/types'
@@ -60,7 +62,7 @@ function fetchRegularCourses(page: number, pageSize: number) {
 const candCourseKey = ref<string | null>(null)
 const candSemesterId = ref<number | null>(null)
 const candidates = ref<MakeupCandidateDto[]>([])
-const loadingCand = ref(false)
+const { loading: loadingCand, withLoading: withLoadingCand } = useLoading()
 
 const makeupTypeOptions = computed(() => [
   { label: t('exam.typeMakeup'), value: 'MAKEUP' as const },
@@ -73,20 +75,19 @@ async function loadCandidates() {
     return
   }
   const sel = parseCourseKey(candCourseKey.value)
-  loadingCand.value = true
-  try {
-    const res = await fetchMakeupCandidates({
-      courseId: sel.id,
-      source: sel.source === 'SELECTION_CAMPAIGN' ? 'SELECTION_CAMPAIGN' : undefined,
-      semesterId: candSemesterId.value ?? undefined,
-    })
-    candidates.value = res.data
-  } catch (e) {
-    message.error((e as Error).message || t('exam.mkLoadFail'))
-    candidates.value = []
-  } finally {
-    loadingCand.value = false
-  }
+  return withLoadingCand(async () => {
+    try {
+      const res = await fetchMakeupCandidates({
+        courseId: sel.id,
+        source: sel.source === 'SELECTION_CAMPAIGN' ? 'SELECTION_CAMPAIGN' : undefined,
+        semesterId: candSemesterId.value ?? undefined,
+      })
+      candidates.value = res.data
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('exam.mkLoadFail'))
+      candidates.value = []
+    }
+  })
 }
 
 const fetchCoursesPage = (page: number, pageSize: number) => fetchCourses(page, pageSize)
@@ -181,7 +182,7 @@ const failDistOption = computed<EChartsOption>(() => {
 
 // ---- 创建补考/重修考试 ----
 const showCreate = ref(false)
-const creating = ref(false)
+const { loading: creating, withLoading: withCreating } = useLoading()
 const createForm = ref({
   examName: '',
   courseId: null as number | null,
@@ -262,35 +263,33 @@ async function handleCreate() {
     localId: f.localId,
     notes: f.notes || undefined,
   }
-  creating.value = true
-  try {
-    await createMakeupExam(body)
-    message.success(t('exam.mkSaveSuccess'))
-    showCreate.value = false
-    await loadMakeupExams()
-  } catch (e) {
-    message.error((e as Error).message || t('exam.mkSaveFail'))
-  } finally {
-    creating.value = false
-  }
+  return withCreating(async () => {
+    try {
+      await createMakeupExam(body)
+      message.success(t('exam.mkSaveSuccess'))
+      showCreate.value = false
+      await loadMakeupExams()
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('exam.mkSaveFail'))
+    }
+  })
 }
 
 // ---- 补考/重修考试列表 ----
 const listSemesterId = ref<number | null>(null)
 const makeupExams = ref<ExamView[]>([])
-const loadingList = ref(false)
+const { loading: loadingList, withLoading: withLoadingList } = useLoading()
 
-async function loadMakeupExams() {
-  loadingList.value = true
-  try {
-    const res = await fetchMakeupExams(listSemesterId.value ?? undefined)
-    makeupExams.value = res.data
-  } catch (e) {
-    message.error((e as Error).message || t('exam.mkLoadFail'))
-    makeupExams.value = []
-  } finally {
-    loadingList.value = false
-  }
+function loadMakeupExams() {
+  return withLoadingList(async () => {
+    try {
+      const res = await fetchMakeupExams(listSemesterId.value ?? undefined)
+      makeupExams.value = res.data
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('exam.mkLoadFail'))
+      makeupExams.value = []
+    }
+  })
 }
 
 // ---- 录入成绩 ----
@@ -300,35 +299,33 @@ interface GradeRow extends MakeupCandidateDto {
 const showGrades = ref(false)
 const gradeExam = ref<ExamView | null>(null)
 const gradeRows = ref<GradeRow[]>([])
-const loadingGrades = ref(false)
-const gradeSaving = ref(false)
+const { loading: loadingGrades, withLoading: withLoadingGrades } = useLoading()
+const { loading: gradeSaving, withLoading: withGradeSaving } = useLoading()
 
-async function openGrades(row: ExamView) {
+function openGrades(row: ExamView) {
   gradeExam.value = row
   showGrades.value = true
   gradeRows.value = []
   // 补考/重修考试仅针对常规课建考（公选课 courseId 为 null，理论上不会出现在此列表）
-  if (row.courseId == null) {
-    loadingGrades.value = false
-    return
-  }
-  loadingGrades.value = true
-  try {
-    // ExamView 未暴露来源学期，按考试学期回退（后端建考时已写入考生名单）
-    const res = await fetchMakeupCandidates({
-      courseId: row.courseId,
-      semesterId: row.semesterId,
-    })
-    gradeRows.value = res.data.map((c) => ({ ...c, score: null }))
-  } catch (e) {
-    message.error((e as Error).message || t('exam.mkLoadFail'))
-  } finally {
-    loadingGrades.value = false
-  }
+  if (row.courseId == null) return
+  const courseId = row.courseId
+  return withLoadingGrades(async () => {
+    try {
+      // ExamView 未暴露来源学期，按考试学期回退（后端建考时已写入考生名单）
+      const res = await fetchMakeupCandidates({
+        courseId,
+        semesterId: row.semesterId,
+      })
+      gradeRows.value = res.data.map((c) => ({ ...c, score: null }))
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('exam.mkLoadFail'))
+    }
+  })
 }
 
-async function handleSaveGrades() {
+function handleSaveGrades() {
   if (gradeExam.value == null) return
+  const examId = gradeExam.value.id
   const entries: MakeupScoreEntryRequest[] = []
   for (const r of gradeRows.value) {
     if (r.score == null) continue
@@ -336,16 +333,15 @@ async function handleSaveGrades() {
     entries.push({ studentUserId: r.studentUserId, score: r.score })
   }
   if (entries.length === 0) return message.warning(t('exam.mkScoreRequired'))
-  gradeSaving.value = true
-  try {
-    await enterMakeupGrades(gradeExam.value.id, entries)
-    message.success(t('exam.mkSubmitSuccess'))
-    showGrades.value = false
-  } catch (e) {
-    message.error((e as Error).message || t('exam.mkSubmitFail'))
-  } finally {
-    gradeSaving.value = false
-  }
+  return withGradeSaving(async () => {
+    try {
+      await enterMakeupGrades(examId, entries)
+      message.success(t('exam.mkSubmitSuccess'))
+      showGrades.value = false
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('exam.mkSubmitFail'))
+    }
+  })
 }
 
 const gradeRowKey = (r: GradeRow) => r.studentUserId

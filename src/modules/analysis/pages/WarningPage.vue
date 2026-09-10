@@ -21,6 +21,8 @@ import {
   type DataTableColumns,
 } from 'naive-ui'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import {
   fetchMyWarnings,
   fetchWarnings,
@@ -44,24 +46,23 @@ const message = useMessage()
 const { isStudent, isAcademicAdmin } = useRoleCheck()
 
 // ---- 学生自查 ----
-const myLoading = ref(false)
+const { loading: myLoading, withLoading: withMyLoading } = useLoading()
 const myWarnings = ref<WarningItemDto[]>([])
 
-async function loadMyWarnings() {
-  myLoading.value = true
-  try {
-    const res = await fetchMyWarnings()
-    myWarnings.value = res.data
-  } catch (e) {
-    message.error((e as Error).message || t('analysis.wrnLoadFail'))
-    myWarnings.value = []
-  } finally {
-    myLoading.value = false
-  }
+function loadMyWarnings() {
+  return withMyLoading(async () => {
+    try {
+      const res = await fetchMyWarnings()
+      myWarnings.value = res.data
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('analysis.wrnLoadFail'))
+      myWarnings.value = []
+    }
+  })
 }
 
 // ---- 看板 ----
-const dashLoading = ref(false)
+const { loading: dashLoading, withLoading: withDashLoading } = useLoading()
 const dashWarnings = ref<WarningItemDto[]>([])
 const semesterOptions = ref<Array<{ label: string; value: number }>>([])
 const filterSemesterId = ref<number | null>(null)
@@ -88,25 +89,24 @@ async function loadSemesters() {
   }
 }
 
-async function loadDashboard() {
-  dashLoading.value = true
-  try {
-    // 看板顶部「按级别汇总」依赖全集，故分块拉全量后客户端分页
-    const all = await fetchAllPages((page, pageSize) =>
-      fetchWarnings({
-        semesterId: filterSemesterId.value ?? undefined,
-        level: filterLevel.value ?? undefined,
-        page,
-        pageSize,
-      }),
-    )
-    dashWarnings.value = all
-  } catch (e) {
-    message.error((e as Error).message || t('analysis.wrnLoadFail'))
-    dashWarnings.value = []
-  } finally {
-    dashLoading.value = false
-  }
+function loadDashboard() {
+  return withDashLoading(async () => {
+    try {
+      // 看板顶部「按级别汇总」依赖全集，故分块拉全量后客户端分页
+      const all = await fetchAllPages((page, pageSize) =>
+        fetchWarnings({
+          semesterId: filterSemesterId.value ?? undefined,
+          level: filterLevel.value ?? undefined,
+          page,
+          pageSize,
+        }),
+      )
+      dashWarnings.value = all
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('analysis.wrnLoadFail'))
+      dashWarnings.value = []
+    }
+  })
 }
 
 const warningRowKey = (row: WarningItemDto) => row.id
@@ -185,8 +185,8 @@ interface ConfigRow {
 }
 
 const configRows = ref<ConfigRow[]>([])
-const configLoading = ref(false)
-const configSaving = ref(false)
+const { loading: configLoading, withLoading: withConfigLoading } = useLoading()
+const { loading: configSaving, withLoading: withConfigSaving } = useLoading()
 
 // 中文描述 -> code
 const descToCode: Record<string, WarningLevelCode> = {
@@ -224,57 +224,55 @@ function defaultConfigRows(): ConfigRow[] {
   ]
 }
 
-async function loadConfig() {
-  configLoading.value = true
-  try {
-    const res = await getWarningConfig()
-    const byCode = new Map<WarningLevelCode, WarningConfigDto>()
-    for (const c of res.data) {
-      const code = descToCode[c.level] ?? (c.level as WarningLevelCode)
-      byCode.set(code, c)
+function loadConfig() {
+  return withConfigLoading(async () => {
+    try {
+      const res = await getWarningConfig()
+      const byCode = new Map<WarningLevelCode, WarningConfigDto>()
+      for (const c of res.data) {
+        const code = descToCode[c.level] ?? (c.level as WarningLevelCode)
+        byCode.set(code, c)
+      }
+      configRows.value = defaultConfigRows().map((row) => {
+        const dto = byCode.get(row.code)
+        return dto
+          ? {
+              ...row,
+              gpaThreshold: dto.gpaThreshold,
+              failCountThreshold: dto.failCountThreshold,
+              semesterFailThreshold: dto.semesterFailThreshold,
+              enabled: dto.enabled === 1,
+            }
+          : row
+      })
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('analysis.wrnLoadFail'))
+      configRows.value = defaultConfigRows()
     }
-    configRows.value = defaultConfigRows().map((row) => {
-      const dto = byCode.get(row.code)
-      return dto
-        ? {
-            ...row,
-            gpaThreshold: dto.gpaThreshold,
-            failCountThreshold: dto.failCountThreshold,
-            semesterFailThreshold: dto.semesterFailThreshold,
-            enabled: dto.enabled === 1,
-          }
-        : row
-    })
-  } catch (e) {
-    message.error((e as Error).message || t('analysis.wrnLoadFail'))
-    configRows.value = defaultConfigRows()
-  } finally {
-    configLoading.value = false
-  }
+  })
 }
 
-async function saveConfig() {
-  configSaving.value = true
-  try {
-    await updateWarningConfig({
-      configs: configRows.value.map((r) => ({
-        level: r.code,
-        gpaThreshold: r.gpaThreshold,
-        failCountThreshold: r.failCountThreshold,
-        semesterFailThreshold: r.semesterFailThreshold,
-        enabled: r.enabled ? 1 : 0,
-      })),
-    })
-    message.success(t('analysis.wrnSaveSuccess'))
-  } catch (e) {
-    message.error((e as Error).message || t('analysis.wrnSaveFail'))
-  } finally {
-    configSaving.value = false
-  }
+function saveConfig() {
+  return withConfigSaving(async () => {
+    try {
+      await updateWarningConfig({
+        configs: configRows.value.map((r) => ({
+          level: r.code,
+          gpaThreshold: r.gpaThreshold,
+          failCountThreshold: r.failCountThreshold,
+          semesterFailThreshold: r.semesterFailThreshold,
+          enabled: r.enabled ? 1 : 0,
+        })),
+      })
+      message.success(t('analysis.wrnSaveSuccess'))
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('analysis.wrnSaveFail'))
+    }
+  })
 }
 
 // ---- 扫描 ----
-const scanning = ref(false)
+const { loading: scanning, withLoading: withScanning } = useLoading()
 interface ScanResult {
   scannedCount: number
   warnedCount: number
@@ -283,21 +281,20 @@ interface ScanResult {
 }
 const scanResult = ref<ScanResult | null>(null)
 
-async function handleScan() {
+function handleScan() {
   if (!confirm(t('analysis.wrnScanConfirm'))) return
-  scanning.value = true
-  scanResult.value = null
-  try {
-    const res = await scanWarnings()
-    scanResult.value = res.data
-    message.success(t('analysis.wrnScanSuccess'))
-    // 扫描后刷新看板
-    await loadDashboard()
-  } catch (e) {
-    message.error((e as Error).message || t('analysis.wrnScanFail'))
-  } finally {
-    scanning.value = false
-  }
+  return withScanning(async () => {
+    scanResult.value = null
+    try {
+      const res = await scanWarnings()
+      scanResult.value = res.data
+      message.success(t('analysis.wrnScanSuccess'))
+      // 扫描后刷新看板
+      await loadDashboard()
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('analysis.wrnScanFail'))
+    }
+  })
 }
 
 const scanByLevel = computed(() =>

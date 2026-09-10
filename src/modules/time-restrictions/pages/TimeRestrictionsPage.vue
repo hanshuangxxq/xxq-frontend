@@ -26,6 +26,8 @@ import {
 } from '../api'
 import { fetchAllTimes } from '@/modules/curriculum/api'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import type { TimeRestriction, RestrictionType, TimeRestrictionForm } from '../types'
 import type { TimeSlot } from '@/modules/curriculum/types'
 
@@ -33,7 +35,7 @@ const { t } = useI18n()
 const message = useMessage()
 const { isAcademicAdmin } = useRoleCheck()
 
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 const restrictions = ref<TimeRestriction[]>([])
 const timeSlots = ref<TimeSlot[]>([])
 
@@ -113,39 +115,41 @@ const adminColumns = computed<DataTableColumns<TimeRestriction>>(() => [
     width: 140,
     render(row) {
       return h(NSpace, null, () => [
-        h(
-          NButton,
-          { size: 'small', onClick: () => startEdit(row) },
-          () => t('time-restrictions.edit'),
+        h(NButton, { size: 'small', onClick: () => startEdit(row) }, () =>
+          t('time-restrictions.edit'),
         ),
-        h(NPopconfirm, { onPositiveClick: () => handleDelete(row.id) }, {
-          default: () => t('time-restrictions.deleteConfirm'),
-          trigger: () =>
-            h(NButton, { size: 'small', type: 'error' }, () => t('time-restrictions.delete')),
-        }),
+        h(
+          NPopconfirm,
+          { onPositiveClick: () => handleDelete(row.id) },
+          {
+            default: () => t('time-restrictions.deleteConfirm'),
+            trigger: () =>
+              h(NButton, { size: 'small', type: 'error' }, () => t('time-restrictions.delete')),
+          },
+        ),
       ])
     },
   },
 ])
 
-async function loadData() {
-  loading.value = true
-  try {
-    const [restRes, timeRes] = await Promise.all([fetchTimeRestrictions(), fetchAllTimes()])
-    restrictions.value = restRes.data
-    timeSlots.value = timeRes.data
-  } catch (e) {
-    message.error((e as Error).message || t('time-restrictions.loadFail'))
-  } finally {
-    loading.value = false
-  }
+function loadData() {
+  return withLoading(async () => {
+    try {
+      const [restRes, timeRes] = await Promise.all([fetchTimeRestrictions(), fetchAllTimes()])
+      restrictions.value = restRes.data
+      timeSlots.value = timeRes.data
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('time-restrictions.loadFail'))
+    }
+  })
 }
 
 // ---- Form ----
 const showForm = ref(false)
 const formMode = ref<'create' | 'edit'>('create')
 const editingId = ref<number | null>(null)
-const saving = ref(false)
+const { loading: saving, withLoading: withSaving } = useLoading()
 
 const emptyForm = (): TimeRestrictionForm => ({
   timeId: null,
@@ -181,27 +185,27 @@ function startEdit(row: TimeRestriction) {
   showForm.value = true
 }
 
-async function handleSave() {
-  saving.value = true
-  try {
-    const body = { ...form.value }
-    if (body.restrictionType === 'BLOCKED') {
-      body.courseId = null
+function handleSave() {
+  return withSaving(async () => {
+    try {
+      const body = { ...form.value }
+      if (body.restrictionType === 'BLOCKED') {
+        body.courseId = null
+      }
+      if (formMode.value === 'create') {
+        await createTimeRestriction(body)
+        message.success(t('time-restrictions.saveSuccess'))
+      } else {
+        await updateTimeRestriction(editingId.value!, body)
+        message.success(t('time-restrictions.saveSuccess'))
+      }
+      showForm.value = false
+      await loadData()
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('time-restrictions.saveFail'))
     }
-    if (formMode.value === 'create') {
-      await createTimeRestriction(body)
-      message.success(t('time-restrictions.saveSuccess'))
-    } else {
-      await updateTimeRestriction(editingId.value!, body)
-      message.success(t('time-restrictions.saveSuccess'))
-    }
-    showForm.value = false
-    await loadData()
-  } catch (e) {
-    message.error((e as Error).message || t('time-restrictions.saveFail'))
-  } finally {
-    saving.value = false
-  }
+  })
 }
 
 async function handleDelete(id: number) {
@@ -210,7 +214,8 @@ async function handleDelete(id: number) {
     message.success(t('time-restrictions.deleteSuccess'))
     await loadData()
   } catch (e) {
-    message.error((e as Error).message || t('time-restrictions.deleteFail'))
+    if (!isReportedError(e))
+      message.error((e as Error).message || t('time-restrictions.deleteFail'))
   }
 }
 

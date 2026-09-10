@@ -19,6 +19,8 @@ import {
 import { fetchCourses, createCourse, updateCourse, deleteCourse } from '../api'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import { useRemotePagination } from '@/shared/composables/useRemotePagination'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import { isPublicCourse } from '../utils'
 import type { Course, CourseForm } from '../types'
 
@@ -27,7 +29,7 @@ const message = useMessage()
 const router = useRouter()
 const { canManageCourses } = useRoleCheck()
 
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 const data = ref<Course[]>([])
 const { pagination } = useRemotePagination(loadData)
 
@@ -75,23 +77,23 @@ const columns = computed<DataTableColumns<Course>>(() => {
   ]
 })
 
-async function loadData() {
-  loading.value = true
-  try {
-    const res = await fetchCourses(pagination.page, pagination.pageSize)
-    data.value = res.data.records
-    pagination.itemCount = res.data.total
-  } catch (e) {
-    message.error((e as Error).message || t('course-management.loadFail'))
-  } finally {
-    loading.value = false
-  }
+function loadData() {
+  return withLoading(async () => {
+    try {
+      const res = await fetchCourses(pagination.page, pagination.pageSize)
+      data.value = res.data.records
+      pagination.itemCount = res.data.total
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('course-management.loadFail'))
+    }
+  })
 }
 
 const showForm = ref(false)
 const formMode = ref<'create' | 'edit'>('create')
 const editingId = ref<number | null>(null)
-const saving = ref(false)
+const { loading: saving, withLoading: withSaving } = useLoading()
 
 const emptyForm = (): CourseForm => ({
   courseName: '',
@@ -131,22 +133,22 @@ function startEdit(row: Course) {
   showForm.value = true
 }
 
-async function handleSave() {
-  saving.value = true
-  try {
-    if (formMode.value === 'create') {
-      await createCourse(form.value)
-    } else {
-      await updateCourse(editingId.value!, form.value)
+function handleSave() {
+  return withSaving(async () => {
+    try {
+      if (formMode.value === 'create') {
+        await createCourse(form.value)
+      } else {
+        await updateCourse(editingId.value!, form.value)
+      }
+      message.success(t('course-management.saveSuccess'))
+      showForm.value = false
+      await loadData()
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('course-management.saveFail'))
     }
-    message.success(t('course-management.saveSuccess'))
-    showForm.value = false
-    await loadData()
-  } catch (e) {
-    message.error((e as Error).message || t('course-management.saveFail'))
-  } finally {
-    saving.value = false
-  }
+  })
 }
 
 async function handleDelete(row: Course) {
@@ -156,7 +158,8 @@ async function handleDelete(row: Course) {
     message.success(t('course-management.deleteSuccess'))
     await loadData()
   } catch (e) {
-    message.error((e as Error).message || t('course-management.deleteFail'))
+    if (!isReportedError(e))
+      message.error((e as Error).message || t('course-management.deleteFail'))
   }
 }
 

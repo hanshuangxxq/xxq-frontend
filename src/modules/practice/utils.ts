@@ -1,35 +1,10 @@
-import { accessToken, refreshAccessToken } from '@/shared/tokenManager'
-import { API_BASE_URL } from '@/config'
+import { api } from '@/shared/api'
 
 type TagType = 'success' | 'info' | 'warning' | 'error' | 'default'
 
-/** 下载实践模块文件（论文/报告），非 Result 封装，直接返回文件流。仿 score/api.ts exportScores。 */
-export async function downloadPracticeFile(path: string): Promise<void> {
-  const url = `${API_BASE_URL}${path}`
-  const doFetch = (): Promise<Response> =>
-    fetch(url, { headers: { Authorization: `Bearer ${accessToken.value}` } })
-
-  let res = await doFetch()
-  if (res.status === 401) {
-    const outcome = await refreshAccessToken()
-    if (outcome === 'success') res = await doFetch()
-  }
-  if (!res.ok) throw new Error(`下载失败: HTTP ${res.status}`)
-
-  const blob = await res.blob()
-  const disp = res.headers.get('Content-Disposition') ?? ''
-  let filename = 'download'
-  const match = disp.match(/filename\*=UTF-8''([^;]+)/i)
-  if (match?.[1]) filename = decodeURIComponent(match[1])
-
-  const objectUrl = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = objectUrl
-  a.download = filename
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(objectUrl)
+/** 下载实践模块文件（论文/报告），非 Result 封装，直接返回文件流。统一走 api.download。 */
+export function downloadPracticeFile(path: string): Promise<void> {
+  return api.download(path)
 }
 
 /** 项目/活动状态（DRAFT/OPEN/CLOSED/ENDED 中文）-> Tag 类型 */

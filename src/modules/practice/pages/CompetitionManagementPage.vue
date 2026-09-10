@@ -21,6 +21,7 @@ import {
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
+import { isReportedError } from '@/shared/api'
 import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import EmptyState from '@/shared/components/EmptyState.vue'
 import {
@@ -36,6 +37,7 @@ import {
   deleteCompetitionResult,
 } from '../api'
 import { fetchAllPages } from '@/shared/pagination'
+import { useLoading } from '@/shared/composables/useLoading'
 import { useRemotePagination } from '@/shared/composables/useRemotePagination'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import {
@@ -59,7 +61,7 @@ const { t } = useI18n()
 const message = useMessage()
 const { isAcademicAdmin } = useRoleCheck()
 
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 const competitions = ref<CompetitionResponse[]>([])
 const { pagination, reset } = useRemotePagination(loadData)
 const filterStatus = ref<CompetitionStatusCode | null>(null)
@@ -91,21 +93,20 @@ const awardOptions = computed(() => [
   { label: t('practice.competition.awardParticipation'), value: 'PARTICIPATION' as AwardCode },
 ])
 
-async function loadData() {
-  loading.value = true
-  try {
-    const res = await fetchCompetitions({
-      status: filterStatus.value ?? undefined,
-      page: pagination.page,
-      pageSize: pagination.pageSize,
-    })
-    competitions.value = res.data.records
-    pagination.itemCount = res.data.total
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.loadFail'))
-  } finally {
-    loading.value = false
-  }
+function loadData() {
+  return withLoading(async () => {
+    try {
+      const res = await fetchCompetitions({
+        status: filterStatus.value ?? undefined,
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+      })
+      competitions.value = res.data.records
+      pagination.itemCount = res.data.total
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+    }
+  })
 }
 
 function handleFilterChange() {
@@ -119,7 +120,8 @@ async function handleStatusChange(row: CompetitionResponse, code: string) {
     message.success(t('practice.common.operationSuccess'))
     await loadData()
   } catch (e) {
-    message.error((e as Error).message || t('practice.common.operationFail'))
+    if (!isReportedError(e))
+      message.error((e as Error).message || t('practice.common.operationFail'))
   }
 }
 
@@ -129,7 +131,7 @@ async function handleDelete(id: number) {
     message.success(t('practice.common.deleteSuccess'))
     await loadData()
   } catch (e) {
-    message.error((e as Error).message || t('practice.common.deleteFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.deleteFail'))
   }
 }
 
@@ -146,7 +148,7 @@ interface CompForm {
 const showForm = ref(false)
 const formMode = ref<'create' | 'edit'>('create')
 const editingId = ref<number | null>(null)
-const saving = ref(false)
+const { loading: saving, withLoading: withSaving } = useLoading()
 const form = ref<CompForm>(emptyForm())
 
 function emptyForm(): CompForm {
@@ -189,7 +191,7 @@ function codeFromLevel(level: string): CompetitionLevelCode {
   return 'SCHOOL'
 }
 
-async function handleSave() {
+function handleSave() {
   const f = form.value
   if (!f.name.trim()) return message.warning(t('practice.competition.nameRequired'))
   const body: CompetitionCreateRequest = {
@@ -201,54 +203,53 @@ async function handleSave() {
     regEndTime: f.regEndTs != null ? tsToIso(f.regEndTs) : null,
     contestTime: f.contestTs != null ? tsToIso(f.contestTs) : null,
   }
-  saving.value = true
-  try {
-    if (formMode.value === 'create') {
-      await createCompetition(body)
-    } else {
-      await updateCompetition(editingId.value!, {
-        name: body.name,
-        description: body.description,
-        organizer: body.organizer,
-        level: body.level,
-        regStartTime: body.regStartTime,
-        regEndTime: body.regEndTime,
-        contestTime: body.contestTime,
-      })
+  return withSaving(async () => {
+    try {
+      if (formMode.value === 'create') {
+        await createCompetition(body)
+      } else {
+        await updateCompetition(editingId.value!, {
+          name: body.name,
+          description: body.description,
+          organizer: body.organizer,
+          level: body.level,
+          regStartTime: body.regStartTime,
+          regEndTime: body.regEndTime,
+          contestTime: body.contestTime,
+        })
+      }
+      message.success(t('practice.common.saveSuccess'))
+      showForm.value = false
+      await loadData()
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.saveFail'))
     }
-    message.success(t('practice.common.saveSuccess'))
-    showForm.value = false
-    await loadData()
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.saveFail'))
-  } finally {
-    saving.value = false
-  }
+  })
 }
 
 // ---- 报名列表 ----
 const showRegistrations = ref(false)
 const registrationsOf = ref<CompetitionResponse | null>(null)
 const registrations = ref<RegistrationResponse[]>([])
-const regLoading = ref(false)
+const { loading: regLoading, withLoading: withRegLoading } = useLoading()
 const { pagination: regPagination, reset: resetReg } = useRemotePagination(loadRegistrations)
 
-async function loadRegistrations() {
-  if (!registrationsOf.value) return
-  regLoading.value = true
-  try {
-    const res = await fetchCompetitionRegistrations(
-      registrationsOf.value.id,
-      regPagination.page,
-      regPagination.pageSize,
-    )
-    registrations.value = res.data.records
-    regPagination.itemCount = res.data.total
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.loadFail'))
-  } finally {
-    regLoading.value = false
-  }
+function loadRegistrations() {
+  const comp = registrationsOf.value
+  if (!comp) return
+  return withRegLoading(async () => {
+    try {
+      const res = await fetchCompetitionRegistrations(
+        comp.id,
+        regPagination.page,
+        regPagination.pageSize,
+      )
+      registrations.value = res.data.records
+      regPagination.itemCount = res.data.total
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+    }
+  })
 }
 
 function openRegistrations(row: CompetitionResponse) {
@@ -265,7 +266,7 @@ const reviewRegForm = ref<{ approved: boolean; reviewComment: string }>({
   approved: true,
   reviewComment: '',
 })
-const savingReviewReg = ref(false)
+const { loading: savingReviewReg, withLoading: withSavingReviewReg } = useLoading()
 
 function startReviewReg(row: RegistrationResponse) {
   reviewingReg.value = row
@@ -273,29 +274,30 @@ function startReviewReg(row: RegistrationResponse) {
   showReviewReg.value = true
 }
 
-async function handleSaveReviewReg() {
-  if (!reviewingReg.value) return
-  savingReviewReg.value = true
-  try {
-    await reviewCompetitionRegistration(reviewingReg.value.id, {
-      approved: reviewRegForm.value.approved,
-      reviewComment: reviewRegForm.value.reviewComment || undefined,
-    })
-    message.success(t('practice.common.operationSuccess'))
-    showReviewReg.value = false
-    await loadRegistrations()
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.operationFail'))
-  } finally {
-    savingReviewReg.value = false
-  }
+function handleSaveReviewReg() {
+  const reg = reviewingReg.value
+  if (!reg) return
+  return withSavingReviewReg(async () => {
+    try {
+      await reviewCompetitionRegistration(reg.id, {
+        approved: reviewRegForm.value.approved,
+        reviewComment: reviewRegForm.value.reviewComment || undefined,
+      })
+      message.success(t('practice.common.operationSuccess'))
+      showReviewReg.value = false
+      await loadRegistrations()
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('practice.common.operationFail'))
+    }
+  })
 }
 
 // ---- 结果录入 ----
 const showResults = ref(false)
 const resultsOf = ref<CompetitionResponse | null>(null)
 const results = ref<CompetitionResultResponse[]>([])
-const resultsLoading = ref(false)
+const { loading: resultsLoading, withLoading: withResultsLoading } = useLoading()
 /** 该竞赛下已通过报名，用于结果录入选择 registrationId */
 const approvedRegistrations = ref<RegistrationResponse[]>([])
 
@@ -321,51 +323,51 @@ const resultForm = ref<{
   score: null,
   comment: '',
 })
-const savingResult = ref(false)
+const { loading: savingResult, withLoading: withSavingResult } = useLoading()
 
-async function openResults(row: CompetitionResponse) {
+function openResults(row: CompetitionResponse) {
   resultsOf.value = row
   showResults.value = true
   resultForm.value = { registrationId: null, award: null, score: null, comment: '' }
-  resultsLoading.value = true
-  try {
-    const [resList, resRegs] = await Promise.all([
-      fetchCompetitionResults(row.id),
-      fetchAllPages((page, pageSize) => fetchCompetitionRegistrations(row.id, page, pageSize)),
-    ])
-    results.value = resList.data
-    approvedRegistrations.value = resRegs.filter((r) => r.status === '已通过')
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.loadFail'))
-  } finally {
-    resultsLoading.value = false
-  }
+  return withResultsLoading(async () => {
+    try {
+      const [resList, resRegs] = await Promise.all([
+        fetchCompetitionResults(row.id),
+        fetchAllPages((page, pageSize) => fetchCompetitionRegistrations(row.id, page, pageSize)),
+      ])
+      results.value = resList.data
+      approvedRegistrations.value = resRegs.filter((r) => r.status === '已通过')
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+    }
+  })
 }
 
-async function handleSaveResult() {
-  if (!resultsOf.value) return
-  if (resultForm.value.registrationId == null)
-    return message.warning(t('practice.competition.registrationRequired'))
-  if (!resultForm.value.award) return message.warning(t('practice.competition.awardRequired'))
-  savingResult.value = true
-  try {
-    await saveCompetitionResult({
-      competitionId: resultsOf.value.id,
-      registrationId: resultForm.value.registrationId,
-      award: resultForm.value.award,
-      score: resultForm.value.score ?? undefined,
-      comment: resultForm.value.comment || undefined,
-    })
-    message.success(t('practice.competition.resultSaved'))
-    resultForm.value = { registrationId: null, award: null, score: null, comment: '' }
-    // 刷新结果列表与下拉
-    const resList = await fetchCompetitionResults(resultsOf.value.id)
-    results.value = resList.data
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.saveFail'))
-  } finally {
-    savingResult.value = false
-  }
+function handleSaveResult() {
+  const competition = resultsOf.value
+  if (!competition) return
+  const registrationId = resultForm.value.registrationId
+  const award = resultForm.value.award
+  if (registrationId == null) return message.warning(t('practice.competition.registrationRequired'))
+  if (!award) return message.warning(t('practice.competition.awardRequired'))
+  return withSavingResult(async () => {
+    try {
+      await saveCompetitionResult({
+        competitionId: competition.id,
+        registrationId,
+        award,
+        score: resultForm.value.score ?? undefined,
+        comment: resultForm.value.comment || undefined,
+      })
+      message.success(t('practice.competition.resultSaved'))
+      resultForm.value = { registrationId: null, award: null, score: null, comment: '' }
+      // 刷新结果列表与下拉
+      const resList = await fetchCompetitionResults(competition.id)
+      results.value = resList.data
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.saveFail'))
+    }
+  })
 }
 
 async function handleDeleteResult(id: number) {
@@ -376,7 +378,7 @@ async function handleDeleteResult(id: number) {
     const resList = await fetchCompetitionResults(resultsOf.value.id)
     results.value = resList.data
   } catch (e) {
-    message.error((e as Error).message || t('practice.common.deleteFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.deleteFail'))
   }
 }
 

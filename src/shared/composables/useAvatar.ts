@@ -1,5 +1,6 @@
 import { ref, computed, watch, onUnmounted, type Ref, type ComputedRef } from 'vue'
-import { accessToken, refreshAccessToken } from '@/shared/tokenManager'
+import { api } from '@/shared/api'
+import { accessToken } from '@/shared/tokenManager'
 import { avatarUrl } from '@/shared/utils/avatar'
 
 export function useAvatar(
@@ -17,27 +18,20 @@ export function useAvatar(
     }
 
     try {
-      const headers: Record<string, string> = {}
-      if (accessToken.value) {
-        headers['Authorization'] = `Bearer ${accessToken.value}`
+      let blob: Blob
+      if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//')) {
+        // 外部直链(非后端接口),直接拉取
+        const res = await fetch(url)
+        if (!res.ok) return
+        blob = await res.blob()
+      } else {
+        // 后端头像接口(/api/avatar/...):去掉 /api 前缀后走统一 api 管线(认证、401 刷新)。
+        // 头像加载失败不弹错误提示、不触发全局加载条
+        blob = await api.getBlob(url.replace(/^\/api/, ''), { silent: true, loading: false })
       }
-
-      let res = await fetch(url, { headers })
-
-      if (res.status === 401) {
-        const refreshed = await refreshAccessToken()
-        if (refreshed === 'success') {
-          headers['Authorization'] = `Bearer ${accessToken.value}`
-          res = await fetch(url, { headers })
-        }
-      }
-
-      if (res.ok) {
-        const blob = await res.blob()
-        const old = blobUrl.value
-        blobUrl.value = URL.createObjectURL(blob)
-        if (old) URL.revokeObjectURL(old)
-      }
+      const old = blobUrl.value
+      blobUrl.value = URL.createObjectURL(blob)
+      if (old) URL.revokeObjectURL(old)
     } catch {
       // leave existing blobUrl so previously loaded avatar stays visible
     }

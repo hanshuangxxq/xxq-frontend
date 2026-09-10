@@ -12,10 +12,12 @@ import {
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
+import { isReportedError } from '@/shared/api'
 import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import CampaignContextSelector from '../../components/CampaignContextSelector.vue'
 import { fetchMyAssignments, unpickStudent } from '../../api'
 import { assignmentSourceTagType, formatDateTime } from '@/modules/practice/utils'
+import { useLoading } from '@/shared/composables/useLoading'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import type { AssignmentResponse, CampaignResponse } from '../../types'
 
@@ -25,20 +27,21 @@ const { isTeacher } = useRoleCheck()
 
 const campaignId = ref<number | null>(null)
 const list = ref<AssignmentResponse[]>([])
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 const topicEndTs = ref<number | null>(null)
 
-async function loadList(): Promise<void> {
+function loadList() {
   if (campaignId.value == null) return
-  loading.value = true
-  try {
-    const res = await fetchMyAssignments(campaignId.value)
-    list.value = res.data ?? []
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.loadFail'))
-  } finally {
-    loading.value = false
-  }
+  return withLoading(async () => {
+    try {
+      const res = await fetchMyAssignments(campaignId.value)
+      list.value = res.data ?? []
+    } catch (e) {
+      if (!isReportedError(e)) {
+        message.error((e as Error).message || t('graduation.common.loadFail'))
+      }
+    }
+  })
 }
 
 function onCampaignChange(id: number | null): void {
@@ -63,7 +66,9 @@ async function handleUnpick(row: AssignmentResponse): Promise<void> {
     message.success(t('graduation.common.operationSuccess'))
     await loadList()
   } catch (e) {
-    message.error((e as Error).message || t('graduation.common.operationFail'))
+    if (!isReportedError(e)) {
+      message.error((e as Error).message || t('graduation.common.operationFail'))
+    }
   }
 }
 

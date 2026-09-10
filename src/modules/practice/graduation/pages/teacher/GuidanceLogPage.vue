@@ -19,10 +19,12 @@ import {
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
+import { isReportedError } from '@/shared/api'
 import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import CampaignContextSelector from '../../components/CampaignContextSelector.vue'
 import { fetchMyAssignments, fetchGuidanceLogs, createGuidanceLog } from '../../api'
 import { tsToIso, formatDateTime } from '@/modules/practice/utils'
+import { useLoading } from '@/shared/composables/useLoading'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import type { AssignmentResponse, GuidanceLogResponse, GuidanceFormCode } from '../../types'
 
@@ -34,7 +36,7 @@ const campaignId = ref<number | null>(null)
 const students = ref<AssignmentResponse[]>([])
 const studentId = ref<number | null>(null)
 const logs = ref<GuidanceLogResponse[]>([])
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 
 async function loadStudents(): Promise<void> {
   if (campaignId.value == null) return
@@ -45,21 +47,24 @@ async function loadStudents(): Promise<void> {
       studentId.value = students.value[0]!.studentId
     }
   } catch (e) {
-    message.error((e as Error).message || t('graduation.common.loadFail'))
+    if (!isReportedError(e)) {
+      message.error((e as Error).message || t('graduation.common.loadFail'))
+    }
   }
 }
 
-async function loadLogs(): Promise<void> {
+function loadLogs() {
   if (campaignId.value == null) return
-  loading.value = true
-  try {
-    const res = await fetchGuidanceLogs(campaignId.value, studentId.value)
-    logs.value = res.data ?? []
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.loadFail'))
-  } finally {
-    loading.value = false
-  }
+  return withLoading(async () => {
+    try {
+      const res = await fetchGuidanceLogs(campaignId.value, studentId.value)
+      logs.value = res.data ?? []
+    } catch (e) {
+      if (!isReportedError(e)) {
+        message.error((e as Error).message || t('graduation.common.loadFail'))
+      }
+    }
+  })
 }
 
 function onCampaignChange(id: number | null): void {
@@ -84,7 +89,7 @@ const logForm = ref<{ logTs: number | null; form: GuidanceFormCode | null; summa
   form: null,
   summary: '',
 })
-const saving = ref(false)
+const { loading: saving, withLoading: withSaving } = useLoading()
 
 const studentOptions = computed(() =>
   students.value.map((s) => ({
@@ -99,11 +104,13 @@ const formOptions = [
   { label: t('graduation.teacher.formPhone'), value: 'PHONE' as GuidanceFormCode },
 ]
 
-async function handleAddLog(): Promise<void> {
+function handleAddLog() {
   if (campaignId.value == null || studentId.value == null) {
     message.warning(t('graduation.teacher.studentRequired'))
     return
   }
+  const cid = campaignId.value
+  const sid = studentId.value
   const f = logForm.value
   if (f.logTs == null) {
     message.warning(t('graduation.teacher.logTime'))
@@ -117,23 +124,26 @@ async function handleAddLog(): Promise<void> {
     message.warning(t('graduation.teacher.summaryRequired'))
     return
   }
-  saving.value = true
-  try {
-    await createGuidanceLog({
-      campaignId: campaignId.value,
-      studentId: studentId.value,
-      logTime: tsToIso(f.logTs),
-      form: f.form,
-      summary: f.summary.trim(),
-    })
-    message.success(t('graduation.common.operationSuccess'))
-    logForm.value = { logTs: null, form: null, summary: '' }
-    await loadLogs()
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.operationFail'))
-  } finally {
-    saving.value = false
-  }
+  const logTs = f.logTs
+  const formCode = f.form
+  return withSaving(async () => {
+    try {
+      await createGuidanceLog({
+        campaignId: cid,
+        studentId: sid,
+        logTime: tsToIso(logTs),
+        form: formCode,
+        summary: f.summary.trim(),
+      })
+      message.success(t('graduation.common.operationSuccess'))
+      logForm.value = { logTs: null, form: null, summary: '' }
+      await loadLogs()
+    } catch (e) {
+      if (!isReportedError(e)) {
+        message.error((e as Error).message || t('graduation.common.operationFail'))
+      }
+    }
+  })
 }
 
 const guidanceLogRowKey = (row: GuidanceLogResponse) => row.id

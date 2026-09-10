@@ -23,6 +23,8 @@ import type { EChartsOption } from 'echarts'
 import BaseChart from '@/shared/components/BaseChart.vue'
 import StatCard from '@/shared/components/StatCard.vue'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import { useChartTheme, passMarkLine, pieSweepAnimation } from '@/shared/chartTheme'
 import { fetchMyScores, fetchMyScoreSemesters, applyReview } from '../api'
 import { getMyProfile } from '@/modules/analysis/api'
@@ -36,7 +38,7 @@ const message = useMessage()
 const { isStudent } = useRoleCheck()
 const { tokens } = useChartTheme()
 
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 const scores = ref<ScoreView[]>([])
 const semesterOptions = ref<Array<{ label: string; value: number }>>([])
 const selectedSemesterId = ref<number | null>(null)
@@ -67,18 +69,17 @@ async function loadSemesters() {
   }
 }
 
-async function loadData() {
-  loading.value = true
-  try {
-    // 不传 semesterId 时后端返回当前学期；切换学期时传入选定 id
-    const res = await fetchMyScores(selectedSemesterId.value ?? undefined)
-    scores.value = res.data
-  } catch (e) {
-    message.error((e as Error).message || t('score.myLoadFail'))
-    scores.value = []
-  } finally {
-    loading.value = false
-  }
+function loadData() {
+  return withLoading(async () => {
+    try {
+      // 不传 semesterId 时后端返回当前学期；切换学期时传入选定 id
+      const res = await fetchMyScores(selectedSemesterId.value ?? undefined)
+      scores.value = res.data
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('score.myLoadFail'))
+      scores.value = []
+    }
+  })
 }
 
 /** 切换学期：更新选中值并重新拉取该学期成绩 */
@@ -114,7 +115,7 @@ const stats = computed(() => {
 const showApply = ref(false)
 const applyTarget = ref<ScoreView | null>(null)
 const applyReason = ref('')
-const applySaving = ref(false)
+const { loading: applySaving, withLoading: withApplySaving } = useLoading()
 
 function openApply(row: ScoreView) {
   applyTarget.value = row
@@ -122,23 +123,23 @@ function openApply(row: ScoreView) {
   showApply.value = true
 }
 
-async function handleApply() {
-  if (applyTarget.value == null) return
+function handleApply() {
+  const target = applyTarget.value
+  if (target == null) return
   if (!applyReason.value.trim()) {
     message.warning(t('score.rvReasonRequired'))
     return
   }
-  applySaving.value = true
-  try {
-    await applyReview({ scoreId: applyTarget.value.id, reason: applyReason.value.trim() })
-    message.success(t('score.rvSaveSuccess'))
-    showApply.value = false
-    await loadData()
-  } catch (e) {
-    message.error((e as Error).message || t('score.rvSaveFail'))
-  } finally {
-    applySaving.value = false
-  }
+  return withApplySaving(async () => {
+    try {
+      await applyReview({ scoreId: target.id, reason: applyReason.value.trim() })
+      message.success(t('score.rvSaveSuccess'))
+      showApply.value = false
+      await loadData()
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('score.rvSaveFail'))
+    }
+  })
 }
 
 const scoreRowKey = (row: ScoreView) => row.id
@@ -337,20 +338,19 @@ const levelPieOption = computed<EChartsOption>(() => {
 const hasData = computed(() => scores.value.length > 0)
 
 // ---- 学习画像（学情分析 #1 融入） ----
-const profileLoading = ref(false)
+const { loading: profileLoading, withLoading: withProfileLoading } = useLoading()
 const profile = ref<StudentProfileDto | null>(null)
 
-async function loadProfile() {
-  profileLoading.value = true
-  try {
-    const res = await getMyProfile()
-    profile.value = res.data
-  } catch (e) {
-    message.error((e as Error).message || t('analysis.pfLoadFail'))
-    profile.value = null
-  } finally {
-    profileLoading.value = false
-  }
+function loadProfile() {
+  return withProfileLoading(async () => {
+    try {
+      const res = await getMyProfile()
+      profile.value = res.data
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('analysis.pfLoadFail'))
+      profile.value = null
+    }
+  })
 }
 
 const hasProfileSubjects = computed(() => (profile.value?.subjects?.length ?? 0) > 0)

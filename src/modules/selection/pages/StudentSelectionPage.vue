@@ -16,16 +16,10 @@ import {
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
-import {
-  fetchStudentCampaigns,
-  fetchMyRecords,
-  selectCourse,
-  dropCourse,
-} from '../api'
-import type {
-  SelectionRecord,
-  StudentCampaign,
-} from '../types'
+import { fetchStudentCampaigns, fetchMyRecords, selectCourse, dropCourse } from '../api'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
+import type { SelectionRecord, StudentCampaign } from '../types'
 
 const { t } = useI18n()
 const message = useMessage()
@@ -38,7 +32,7 @@ interface GroupedSelection {
   campaigns: StudentCampaign[]
 }
 
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 const campaigns = ref<StudentCampaign[]>([])
 const records = ref<SelectionRecord[]>([])
 
@@ -150,9 +144,7 @@ function capacityColor(c: StudentCampaign): string {
 }
 
 function findActiveRecord(campaignId: number): SelectionRecord | undefined {
-  return records.value.find(
-    (r) => r.campaignId === campaignId && r.status === 'SELECTED',
-  )
+  return records.value.find((r) => r.campaignId === campaignId && r.status === 'SELECTED')
 }
 
 function campaignNameOf(campaignId: number): string {
@@ -187,28 +179,27 @@ const groupedSelections = computed<GroupedSelection[]>(() => {
   return Array.from(map.values())
 })
 
-async function loadAll() {
-  loading.value = true
-  try {
-    const campaignRes = await fetchStudentCampaigns()
-    const list = campaignRes.data
-    if (list.length === 0) {
-      campaigns.value = []
-      records.value = []
-      return
+function loadAll() {
+  return withLoading(async () => {
+    try {
+      const campaignRes = await fetchStudentCampaigns()
+      const list = campaignRes.data
+      if (list.length === 0) {
+        campaigns.value = []
+        records.value = []
+        return
+      }
+      const recordResults = await Promise.all(
+        list.map((c) => fetchMyRecords(c.id).catch(() => null)),
+      )
+      campaigns.value = list
+      records.value = recordResults
+        .filter((r): r is NonNullable<typeof r> => r !== null)
+        .flatMap((r) => r.data)
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('selection.loadFail'))
     }
-    const recordResults = await Promise.all(
-      list.map((c) => fetchMyRecords(c.id).catch(() => null)),
-    )
-    campaigns.value = list
-    records.value = recordResults
-      .filter((r): r is NonNullable<typeof r> => r !== null)
-      .flatMap((r) => r.data)
-  } catch (e) {
-    message.error((e as Error).message || t('selection.loadFail'))
-  } finally {
-    loading.value = false
-  }
+  })
 }
 
 async function handleSelect(campaign: StudentCampaign) {
@@ -217,7 +208,7 @@ async function handleSelect(campaign: StudentCampaign) {
     message.success(t('selection.selectSuccess'))
     await loadAll()
   } catch (e) {
-    message.error((e as Error).message || t('selection.selectFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('selection.selectFail'))
     await loadAll()
   }
 }
@@ -228,7 +219,7 @@ async function handleDrop(recordId: number) {
     message.success(t('selection.dropSuccess'))
     await loadAll()
   } catch (e) {
-    message.error((e as Error).message || t('selection.dropFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('selection.dropFail'))
     await loadAll()
   }
 }
@@ -431,7 +422,12 @@ onMounted(loadAll)
                       {{ $t('selection.endTime') }}: {{ formatDateTime(campaign.endTime) }}
                     </span>
                     <span>
-                      {{ $t('selection.weekRangeValue', { start: campaign.startWeek, end: campaign.endWeek }) }}
+                      {{
+                        $t('selection.weekRangeValue', {
+                          start: campaign.startWeek,
+                          end: campaign.endWeek,
+                        })
+                      }}
                     </span>
                   </div>
 

@@ -32,6 +32,8 @@ import {
 } from '../api'
 import { fetchTeachInfoList } from '@/modules/curriculum/api'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import type { TeachInfo } from '@/modules/curriculum/types'
 import type { TeachingEvaluationView, EvaluationStatusDto, EvaluationFormItem } from '../types'
 import { formatDateTime } from '../utils'
@@ -47,47 +49,44 @@ const adminTab = ref<'items' | 'templates' | 'period' | 'override'>('items')
 const studentTab = ref<'submit' | 'my'>('submit')
 
 // ---- 评教周期 ----
-const periodLoading = ref(false)
+const { loading: periodLoading, withLoading: withPeriodLoading } = useLoading()
 const period = ref<EvaluationStatusDto | null>(null)
-const periodActionLoading = ref(false)
+const { loading: periodActionLoading, withLoading: withPeriodAction } = useLoading()
 
-async function loadPeriod() {
-  periodLoading.value = true
-  try {
-    const res = await fetchEvaluationPeriod()
-    period.value = res.data
-  } catch (e) {
-    message.error((e as Error).message || t('analysis.evLoadFail'))
-    period.value = null
-  } finally {
-    periodLoading.value = false
-  }
+function loadPeriod() {
+  return withPeriodLoading(async () => {
+    try {
+      const res = await fetchEvaluationPeriod()
+      period.value = res.data
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('analysis.evLoadFail'))
+      period.value = null
+    }
+  })
 }
 
-async function handleOpenPeriod() {
-  periodActionLoading.value = true
-  try {
-    const res = await openEvaluationPeriod()
-    period.value = res.data
-    message.success(t('analysis.evOpenSuccess'))
-  } catch (e) {
-    message.error((e as Error).message || t('analysis.evOpenFail'))
-  } finally {
-    periodActionLoading.value = false
-  }
+function handleOpenPeriod() {
+  return withPeriodAction(async () => {
+    try {
+      const res = await openEvaluationPeriod()
+      period.value = res.data
+      message.success(t('analysis.evOpenSuccess'))
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('analysis.evOpenFail'))
+    }
+  })
 }
 
-async function handleClosePeriod() {
-  periodActionLoading.value = true
-  try {
-    const res = await closeEvaluationPeriod()
-    period.value = res.data
-    message.success(t('analysis.evCloseSuccess'))
-  } catch (e) {
-    message.error((e as Error).message || t('analysis.evCloseFail'))
-  } finally {
-    periodActionLoading.value = false
-  }
+function handleClosePeriod() {
+  return withPeriodAction(async () => {
+    try {
+      const res = await closeEvaluationPeriod()
+      period.value = res.data
+      message.success(t('analysis.evCloseSuccess'))
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('analysis.evCloseFail'))
+    }
+  })
 }
 
 const periodOpen = computed(() => period.value?.open === true)
@@ -119,29 +118,28 @@ interface FormRow extends EvaluationFormItem {
   score: number
 }
 
-const formLoading = ref(false)
+const { loading: formLoading, withLoading: withFormLoading } = useLoading()
 const formRows = ref<FormRow[]>([])
 const currentTemplateName = ref('')
 const comment = ref('')
-const submitting = ref(false)
+const { loading: submitting, withLoading: withSubmitting } = useLoading()
 
-async function loadForm(teachInfoId: number) {
-  formLoading.value = true
-  formRows.value = []
-  currentTemplateName.value = ''
-  try {
-    const res = await fetchEvaluationForm(teachInfoId)
-    currentTemplateName.value = res.data.templateName
-    formRows.value = res.data.items
-      .slice()
-      .sort((a, b) => a.sortOrder - b.sortOrder)
-      .map((it) => ({ ...it, score: it.required === 1 ? it.maxScore : 0 }))
-  } catch {
-    // 错误提示由请求封装统一处理（如「暂未配置评教模板」）
+function loadForm(teachInfoId: number) {
+  return withFormLoading(async () => {
     formRows.value = []
-  } finally {
-    formLoading.value = false
-  }
+    currentTemplateName.value = ''
+    try {
+      const res = await fetchEvaluationForm(teachInfoId)
+      currentTemplateName.value = res.data.templateName
+      formRows.value = res.data.items
+        .slice()
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map((it) => ({ ...it, score: it.required === 1 ? it.maxScore : 0 }))
+    } catch {
+      // 错误提示由请求封装统一处理（如「暂未配置评教模板」）
+      formRows.value = []
+    }
+  })
 }
 
 function handleCourseChange(id: number | null) {
@@ -154,8 +152,9 @@ function handleCourseChange(id: number | null) {
   }
 }
 
-async function handleSubmit() {
-  if (selectedTeachInfoId.value == null) {
+function handleSubmit() {
+  const teachInfoId = selectedTeachInfoId.value
+  if (teachInfoId == null) {
     message.warning(t('analysis.evSelectCourseFirst'))
     return
   }
@@ -165,48 +164,46 @@ async function handleSubmit() {
       return
     }
   }
-  submitting.value = true
-  try {
-    const scores: { itemId: number; score: number }[] = []
-    for (const it of formRows.value) {
-      if (it.score >= 1) {
-        scores.push({ itemId: it.itemId, score: it.score })
+  return withSubmitting(async () => {
+    try {
+      const scores: { itemId: number; score: number }[] = []
+      for (const it of formRows.value) {
+        if (it.score >= 1) {
+          scores.push({ itemId: it.itemId, score: it.score })
+        }
       }
+      await submitEvaluation({
+        teachInfoId,
+        scores,
+        comment: comment.value.trim() || undefined,
+      })
+      message.success(t('analysis.evSubmitSuccess'))
+      selectedTeachInfoId.value = null
+      formRows.value = []
+      currentTemplateName.value = ''
+      comment.value = ''
+      await loadMyEvaluations()
+      studentTab.value = 'my'
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('analysis.evSubmitFail'))
     }
-    await submitEvaluation({
-      teachInfoId: selectedTeachInfoId.value,
-      scores,
-      comment: comment.value.trim() || undefined,
-    })
-    message.success(t('analysis.evSubmitSuccess'))
-    selectedTeachInfoId.value = null
-    formRows.value = []
-    currentTemplateName.value = ''
-    comment.value = ''
-    await loadMyEvaluations()
-    studentTab.value = 'my'
-  } catch (e) {
-    message.error((e as Error).message || t('analysis.evSubmitFail'))
-  } finally {
-    submitting.value = false
-  }
+  })
 }
 
 // ---- 学生：我的评教 ----
-const myLoading = ref(false)
+const { loading: myLoading, withLoading: withMyLoading } = useLoading()
 const myEvaluations = ref<TeachingEvaluationView[]>([])
 
-async function loadMyEvaluations() {
-  myLoading.value = true
-  try {
-    const res = await fetchMyEvaluations()
-    myEvaluations.value = res.data
-  } catch (e) {
-    message.error((e as Error).message || t('analysis.evLoadFail'))
-    myEvaluations.value = []
-  } finally {
-    myLoading.value = false
-  }
+function loadMyEvaluations() {
+  return withMyLoading(async () => {
+    try {
+      const res = await fetchMyEvaluations()
+      myEvaluations.value = res.data
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('analysis.evLoadFail'))
+      myEvaluations.value = []
+    }
+  })
 }
 
 const myEvaluationRowKey = (row: TeachingEvaluationView) => row.id

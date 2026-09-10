@@ -14,6 +14,7 @@ import {
   NTag,
   useMessage,
 } from 'naive-ui'
+import { isReportedError } from '@/shared/api'
 import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import {
   fetchAvailableCampaigns,
@@ -26,6 +27,7 @@ import {
   assignmentSourceTagType,
   formatDateTime,
 } from '@/modules/practice/utils'
+import { useLoading } from '@/shared/composables/useLoading'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import type { CampaignResponse, ProposalResponse, AssignmentResponse } from '../../types'
 
@@ -34,10 +36,10 @@ const message = useMessage()
 const { isStudent } = useRoleCheck()
 
 const campaigns = ref<CampaignResponse[]>([])
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 const myProposals = ref<ProposalResponse[]>([])
 const myAssignment = ref<AssignmentResponse | null>(null)
-const assignmentLoading = ref(false)
+const { loading: assignmentLoading, withLoading: withAssignmentLoading } = useLoading()
 
 /** 选题窗口内才允许进入申报 */
 function inTopicWindow(c: CampaignResponse): boolean {
@@ -62,38 +64,36 @@ function hasActiveProposal(campaignId: number): boolean {
   return !!p && p.status !== '已驳回'
 }
 
-async function loadCampaigns(): Promise<void> {
-  loading.value = true
-  try {
-    const res = await fetchAvailableCampaigns()
-    campaigns.value = res.data ?? []
-    const pRes = await fetchMyProposals()
-    myProposals.value = pRes.data ?? []
-  } catch {
-    /* 已展示错误 */
-  } finally {
-    loading.value = false
-  }
+function loadCampaigns() {
+  return withLoading(async () => {
+    try {
+      const res = await fetchAvailableCampaigns()
+      campaigns.value = res.data ?? []
+      const pRes = await fetchMyProposals()
+      myProposals.value = pRes.data ?? []
+    } catch {
+      /* 已展示错误 */
+    }
+  })
 }
 
 // 我的指导关系（对全部可见活动展示，无活动时为空）
-async function loadAssignments(): Promise<void> {
-  assignmentLoading.value = true
-  try {
-    const res = await fetchMyAssignments()
-    myAssignment.value = res.data?.[0] ?? null
-  } catch {
-    myAssignment.value = null
-  } finally {
-    assignmentLoading.value = false
-  }
+function loadAssignments() {
+  return withAssignmentLoading(async () => {
+    try {
+      const res = await fetchMyAssignments()
+      myAssignment.value = res.data?.[0] ?? null
+    } catch {
+      myAssignment.value = null
+    }
+  })
 }
 
 // ===== 选题申报弹窗 =====
 const showDeclare = ref(false)
 const declareCampaign = ref<CampaignResponse | null>(null)
 const declareForm = ref({ title: '', content: '' })
-const saving = ref(false)
+const { loading: saving, withLoading: withSaving } = useLoading()
 
 function startDeclare(c: CampaignResponse): void {
   declareCampaign.value = c
@@ -108,8 +108,9 @@ function startResubmit(c: CampaignResponse): void {
   showDeclare.value = true
 }
 
-async function handleSubmitProposal(): Promise<void> {
+function handleSubmitProposal() {
   if (!declareCampaign.value) return
+  const campaign = declareCampaign.value
   const f = declareForm.value
   if (!f.title.trim()) {
     message.warning(t('graduation.student.titleRequired'))
@@ -119,22 +120,23 @@ async function handleSubmitProposal(): Promise<void> {
     message.warning(t('graduation.common.contentMin100'))
     return
   }
-  saving.value = true
-  try {
-    await submitProposal({
-      campaignId: declareCampaign.value.id,
-      title: f.title.trim(),
-      content: f.content.trim(),
-    })
-    message.success(t('graduation.common.operationSuccess'))
-    showDeclare.value = false
-    await loadCampaigns()
-    await loadAssignments()
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.operationFail'))
-  } finally {
-    saving.value = false
-  }
+  return withSaving(async () => {
+    try {
+      await submitProposal({
+        campaignId: campaign.id,
+        title: f.title.trim(),
+        content: f.content.trim(),
+      })
+      message.success(t('graduation.common.operationSuccess'))
+      showDeclare.value = false
+      await loadCampaigns()
+      await loadAssignments()
+    } catch (e) {
+      if (!isReportedError(e)) {
+        message.error((e as Error).message || t('graduation.common.operationFail'))
+      }
+    }
+  })
 }
 
 onMounted(() => {

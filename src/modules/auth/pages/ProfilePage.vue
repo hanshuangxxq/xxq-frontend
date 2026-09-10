@@ -16,6 +16,7 @@ import {
 } from 'naive-ui'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useAvatar } from '@/shared/composables/useAvatar'
+import { useLoading } from '@/shared/composables/useLoading'
 import { refreshToken } from '@/shared/tokenManager'
 import { formatDateTime } from '@/shared/utils/format'
 import { authApi } from '../api'
@@ -27,8 +28,8 @@ const message = useMessage()
 
 const profile = ref<UserProfile | null>(null)
 const editing = ref(false)
-const saving = ref(false)
-const uploading = ref(false)
+const { loading: saving, withLoading: withSaving } = useLoading()
+const { loading: uploading, withLoading: withUploading } = useLoading()
 
 const genderOptions = computed(() => [
   { label: t('profile.notSet'), value: '' },
@@ -98,42 +99,40 @@ function cancelEdit() {
   editing.value = false
 }
 
-async function saveProfile() {
-  saving.value = true
-  try {
-    const userId = authStore.user!.userId
-    await authApi.updateProfile(userId, {
-      email: form.value.email || undefined,
-      phone: form.value.phone || undefined,
-      gender: form.value.gender || undefined,
-      description: form.value.description || undefined,
-    })
-    message.success(t('profile.saveSuccess'))
-    await loadProfile()
-    editing.value = false
-  } catch {
-    // 错误消息已由 api 层统一提示
-  } finally {
-    saving.value = false
-  }
+function saveProfile() {
+  return withSaving(async () => {
+    try {
+      const userId = authStore.user!.userId
+      await authApi.updateProfile(userId, {
+        email: form.value.email || undefined,
+        phone: form.value.phone || undefined,
+        gender: form.value.gender || undefined,
+        description: form.value.description || undefined,
+      })
+      message.success(t('profile.saveSuccess'))
+      await loadProfile()
+      editing.value = false
+    } catch {
+      // 错误消息已由 api 层统一提示
+    }
+  })
 }
 
-async function handleAvatarUpload(file: File) {
-  uploading.value = true
-  try {
-    const userId = authStore.user!.userId
-    const filename = await authApi.uploadAvatar(userId, file)
-    if (authStore.user) {
-      authStore.user.avatar = filename
-      authStore.persistUser()
+function handleAvatarUpload(file: File) {
+  return withUploading(async () => {
+    try {
+      const userId = authStore.user!.userId
+      const filename = await authApi.uploadAvatar(userId, file)
+      if (authStore.user) {
+        authStore.user.avatar = filename
+        authStore.persistUser()
+      }
+      await loadProfile()
+      message.success(t('profile.saveSuccess'))
+    } catch {
+      // 错误消息已由 api 层统一提示
     }
-    await loadProfile()
-    message.success(t('profile.saveSuccess'))
-  } catch {
-    // 错误消息已由 api 层统一提示
-  } finally {
-    uploading.value = false
-  }
+  })
 }
 
 function triggerUpload() {

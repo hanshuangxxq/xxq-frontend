@@ -12,10 +12,12 @@ import {
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
+import { isReportedError } from '@/shared/api'
 import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import CampaignContextSelector from '../../components/CampaignContextSelector.vue'
 import { fetchTeacherPool, fetchMyAssignments, pickStudent } from '../../api'
 import { proposalStatusTagType, assignmentSourceTagType } from '@/modules/practice/utils'
+import { useLoading } from '@/shared/composables/useLoading'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import type { TeacherPickPoolRow, AssignmentResponse, CampaignResponse } from '../../types'
 
@@ -26,7 +28,7 @@ const { isTeacher } = useRoleCheck()
 const campaignId = ref<number | null>(null)
 const pool = ref<TeacherPickPoolRow[]>([])
 const myAssignments = ref<AssignmentResponse[]>([])
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 const pickingId = ref<number | null>(null)
 
 /** 已自选数（来源=教师自选） */
@@ -49,21 +51,20 @@ function canPick(row: TeacherPickPoolRow): boolean {
   return true
 }
 
-async function loadPool(): Promise<void> {
+function loadPool() {
   if (campaignId.value == null) return
-  loading.value = true
-  try {
-    const [poolRes, myRes] = await Promise.all([
-      fetchTeacherPool(campaignId.value),
-      fetchMyAssignments(campaignId.value),
-    ])
-    pool.value = poolRes.data ?? []
-    myAssignments.value = myRes.data ?? []
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.loadFail'))
-  } finally {
-    loading.value = false
-  }
+  const id = campaignId.value
+  return withLoading(async () => {
+    try {
+      const [poolRes, myRes] = await Promise.all([fetchTeacherPool(id), fetchMyAssignments(id)])
+      pool.value = poolRes.data ?? []
+      myAssignments.value = myRes.data ?? []
+    } catch (e) {
+      if (!isReportedError(e)) {
+        message.error((e as Error).message || t('graduation.common.loadFail'))
+      }
+    }
+  })
 }
 
 function onCampaignChange(id: number | null): void {
@@ -87,7 +88,9 @@ async function handlePick(row: TeacherPickPoolRow): Promise<void> {
     await loadPool()
   } catch (e) {
     // F-R-24：409 抢选失败时刷新池列表（错误提示已由 api 层展示）
-    message.error((e as Error).message || t('graduation.common.operationFail'))
+    if (!isReportedError(e)) {
+      message.error((e as Error).message || t('graduation.common.operationFail'))
+    }
     await loadPool()
   } finally {
     pickingId.value = null

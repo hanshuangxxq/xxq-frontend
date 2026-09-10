@@ -14,6 +14,9 @@
     "empty": "无数据"
   },
   "publicTag": "公选",
+  "loading": "数据加载中…",
+  "cancelLoading": "取消",
+  "cancelled": "已取消加载",
   "error": {
     "network": "网络异常，请检查网络连接",
     "requestFailed": "请求失败",

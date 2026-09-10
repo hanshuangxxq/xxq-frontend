@@ -26,6 +26,8 @@ import {
   fetchBindableCampaigns,
 } from '../api'
 import { useRemotePagination } from '@/shared/composables/useRemotePagination'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import type { Campaign, CampaignStatus, SelectionGroup, SelectionGroupForm } from '../types'
 
 const props = defineProps<{
@@ -40,7 +42,7 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const message = useMessage()
 
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 const groups = ref<SelectionGroup[]>([])
 const { pagination } = useRemotePagination(loadGroups)
 
@@ -55,17 +57,16 @@ function formatDateTime(s: string | null | undefined): string {
   return s ? s.replace('T', ' ') : ''
 }
 
-async function loadGroups() {
-  loading.value = true
-  try {
-    const res = await fetchAllGroups(pagination.page, pagination.pageSize)
-    groups.value = res.data.records
-    pagination.itemCount = res.data.total
-  } catch (e) {
-    message.error((e as Error).message || t('selection.loadFail'))
-  } finally {
-    loading.value = false
-  }
+function loadGroups() {
+  return withLoading(async () => {
+    try {
+      const res = await fetchAllGroups(pagination.page, pagination.pageSize)
+      groups.value = res.data.records
+      pagination.itemCount = res.data.total
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('selection.loadFail'))
+    }
+  })
 }
 
 watch(
@@ -159,7 +160,7 @@ const groupColumns = computed<DataTableColumns<SelectionGroup>>(() => [
 const showGroupForm = ref(false)
 const groupFormMode = ref<'create' | 'edit'>('create')
 const editingGroupId = ref<number | null>(null)
-const savingGroup = ref(false)
+const { loading: savingGroup, withLoading: withSavingGroup } = useLoading()
 const groupForm = ref<SelectionGroupForm>({
   name: '',
   maxCourses: 1,
@@ -182,7 +183,7 @@ function openEditGroup(row: SelectionGroup) {
   showGroupForm.value = true
 }
 
-async function handleSaveGroup() {
+function handleSaveGroup() {
   if (!groupForm.value.name) {
     message.warning(t('selection.groupNameRequired'))
     return
@@ -191,26 +192,25 @@ async function handleSaveGroup() {
     message.warning(t('selection.groupMaxCoursesRequired'))
     return
   }
-  savingGroup.value = true
-  try {
-    const payload: SelectionGroupForm = {
-      name: groupForm.value.name,
-      maxCourses: groupForm.value.maxCourses,
+  return withSavingGroup(async () => {
+    try {
+      const payload: SelectionGroupForm = {
+        name: groupForm.value.name,
+        maxCourses: groupForm.value.maxCourses,
+      }
+      if (groupFormMode.value === 'create') {
+        await createGroup(payload)
+      } else {
+        await updateGroup(editingGroupId.value!, payload)
+      }
+      message.success(t('selection.saveSuccess'))
+      showGroupForm.value = false
+      await loadGroups()
+      emit('changed')
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('selection.saveFail'))
     }
-    if (groupFormMode.value === 'create') {
-      await createGroup(payload)
-    } else {
-      await updateGroup(editingGroupId.value!, payload)
-    }
-    message.success(t('selection.saveSuccess'))
-    showGroupForm.value = false
-    await loadGroups()
-    emit('changed')
-  } catch (e) {
-    message.error((e as Error).message || t('selection.saveFail'))
-  } finally {
-    savingGroup.value = false
-  }
+  })
 }
 
 async function handleDelete(row: SelectionGroup) {
@@ -220,13 +220,13 @@ async function handleDelete(row: SelectionGroup) {
     await loadGroups()
     emit('changed')
   } catch (e) {
-    message.error((e as Error).message || t('selection.deleteFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('selection.deleteFail'))
   }
 }
 
 const showBindingModal = ref(false)
 const bindingGroup = ref<SelectionGroup | null>(null)
-const bindingLoading = ref(false)
+const { loading: bindingLoading, withLoading: withBindingLoading } = useLoading()
 const bindableCampaigns = ref<Campaign[]>([])
 
 async function openBindingModal(row: SelectionGroup) {
@@ -236,16 +236,15 @@ async function openBindingModal(row: SelectionGroup) {
   await loadBindableCampaigns(row.id)
 }
 
-async function loadBindableCampaigns(groupId: number) {
-  bindingLoading.value = true
-  try {
-    const res = await fetchBindableCampaigns(groupId)
-    bindableCampaigns.value = res.data
-  } catch (e) {
-    message.error((e as Error).message || t('selection.loadFail'))
-  } finally {
-    bindingLoading.value = false
-  }
+function loadBindableCampaigns(groupId: number) {
+  return withBindingLoading(async () => {
+    try {
+      const res = await fetchBindableCampaigns(groupId)
+      bindableCampaigns.value = res.data
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('selection.loadFail'))
+    }
+  })
 }
 
 const campaignRowKey = (row: Campaign) => row.id
@@ -329,7 +328,7 @@ async function handleBind(campaignId: number) {
     await loadGroups()
     emit('changed')
   } catch (e) {
-    message.error((e as Error).message || t('selection.saveFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('selection.saveFail'))
   }
 }
 
@@ -342,7 +341,7 @@ async function handleUnbind(campaignId: number) {
     await loadGroups()
     emit('changed')
   } catch (e) {
-    message.error((e as Error).message || t('selection.deleteFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('selection.deleteFail'))
   }
 }
 </script>

@@ -23,8 +23,10 @@ import {
   type DataTableColumns,
   type UploadFileInfo,
 } from 'naive-ui'
+import { isReportedError } from '@/shared/api'
 import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import EmptyState from '@/shared/components/EmptyState.vue'
+import { useLoading } from '@/shared/composables/useLoading'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import {
   fetchAvailableSocialPractices,
@@ -60,19 +62,18 @@ const activeTab = ref('available')
 const MAX_SIZE = 20 * 1024 * 1024
 
 // ---- 可申报项目 ----
-const availLoading = ref(false)
+const { loading: availLoading, withLoading: withAvailLoading } = useLoading()
 const available = ref<SocialPracticeResponse[]>([])
 
-async function loadAvailable() {
-  availLoading.value = true
-  try {
-    const res = await fetchAvailableSocialPractices()
-    available.value = res.data
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.loadFail'))
-  } finally {
-    availLoading.value = false
-  }
+function loadAvailable() {
+  return withAvailLoading(async () => {
+    try {
+      const res = await fetchAvailableSocialPractices()
+      available.value = res.data
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+    }
+  })
 }
 
 const showApply = ref(false)
@@ -83,7 +84,7 @@ const applyForm = ref<{
   members: Array<number>
   applyReason: string
 }>({ teamMode: 'individual', teamName: '', members: [], applyReason: '' })
-const savingApply = ref(false)
+const { loading: savingApply, withLoading: withSavingApply } = useLoading()
 
 const fetchStudentsPage = (page: number, pageSize: number) => fetchStudents({ page, pageSize })
 const studentLabelOf = (s: Student) => s.name
@@ -95,7 +96,7 @@ function startApply(row: SocialPracticeResponse) {
   showApply.value = true
 }
 
-async function handleApply() {
+function handleApply() {
   if (!applyingItem.value) return
   const f = applyForm.value
   const body =
@@ -110,17 +111,17 @@ async function handleApply() {
           practiceId: applyingItem.value.id,
           applyReason: f.applyReason || undefined,
         }
-  savingApply.value = true
-  try {
-    await applySocialPractice(body)
-    message.success(t('practice.common.operationSuccess'))
-    showApply.value = false
-    await loadMyApplications()
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.operationFail'))
-  } finally {
-    savingApply.value = false
-  }
+  return withSavingApply(async () => {
+    try {
+      await applySocialPractice(body)
+      message.success(t('practice.common.operationSuccess'))
+      showApply.value = false
+      await loadMyApplications()
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('practice.common.operationFail'))
+    }
+  })
 }
 
 const socialPracticeRowKey = (row: SocialPracticeResponse) => row.id
@@ -170,19 +171,18 @@ const availableColumns = computed<DataTableColumns<SocialPracticeResponse>>(() =
 ])
 
 // ---- 我的申报 ----
-const myAppLoading = ref(false)
+const { loading: myAppLoading, withLoading: withMyAppLoading } = useLoading()
 const myApplications = ref<SocialPracticeApplicationResponse[]>([])
 
-async function loadMyApplications() {
-  myAppLoading.value = true
-  try {
-    const res = await fetchMySocialPracticeApplications()
-    myApplications.value = res.data
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.loadFail'))
-  } finally {
-    myAppLoading.value = false
-  }
+function loadMyApplications() {
+  return withMyAppLoading(async () => {
+    try {
+      const res = await fetchMySocialPracticeApplications()
+      myApplications.value = res.data
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+    }
+  })
 }
 
 async function handleRevoke(id: number) {
@@ -191,7 +191,7 @@ async function handleRevoke(id: number) {
     message.success(t('practice.common.revokeSuccess'))
     await loadMyApplications()
   } catch (e) {
-    message.error((e as Error).message || t('practice.common.revokeFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.revokeFail'))
   }
 }
 
@@ -273,19 +273,18 @@ const myAppColumns = computed<DataTableColumns<SocialPracticeApplicationResponse
 ])
 
 // ---- 我的报告 ----
-const reportLoading = ref(false)
+const { loading: reportLoading, withLoading: withReportLoading } = useLoading()
 const myReports = ref<SocialPracticeReportResponse[]>([])
 
-async function loadMyReports() {
-  reportLoading.value = true
-  try {
-    const res = await fetchMySocialPracticeReports()
-    myReports.value = res.data
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.loadFail'))
-  } finally {
-    reportLoading.value = false
-  }
+function loadMyReports() {
+  return withReportLoading(async () => {
+    try {
+      const res = await fetchMySocialPracticeReports()
+      myReports.value = res.data
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+    }
+  })
 }
 
 const approvedPractices = computed(() => myApplications.value.filter((a) => a.status === '已通过'))
@@ -301,7 +300,7 @@ const reportForm = ref<{ practiceId: number | null; title: string; summary: stri
   summary: '',
 })
 const fileList = ref<UploadFileInfo[]>([])
-const savingReport = ref(false)
+const { loading: savingReport, withLoading: withSavingReport } = useLoading()
 
 function startSubmitReport() {
   reportFormMode.value = 'create'
@@ -317,34 +316,35 @@ function startResubmitReport(row: SocialPracticeReportResponse) {
   showReportForm.value = true
 }
 
-async function handleSubmitReport() {
+function handleSubmitReport() {
   const f = reportForm.value
   if (f.practiceId == null) return message.warning(t('practice.socialPractice.practiceRequired'))
   if (!f.title.trim()) return message.warning(t('practice.socialPractice.titleRequired'))
   const file = fileList.value[0]?.file
   if (!file) return message.warning(t('practice.common.fileRequired'))
   if (file.size > MAX_SIZE) return message.warning(t('practice.common.fileTooLarge'))
-  savingReport.value = true
-  try {
-    await submitSocialPracticeReport(
-      { practiceId: f.practiceId, title: f.title.trim(), summary: f.summary || undefined },
-      file,
-    )
-    message.success(t('practice.socialPractice.submitSuccess'))
-    showReportForm.value = false
-    await loadMyReports()
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.saveFail'))
-  } finally {
-    savingReport.value = false
-  }
+  const practiceId = f.practiceId
+  return withSavingReport(async () => {
+    try {
+      await submitSocialPracticeReport(
+        { practiceId, title: f.title.trim(), summary: f.summary || undefined },
+        file,
+      )
+      message.success(t('practice.socialPractice.submitSuccess'))
+      showReportForm.value = false
+      await loadMyReports()
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.saveFail'))
+    }
+  })
 }
 
 async function handleDownloadReport(id: number) {
   try {
     await downloadPracticeFile(`/practice/social-practice-reports/${id}/download`)
   } catch (e) {
-    message.error((e as Error).message || t('practice.common.operationFail'))
+    if (!isReportedError(e))
+      message.error((e as Error).message || t('practice.common.operationFail'))
   }
 }
 
@@ -354,7 +354,7 @@ async function handleDeleteReport(id: number) {
     message.success(t('practice.common.deleteSuccess'))
     await loadMyReports()
   } catch (e) {
-    message.error((e as Error).message || t('practice.common.deleteFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.deleteFail'))
   }
 }
 

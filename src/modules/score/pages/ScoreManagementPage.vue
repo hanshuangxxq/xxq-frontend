@@ -16,6 +16,8 @@ import {
   type DataTableColumns,
 } from 'naive-ui'
 import StatCard from '@/shared/components/StatCard.vue'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import {
   getScoreConfig,
   setScoreConfig,
@@ -54,12 +56,12 @@ const selectedTeachInfoId = computed(() => {
 })
 const config = ref<ScoreConfig | null>(null)
 const ratioInput = ref<number | null>(null)
-const ratioSaving = ref(false)
+const { loading: ratioSaving, withLoading: withRatioSaving } = useLoading()
 
 const rosterRows = ref<RosterRow[]>([])
-const loadingRoster = ref(false)
-const saving = ref(false)
-const exporting = ref(false)
+const { loading: loadingRoster, withLoading: withRosterLoading } = useLoading()
+const { loading: saving, withLoading: withSaving } = useLoading()
+const { loading: exporting, withLoading: withExporting } = useLoading()
 const exportFormat = ref<'excel' | 'pdf'>('excel')
 
 const hasConfig = computed(() => config.value !== null)
@@ -82,7 +84,7 @@ async function loadExamOptions() {
         teachInfoId: e.teachInfoId as number,
       }))
   } catch (e) {
-    message.error((e as Error).message || t('score.mgLoadFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('score.mgLoadFail'))
   }
 }
 
@@ -96,57 +98,56 @@ async function loadConfigAndRoster() {
     config.value = cfgRes.data
     ratioInput.value = cfgRes.data?.regularRatio ?? 30
   } catch (e) {
-    message.error((e as Error).message || t('score.mgLoadFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('score.mgLoadFail'))
     config.value = null
     ratioInput.value = 30
   }
   // 已录成绩 + 名单（按考试过滤，仅返回参加该考试的学生）
-  loadingRoster.value = true
-  try {
-    const [sRes, rRes] = await Promise.all([
-      fetchScoresByTeachInfo(teachId),
-      fetchRoster(teachId, examId),
-    ])
-    // 仅取「正常」成绩用于录入预填（补考/重修在考试模块录入）
-    const regularMap = new Map<number, ScoreView>()
-    for (const s of sRes.data) {
-      if (s.scoreType === '正常') regularMap.set(s.studentUserId, s)
-    }
-    rosterRows.value = rRes.data.map((r) => {
-      const exist = regularMap.get(r.studentUserId)
-      return {
-        ...r,
-        regular: exist ? exist.regularScore : null,
-        final: exist ? exist.finalScore : null,
-        locked: exist ? exist.locked : 0,
-        scoreId: exist ? exist.id : null,
+  await withRosterLoading(async () => {
+    try {
+      const [sRes, rRes] = await Promise.all([
+        fetchScoresByTeachInfo(teachId),
+        fetchRoster(teachId, examId),
+      ])
+      // 仅取「正常」成绩用于录入预填（补考/重修在考试模块录入）
+      const regularMap = new Map<number, ScoreView>()
+      for (const s of sRes.data) {
+        if (s.scoreType === '正常') regularMap.set(s.studentUserId, s)
       }
-    })
-  } catch (e) {
-    message.error((e as Error).message || t('score.mgLoadFail'))
-    rosterRows.value = []
-  } finally {
-    loadingRoster.value = false
-  }
+      rosterRows.value = rRes.data.map((r) => {
+        const exist = regularMap.get(r.studentUserId)
+        return {
+          ...r,
+          regular: exist ? exist.regularScore : null,
+          final: exist ? exist.finalScore : null,
+          locked: exist ? exist.locked : 0,
+          scoreId: exist ? exist.id : null,
+        }
+      })
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('score.mgLoadFail'))
+      rosterRows.value = []
+    }
+  })
 }
 
-async function handleSetRatio() {
+function handleSetRatio() {
   const teachId = selectedTeachInfoId.value
   if (teachId == null) return
-  if (ratioInput.value == null || ratioInput.value < 0 || ratioInput.value > 100) {
+  const ratio = ratioInput.value
+  if (ratio == null || ratio < 0 || ratio > 100) {
     message.warning(t('score.mgRatioRequired'))
     return
   }
-  ratioSaving.value = true
-  try {
-    const res = await setScoreConfig(teachId, ratioInput.value)
-    config.value = res.data
-    message.success(t('score.mgRatioSaved'))
-  } catch (e) {
-    message.error((e as Error).message || t('score.mgSaveFail'))
-  } finally {
-    ratioSaving.value = false
-  }
+  return withRatioSaving(async () => {
+    try {
+      const res = await setScoreConfig(teachId, ratio)
+      config.value = res.data
+      message.success(t('score.mgRatioSaved'))
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('score.mgSaveFail'))
+    }
+  })
 }
 
 function inRange(v: number | null): v is number {
@@ -180,7 +181,7 @@ const stats = computed(() => {
   }
 })
 
-async function handleBatchSave() {
+function handleBatchSave() {
   const teachId = selectedTeachInfoId.value
   const examId = selectedExamId.value
   if (teachId == null || examId == null) return
@@ -202,30 +203,28 @@ async function handleBatchSave() {
     message.warning(t('score.mgScoreRange'))
     return
   }
-  saving.value = true
-  try {
-    await batchCreateScores({ teachInfoId: teachId, examId, entries })
-    message.success(t('score.mgBatchSuccess'))
-    await loadConfigAndRoster()
-  } catch (e) {
-    message.error((e as Error).message || t('score.mgSaveFail'))
-  } finally {
-    saving.value = false
-  }
+  return withSaving(async () => {
+    try {
+      await batchCreateScores({ teachInfoId: teachId, examId, entries })
+      message.success(t('score.mgBatchSuccess'))
+      await loadConfigAndRoster()
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('score.mgSaveFail'))
+    }
+  })
 }
 
-async function handleExport() {
+function handleExport() {
   const teachId = selectedTeachInfoId.value
   if (teachId == null) return
-  exporting.value = true
-  try {
-    await exportScores(teachId, exportFormat.value)
-    message.success(t('score.mgExportSuccess'))
-  } catch (e) {
-    message.error((e as Error).message || t('score.mgExportFail'))
-  } finally {
-    exporting.value = false
-  }
+  return withExporting(async () => {
+    try {
+      await exportScores(teachId, exportFormat.value)
+      message.success(t('score.mgExportSuccess'))
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('score.mgExportFail'))
+    }
+  })
 }
 
 const rosterRowKey = (row: RosterRow) => row.studentUserId

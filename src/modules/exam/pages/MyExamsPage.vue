@@ -1,15 +1,27 @@
 <script setup lang="ts">
 import { ref, computed, h, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { NCard, NDataTable, NTag, NSpin, NEmpty, NTabs, NTabPane, useMessage, type DataTableColumns } from 'naive-ui'
+import {
+  NCard,
+  NDataTable,
+  NTag,
+  NSpin,
+  NEmpty,
+  NTabs,
+  NTabPane,
+  useMessage,
+  type DataTableColumns,
+} from 'naive-ui'
 import { fetchMyExams } from '../api'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import type { ExamView } from '../types'
 import { calcDurationMinutes } from '../utils'
 
 const { t } = useI18n()
 const message = useMessage()
 
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 const data = ref<ExamView[]>([])
 
 const activeTab = ref('normal')
@@ -35,17 +47,16 @@ function statusTagType(status: string): 'success' | 'info' | 'warning' | 'error'
   }
 }
 
-async function loadData() {
-  loading.value = true
-  try {
-    const res = await fetchMyExams()
-    data.value = res.data.sort((a, b) => a.examDate.localeCompare(b.examDate))
-  } catch (e) {
-    message.error((e as Error).message || t('exam.myLoadFail'))
-    data.value = []
-  } finally {
-    loading.value = false
-  }
+function loadData() {
+  return withLoading(async () => {
+    try {
+      const res = await fetchMyExams()
+      data.value = res.data.sort((a, b) => a.examDate.localeCompare(b.examDate))
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('exam.myLoadFail'))
+      data.value = []
+    }
+  })
 }
 
 const examRowKey = (row: ExamView) => row.id

@@ -20,6 +20,8 @@ import { fetchLocals, createLocal, updateLocal, deleteLocal } from '../api'
 import { fetchTeachers } from '@/modules/curriculum/api'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import { useRemotePagination } from '@/shared/composables/useRemotePagination'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import PagedSelect from '@/shared/components/PagedSelect.vue'
 import {
   LOCAL_TYPE_TO_CODE,
@@ -34,7 +36,7 @@ const { t } = useI18n()
 const message = useMessage()
 const { canManageLocals } = useRoleCheck()
 
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 const data = ref<Local[]>([])
 const { pagination, reset } = useRemotePagination(loadData)
 
@@ -87,21 +89,20 @@ const columns = computed<DataTableColumns<Local>>(() => {
   ]
 })
 
-async function loadData() {
-  loading.value = true
-  try {
-    const res = await fetchLocals({
-      type: filterType.value ?? undefined,
-      page: pagination.page,
-      pageSize: pagination.pageSize,
-    })
-    data.value = res.data.records
-    pagination.itemCount = res.data.total
-  } catch (e) {
-    message.error((e as Error).message || t('locals.loadFail'))
-  } finally {
-    loading.value = false
-  }
+function loadData() {
+  return withLoading(async () => {
+    try {
+      const res = await fetchLocals({
+        type: filterType.value ?? undefined,
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+      })
+      data.value = res.data.records
+      pagination.itemCount = res.data.total
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('locals.loadFail'))
+    }
+  })
 }
 
 function handleTypeChange() {
@@ -112,7 +113,7 @@ function handleTypeChange() {
 const showForm = ref(false)
 const formMode = ref<'create' | 'edit'>('create')
 const editingId = ref<number | null>(null)
-const saving = ref(false)
+const { loading: saving, withLoading: withSaving } = useLoading()
 
 const emptyForm = (): LocalForm => ({
   building: '',
@@ -167,21 +168,20 @@ async function handleSave() {
   if (managerRequired.value && form.value.managerId == null) {
     return message.warning(t('locals.managerRequired'))
   }
-  saving.value = true
-  try {
-    if (formMode.value === 'create') {
-      await createLocal(form.value)
-    } else {
-      await updateLocal(editingId.value!, form.value)
+  return withSaving(async () => {
+    try {
+      if (formMode.value === 'create') {
+        await createLocal(form.value)
+      } else {
+        await updateLocal(editingId.value!, form.value)
+      }
+      message.success(t('locals.saveSuccess'))
+      showForm.value = false
+      await loadData()
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('locals.saveFail'))
     }
-    message.success(t('locals.saveSuccess'))
-    showForm.value = false
-    await loadData()
-  } catch (e) {
-    message.error((e as Error).message || t('locals.saveFail'))
-  } finally {
-    saving.value = false
-  }
+  })
 }
 
 async function handleDelete(id: number) {
@@ -190,7 +190,7 @@ async function handleDelete(id: number) {
     message.success(t('locals.deleteSuccess'))
     await loadData()
   } catch (e) {
-    message.error((e as Error).message || t('locals.deleteFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('locals.deleteFail'))
   }
 }
 

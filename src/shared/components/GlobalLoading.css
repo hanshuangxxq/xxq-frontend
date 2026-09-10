@@ -1,0 +1,45 @@
+.global-loading {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6000;
+}
+
+.global-loading-card {
+  box-shadow: 0 2px 12px rgb(0 0 0 / 15%);
+  border-radius: 8px;
+}
+
+.global-loading-card :deep(.n-card__content) {
+  padding: 6px 8px 6px 14px;
+}
+
+.global-loading-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.global-loading-text {
+  font-size: 13px;
+}
+
+.global-loading-cancel {
+  flex-shrink: 0;
+}
+
+/* 淡入淡出过渡 */
+.global-loading-enter-active,
+.global-loading-leave-active {
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.global-loading-enter-from,
+.global-loading-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-8px);
+}

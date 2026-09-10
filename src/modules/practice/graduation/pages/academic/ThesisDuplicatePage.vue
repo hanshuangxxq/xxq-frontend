@@ -36,6 +36,8 @@ import {
   tsToIso,
 } from '@/modules/practice/utils'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import type { ThesisResponse, ThesisStatusCode, DuplicateResultCode } from '../../types'
 
 const { t } = useI18n()
@@ -44,9 +46,9 @@ const { isAcademicAdmin } = useRoleCheck()
 
 const campaignId = ref<number | null>(null)
 const list = ref<ThesisResponse[]>([])
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 const filterStatus = ref<ThesisStatusCode | null>(null)
-const exporting = ref(false)
+const { loading: exporting, withLoading: withExporting } = useLoading()
 
 const statusOptions = computed(() => [
   { label: t('graduation.academic.thesisStatusSubmitted'), value: 'SUBMITTED' as ThesisStatusCode },
@@ -62,18 +64,18 @@ const statusOptions = computed(() => [
   },
 ])
 
-async function loadList(): Promise<void> {
-  if (campaignId.value == null) return
-  loading.value = true
-  try {
-    const res = await fetchCampaignTheses(campaignId.value, filterStatus.value)
-    // 最新版优先
-    list.value = (res.data ?? []).sort((a, b) => b.isLatest - a.isLatest || b.version - a.version)
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.loadFail'))
-  } finally {
-    loading.value = false
-  }
+function loadList(): Promise<void> {
+  return withLoading(async () => {
+    if (campaignId.value == null) return
+    try {
+      const res = await fetchCampaignTheses(campaignId.value, filterStatus.value)
+      // 最新版优先
+      list.value = (res.data ?? []).sort((a, b) => b.isLatest - a.isLatest || b.version - a.version)
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('graduation.common.loadFail'))
+    }
+  })
 }
 
 function onCampaignChange(id: number | null): void {
@@ -97,7 +99,7 @@ const registerForm = ref<{
   result: DuplicateResultCode | null
   comment: string
 }>({ duplicateRate: null, platform: '', checkTs: Date.now(), result: null, comment: '' })
-const saving = ref(false)
+const { loading: saving, withLoading: withSaving } = useLoading()
 
 function startRegister(row: ThesisResponse): void {
   registering.value = row
@@ -111,61 +113,62 @@ function startRegister(row: ThesisResponse): void {
   showRegister.value = true
 }
 
-async function handleRegister(): Promise<void> {
-  if (!registering.value) return
-  const f = registerForm.value
-  if (
-    f.duplicateRate == null ||
-    !Number.isInteger(f.duplicateRate) ||
-    f.duplicateRate < 0 ||
-    f.duplicateRate > 100
-  ) {
-    message.warning(t('graduation.academic.rateRequired'))
-    return
-  }
-  if (!f.result) {
-    message.warning(t('graduation.common.required'))
-    return
-  }
-  saving.value = true
-  try {
-    await registerDuplicateCheck({
-      thesisId: registering.value.id,
-      duplicateRate: f.duplicateRate,
-      platform: f.platform || undefined,
-      checkTime: tsToIso(f.checkTs),
-      result: f.result,
-      comment: f.comment || undefined,
-    })
-    message.success(t('graduation.common.operationSuccess'))
-    showRegister.value = false
-    await loadList()
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.operationFail'))
-    await loadList()
-  } finally {
-    saving.value = false
-  }
+function handleRegister(): Promise<void> {
+  return withSaving(async () => {
+    if (!registering.value) return
+    const f = registerForm.value
+    if (
+      f.duplicateRate == null ||
+      !Number.isInteger(f.duplicateRate) ||
+      f.duplicateRate < 0 ||
+      f.duplicateRate > 100
+    ) {
+      message.warning(t('graduation.academic.rateRequired'))
+      return
+    }
+    if (!f.result) {
+      message.warning(t('graduation.common.required'))
+      return
+    }
+    try {
+      await registerDuplicateCheck({
+        thesisId: registering.value.id,
+        duplicateRate: f.duplicateRate,
+        platform: f.platform || undefined,
+        checkTime: tsToIso(f.checkTs),
+        result: f.result,
+        comment: f.comment || undefined,
+      })
+      message.success(t('graduation.common.operationSuccess'))
+      showRegister.value = false
+      await loadList()
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('graduation.common.operationFail'))
+      await loadList()
+    }
+  })
 }
 
 async function handleDownload(row: ThesisResponse): Promise<void> {
   try {
     await downloadThesis(row.id)
   } catch (e) {
-    message.error((e as Error).message || t('graduation.common.operationFail'))
+    if (!isReportedError(e))
+      message.error((e as Error).message || t('graduation.common.operationFail'))
   }
 }
 
-async function handleExportPackage(): Promise<void> {
-  if (campaignId.value == null) return
-  exporting.value = true
-  try {
-    await exportThesisPackage(campaignId.value, filterStatus.value)
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.operationFail'))
-  } finally {
-    exporting.value = false
-  }
+function handleExportPackage(): Promise<void> {
+  return withExporting(async () => {
+    if (campaignId.value == null) return
+    try {
+      await exportThesisPackage(campaignId.value, filterStatus.value)
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('graduation.common.operationFail'))
+    }
+  })
 }
 
 const thesisRowKey = (row: ThesisResponse) => row.id

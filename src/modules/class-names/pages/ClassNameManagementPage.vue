@@ -20,6 +20,8 @@ import { fetchClassNames, createClassName, updateClassName, deleteClassName } fr
 import { fetchColleges } from '@/modules/college/api'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import { useRemotePagination } from '@/shared/composables/useRemotePagination'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import type { College } from '@/modules/college/types'
 import type { ClassName, ClassNameForm } from '../types'
 
@@ -27,7 +29,7 @@ const { t } = useI18n()
 const message = useMessage()
 const { canManageClassNames } = useRoleCheck()
 
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 const data = ref<ClassName[]>([])
 const { pagination } = useRemotePagination(loadData)
 
@@ -90,23 +92,22 @@ const columns = computed<DataTableColumns<ClassName>>(() => {
   ]
 })
 
-async function loadData() {
-  loading.value = true
-  try {
-    const res = await fetchClassNames(pagination.page, pagination.pageSize)
-    data.value = res.data.records
-    pagination.itemCount = res.data.total
-  } catch (e) {
-    message.error((e as Error).message || t('class-names.loadFail'))
-  } finally {
-    loading.value = false
-  }
+function loadData() {
+  return withLoading(async () => {
+    try {
+      const res = await fetchClassNames(pagination.page, pagination.pageSize)
+      data.value = res.data.records
+      pagination.itemCount = res.data.total
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('class-names.loadFail'))
+    }
+  })
 }
 
 const showForm = ref(false)
 const formMode = ref<'create' | 'edit'>('create')
 const editingId = ref<number | null>(null)
-const saving = ref(false)
+const { loading: saving, withLoading: withSaving } = useLoading()
 
 const emptyForm = (): ClassNameForm => ({ className: '', collegeId: null })
 const form = ref<ClassNameForm>(emptyForm())
@@ -125,22 +126,21 @@ function startEdit(row: ClassName) {
   showForm.value = true
 }
 
-async function handleSave() {
-  saving.value = true
-  try {
-    if (formMode.value === 'create') {
-      await createClassName(form.value)
-    } else {
-      await updateClassName(editingId.value!, form.value)
+function handleSave() {
+  return withSaving(async () => {
+    try {
+      if (formMode.value === 'create') {
+        await createClassName(form.value)
+      } else {
+        await updateClassName(editingId.value!, form.value)
+      }
+      message.success(t('class-names.saveSuccess'))
+      showForm.value = false
+      await loadData()
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('class-names.saveFail'))
     }
-    message.success(t('class-names.saveSuccess'))
-    showForm.value = false
-    await loadData()
-  } catch (e) {
-    message.error((e as Error).message || t('class-names.saveFail'))
-  } finally {
-    saving.value = false
-  }
+  })
 }
 
 async function handleDelete(id: number) {
@@ -149,7 +149,7 @@ async function handleDelete(id: number) {
     message.success(t('class-names.deleteSuccess'))
     await loadData()
   } catch (e) {
-    message.error((e as Error).message || t('class-names.deleteFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('class-names.deleteFail'))
   }
 }
 

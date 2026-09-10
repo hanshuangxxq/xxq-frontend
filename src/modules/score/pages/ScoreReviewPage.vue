@@ -30,6 +30,8 @@ import {
 import StatCard from '@/shared/components/StatCard.vue'
 import { fetchAllPages } from '@/shared/pagination'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import {
   applyReview,
   fetchMyReviews,
@@ -46,7 +48,7 @@ const { t } = useI18n()
 const message = useMessage()
 const { isStudent, isTeacher, isAcademicAdmin } = useRoleCheck()
 
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 const reviews = ref<ReviewView[]>([])
 const statusFilter = ref<ReviewStatusCode | null>(null)
 /** 列表本地分页（状态计数带需全集，故分块拉全量后客户端分页） */
@@ -117,24 +119,23 @@ function toggleStatusFilter(code: ReviewStatusCode) {
   statusFilter.value = statusFilter.value === code ? null : code
 }
 
-async function loadData() {
-  loading.value = true
-  try {
-    if (isStudent.value) {
-      const res = await fetchMyReviews()
-      reviews.value = res.data
-    } else {
-      // 统计带计数需全集，故分块拉全量后客户端分页
-      reviews.value = await fetchAllPages((page, pageSize) =>
-        fetchReviewTodos(undefined, page, pageSize),
-      )
+function loadData() {
+  return withLoading(async () => {
+    try {
+      if (isStudent.value) {
+        const res = await fetchMyReviews()
+        reviews.value = res.data
+      } else {
+        // 统计带计数需全集，故分块拉全量后客户端分页
+        reviews.value = await fetchAllPages((page, pageSize) =>
+          fetchReviewTodos(undefined, page, pageSize),
+        )
+      }
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('score.rvLoadFail'))
+      reviews.value = []
     }
-  } catch (e) {
-    message.error((e as Error).message || t('score.rvLoadFail'))
-    reviews.value = []
-  } finally {
-    loading.value = false
-  }
+  })
 }
 
 // ---- 详情抽屉 ----
@@ -157,7 +158,7 @@ const myScoreOptions = ref<Array<{ label: string; value: number }>>([])
 const showApply = ref(false)
 const applyScoreId = ref<number | null>(null)
 const applyReason = ref('')
-const applySaving = ref(false)
+const { loading: applySaving, withLoading: withApplySaving } = useLoading()
 
 async function loadMyScores() {
   try {
@@ -177,8 +178,9 @@ function openApply() {
   showApply.value = true
 }
 
-async function handleApply() {
-  if (applyScoreId.value == null) {
+function handleApply() {
+  const scoreId = applyScoreId.value
+  if (scoreId == null) {
     message.warning(t('score.rvSelectScorePlaceholder'))
     return
   }
@@ -186,17 +188,16 @@ async function handleApply() {
     message.warning(t('score.rvReasonRequired'))
     return
   }
-  applySaving.value = true
-  try {
-    await applyReview({ scoreId: applyScoreId.value, reason: applyReason.value.trim() })
-    message.success(t('score.rvSaveSuccess'))
-    showApply.value = false
-    await loadData()
-  } catch (e) {
-    message.error((e as Error).message || t('score.rvSaveFail'))
-  } finally {
-    applySaving.value = false
-  }
+  return withApplySaving(async () => {
+    try {
+      await applyReview({ scoreId, reason: applyReason.value.trim() })
+      message.success(t('score.rvSaveSuccess'))
+      showApply.value = false
+      await loadData()
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('score.rvSaveFail'))
+    }
+  })
 }
 
 async function handleEscalate(row: ReviewView) {
@@ -206,7 +207,7 @@ async function handleEscalate(row: ReviewView) {
     await loadData()
     syncSelected()
   } catch (e) {
-    message.error((e as Error).message || t('score.rvSaveFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('score.rvSaveFail'))
   }
 }
 
@@ -215,7 +216,7 @@ const showReply = ref(false)
 const replyTarget = ref<ReviewView | null>(null)
 const replyText = ref('')
 const replyNewScore = ref<number | null>(null)
-const replySaving = ref(false)
+const { loading: replySaving, withLoading: withReplySaving } = useLoading()
 
 function openReply(row: ReviewView) {
   replyTarget.value = row
@@ -224,27 +225,27 @@ function openReply(row: ReviewView) {
   showReply.value = true
 }
 
-async function handleReply() {
-  if (replyTarget.value == null) return
+function handleReply() {
+  const target = replyTarget.value
+  if (target == null) return
   if (!replyText.value.trim()) {
     message.warning(t('score.rvReplyRequired'))
     return
   }
-  replySaving.value = true
-  try {
-    await replyReview(replyTarget.value.id, {
-      reply: replyText.value.trim(),
-      newTotalScore: replyNewScore.value,
-    })
-    message.success(t('score.rvSaveSuccess'))
-    showReply.value = false
-    await loadData()
-    syncSelected()
-  } catch (e) {
-    message.error((e as Error).message || t('score.rvSaveFail'))
-  } finally {
-    replySaving.value = false
-  }
+  return withReplySaving(async () => {
+    try {
+      await replyReview(target.id, {
+        reply: replyText.value.trim(),
+        newTotalScore: replyNewScore.value,
+      })
+      message.success(t('score.rvSaveSuccess'))
+      showReply.value = false
+      await loadData()
+      syncSelected()
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('score.rvSaveFail'))
+    }
+  })
 }
 
 // ---- 教务：终审 ----
@@ -253,7 +254,7 @@ const resolveTarget = ref<ReviewView | null>(null)
 const resolveText = ref('')
 const resolveNewScore = ref<number | null>(null)
 const resolveResolved = ref<boolean>(true)
-const resolveSaving = ref(false)
+const { loading: resolveSaving, withLoading: withResolveSaving } = useLoading()
 
 function openResolve(row: ReviewView) {
   resolveTarget.value = row
@@ -263,28 +264,28 @@ function openResolve(row: ReviewView) {
   showResolve.value = true
 }
 
-async function handleResolve() {
-  if (resolveTarget.value == null) return
+function handleResolve() {
+  const target = resolveTarget.value
+  if (target == null) return
   if (!resolveText.value.trim()) {
     message.warning(t('score.rvReplyRequired'))
     return
   }
-  resolveSaving.value = true
-  try {
-    await resolveReview(resolveTarget.value.id, {
-      reply: resolveText.value.trim(),
-      newTotalScore: resolveNewScore.value,
-      resolved: resolveResolved.value,
-    })
-    message.success(t('score.rvSaveSuccess'))
-    showResolve.value = false
-    await loadData()
-    syncSelected()
-  } catch (e) {
-    message.error((e as Error).message || t('score.rvSaveFail'))
-  } finally {
-    resolveSaving.value = false
-  }
+  return withResolveSaving(async () => {
+    try {
+      await resolveReview(target.id, {
+        reply: resolveText.value.trim(),
+        newTotalScore: resolveNewScore.value,
+        resolved: resolveResolved.value,
+      })
+      message.success(t('score.rvSaveSuccess'))
+      showResolve.value = false
+      await loadData()
+      syncSelected()
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('score.rvSaveFail'))
+    }
+  })
 }
 
 const columns = computed<DataTableColumns<ReviewView>>(() => {

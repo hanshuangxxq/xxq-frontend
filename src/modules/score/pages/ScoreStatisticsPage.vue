@@ -26,12 +26,14 @@ import type { Semester } from '@/modules/curriculum/types'
 import type { ScoreStatisticsDto } from '../types'
 import { levelColor } from '../utils'
 import { useChartTheme, pieSweepAnimation } from '@/shared/chartTheme'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 
 const { t } = useI18n()
 const message = useMessage()
 const { tokens } = useChartTheme()
 
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 const data = ref<ScoreStatisticsDto[]>([])
 
 const semesterOptions = ref<Array<{ label: string; value: number }>>([])
@@ -60,23 +62,22 @@ async function loadDropdowns() {
   }
 }
 
-async function loadData() {
-  loading.value = true
-  try {
-    const sel = filterCourseKey.value ? parseCourseKey(filterCourseKey.value) : null
-    const res = await fetchScoreStatistics({
-      courseId: sel?.id,
-      source: sel?.source === 'SELECTION_CAMPAIGN' ? 'SELECTION_CAMPAIGN' : undefined,
-      className: filterClassName.value || undefined,
-      semesterId: filterSemesterId.value ?? undefined,
-    })
-    data.value = res.data
-  } catch (e) {
-    message.error((e as Error).message || t('score.statLoadFail'))
-    data.value = []
-  } finally {
-    loading.value = false
-  }
+function loadData() {
+  return withLoading(async () => {
+    try {
+      const sel = filterCourseKey.value ? parseCourseKey(filterCourseKey.value) : null
+      const res = await fetchScoreStatistics({
+        courseId: sel?.id,
+        source: sel?.source === 'SELECTION_CAMPAIGN' ? 'SELECTION_CAMPAIGN' : undefined,
+        className: filterClassName.value || undefined,
+        semesterId: filterSemesterId.value ?? undefined,
+      })
+      data.value = res.data
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('score.statLoadFail'))
+      data.value = []
+    }
+  })
 }
 
 function handleReset() {

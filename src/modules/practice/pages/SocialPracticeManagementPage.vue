@@ -38,6 +38,8 @@ import {
   deleteSocialPracticeReport,
 } from '../api'
 import { useRemotePagination } from '@/shared/composables/useRemotePagination'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import {
   projectStatusTagType,
@@ -88,26 +90,25 @@ const reportStatusOptions = computed(() => [
 ])
 
 // ============ 项目 ============
-const practiceLoading = ref(false)
+const { loading: practiceLoading, withLoading: withPracticeLoading } = useLoading()
 const practices = ref<SocialPracticeResponse[]>([])
 const { pagination: prPagination, reset: resetPr } = useRemotePagination(loadPractices)
 const filterPrStatus = ref<SocialPracticeStatusCode | null>(null)
 
-async function loadPractices() {
-  practiceLoading.value = true
-  try {
-    const res = await fetchSocialPractices({
-      status: filterPrStatus.value ?? undefined,
-      page: prPagination.page,
-      pageSize: prPagination.pageSize,
-    })
-    practices.value = res.data.records
-    prPagination.itemCount = res.data.total
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.loadFail'))
-  } finally {
-    practiceLoading.value = false
-  }
+function loadPractices() {
+  return withPracticeLoading(async () => {
+    try {
+      const res = await fetchSocialPractices({
+        status: filterPrStatus.value ?? undefined,
+        page: prPagination.page,
+        pageSize: prPagination.pageSize,
+      })
+      practices.value = res.data.records
+      prPagination.itemCount = res.data.total
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+    }
+  })
 }
 
 function handlePrFilterChange() {
@@ -121,7 +122,8 @@ async function handlePrStatusChange(row: SocialPracticeResponse, code: string) {
     message.success(t('practice.common.operationSuccess'))
     await loadPractices()
   } catch (e) {
-    message.error((e as Error).message || t('practice.common.operationFail'))
+    if (!isReportedError(e))
+      message.error((e as Error).message || t('practice.common.operationFail'))
   }
 }
 
@@ -131,7 +133,7 @@ async function handleDeletePractice(id: number) {
     message.success(t('practice.common.deleteSuccess'))
     await loadPractices()
   } catch (e) {
-    message.error((e as Error).message || t('practice.common.deleteFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.deleteFail'))
   }
 }
 
@@ -147,7 +149,7 @@ interface PrForm {
 const showPrForm = ref(false)
 const prFormMode = ref<'create' | 'edit'>('create')
 const editingPrId = ref<number | null>(null)
-const savingPr = ref(false)
+const { loading: savingPr, withLoading: withSavingPr } = useLoading()
 const prForm = ref<PrForm>(emptyPrForm())
 
 function emptyPrForm(): PrForm {
@@ -175,7 +177,7 @@ function startEditPr(row: SocialPracticeResponse) {
   showPrForm.value = true
 }
 
-async function handleSavePr() {
+function handleSavePr() {
   const f = prForm.value
   if (!f.title.trim()) return message.warning(t('practice.socialPractice.titleRequired'))
   if (f.capacity == null || f.capacity <= 0)
@@ -188,53 +190,52 @@ async function handleSavePr() {
     endTime: f.endTs != null ? tsToIso(f.endTs) : null,
     capacity: f.capacity,
   }
-  savingPr.value = true
-  try {
-    if (prFormMode.value === 'create') {
-      await createSocialPractice(body)
-    } else {
-      await updateSocialPractice(editingPrId.value!, {
-        title: body.title,
-        description: body.description,
-        organizer: body.organizer,
-        startTime: body.startTime,
-        endTime: body.endTime,
-        capacity: body.capacity,
-      })
+  return withSavingPr(async () => {
+    try {
+      if (prFormMode.value === 'create') {
+        await createSocialPractice(body)
+      } else {
+        await updateSocialPractice(editingPrId.value!, {
+          title: body.title,
+          description: body.description,
+          organizer: body.organizer,
+          startTime: body.startTime,
+          endTime: body.endTime,
+          capacity: body.capacity,
+        })
+      }
+      message.success(t('practice.common.saveSuccess'))
+      showPrForm.value = false
+      await loadPractices()
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.saveFail'))
     }
-    message.success(t('practice.common.saveSuccess'))
-    showPrForm.value = false
-    await loadPractices()
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.saveFail'))
-  } finally {
-    savingPr.value = false
-  }
+  })
 }
 
 // 申报列表
 const showApps = ref(false)
 const appsOf = ref<SocialPracticeResponse | null>(null)
 const apps = ref<SocialPracticeApplicationResponse[]>([])
-const appLoading = ref(false)
+const { loading: appLoading, withLoading: withAppLoading } = useLoading()
 const { pagination: appPagination, reset: resetApp } = useRemotePagination(loadApps)
 
-async function loadApps() {
+function loadApps() {
   if (!appsOf.value) return
-  appLoading.value = true
-  try {
-    const res = await fetchSocialPracticeApplications(
-      appsOf.value.id,
-      appPagination.page,
-      appPagination.pageSize,
-    )
-    apps.value = res.data.records
-    appPagination.itemCount = res.data.total
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.loadFail'))
-  } finally {
-    appLoading.value = false
-  }
+  const target = appsOf.value
+  return withAppLoading(async () => {
+    try {
+      const res = await fetchSocialPracticeApplications(
+        target.id,
+        appPagination.page,
+        appPagination.pageSize,
+      )
+      apps.value = res.data.records
+      appPagination.itemCount = res.data.total
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+    }
+  })
 }
 
 function openApps(row: SocialPracticeResponse) {
@@ -251,7 +252,7 @@ const reviewAppForm = ref<{ approved: boolean; reviewComment: string }>({
   approved: true,
   reviewComment: '',
 })
-const savingReviewApp = ref(false)
+const { loading: savingReviewApp, withLoading: withSavingReviewApp } = useLoading()
 
 function startReviewApp(row: SocialPracticeApplicationResponse) {
   reviewingApp.value = row
@@ -259,46 +260,46 @@ function startReviewApp(row: SocialPracticeApplicationResponse) {
   showReviewApp.value = true
 }
 
-async function handleSaveReviewApp() {
+function handleSaveReviewApp() {
   if (!reviewingApp.value) return
-  savingReviewApp.value = true
-  try {
-    await reviewSocialPracticeApplication(reviewingApp.value.id, {
-      approved: reviewAppForm.value.approved,
-      reviewComment: reviewAppForm.value.reviewComment || undefined,
-    })
-    message.success(t('practice.common.operationSuccess'))
-    showReviewApp.value = false
-    await loadApps()
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.operationFail'))
-  } finally {
-    savingReviewApp.value = false
-  }
+  const target = reviewingApp.value
+  return withSavingReviewApp(async () => {
+    try {
+      await reviewSocialPracticeApplication(target.id, {
+        approved: reviewAppForm.value.approved,
+        reviewComment: reviewAppForm.value.reviewComment || undefined,
+      })
+      message.success(t('practice.common.operationSuccess'))
+      showReviewApp.value = false
+      await loadApps()
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('practice.common.operationFail'))
+    }
+  })
 }
 
 // ============ 报告 ============
-const reportLoading = ref(false)
+const { loading: reportLoading, withLoading: withReportLoading } = useLoading()
 const reports = ref<SocialPracticeReportResponse[]>([])
 const { pagination: reportPagination, reset: resetReport } = useRemotePagination(loadReports)
 const filterReportStatus = ref<ReportStatusCode | null>(null)
 let reportsLoaded = false
 
-async function loadReports() {
-  reportLoading.value = true
-  try {
-    const res = await fetchSocialPracticeReports({
-      status: filterReportStatus.value ?? undefined,
-      page: reportPagination.page,
-      pageSize: reportPagination.pageSize,
-    })
-    reports.value = res.data.records
-    reportPagination.itemCount = res.data.total
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.loadFail'))
-  } finally {
-    reportLoading.value = false
-  }
+function loadReports() {
+  return withReportLoading(async () => {
+    try {
+      const res = await fetchSocialPracticeReports({
+        status: filterReportStatus.value ?? undefined,
+        page: reportPagination.page,
+        pageSize: reportPagination.pageSize,
+      })
+      reports.value = res.data.records
+      reportPagination.itemCount = res.data.total
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+    }
+  })
 }
 
 function handleReportFilterChange() {
@@ -310,7 +311,8 @@ async function handleDownloadReport(id: number) {
   try {
     await downloadPracticeFile(`/practice/social-practice-reports/${id}/download`)
   } catch (e) {
-    message.error((e as Error).message || t('practice.common.operationFail'))
+    if (!isReportedError(e))
+      message.error((e as Error).message || t('practice.common.operationFail'))
   }
 }
 
@@ -320,7 +322,7 @@ async function handleDeleteReport(id: number) {
     message.success(t('practice.common.deleteSuccess'))
     await loadReports()
   } catch (e) {
-    message.error((e as Error).message || t('practice.common.deleteFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.deleteFail'))
   }
 }
 
@@ -331,7 +333,7 @@ const reviewReportForm = ref<{ score: number | null; feedback: string }>({
   score: null,
   feedback: '',
 })
-const savingReviewReport = ref(false)
+const { loading: savingReviewReport, withLoading: withSavingReviewReport } = useLoading()
 
 function startReviewReport(row: SocialPracticeReportResponse) {
   reviewingReport.value = row
@@ -339,23 +341,24 @@ function startReviewReport(row: SocialPracticeReportResponse) {
   showReviewReport.value = true
 }
 
-async function handleSaveReviewReport() {
+function handleSaveReviewReport() {
   if (!reviewingReport.value) return
+  const target = reviewingReport.value
   const body: SocialPracticeReportReviewRequest = {
     score: reviewReportForm.value.score ?? undefined,
     feedback: reviewReportForm.value.feedback || undefined,
   }
-  savingReviewReport.value = true
-  try {
-    await reviewSocialPracticeReport(reviewingReport.value.id, body)
-    message.success(t('practice.common.operationSuccess'))
-    showReviewReport.value = false
-    await loadReports()
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.operationFail'))
-  } finally {
-    savingReviewReport.value = false
-  }
+  return withSavingReviewReport(async () => {
+    try {
+      await reviewSocialPracticeReport(target.id, body)
+      message.success(t('practice.common.operationSuccess'))
+      showReviewReport.value = false
+      await loadReports()
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('practice.common.operationFail'))
+    }
+  })
 }
 
 function onTabChange(name: string | number) {

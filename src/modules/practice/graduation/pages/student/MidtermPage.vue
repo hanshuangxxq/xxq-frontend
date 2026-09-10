@@ -16,6 +16,7 @@ import {
   useMessage,
   type UploadFileInfo,
 } from 'naive-ui'
+import { isReportedError } from '@/shared/api'
 import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import CampaignContextSelector from '../../components/CampaignContextSelector.vue'
 import { fetchMyMidterm, submitMidterm, downloadMidterm, fetchMyOpeningReport } from '../../api'
@@ -24,6 +25,7 @@ import {
   validateUploadFile,
   formatDateTime,
 } from '@/modules/practice/utils'
+import { useLoading } from '@/shared/composables/useLoading'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import type { MidtermResponse, CampaignResponse } from '../../types'
 
@@ -33,7 +35,7 @@ const { isStudent } = useRoleCheck()
 
 const campaignId = ref<number | null>(null)
 const midterm = ref<MidtermResponse | null>(null)
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 
 /** 门禁预判：开题报告已通过（F-R-41，后端 409 兜底） */
 const gateOpen = ref(false)
@@ -61,17 +63,19 @@ async function checkGate(): Promise<void> {
   }
 }
 
-async function loadMidterm(): Promise<void> {
+function loadMidterm() {
   if (campaignId.value == null) return
-  loading.value = true
-  try {
-    const res = await fetchMyMidterm(campaignId.value)
-    midterm.value = res.data
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.loadFail'))
-  } finally {
-    loading.value = false
-  }
+  const id = campaignId.value
+  return withLoading(async () => {
+    try {
+      const res = await fetchMyMidterm(id)
+      midterm.value = res.data
+    } catch (e) {
+      if (!isReportedError(e)) {
+        message.error((e as Error).message || t('graduation.common.loadFail'))
+      }
+    }
+  })
 }
 
 function onCampaignChange(id: number | null): void {
@@ -89,7 +93,7 @@ function onCampaignChange(id: number | null): void {
 const showForm = ref(false)
 const form = ref({ content: '' })
 const fileList = ref<UploadFileInfo[]>([])
-const saving = ref(false)
+const { loading: saving, withLoading: withSaving } = useLoading()
 
 function startSubmit(): void {
   form.value = { content: midterm.value?.content ?? '' }
@@ -97,8 +101,9 @@ function startSubmit(): void {
   showForm.value = true
 }
 
-async function handleSubmit(): Promise<void> {
+function handleSubmit() {
   if (campaignId.value == null) return
+  const id = campaignId.value
   if (!form.value.content.trim()) {
     message.warning(t('graduation.common.contentRequired'))
     return
@@ -115,17 +120,18 @@ async function handleSubmit(): Promise<void> {
       return
     }
   }
-  saving.value = true
-  try {
-    await submitMidterm({ campaignId: campaignId.value, content: form.value.content.trim() }, raw)
-    message.success(t('graduation.common.operationSuccess'))
-    showForm.value = false
-    await loadMidterm()
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.operationFail'))
-  } finally {
-    saving.value = false
-  }
+  return withSaving(async () => {
+    try {
+      await submitMidterm({ campaignId: id, content: form.value.content.trim() }, raw)
+      message.success(t('graduation.common.operationSuccess'))
+      showForm.value = false
+      await loadMidterm()
+    } catch (e) {
+      if (!isReportedError(e)) {
+        message.error((e as Error).message || t('graduation.common.operationFail'))
+      }
+    }
+  })
 }
 
 async function handleDownload(): Promise<void> {
@@ -133,7 +139,9 @@ async function handleDownload(): Promise<void> {
   try {
     await downloadMidterm(midterm.value.id)
   } catch (e) {
-    message.error((e as Error).message || t('graduation.common.operationFail'))
+    if (!isReportedError(e)) {
+      message.error((e as Error).message || t('graduation.common.operationFail'))
+    }
   }
 }
 </script>

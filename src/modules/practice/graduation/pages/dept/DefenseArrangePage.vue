@@ -25,6 +25,8 @@ import { fetchTeachers } from '@/modules/curriculum/api'
 import PagedSelect from '@/shared/components/PagedSelect.vue'
 import { tsToIso, formatDateTime } from '@/modules/practice/utils'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import type { DefenseResponse, DashboardRow } from '../../types'
 import type { Teacher } from '@/modules/curriculum/types'
 
@@ -35,23 +37,23 @@ const { isDepartment } = useRoleCheck()
 const campaignId = ref<number | null>(null)
 const list = ref<DefenseResponse[]>([])
 const studentRows = ref<DashboardRow[]>([])
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 
-async function loadData(): Promise<void> {
-  if (campaignId.value == null) return
-  loading.value = true
-  try {
-    const [dRes, rowsRes] = await Promise.all([
-      fetchDefenseList(campaignId.value),
-      fetchDashboard(campaignId.value, { page: 1, pageSize: 100 }),
-    ])
-    list.value = dRes.data ?? []
-    studentRows.value = rowsRes.data.records
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.loadFail'))
-  } finally {
-    loading.value = false
-  }
+function loadData(): Promise<void> {
+  return withLoading(async () => {
+    if (campaignId.value == null) return
+    try {
+      const [dRes, rowsRes] = await Promise.all([
+        fetchDefenseList(campaignId.value),
+        fetchDashboard(campaignId.value, { page: 1, pageSize: 100 }),
+      ])
+      list.value = dRes.data ?? []
+      studentRows.value = rowsRes.data.records
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('graduation.common.loadFail'))
+    }
+  })
 }
 
 function onCampaignChange(id: number | null): void {
@@ -90,7 +92,7 @@ const form = ref<{
   panelIds: [],
   panelLabel: undefined,
 })
-const saving = ref(false)
+const { loading: saving, withLoading: withSaving } = useLoading()
 
 const fetchTeachersPage = (page: number, pageSize: number) => fetchTeachers(page, pageSize)
 const reviewerLabelOf = (tch: Teacher) => `${tch.name}（${tch.department || '-'}）`
@@ -136,33 +138,33 @@ function startEdit(row: DefenseResponse): void {
   showForm.value = true
 }
 
-async function handleSave(): Promise<void> {
-  if (campaignId.value == null) return
-  if (form.value.studentId == null) {
-    message.warning(t('graduation.dept.chooseStudent'))
-    return
-  }
-  saving.value = true
-  try {
-    await arrangeDefense({
-      campaignId: campaignId.value,
-      studentId: form.value.studentId,
-      groupName: form.value.groupName || undefined,
-      defenseTime: form.value.defenseTs != null ? tsToIso(form.value.defenseTs) : undefined,
-      location: form.value.location || undefined,
-      reviewerId: form.value.reviewerId,
-      defenseTeacherIds: form.value.panelIds.map(Number).filter((n) => n > 0),
-    })
-    message.success(t('graduation.dept.arrangeSaved'))
-    showForm.value = false
-    await loadData()
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.operationFail'))
-    // F-R-32：409 未查重通过等冲突后刷新
-    await loadData()
-  } finally {
-    saving.value = false
-  }
+function handleSave(): Promise<void> {
+  return withSaving(async () => {
+    if (campaignId.value == null) return
+    if (form.value.studentId == null) {
+      message.warning(t('graduation.dept.chooseStudent'))
+      return
+    }
+    try {
+      await arrangeDefense({
+        campaignId: campaignId.value,
+        studentId: form.value.studentId,
+        groupName: form.value.groupName || undefined,
+        defenseTime: form.value.defenseTs != null ? tsToIso(form.value.defenseTs) : undefined,
+        location: form.value.location || undefined,
+        reviewerId: form.value.reviewerId,
+        defenseTeacherIds: form.value.panelIds.map(Number).filter((n) => n > 0),
+      })
+      message.success(t('graduation.dept.arrangeSaved'))
+      showForm.value = false
+      await loadData()
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('graduation.common.operationFail'))
+      // F-R-32：409 未查重通过等冲突后刷新
+      await loadData()
+    }
+  })
 }
 
 const defenseRowKey = (row: DefenseResponse) => row.id

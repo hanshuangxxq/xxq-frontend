@@ -18,6 +18,8 @@ import {
 } from 'naive-ui'
 import { createCampaign, fetchAllGroups } from '../api'
 import { useLocaleStore } from '@/stores/useLocaleStore'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import PagedSelect from '@/shared/components/PagedSelect.vue'
 import type { CampaignForm, SelectionGroup } from '../types'
 import type { Semester } from '@/modules/curriculum/types'
@@ -43,7 +45,7 @@ const message = useMessage()
 const localeStore = useLocaleStore()
 const dateLocale = computed(() => localeStore.naiveConfig().dateLocale)
 
-const saving = ref(false)
+const { loading: saving, withLoading: withSaving } = useLoading()
 
 const semesterOptions = computed<SelectOption[]>(() =>
   props.semesters.map((s) => ({ label: s.name, value: s.id })),
@@ -117,38 +119,37 @@ function validate(): string | null {
   return null
 }
 
-async function handleSubmit() {
+function handleSubmit() {
   const error = validate()
   if (error) {
     message.warning(error)
     return
   }
 
-  saving.value = true
-  try {
-    await createCampaign({
-      name: form.value.name,
-      semesterId: form.value.semesterId!,
-      startTime: form.value.startTime,
-      endTime: form.value.endTime,
-      startWeek: form.value.startWeek,
-      endWeek: form.value.endWeek,
-      groupId: form.value.groupId ?? undefined,
-      courseCode: form.value.courseCode,
-      credit: form.value.credit,
-      courseHour: form.value.courseHour,
-      description: form.value.description,
-      courseType: PUBLIC_ELECTIVE_COURSE_TYPE,
-      capacity: form.value.capacity,
-    })
-    message.success(t('selection.saveSuccess'))
-    emit('update:show', false)
-    emit('success')
-  } catch (e) {
-    message.error((e as Error).message || t('selection.saveFail'))
-  } finally {
-    saving.value = false
-  }
+  return withSaving(async () => {
+    try {
+      await createCampaign({
+        name: form.value.name,
+        semesterId: form.value.semesterId!,
+        startTime: form.value.startTime,
+        endTime: form.value.endTime,
+        startWeek: form.value.startWeek,
+        endWeek: form.value.endWeek,
+        groupId: form.value.groupId ?? undefined,
+        courseCode: form.value.courseCode,
+        credit: form.value.credit,
+        courseHour: form.value.courseHour,
+        description: form.value.description,
+        courseType: PUBLIC_ELECTIVE_COURSE_TYPE,
+        capacity: form.value.capacity,
+      })
+      message.success(t('selection.saveSuccess'))
+      emit('update:show', false)
+      emit('success')
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('selection.saveFail'))
+    }
+  })
 }
 </script>
 

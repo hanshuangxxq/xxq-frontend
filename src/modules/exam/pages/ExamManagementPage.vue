@@ -28,6 +28,8 @@ import { fetchAllSemesters } from '@/modules/curriculum/api'
 import { fetchLocals } from '@/modules/locals/api'
 import { fetchClassNames } from '@/modules/class-names/api'
 import { fetchAllPages } from '@/shared/pagination'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import PagedSelect from '@/shared/components/PagedSelect.vue'
 import type { Course } from '@/modules/course/types'
 import type { Semester } from '@/modules/curriculum/types'
@@ -45,7 +47,7 @@ import { calcDurationMinutes } from '../utils'
 const { t } = useI18n()
 const message = useMessage()
 
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 const data = ref<ExamView[]>([])
 /** 考试列表本地分页（需客户端过滤补考/重修，故分块拉全量后客户端分页） */
 const examPagination = reactive({
@@ -58,7 +60,7 @@ const semesterOptions = ref<Array<{ label: string; value: number }>>([])
 
 /** 当前所选班级的可排考课程（由后端按班级在库中查询返回） */
 const classCourseOptions = ref<ClassCourseOptionDto[]>([])
-const loadingCourses = ref(false)
+const { loading: loadingCourses, withLoading: withLoadingCourses } = useLoading()
 
 /** classId -> className 缓存：PagedSelect 翻页时累积，供保存时由 classId 反查 className */
 const classNameById = ref<Record<number, string>>({})
@@ -124,29 +126,28 @@ async function loadSemesters() {
   }
 }
 
-async function loadData() {
-  loading.value = true
-  try {
-    const sel = filterCourseKey.value ? parseCourseKey(filterCourseKey.value) : null
-    // 服务端 examType 无法表达「期末或期中、排除补考」，故分块拉全量后客户端过滤+分页
-    const all = await fetchAllPages((page, pageSize) =>
-      fetchExams({
-        semesterId: filterSemesterId.value ?? undefined,
-        courseId: sel?.id,
-        source: sel?.source === 'SELECTION_CAMPAIGN' ? 'SELECTION_CAMPAIGN' : undefined,
-        examType: filterExamType.value ?? undefined,
-        page,
-        pageSize,
-      }),
-    )
-    // 仅展示期末/期中（补考/重修在专门页面）
-    data.value = all.filter((e) => e.examType === '期末考试' || e.examType === '期中考试')
-  } catch (e) {
-    message.error((e as Error).message || t('exam.mgLoadFail'))
-    data.value = []
-  } finally {
-    loading.value = false
-  }
+function loadData() {
+  return withLoading(async () => {
+    try {
+      const sel = filterCourseKey.value ? parseCourseKey(filterCourseKey.value) : null
+      // 服务端 examType 无法表达「期末或期中、排除补考」，故分块拉全量后客户端过滤+分页
+      const all = await fetchAllPages((page, pageSize) =>
+        fetchExams({
+          semesterId: filterSemesterId.value ?? undefined,
+          courseId: sel?.id,
+          source: sel?.source === 'SELECTION_CAMPAIGN' ? 'SELECTION_CAMPAIGN' : undefined,
+          examType: filterExamType.value ?? undefined,
+          page,
+          pageSize,
+        }),
+      )
+      // 仅展示期末/期中（补考/重修在专门页面）
+      data.value = all.filter((e) => e.examType === '期末考试' || e.examType === '期中考试')
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('exam.mgLoadFail'))
+      data.value = []
+    }
+  })
 }
 
 function handleReset() {
@@ -207,7 +208,7 @@ interface ExamForm {
 const showForm = ref(false)
 const formMode = ref<'create' | 'edit'>('create')
 const editingId = ref<number | null>(null)
-const saving = ref(false)
+const { loading: saving, withLoading: withSaving } = useLoading()
 
 function emptyForm(): ExamForm {
   return {
@@ -244,17 +245,16 @@ const coursePlaceholder = computed(() => {
 })
 
 /** 按所选班级拉取可排考课程（前端主动发起，后端按 class_id 在库中查询后返回）。 */
-async function loadClassCourses(classId: number) {
-  loadingCourses.value = true
-  try {
-    const res = await fetchClassCourseOptions(classId)
-    classCourseOptions.value = res.data
-  } catch (e) {
-    message.error((e as Error).message || t('exam.mgCourseLoadFail'))
-    classCourseOptions.value = []
-  } finally {
-    loadingCourses.value = false
-  }
+function loadClassCourses(classId: number) {
+  return withLoadingCourses(async () => {
+    try {
+      const res = await fetchClassCourseOptions(classId)
+      classCourseOptions.value = res.data
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('exam.mgCourseLoadFail'))
+      classCourseOptions.value = []
+    }
+  })
 }
 
 async function onClassChange(classId: number | null) {
@@ -342,7 +342,7 @@ async function startEdit(row: ExamView) {
   showForm.value = true
 }
 
-async function handleSave() {
+function handleSave() {
   const f = form.value
   if (!f.examName.trim()) return message.warning(t('exam.mgExamNameRequired'))
   // 编辑时班级可不改（classId 为空表示沿用原班级）
@@ -374,21 +374,20 @@ async function handleSave() {
     notes: f.notes || undefined,
     status: f.status,
   }
-  saving.value = true
-  try {
-    if (formMode.value === 'create') {
-      await createExam(body)
-    } else {
-      await updateExam(editingId.value!, body)
+  return withSaving(async () => {
+    try {
+      if (formMode.value === 'create') {
+        await createExam(body)
+      } else {
+        await updateExam(editingId.value!, body)
+      }
+      message.success(t('exam.mgSaveSuccess'))
+      showForm.value = false
+      await loadData()
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('exam.mgSaveFail'))
     }
-    message.success(t('exam.mgSaveSuccess'))
-    showForm.value = false
-    await loadData()
-  } catch (e) {
-    message.error((e as Error).message || t('exam.mgSaveFail'))
-  } finally {
-    saving.value = false
-  }
+  })
 }
 
 async function handleDelete(id: number) {
@@ -397,7 +396,7 @@ async function handleDelete(id: number) {
     message.success(t('exam.mgDeleteSuccess'))
     await loadData()
   } catch (e) {
-    message.error((e as Error).message || t('exam.mgDeleteFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('exam.mgDeleteFail'))
   }
 }
 

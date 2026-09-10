@@ -17,9 +17,11 @@ import {
   NTimelineItem,
   useMessage,
 } from 'naive-ui'
+import { isReportedError } from '@/shared/api'
 import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import { fetchMyProposals, submitProposal } from '../../api'
 import { proposalStatusTagType, formatDateTime } from '@/modules/practice/utils'
+import { useLoading } from '@/shared/composables/useLoading'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import type { ProposalResponse } from '../../types'
 
@@ -28,25 +30,26 @@ const message = useMessage()
 const { isStudent } = useRoleCheck()
 
 const proposals = ref<ProposalResponse[]>([])
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 
-async function loadProposals(): Promise<void> {
-  loading.value = true
-  try {
-    const res = await fetchMyProposals()
-    proposals.value = res.data ?? []
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.loadFail'))
-  } finally {
-    loading.value = false
-  }
+function loadProposals() {
+  return withLoading(async () => {
+    try {
+      const res = await fetchMyProposals()
+      proposals.value = res.data ?? []
+    } catch (e) {
+      if (!isReportedError(e)) {
+        message.error((e as Error).message || t('graduation.common.loadFail'))
+      }
+    }
+  })
 }
 
 // ===== 修改重提弹窗（F-R-15）=====
 const showResubmit = ref(false)
 const editingProposal = ref<ProposalResponse | null>(null)
 const resubmitForm = ref({ title: '', content: '' })
-const saving = ref(false)
+const { loading: saving, withLoading: withSaving } = useLoading()
 
 function startResubmit(p: ProposalResponse): void {
   editingProposal.value = p
@@ -54,8 +57,9 @@ function startResubmit(p: ProposalResponse): void {
   showResubmit.value = true
 }
 
-async function handleResubmit(): Promise<void> {
+function handleResubmit() {
   if (!editingProposal.value) return
+  const proposal = editingProposal.value
   const f = resubmitForm.value
   if (!f.title.trim()) {
     message.warning(t('graduation.student.titleRequired'))
@@ -65,21 +69,22 @@ async function handleResubmit(): Promise<void> {
     message.warning(t('graduation.common.contentMin100'))
     return
   }
-  saving.value = true
-  try {
-    await submitProposal({
-      campaignId: editingProposal.value.campaignId,
-      title: f.title.trim(),
-      content: f.content.trim(),
-    })
-    message.success(t('graduation.common.operationSuccess'))
-    showResubmit.value = false
-    await loadProposals()
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.operationFail'))
-  } finally {
-    saving.value = false
-  }
+  return withSaving(async () => {
+    try {
+      await submitProposal({
+        campaignId: proposal.campaignId,
+        title: f.title.trim(),
+        content: f.content.trim(),
+      })
+      message.success(t('graduation.common.operationSuccess'))
+      showResubmit.value = false
+      await loadProposals()
+    } catch (e) {
+      if (!isReportedError(e)) {
+        message.error((e as Error).message || t('graduation.common.operationFail'))
+      }
+    }
+  })
 }
 
 onMounted(() => {

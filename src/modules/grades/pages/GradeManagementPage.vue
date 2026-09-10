@@ -18,13 +18,15 @@ import {
 } from 'naive-ui'
 import { fetchGrades, createGrade, updateGrade, deleteGrade } from '../api'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import type { Grade, GradeForm } from '../types'
 
 const { t } = useI18n()
 const message = useMessage()
 const { isAcademicAdmin } = useRoleCheck()
 
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 const data = ref<Grade[]>([])
 
 function formatDateTime(s: string | null | undefined): string {
@@ -80,24 +82,21 @@ const columns = computed<DataTableColumns<Grade>>(() => {
   ]
 })
 
-async function loadData() {
-  loading.value = true
-  try {
-    const res = await fetchGrades()
-    data.value = res.data.sort((a, b) =>
-      a.name.localeCompare(b.name, 'zh-CN', { numeric: true }),
-    )
-  } catch (e) {
-    message.error((e as Error).message || t('grades.loadFail'))
-  } finally {
-    loading.value = false
-  }
+function loadData() {
+  return withLoading(async () => {
+    try {
+      const res = await fetchGrades()
+      data.value = res.data.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN', { numeric: true }))
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('grades.loadFail'))
+    }
+  })
 }
 
 const showForm = ref(false)
 const formMode = ref<'create' | 'edit'>('create')
 const editingId = ref<number | null>(null)
-const saving = ref(false)
+const { loading: saving, withLoading: withSaving } = useLoading()
 
 const emptyForm = (): GradeForm => ({ name: '', description: '' })
 const form = ref<GradeForm>(emptyForm())
@@ -121,25 +120,24 @@ async function handleSave() {
     message.warning(t('grades.nameRequired'))
     return
   }
-  saving.value = true
-  try {
-    const payload: GradeForm = {
-      name: form.value.name,
-      description: form.value.description || undefined,
+  await withSaving(async () => {
+    try {
+      const payload: GradeForm = {
+        name: form.value.name,
+        description: form.value.description || undefined,
+      }
+      if (formMode.value === 'create') {
+        await createGrade(payload)
+      } else {
+        await updateGrade(editingId.value!, payload)
+      }
+      message.success(t('grades.saveSuccess'))
+      showForm.value = false
+      await loadData()
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('grades.saveFail'))
     }
-    if (formMode.value === 'create') {
-      await createGrade(payload)
-    } else {
-      await updateGrade(editingId.value!, payload)
-    }
-    message.success(t('grades.saveSuccess'))
-    showForm.value = false
-    await loadData()
-  } catch (e) {
-    message.error((e as Error).message || t('grades.saveFail'))
-  } finally {
-    saving.value = false
-  }
+  })
 }
 
 async function handleDelete(id: number) {
@@ -148,7 +146,7 @@ async function handleDelete(id: number) {
     message.success(t('grades.deleteSuccess'))
     await loadData()
   } catch (e) {
-    message.error((e as Error).message || t('grades.deleteFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('grades.deleteFail'))
   }
 }
 

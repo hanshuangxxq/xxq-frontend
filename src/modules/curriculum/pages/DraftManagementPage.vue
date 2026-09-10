@@ -32,6 +32,8 @@ import { fetchColleges } from '@/modules/college/api'
 import { fetchCourses } from '@/modules/course/api'
 import { isPublicCourse } from '@/modules/course/utils'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import PagedSelect from '@/shared/components/PagedSelect.vue'
 import type { DraftItem, DraftClassSummary, Semester } from '../types'
 import type { ClassName } from '@/modules/class-names/types'
@@ -47,7 +49,7 @@ const { t } = useI18n()
 const message = useMessage()
 const { canManageDrafts } = useRoleCheck()
 
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 const drafts = ref<DraftItem[]>([])
 const summary = ref<DraftClassSummary | null>(null)
 
@@ -90,7 +92,7 @@ interface DraftEntry {
 const entries = ref<DraftEntry[]>([
   { courseId: null, teacherId: null, startWeek: null, endWeek: null },
 ])
-const submitting = ref(false)
+const { loading: submitting, withLoading: withSubmitting } = useLoading()
 
 /** 排课草稿仅用常规课（排除公选课）；端点不支持按 source 过滤，故按页客户端过滤 */
 function fetchRegularCourses(page: number, pageSize: number) {
@@ -175,18 +177,17 @@ const draftColumns: DataTableColumns<DraftItem> = [
   },
 ]
 
-async function loadData() {
-  loading.value = true
-  try {
-    const [draftRes, summaryRes] = await Promise.all([fetchDrafts(), fetchDraftClassSummary()])
-    if (semesterOptions.value.length === 0) loadSemesters()
-    drafts.value = draftRes.data
-    summary.value = summaryRes.data
-  } catch (e) {
-    message.error((e as Error).message || t('teach-drafts.loadFail'))
-  } finally {
-    loading.value = false
-  }
+function loadData() {
+  return withLoading(async () => {
+    try {
+      const [draftRes, summaryRes] = await Promise.all([fetchDrafts(), fetchDraftClassSummary()])
+      if (semesterOptions.value.length === 0) loadSemesters()
+      drafts.value = draftRes.data
+      summary.value = summaryRes.data
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('teach-drafts.loadFail'))
+    }
+  })
 }
 
 function addEntry() {
@@ -241,18 +242,17 @@ async function handleSubmit() {
     message.warning(t('teach-drafts.addCourse'))
     return
   }
-  submitting.value = true
-  try {
-    await submitDrafts(body)
-    message.success(t('teach-drafts.submitSuccess'))
-    selectedClasses.value = []
-    entries.value = [{ courseId: null, teacherId: null, startWeek: null, endWeek: null }]
-    await loadData()
-  } catch (e) {
-    message.error((e as Error).message || t('teach-drafts.submitFail'))
-  } finally {
-    submitting.value = false
-  }
+  await withSubmitting(async () => {
+    try {
+      await submitDrafts(body)
+      message.success(t('teach-drafts.submitSuccess'))
+      selectedClasses.value = []
+      entries.value = [{ courseId: null, teacherId: null, startWeek: null, endWeek: null }]
+      await loadData()
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('teach-drafts.submitFail'))
+    }
+  })
 }
 
 async function handleClearByClass(classNameVal: string) {
@@ -261,7 +261,8 @@ async function handleClearByClass(classNameVal: string) {
     message.success(t('teach-drafts.clearByClassSuccess'))
     await loadData()
   } catch (e) {
-    message.error((e as Error).message || t('teach-drafts.clearByClassFail'))
+    if (!isReportedError(e))
+      message.error((e as Error).message || t('teach-drafts.clearByClassFail'))
   }
 }
 
@@ -271,7 +272,8 @@ async function handleDeleteSingle(row: DraftItem) {
     message.success(t('teach-drafts.deleteSingleSuccess'))
     await loadData()
   } catch (e) {
-    message.error((e as Error).message || t('teach-drafts.deleteSingleFail'))
+    if (!isReportedError(e))
+      message.error((e as Error).message || t('teach-drafts.deleteSingleFail'))
   }
 }
 

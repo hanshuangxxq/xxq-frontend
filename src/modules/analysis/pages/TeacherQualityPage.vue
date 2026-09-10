@@ -20,6 +20,8 @@ import BaseChart from '@/shared/components/BaseChart.vue'
 import StatCard from '@/shared/components/StatCard.vue'
 import { fetchAllPages } from '@/shared/pagination'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import { getMyTeacherQuality, fetchTeacherQualityList } from '../api'
 import { fetchAllSemesters } from '@/modules/curriculum/api'
 import type { Semester } from '@/modules/curriculum/types'
@@ -90,24 +92,23 @@ function radarOption(dto: TeacherQualityDto, tks: ChartThemeTokens): EChartsOpti
 }
 
 // ---- 教师：本人质量 ----
-const myLoading = ref(false)
+const { loading: myLoading, withLoading: withMyLoading } = useLoading()
 const myQuality = ref<TeacherQualityDto | null>(null)
 
-async function loadMyQuality() {
-  myLoading.value = true
-  try {
-    const res = await getMyTeacherQuality(filterSemesterId.value ?? undefined)
-    myQuality.value = res.data
-  } catch (e) {
-    message.error((e as Error).message || t('analysis.tqLoadFail'))
-    myQuality.value = null
-  } finally {
-    myLoading.value = false
-  }
+function loadMyQuality() {
+  return withMyLoading(async () => {
+    try {
+      const res = await getMyTeacherQuality(filterSemesterId.value ?? undefined)
+      myQuality.value = res.data
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('analysis.tqLoadFail'))
+      myQuality.value = null
+    }
+  })
 }
 
 // ---- 管理员/院系：列表 + 对比 ----
-const listLoading = ref(false)
+const { loading: listLoading, withLoading: withListLoading } = useLoading()
 const list = ref<TeacherQualityDto[]>([])
 /** 列表本地分页（对比柱状图需全集，故分块拉全量后客户端分页） */
 const listPagination = reactive({
@@ -116,18 +117,17 @@ const listPagination = reactive({
   pageSizes: [10, 20, 50],
 })
 
-async function loadList() {
-  listLoading.value = true
-  try {
-    list.value = await fetchAllPages((page, pageSize) =>
-      fetchTeacherQualityList(filterSemesterId.value ?? undefined, page, pageSize),
-    )
-  } catch (e) {
-    message.error((e as Error).message || t('analysis.tqLoadFail'))
-    list.value = []
-  } finally {
-    listLoading.value = false
-  }
+function loadList() {
+  return withListLoading(async () => {
+    try {
+      list.value = await fetchAllPages((page, pageSize) =>
+        fetchTeacherQualityList(filterSemesterId.value ?? undefined, page, pageSize),
+      )
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('analysis.tqLoadFail'))
+      list.value = []
+    }
+  })
 }
 
 const teacherQualityRowKey = (row: TeacherQualityDto) => row.teacherId

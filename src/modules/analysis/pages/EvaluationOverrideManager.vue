@@ -16,6 +16,8 @@ import {
 } from 'naive-ui'
 import { fetchEvaluationTemplates, fetchEvaluationOverride, setEvaluationOverride } from '../api'
 import { fetchTeachInfoList } from '@/modules/curriculum/api'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import type { TeachInfo } from '@/modules/curriculum/types'
 import type { EvaluationTemplateDto } from '../types'
 
@@ -62,24 +64,24 @@ async function loadTemplates() {
 }
 
 // ---- 当前覆盖 ----
-const currentLoading = ref(false)
+const { loading: currentLoading, withLoading: withCurrentLoading } = useLoading()
 const currentTemplate = ref<EvaluationTemplateDto | null>(null)
 const selectedTemplateId = ref<number | null>(null)
-const saving = ref(false)
+const { loading: saving, withLoading: withSaving } = useLoading()
 
-async function loadCurrentOverride(teachInfoId: number) {
-  currentLoading.value = true
-  currentTemplate.value = null
-  selectedTemplateId.value = null
-  try {
-    const res = await fetchEvaluationOverride(teachInfoId)
-    currentTemplate.value = res.data
-    selectedTemplateId.value = res.data?.id ?? null
-  } catch (e) {
-    message.error((e as Error).message || t('analysis.evOverrideSaveFail'))
-  } finally {
-    currentLoading.value = false
-  }
+function loadCurrentOverride(teachInfoId: number) {
+  return withCurrentLoading(async () => {
+    currentTemplate.value = null
+    selectedTemplateId.value = null
+    try {
+      const res = await fetchEvaluationOverride(teachInfoId)
+      currentTemplate.value = res.data
+      selectedTemplateId.value = res.data?.id ?? null
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('analysis.evOverrideSaveFail'))
+    }
+  })
 }
 
 function handleCourseChange(id: number | null) {
@@ -91,34 +93,35 @@ function handleCourseChange(id: number | null) {
   }
 }
 
-async function handleSaveOverride() {
-  if (selectedTeachInfoId.value == null || selectedTemplateId.value == null) return
-  saving.value = true
-  try {
-    await setEvaluationOverride(selectedTeachInfoId.value, {
-      templateId: selectedTemplateId.value,
-    })
-    message.success(t('analysis.evOverrideSaveSuccess'))
-    await loadCurrentOverride(selectedTeachInfoId.value)
-  } catch (e) {
-    message.error((e as Error).message || t('analysis.evOverrideSaveFail'))
-  } finally {
-    saving.value = false
-  }
+function handleSaveOverride() {
+  const teachInfoId = selectedTeachInfoId.value
+  const templateId = selectedTemplateId.value
+  if (teachInfoId == null || templateId == null) return
+  return withSaving(async () => {
+    try {
+      await setEvaluationOverride(teachInfoId, { templateId })
+      message.success(t('analysis.evOverrideSaveSuccess'))
+      await loadCurrentOverride(teachInfoId)
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('analysis.evOverrideSaveFail'))
+    }
+  })
 }
 
-async function handleClearOverride() {
-  if (selectedTeachInfoId.value == null) return
-  saving.value = true
-  try {
-    await setEvaluationOverride(selectedTeachInfoId.value, { templateId: null })
-    message.success(t('analysis.evOverrideClearSuccess'))
-    await loadCurrentOverride(selectedTeachInfoId.value)
-  } catch (e) {
-    message.error((e as Error).message || t('analysis.evOverrideClearFail'))
-  } finally {
-    saving.value = false
-  }
+function handleClearOverride() {
+  const teachInfoId = selectedTeachInfoId.value
+  if (teachInfoId == null) return
+  return withSaving(async () => {
+    try {
+      await setEvaluationOverride(teachInfoId, { templateId: null })
+      message.success(t('analysis.evOverrideClearSuccess'))
+      await loadCurrentOverride(teachInfoId)
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('analysis.evOverrideClearFail'))
+    }
+  })
 }
 
 onMounted(() => {

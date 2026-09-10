@@ -13,6 +13,8 @@ import {
   type DataTableColumns,
 } from 'naive-ui'
 import { batchImportUsers } from '../api'
+import { isReportedError } from '@/shared/api'
+import { useLoading } from '@/shared/composables/useLoading'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import type { BatchImportUser, BatchImportDetail } from '../types'
 
@@ -58,7 +60,7 @@ function createRow(): RowData {
 }
 
 const rows = ref<RowData[]>([createRow()])
-const submitting = ref(false)
+const { loading: submitting, withLoading: withSubmitting } = useLoading()
 const importResult = ref<{
   total: number
   successCount: number
@@ -88,33 +90,35 @@ function validateRows(): string | null {
   return null
 }
 
-async function handleSubmit() {
+function handleSubmit() {
   const validationError = validateRows()
   if (validationError) {
     message.warning(validationError)
     return
   }
 
-  submitting.value = true
-  try {
-    const users: BatchImportUser[] = rows.value.map((row) => ({
-      username: row.username.trim(),
-      password: row.password,
-      userType: row.userType,
-      ...(row.identifier.trim() && { identifier: row.identifier.trim() }),
-      ...(row.userType === 'student' && row.className.trim() && { className: row.className.trim() }),
-      ...(row.gender !== '未知' && { gender: row.gender }),
-      ...(row.department.trim() && { department: row.department.trim() }),
-    }))
+  return withSubmitting(async () => {
+    try {
+      const users: BatchImportUser[] = rows.value.map((row) => ({
+        username: row.username.trim(),
+        password: row.password,
+        userType: row.userType,
+        ...(row.identifier.trim() && { identifier: row.identifier.trim() }),
+        ...(row.userType === 'student' &&
+          row.className.trim() && { className: row.className.trim() }),
+        ...(row.gender !== '未知' && { gender: row.gender }),
+        ...(row.department.trim() && { department: row.department.trim() }),
+      }))
 
-    const result = await batchImportUsers({ users })
-    importResult.value = result.data
-    message.success(t('batch-import.submitSuccess'))
-  } catch (e) {
-    message.error((e as Error).message || t('batch-import.submitFail'))
-  } finally {
-    submitting.value = false
-  }
+      const result = await batchImportUsers({ users })
+      importResult.value = result.data
+      message.success(t('batch-import.submitSuccess'))
+    } catch (e) {
+      if (!isReportedError(e)) {
+        message.error((e as Error).message || t('batch-import.submitFail'))
+      }
+    }
+  })
 }
 
 const batchImportDetailRowKey = (row: BatchImportDetail) => row.index

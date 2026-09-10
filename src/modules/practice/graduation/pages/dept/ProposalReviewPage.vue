@@ -16,6 +16,8 @@ import ReviewModal from '../../components/ReviewModal.vue'
 import { fetchPendingDeptProposals, reviewProposalDept } from '../../api'
 import { formatDateTime } from '@/modules/practice/utils'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import type { ProposalResponse } from '../../types'
 
 const { t } = useI18n()
@@ -24,19 +26,19 @@ const { isDepartment } = useRoleCheck()
 
 const campaignId = ref<number | null>(null)
 const list = ref<ProposalResponse[]>([])
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 
-async function loadList(): Promise<void> {
-  if (campaignId.value == null) return
-  loading.value = true
-  try {
-    const res = await fetchPendingDeptProposals(campaignId.value)
-    list.value = res.data ?? []
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.loadFail'))
-  } finally {
-    loading.value = false
-  }
+function loadList(): Promise<void> {
+  return withLoading(async () => {
+    if (campaignId.value == null) return
+    try {
+      const res = await fetchPendingDeptProposals(campaignId.value)
+      list.value = res.data ?? []
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('graduation.common.loadFail'))
+    }
+  })
 }
 
 function onCampaignChange(id: number | null): void {
@@ -48,31 +50,31 @@ function onCampaignChange(id: number | null): void {
 // ===== 初审弹窗 =====
 const showReview = ref(false)
 const reviewing = ref<ProposalResponse | null>(null)
-const submitting = ref(false)
+const { loading: submitting, withLoading: withSubmitting } = useLoading()
 
 function startReview(row: ProposalResponse): void {
   reviewing.value = row
   showReview.value = true
 }
 
-async function handleReview(value: { approve?: boolean; comment?: string }): Promise<void> {
-  if (!reviewing.value) return
-  submitting.value = true
-  try {
-    await reviewProposalDept(reviewing.value.id, {
-      approve: value.approve ?? false,
-      comment: value.comment,
-    })
-    message.success(t('graduation.common.operationSuccess'))
-    showReview.value = false
-    await loadList()
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.operationFail'))
-    // F-R-42：409 状态不匹配（他人已处理）时刷新队列
-    await loadList()
-  } finally {
-    submitting.value = false
-  }
+function handleReview(value: { approve?: boolean; comment?: string }): Promise<void> {
+  return withSubmitting(async () => {
+    if (!reviewing.value) return
+    try {
+      await reviewProposalDept(reviewing.value.id, {
+        approve: value.approve ?? false,
+        comment: value.comment,
+      })
+      message.success(t('graduation.common.operationSuccess'))
+      showReview.value = false
+      await loadList()
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('graduation.common.operationFail'))
+      // F-R-42：409 状态不匹配（他人已处理）时刷新队列
+      await loadList()
+    }
+  })
 }
 
 const proposalRowKey = (row: ProposalResponse) => row.id

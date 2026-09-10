@@ -6,6 +6,8 @@ import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import CampaignContextSelector from '../../components/CampaignContextSelector.vue'
 import { fetchOperationLogs } from '../../api'
 import { useRemotePagination } from '@/shared/composables/useRemotePagination'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import { formatDateTime } from '@/modules/practice/utils'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import type { OperationLogResponse } from '../../types'
@@ -16,21 +18,21 @@ const { isAcademicAdmin } = useRoleCheck()
 
 const campaignId = ref<number | null>(null)
 const logs = ref<OperationLogResponse[]>([])
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 const { pagination, reset } = useRemotePagination(loadLogs)
 
-async function loadLogs(): Promise<void> {
-  if (campaignId.value == null) return
-  loading.value = true
-  try {
-    const res = await fetchOperationLogs(campaignId.value, pagination.page, pagination.pageSize)
-    logs.value = res.data.records
-    pagination.itemCount = res.data.total
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.loadFail'))
-  } finally {
-    loading.value = false
-  }
+function loadLogs(): Promise<void> {
+  return withLoading(async () => {
+    if (campaignId.value == null) return
+    try {
+      const res = await fetchOperationLogs(campaignId.value, pagination.page, pagination.pageSize)
+      logs.value = res.data.records
+      pagination.itemCount = res.data.total
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('graduation.common.loadFail'))
+    }
+  })
 }
 
 function onCampaignChange(id: number | null): void {

@@ -14,6 +14,9 @@
     "empty": "No data"
   },
   "publicTag": "Public",
+  "loading": "Loading data…",
+  "cancelLoading": "Cancel",
+  "cancelled": "Loading cancelled",
   "error": {
     "network": "Network error, please check your connection",
     "requestFailed": "Request failed",

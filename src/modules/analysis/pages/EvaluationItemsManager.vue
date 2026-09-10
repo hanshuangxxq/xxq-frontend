@@ -25,24 +25,25 @@ import {
 } from '../api'
 import type { EvaluationItemDto } from '../types'
 import { formatDateTime } from '../utils'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 
 const { t } = useI18n()
 const message = useMessage()
 
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 const data = ref<EvaluationItemDto[]>([])
 
-async function loadData() {
-  loading.value = true
-  try {
-    const res = await fetchEvaluationItems()
-    data.value = res.data
-  } catch (e) {
-    message.error((e as Error).message || t('analysis.evLoadFail'))
-    data.value = []
-  } finally {
-    loading.value = false
-  }
+function loadData() {
+  return withLoading(async () => {
+    try {
+      const res = await fetchEvaluationItems()
+      data.value = res.data
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('analysis.evLoadFail'))
+      data.value = []
+    }
+  })
 }
 
 const evaluationItemRowKey = (row: EvaluationItemDto) => row.id
@@ -93,7 +94,7 @@ const columns = computed<DataTableColumns<EvaluationItemDto>>(() => [
 const showForm = ref(false)
 const formMode = ref<'create' | 'edit'>('create')
 const editingId = ref<number | null>(null)
-const saving = ref(false)
+const { loading: saving, withLoading: withSaving } = useLoading()
 
 interface ItemForm {
   name: string
@@ -126,35 +127,34 @@ function startEdit(row: EvaluationItemDto) {
   showForm.value = true
 }
 
-async function handleSave() {
+function handleSave() {
   const name = form.value.name.trim()
   if (!name) {
     message.warning(t('analysis.evItemNameRequired'))
     return
   }
-  saving.value = true
-  try {
-    if (formMode.value === 'create') {
-      await createEvaluationItem({
-        name,
-        description: form.value.description.trim() || undefined,
-        maxScore: form.value.maxScore,
-      })
-    } else {
-      await updateEvaluationItem(editingId.value!, {
-        name,
-        description: form.value.description.trim() || undefined,
-        maxScore: form.value.maxScore,
-      })
+  return withSaving(async () => {
+    try {
+      if (formMode.value === 'create') {
+        await createEvaluationItem({
+          name,
+          description: form.value.description.trim() || undefined,
+          maxScore: form.value.maxScore,
+        })
+      } else {
+        await updateEvaluationItem(editingId.value!, {
+          name,
+          description: form.value.description.trim() || undefined,
+          maxScore: form.value.maxScore,
+        })
+      }
+      message.success(t('analysis.evSubmitSuccess'))
+      showForm.value = false
+      await loadData()
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('analysis.evItemSaveFail'))
     }
-    message.success(t('analysis.evSubmitSuccess'))
-    showForm.value = false
-    await loadData()
-  } catch (e) {
-    message.error((e as Error).message || t('analysis.evItemSaveFail'))
-  } finally {
-    saving.value = false
-  }
+  })
 }
 
 async function handleDelete(id: number) {
@@ -163,7 +163,7 @@ async function handleDelete(id: number) {
     message.success(t('analysis.evItemDeleteSuccess'))
     await loadData()
   } catch (e) {
-    message.error((e as Error).message || t('analysis.evItemDeleteFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('analysis.evItemDeleteFail'))
   }
 }
 

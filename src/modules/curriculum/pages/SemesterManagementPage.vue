@@ -21,6 +21,8 @@ import {
 } from 'naive-ui'
 import { fetchAllSemesters, createSemester, updateSemester, deleteSemester } from '../api'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import { useLocaleStore } from '@/stores/useLocaleStore'
 import type { Semester, SemesterForm } from '../types'
 
@@ -30,7 +32,7 @@ const { isAcademicAdmin } = useRoleCheck()
 const localeStore = useLocaleStore()
 const dateLocale = computed(() => localeStore.naiveConfig().dateLocale)
 
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 const data = ref<Semester[]>([])
 
 const statusOptions = computed(() => [
@@ -114,22 +116,21 @@ const actionColumns = computed<DataTableColumns<Semester>>(() => {
 
 const allColumns = computed(() => [...columns, ...actionColumns.value])
 
-async function loadData() {
-  loading.value = true
-  try {
-    const res = await fetchAllSemesters()
-    data.value = res.data
-  } catch (e) {
-    message.error((e as Error).message || t('semester.loadFail'))
-  } finally {
-    loading.value = false
-  }
+function loadData() {
+  return withLoading(async () => {
+    try {
+      const res = await fetchAllSemesters()
+      data.value = res.data
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('semester.loadFail'))
+    }
+  })
 }
 
 const showForm = ref(false)
 const formMode = ref<'create' | 'edit'>('create')
 const editingId = ref<number | null>(null)
-const saving = ref(false)
+const { loading: saving, withLoading: withSaving } = useLoading()
 
 const emptyForm = (): SemesterForm => ({
   name: '',
@@ -180,34 +181,33 @@ function startEdit(row: Semester) {
   showForm.value = true
 }
 
-async function handleSave() {
-  saving.value = true
-  try {
-    if (formMode.value === 'create') {
-      await createSemester(form.value)
-    } else {
-      const payload: SemesterForm = {
-        name: form.value.name || originalForm.value.name,
-        startWeek:
-          form.value.startWeek !== undefined
-            ? form.value.startWeek
-            : originalForm.value.startWeek,
-        endWeek:
-          form.value.endWeek !== undefined ? form.value.endWeek : originalForm.value.endWeek,
-        startDate: form.value.startDate ?? originalForm.value.startDate,
-        endDate: form.value.endDate ?? originalForm.value.endDate,
-        status: form.value.status,
+function handleSave() {
+  return withSaving(async () => {
+    try {
+      if (formMode.value === 'create') {
+        await createSemester(form.value)
+      } else {
+        const payload: SemesterForm = {
+          name: form.value.name || originalForm.value.name,
+          startWeek:
+            form.value.startWeek !== undefined
+              ? form.value.startWeek
+              : originalForm.value.startWeek,
+          endWeek:
+            form.value.endWeek !== undefined ? form.value.endWeek : originalForm.value.endWeek,
+          startDate: form.value.startDate ?? originalForm.value.startDate,
+          endDate: form.value.endDate ?? originalForm.value.endDate,
+          status: form.value.status,
+        }
+        await updateSemester(editingId.value!, payload)
       }
-      await updateSemester(editingId.value!, payload)
+      message.success(t('semester.saveSuccess'))
+      showForm.value = false
+      await loadData()
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('semester.saveFail'))
     }
-    message.success(t('semester.saveSuccess'))
-    showForm.value = false
-    await loadData()
-  } catch (e) {
-    message.error((e as Error).message || t('semester.saveFail'))
-  } finally {
-    saving.value = false
-  }
+  })
 }
 
 async function handleDelete(id: number) {
@@ -216,7 +216,7 @@ async function handleDelete(id: number) {
     message.success(t('semester.deleteSuccess'))
     await loadData()
   } catch (e) {
-    message.error((e as Error).message || t('semester.deleteFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('semester.deleteFail'))
   }
 }
 

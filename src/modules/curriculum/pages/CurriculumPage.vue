@@ -24,6 +24,8 @@ import {
   examStatusTagType as progressExamStatusTagType,
 } from '@/modules/analysis/utils'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import type {
   TeachInfo,
   PublicCourseDto,
@@ -106,25 +108,24 @@ function campaignStatusLabel(status: CampaignStatus): string {
 }
 
 // ---- Student: Class Courses ----
-const classCoursesLoading = ref(false)
+const { loading: classCoursesLoading, withLoading: withClassCoursesLoading } = useLoading()
 const classCourses = ref<ClassCourse[]>([])
 
-async function loadClassCourses() {
-  classCoursesLoading.value = true
-  try {
-    const res = await fetchClassCourses()
-    const body = res.data as unknown as ClassCourseResponse | ClassCourse[]
-    if (Array.isArray(body)) {
-      classCourses.value = body
-    } else {
-      mondayDate.value = body.mondayDate
-      classCourses.value = body.courses
+function loadClassCourses() {
+  return withClassCoursesLoading(async () => {
+    try {
+      const res = await fetchClassCourses()
+      const body = res.data as unknown as ClassCourseResponse | ClassCourse[]
+      if (Array.isArray(body)) {
+        classCourses.value = body
+      } else {
+        mondayDate.value = body.mondayDate
+        classCourses.value = body.courses
+      }
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('curriculum.loadFail'))
     }
-  } catch (e) {
-    message.error((e as Error).message || t('curriculum.loadFail'))
-  } finally {
-    classCoursesLoading.value = false
-  }
+  })
 }
 
 // ---- Student: Course detail modal ----
@@ -132,7 +133,7 @@ const courseDetailVisible = ref(false)
 const courseDetailItem = ref<ClassCourse | null>(null)
 
 // ---- Schedule tab (timetable grid) ----
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 const data = ref<TeachInfo[]>([])
 const scheduleWeek = ref(1)
 const currentSemester = ref<Semester | null>(null)
@@ -192,7 +193,7 @@ function openCourseDetailAt(timeId: number, day: number) {
 const DAYS = [1, 2, 3, 4, 5, 6, 7]
 
 // ---- Teacher: My Courses ----
-const teacherLoading = ref(false)
+const { loading: teacherLoading, withLoading: withTeacherLoading } = useLoading()
 const teacherCourses = ref<TeachInfo[]>([])
 
 const teacherColumns: DataTableColumns<TeachInfo> = [
@@ -241,20 +242,19 @@ function teacherRowKey(row: TeachInfo): string {
   return `${row.courseName}-${row.className}`
 }
 
-async function loadTeacherCourses() {
-  teacherLoading.value = true
-  try {
-    const res = await fetchTeachInfoList()
-    teacherCourses.value = res.data.courses
-  } catch (e) {
-    message.error((e as Error).message || t('curriculum.loadFail'))
-  } finally {
-    teacherLoading.value = false
-  }
+function loadTeacherCourses() {
+  return withTeacherLoading(async () => {
+    try {
+      const res = await fetchTeachInfoList()
+      teacherCourses.value = res.data.courses
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('curriculum.loadFail'))
+    }
+  })
 }
 
 // ---- Teacher: My Course Exams ----
-const examLoading = ref(false)
+const { loading: examLoading, withLoading: withExamLoading } = useLoading()
 const exams = ref<ExamView[]>([])
 
 const examRowKey = (row: ExamView) => row.id
@@ -315,17 +315,16 @@ const examColumns = computed<DataTableColumns<ExamView>>(() => [
   },
 ])
 
-async function loadTeacherExams() {
-  examLoading.value = true
-  try {
-    const res = await fetchTeacherExams()
-    exams.value = res.data.sort((a, b) => a.examDate.localeCompare(b.examDate))
-  } catch (e) {
-    message.error((e as Error).message || t('exam.tcLoadFail'))
-    exams.value = []
-  } finally {
-    examLoading.value = false
-  }
+function loadTeacherExams() {
+  return withExamLoading(async () => {
+    try {
+      const res = await fetchTeacherExams()
+      exams.value = res.data.sort((a, b) => a.examDate.localeCompare(b.examDate))
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('exam.tcLoadFail'))
+      exams.value = []
+    }
+  })
 }
 
 // ---- Detail modal ----
@@ -376,20 +375,19 @@ function openDetail(item: TeachInfo) {
 }
 
 // ---- Student: Learning Progress (学情分析 #6 融入) ----
-const progressLoading = ref(false)
+const { loading: progressLoading, withLoading: withProgressLoading } = useLoading()
 const progress = ref<LearningProgressDto | null>(null)
 
-async function loadProgress() {
-  progressLoading.value = true
-  try {
-    const res = await getMyProgress()
-    progress.value = res.data
-  } catch (e) {
-    message.error((e as Error).message || t('analysis.pgLoadFail'))
-    progress.value = null
-  } finally {
-    progressLoading.value = false
-  }
+function loadProgress() {
+  return withProgressLoading(async () => {
+    try {
+      const res = await getMyProgress()
+      progress.value = res.data
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('analysis.pgLoadFail'))
+      progress.value = null
+    }
+  })
 }
 
 const hasProgress = computed(() => (progress.value?.courses?.length ?? 0) > 0)
@@ -470,17 +468,16 @@ const progressColumns = computed<DataTableColumns<CourseProgress>>(() => [
 ])
 
 // ---- Data loading ----
-async function loadData() {
-  loading.value = true
-  try {
-    const res = await fetchTeachInfoList({ week: scheduleWeek.value })
-    mondayDate.value = res.data.mondayDate
-    data.value = res.data.courses
-  } catch (e) {
-    message.error((e as Error).message || t('curriculum.loadFail'))
-  } finally {
-    loading.value = false
-  }
+function loadData() {
+  return withLoading(async () => {
+    try {
+      const res = await fetchTeachInfoList({ week: scheduleWeek.value })
+      mondayDate.value = res.data.mondayDate
+      data.value = res.data.courses
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('curriculum.loadFail'))
+    }
+  })
 }
 
 watch(activeTab, (tab) => {

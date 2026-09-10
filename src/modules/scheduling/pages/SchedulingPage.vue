@@ -44,6 +44,8 @@ import { fetchColleges } from '@/modules/college/api'
 import { fetchCourses } from '@/modules/course/api'
 import { isPublicCourse } from '@/modules/course/utils'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import PagedSelect from '@/shared/components/PagedSelect.vue'
 import type { ClassName } from '@/modules/class-names/types'
 import type { College } from '@/modules/college/types'
@@ -58,19 +60,19 @@ const { isAcademicAdmin, canManageDrafts } = useRoleCheck()
 const status = ref<'NOT_SOLVING' | 'SOLVING' | 'FINISHED'>('NOT_SOLVING')
 const score = ref('')
 const scheduleId = ref<number | null>(null)
-const solving = ref(false)
+const { loading: solving, withLoading: withSolving } = useLoading()
 const lessons = ref<ScheduledLesson[]>([])
 let pollTimer: ReturnType<typeof setInterval> | null = null
 
 // ---- Data preview ----
 const showData = ref(false)
-const dataLoading = ref(false)
+const { loading: dataLoading, withLoading: withDataLoading } = useLoading()
 const teachInfoList = ref<TeachInfo[]>([])
 const timeMap = ref<Map<number, TimeSlot>>(new Map())
 
 // ---- Draft management ----
 const showDrafts = ref(false)
-const draftLoading = ref(false)
+const { loading: draftLoading, withLoading: withDraftLoading } = useLoading()
 const drafts = ref<DraftItem[]>([])
 const summary = ref<DraftClassSummary | null>(null)
 const selectedClasses = ref<string[]>([])
@@ -83,7 +85,7 @@ interface DraftEntry {
 const entries = ref<DraftEntry[]>([
   { courseId: null, teacherId: null, startWeek: null, endWeek: null },
 ])
-const submitting = ref(false)
+const { loading: submitting, withLoading: withSubmitting } = useLoading()
 
 /** 排课草稿仅用常规课（排除公选课）；端点不支持按 source 过滤，故按页客户端过滤 */
 function fetchRegularCourses(page: number, pageSize: number) {
@@ -347,21 +349,20 @@ const draftColumns: DataTableColumns<DraftItem> = [
 ]
 
 // ---- Data preview ----
-async function loadSchedulingData() {
-  dataLoading.value = true
-  try {
-    const [teachRes, timeRes] = await Promise.all([fetchTeachInfoList(), fetchAllTimes()])
-    teachInfoList.value = teachRes.data.courses
-    const map = new Map<number, TimeSlot>()
-    for (const slot of timeRes.data) {
-      map.set(slot.id, slot)
+function loadSchedulingData() {
+  return withDataLoading(async () => {
+    try {
+      const [teachRes, timeRes] = await Promise.all([fetchTeachInfoList(), fetchAllTimes()])
+      teachInfoList.value = teachRes.data.courses
+      const map = new Map<number, TimeSlot>()
+      for (const slot of timeRes.data) {
+        map.set(slot.id, slot)
+      }
+      timeMap.value = map
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('scheduling.loadFail'))
     }
-    timeMap.value = map
-  } catch (e) {
-    message.error((e as Error).message || t('scheduling.loadFail'))
-  } finally {
-    dataLoading.value = false
-  }
+  })
 }
 
 function toggleData() {
@@ -427,17 +428,16 @@ function onEntryEndWeekChange(entry: DraftEntry, v: string) {
   entry.endWeek = v ? parseInt(v, 10) : null
 }
 
-async function loadDraftData() {
-  draftLoading.value = true
-  try {
-    const [draftRes, summaryRes] = await Promise.all([fetchDrafts(), fetchDraftClassSummary()])
-    drafts.value = draftRes.data
-    summary.value = summaryRes.data
-  } catch (e) {
-    message.error((e as Error).message || t('teach-drafts.loadFail'))
-  } finally {
-    draftLoading.value = false
-  }
+function loadDraftData() {
+  return withDraftLoading(async () => {
+    try {
+      const [draftRes, summaryRes] = await Promise.all([fetchDrafts(), fetchDraftClassSummary()])
+      drafts.value = draftRes.data
+      summary.value = summaryRes.data
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('teach-drafts.loadFail'))
+    }
+  })
 }
 
 function toggleDrafts() {
@@ -479,18 +479,17 @@ async function handleDraftSubmit() {
     message.warning(t('teach-drafts.addCourse'))
     return
   }
-  submitting.value = true
-  try {
-    await submitDrafts(body)
-    message.success(t('teach-drafts.submitSuccess'))
-    selectedClasses.value = []
-    entries.value = [{ courseId: null, teacherId: null, startWeek: null, endWeek: null }]
-    await loadDraftData()
-  } catch (e) {
-    message.error((e as Error).message || t('teach-drafts.submitFail'))
-  } finally {
-    submitting.value = false
-  }
+  await withSubmitting(async () => {
+    try {
+      await submitDrafts(body)
+      message.success(t('teach-drafts.submitSuccess'))
+      selectedClasses.value = []
+      entries.value = [{ courseId: null, teacherId: null, startWeek: null, endWeek: null }]
+      await loadDraftData()
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('teach-drafts.submitFail'))
+    }
+  })
 }
 
 async function handleClearAll() {
@@ -499,7 +498,7 @@ async function handleClearAll() {
     message.success(t('teach-drafts.clearAllSuccess'))
     await loadDraftData()
   } catch (e) {
-    message.error((e as Error).message || t('teach-drafts.clearAllFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('teach-drafts.clearAllFail'))
   }
 }
 
@@ -509,7 +508,8 @@ async function handleClearByClass(classNameVal: string) {
     message.success(t('teach-drafts.clearByClassSuccess'))
     await loadDraftData()
   } catch (e) {
-    message.error((e as Error).message || t('teach-drafts.clearByClassFail'))
+    if (!isReportedError(e))
+      message.error((e as Error).message || t('teach-drafts.clearByClassFail'))
   }
 }
 
@@ -519,7 +519,8 @@ async function handleDeleteSingle(row: DraftItem) {
     message.success(t('teach-drafts.deleteSingleSuccess'))
     await loadDraftData()
   } catch (e) {
-    message.error((e as Error).message || t('teach-drafts.deleteSingleFail'))
+    if (!isReportedError(e))
+      message.error((e as Error).message || t('teach-drafts.deleteSingleFail'))
   }
 }
 
@@ -528,7 +529,8 @@ function startPolling() {
   if (!scheduleId.value) return
   pollTimer = setInterval(async () => {
     try {
-      const res = await getSolution(scheduleId.value!)
+      // 求解轮询:不触发全局加载条(求解期间每 3s 一次,页面已有自身进度展示)
+      const res = await getSolution(scheduleId.value!, { loading: false })
       const data = res.data
       status.value = data.solverStatus
       score.value = data.score
@@ -549,24 +551,23 @@ function stopPolling() {
   }
 }
 
-async function handleSolve() {
-  solving.value = true
-  try {
-    const res = await solve()
-    if (!res.data) {
-      throw new Error(res.message)
+function handleSolve() {
+  return withSolving(async () => {
+    try {
+      const res = await solve()
+      if (!res.data) {
+        throw new Error(res.message)
+      }
+      scheduleId.value = res.data.scheduleId
+      status.value = 'SOLVING'
+      score.value = ''
+      lessons.value = []
+      message.success(t('scheduling.solveSuccess'))
+      startPolling()
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('scheduling.solveFail'))
     }
-    scheduleId.value = res.data.scheduleId
-    status.value = 'SOLVING'
-    score.value = ''
-    lessons.value = []
-    message.success(t('scheduling.solveSuccess'))
-    startPolling()
-  } catch (e) {
-    message.error((e as Error).message || t('scheduling.solveFail'))
-  } finally {
-    solving.value = false
-  }
+  })
 }
 
 async function handleStop() {
@@ -577,7 +578,7 @@ async function handleStop() {
     status.value = 'NOT_SOLVING'
     message.success(t('scheduling.stopSuccess'))
   } catch (e) {
-    message.error((e as Error).message || t('scheduling.stopFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('scheduling.stopFail'))
   }
 }
 

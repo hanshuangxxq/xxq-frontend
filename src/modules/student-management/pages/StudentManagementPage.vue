@@ -20,6 +20,8 @@ import { fetchStudents, updateStudent, fetchMajors } from '../api'
 import { fetchClassNames } from '@/modules/class-names/api'
 import { fetchGrades } from '@/modules/grades/api'
 import { useRemotePagination } from '@/shared/composables/useRemotePagination'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import PagedSelect from '@/shared/components/PagedSelect.vue'
 import type { Student, StudentQuery, StudentUpdateForm } from '../types'
 import type { ClassName } from '@/modules/class-names/types'
@@ -27,7 +29,7 @@ import type { ClassName } from '@/modules/class-names/types'
 const { t } = useI18n()
 const message = useMessage()
 
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 const data = ref<Student[]>([])
 const { pagination, reset } = useRemotePagination(loadData)
 
@@ -77,26 +79,26 @@ const columns: DataTableColumns<Student> = [
   },
 ]
 
-async function loadData() {
-  loading.value = true
-  try {
-    const q: StudentQuery = {
-      page: pagination.page,
-      pageSize: pagination.pageSize,
+function loadData() {
+  return withLoading(async () => {
+    try {
+      const q: StudentQuery = {
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+      }
+      if (filterName.value) q.name = filterName.value
+      if (filterGradeId.value != null) q.gradeId = filterGradeId.value
+      if (filterClassName.value) q.className = filterClassName.value
+      if (filterMajor.value) q.major = filterMajor.value
+      if (filterUnassigned.value !== null) q.unassigned = true
+      const res = await fetchStudents(q)
+      data.value = res.data.records
+      pagination.itemCount = res.data.total
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('student-management.loadFail'))
     }
-    if (filterName.value) q.name = filterName.value
-    if (filterGradeId.value != null) q.gradeId = filterGradeId.value
-    if (filterClassName.value) q.className = filterClassName.value
-    if (filterMajor.value) q.major = filterMajor.value
-    if (filterUnassigned.value !== null) q.unassigned = true
-    const res = await fetchStudents(q)
-    data.value = res.data.records
-    pagination.itemCount = res.data.total
-  } catch (e) {
-    message.error((e as Error).message || t('student-management.loadFail'))
-  } finally {
-    loading.value = false
-  }
+  })
 }
 
 function handleQuery() {
@@ -117,7 +119,7 @@ function handleReset() {
 const showForm = ref(false)
 const editingStudentId = ref<number | null>(null)
 const editingStudentName = ref('')
-const saving = ref(false)
+const { loading: saving, withLoading: withSaving } = useLoading()
 
 const emptyForm = (): StudentUpdateForm => ({
   studentNo: '',
@@ -151,25 +153,25 @@ function startEdit(row: Student) {
   showForm.value = true
 }
 
-async function handleSave() {
-  saving.value = true
-  try {
-    const body: StudentUpdateForm = {
-      studentNo: form.value.studentNo || originalForm.value.studentNo,
-      className: form.value.className || originalForm.value.className,
-      majorName: form.value.majorName || originalForm.value.majorName,
-      gradeName: form.value.gradeName || originalForm.value.gradeName,
-      enrollmentYear: form.value.enrollmentYear ?? originalForm.value.enrollmentYear,
+function handleSave() {
+  return withSaving(async () => {
+    try {
+      const body: StudentUpdateForm = {
+        studentNo: form.value.studentNo || originalForm.value.studentNo,
+        className: form.value.className || originalForm.value.className,
+        majorName: form.value.majorName || originalForm.value.majorName,
+        gradeName: form.value.gradeName || originalForm.value.gradeName,
+        enrollmentYear: form.value.enrollmentYear ?? originalForm.value.enrollmentYear,
+      }
+      await updateStudent(editingStudentId.value!, body)
+      message.success(t('student-management.saveSuccess'))
+      showForm.value = false
+      await loadData()
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('student-management.saveFail'))
     }
-    await updateStudent(editingStudentId.value!, body)
-    message.success(t('student-management.saveSuccess'))
-    showForm.value = false
-    await loadData()
-  } catch (e) {
-    message.error((e as Error).message || t('student-management.saveFail'))
-  } finally {
-    saving.value = false
-  }
+  })
 }
 
 const majorOptions = ref<Array<{ label: string; value: string }>>([])

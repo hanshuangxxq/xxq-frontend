@@ -34,6 +34,8 @@ import {
 import { fetchAllSemesters } from '@/modules/curriculum/api'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import { useRemotePagination } from '@/shared/composables/useRemotePagination'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import PagedSelect from '@/shared/components/PagedSelect.vue'
 import { useLocaleStore } from '@/stores/useLocaleStore'
 import type { Campaign, CampaignForm, CampaignStatus, SelectionGroup } from '../types'
@@ -53,7 +55,7 @@ const { isAcademicAdmin } = useRoleCheck()
 const localeStore = useLocaleStore()
 const dateLocale = computed(() => localeStore.naiveConfig().dateLocale)
 
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 const data = ref<Campaign[]>([])
 const semesters = ref<Semester[]>([])
 const { pagination } = useRemotePagination(loadData)
@@ -75,21 +77,20 @@ function isExpired(endTime: string): boolean {
   return new Date(endTime) < new Date()
 }
 
-async function loadData() {
-  loading.value = true
-  try {
-    const [campaignRes, semesterRes] = await Promise.all([
-      fetchCampaigns(pagination.page, pagination.pageSize),
-      fetchAllSemesters(),
-    ])
-    data.value = campaignRes.data.records
-    pagination.itemCount = campaignRes.data.total
-    semesters.value = semesterRes.data
-  } catch (e) {
-    message.error((e as Error).message || t('selection.loadFail'))
-  } finally {
-    loading.value = false
-  }
+function loadData() {
+  return withLoading(async () => {
+    try {
+      const [campaignRes, semesterRes] = await Promise.all([
+        fetchCampaigns(pagination.page, pagination.pageSize),
+        fetchAllSemesters(),
+      ])
+      data.value = campaignRes.data.records
+      pagination.itemCount = campaignRes.data.total
+      semesters.value = semesterRes.data
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('selection.loadFail'))
+    }
+  })
 }
 
 function goDetail(id: number) {
@@ -211,7 +212,7 @@ const columns = computed<DataTableColumns<Campaign>>(() => [
 
 const showForm = ref(false)
 const editingId = ref<number | null>(null)
-const saving = ref(false)
+const { loading: saving, withLoading: withSaving } = useLoading()
 const showCreateModal = ref(false)
 const showGroupModal = ref(false)
 
@@ -267,7 +268,7 @@ function startEdit(row: Campaign) {
   showForm.value = true
 }
 
-async function handleSave() {
+function handleSave() {
   if (!form.value.name) {
     message.warning(t('selection.nameRequired'))
     return
@@ -312,36 +313,35 @@ async function handleSave() {
     message.warning(t('selection.capacityMin'))
     return
   }
-  saving.value = true
-  try {
-    const payload: Partial<CampaignForm> = {
-      name: form.value.name,
-      semesterId: form.value.semesterId ?? undefined,
-      startTime: form.value.startTime,
-      endTime: form.value.endTime,
-      startWeek: form.value.startWeek,
-      endWeek: form.value.endWeek,
-      courseCode: form.value.courseCode,
-      credit: form.value.credit,
-      courseHour: form.value.courseHour,
-      description: form.value.description,
-      courseType: PUBLIC_ELECTIVE_COURSE_TYPE,
-      capacity: form.value.capacity,
+  return withSaving(async () => {
+    try {
+      const payload: Partial<CampaignForm> = {
+        name: form.value.name,
+        semesterId: form.value.semesterId ?? undefined,
+        startTime: form.value.startTime,
+        endTime: form.value.endTime,
+        startWeek: form.value.startWeek,
+        endWeek: form.value.endWeek,
+        courseCode: form.value.courseCode,
+        credit: form.value.credit,
+        courseHour: form.value.courseHour,
+        description: form.value.description,
+        courseType: PUBLIC_ELECTIVE_COURSE_TYPE,
+        capacity: form.value.capacity,
+      }
+      // groupId 为 null 时不传，避免误触发换绑；
+      // 用户选择了具体组才带上，由后端处理"已绑定同组幂等 / 换绑"逻辑。
+      if (form.value.groupId != null) {
+        payload.groupId = form.value.groupId
+      }
+      await updateCampaign(editingId.value!, payload)
+      message.success(t('selection.saveSuccess'))
+      showForm.value = false
+      await loadData()
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('selection.saveFail'))
     }
-    // groupId 为 null 时不传，避免误触发换绑；
-    // 用户选择了具体组才带上，由后端处理"已绑定同组幂等 / 换绑"逻辑。
-    if (form.value.groupId != null) {
-      payload.groupId = form.value.groupId
-    }
-    await updateCampaign(editingId.value!, payload)
-    message.success(t('selection.saveSuccess'))
-    showForm.value = false
-    await loadData()
-  } catch (e) {
-    message.error((e as Error).message || t('selection.saveFail'))
-  } finally {
-    saving.value = false
-  }
+  })
 }
 
 async function handleDelete(id: number) {
@@ -350,7 +350,7 @@ async function handleDelete(id: number) {
     message.success(t('selection.deleteSuccess'))
     await loadData()
   } catch (e) {
-    message.error((e as Error).message || t('selection.deleteFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('selection.deleteFail'))
   }
 }
 
@@ -361,7 +361,7 @@ async function handleOpen(id: number) {
     const item = data.value.find((c) => c.id === id)
     if (item) item.status = 'OPEN'
   } catch (e) {
-    message.error((e as Error).message || t('selection.saveFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('selection.saveFail'))
   }
 }
 
@@ -372,7 +372,7 @@ async function handleClose(id: number) {
     const item = data.value.find((c) => c.id === id)
     if (item) item.status = 'CLOSED'
   } catch (e) {
-    message.error((e as Error).message || t('selection.saveFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('selection.saveFail'))
   }
 }
 
@@ -386,10 +386,9 @@ async function handleFinalize(id: number) {
     message.success(t('selection.finalize'))
     if (item) item.status = 'FINALIZED'
   } catch (e) {
-    message.error((e as Error).message || t('selection.saveFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('selection.saveFail'))
   }
 }
-
 onMounted(loadData)
 </script>
 

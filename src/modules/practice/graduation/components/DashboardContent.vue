@@ -16,6 +16,8 @@ import {
 import { fetchDashboard, exportDashboard, type DashboardQuery } from '../api'
 import { fetchColleges } from '@/modules/college/api'
 import { useRemotePagination } from '@/shared/composables/useRemotePagination'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import {
   proposalStatusTagType,
   assignmentSourceTagType,
@@ -42,8 +44,13 @@ const { t } = useI18n()
 const message = useMessage()
 
 const rows = ref<DashboardRow[]>([])
-const loading = ref(false)
-const exporting = ref<'xlsx' | 'csv' | null>(null)
+const { loading, withLoading } = useLoading()
+const { loading: exportingXlsx, withLoading: withExportingXlsx } = useLoading()
+const { loading: exportingCsv, withLoading: withExportingCsv } = useLoading()
+/** 当前导出中的格式（null = 未在导出），供导出按钮 loading/disabled 判断 */
+const exporting = computed<'xlsx' | 'csv' | null>(() =>
+  exportingXlsx.value ? 'xlsx' : exportingCsv.value ? 'csv' : null,
+)
 
 const filterStatus = ref<string | null>(null)
 const keyword = ref('')
@@ -64,25 +71,25 @@ const statusFilterOptions = computed(() => [
 
 const collegeOptions = computed(() => colleges.value.map((c) => ({ label: c.name, value: c.id })))
 
-async function loadData(): Promise<void> {
-  if (props.campaignId == null) return
-  loading.value = true
-  try {
-    const query: DashboardQuery = {
-      status: (filterStatus.value as DashboardQuery['status']) ?? undefined,
-      keyword: keyword.value || undefined,
-      collegeId: collegeId.value ?? undefined,
-      page: pagination.page,
-      pageSize: pagination.pageSize,
+function loadData(): Promise<void> {
+  return withLoading(async () => {
+    if (props.campaignId == null) return
+    try {
+      const query: DashboardQuery = {
+        status: (filterStatus.value as DashboardQuery['status']) ?? undefined,
+        keyword: keyword.value || undefined,
+        collegeId: collegeId.value ?? undefined,
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+      }
+      const res = await fetchDashboard(props.campaignId, query)
+      rows.value = res.data.records
+      pagination.itemCount = res.data.total
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('graduation.common.loadFail'))
     }
-    const res = await fetchDashboard(props.campaignId, query)
-    rows.value = res.data.records
-    pagination.itemCount = res.data.total
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.loadFail'))
-  } finally {
-    loading.value = false
-  }
+  })
 }
 
 function handleFilterChange(): void {
@@ -98,20 +105,21 @@ function handleReset(): void {
 }
 
 /** F-R-12：导出携带当前筛选，导出中加载态防重复点击 */
-async function handleExport(format: 'xlsx' | 'csv'): Promise<void> {
-  if (props.campaignId == null) return
-  exporting.value = format
-  try {
-    await exportDashboard(props.campaignId, format, {
-      status: (filterStatus.value as DashboardQuery['status']) ?? undefined,
-      keyword: keyword.value || undefined,
-      collegeId: collegeId.value ?? undefined,
-    })
-  } catch (e) {
-    message.error((e as Error).message || t('graduation.common.operationFail'))
-  } finally {
-    exporting.value = null
-  }
+function handleExport(format: 'xlsx' | 'csv'): Promise<void> {
+  const withExporting = format === 'xlsx' ? withExportingXlsx : withExportingCsv
+  return withExporting(async () => {
+    if (props.campaignId == null) return
+    try {
+      await exportDashboard(props.campaignId, format, {
+        status: (filterStatus.value as DashboardQuery['status']) ?? undefined,
+        keyword: keyword.value || undefined,
+        collegeId: collegeId.value ?? undefined,
+      })
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('graduation.common.operationFail'))
+    }
+  })
 }
 
 watch(

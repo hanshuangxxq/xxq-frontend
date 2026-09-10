@@ -18,6 +18,8 @@ import {
 } from 'naive-ui'
 import { fetchColleges, createCollege, updateCollege, deleteCollege } from '../api'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import type { College, CollegeCreateRequest } from '../types'
 
 const { t } = useI18n()
@@ -30,7 +32,7 @@ function formatDateTime(s: string | null | undefined): string {
   return s.slice(0, 16).replace('T', ' ')
 }
 
-const loading = ref(false)
+const { loading, withLoading } = useLoading()
 const data = ref<College[]>([])
 
 const collegeRowKey = (row: College) => row.id
@@ -88,22 +90,21 @@ const columns = computed<DataTableColumns<College>>(() => {
   ]
 })
 
-async function loadData() {
-  loading.value = true
-  try {
-    const res = await fetchColleges()
-    data.value = res.data
-  } catch (e) {
-    message.error((e as Error).message || t('college.loadFail'))
-  } finally {
-    loading.value = false
-  }
+function loadData() {
+  return withLoading(async () => {
+    try {
+      const res = await fetchColleges()
+      data.value = res.data
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('college.loadFail'))
+    }
+  })
 }
 
 const showForm = ref(false)
 const formMode = ref<'create' | 'edit'>('create')
 const editingId = ref<number | null>(null)
-const saving = ref(false)
+const { loading: saving, withLoading: withSaving } = useLoading()
 
 interface CollegeForm {
   collegeName: string
@@ -131,7 +132,7 @@ function startEdit(row: College) {
   showForm.value = true
 }
 
-async function handleSave() {
+function handleSave() {
   const f = form.value
   if (!f.collegeName.trim()) return message.warning(t('college.nameRequired'))
   const body: CollegeCreateRequest = {
@@ -139,21 +140,20 @@ async function handleSave() {
     collegeCode: f.collegeCode.trim() || undefined,
     collegeNo: f.collegeNo.trim() || undefined,
   }
-  saving.value = true
-  try {
-    if (formMode.value === 'create') {
-      await createCollege(body)
-    } else {
-      await updateCollege(editingId.value!, body)
+  return withSaving(async () => {
+    try {
+      if (formMode.value === 'create') {
+        await createCollege(body)
+      } else {
+        await updateCollege(editingId.value!, body)
+      }
+      message.success(t('college.saveSuccess'))
+      showForm.value = false
+      await loadData()
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('college.saveFail'))
     }
-    message.success(t('college.saveSuccess'))
-    showForm.value = false
-    await loadData()
-  } catch (e) {
-    message.error((e as Error).message || t('college.saveFail'))
-  } finally {
-    saving.value = false
-  }
+  })
 }
 
 async function handleDelete(id: number) {
@@ -162,10 +162,9 @@ async function handleDelete(id: number) {
     message.success(t('college.deleteSuccess'))
     await loadData()
   } catch (e) {
-    message.error((e as Error).message || t('college.deleteFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('college.deleteFail'))
   }
 }
-
 onMounted(loadData)
 </script>
 

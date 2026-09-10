@@ -25,6 +25,8 @@ import {
 import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import EmptyState from '@/shared/components/EmptyState.vue'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
+import { useLoading } from '@/shared/composables/useLoading'
+import { isReportedError } from '@/shared/api'
 import {
   fetchAvailableCompetitions,
   registerCompetition,
@@ -45,19 +47,18 @@ const { isStudent } = useRoleCheck()
 const activeTab = ref('available')
 
 // ---- 可报名竞赛 ----
-const availLoading = ref(false)
+const { loading: availLoading, withLoading: withAvailLoading } = useLoading()
 const available = ref<CompetitionResponse[]>([])
 
-async function loadAvailable() {
-  availLoading.value = true
-  try {
-    const res = await fetchAvailableCompetitions()
-    available.value = res.data
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.loadFail'))
-  } finally {
-    availLoading.value = false
-  }
+function loadAvailable() {
+  return withAvailLoading(async () => {
+    try {
+      const res = await fetchAvailableCompetitions()
+      available.value = res.data
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+    }
+  })
 }
 
 const showRegister = ref(false)
@@ -67,7 +68,7 @@ const registerForm = ref<{
   teamName: string
   members: Array<number>
 }>({ teamMode: 'individual', teamName: '', members: [] })
-const savingRegister = ref(false)
+const { loading: savingRegister, withLoading: withSavingRegister } = useLoading()
 
 const fetchStudentsPage = (page: number, pageSize: number) => fetchStudents({ page, pageSize })
 const studentLabelOf = (s: Student) => s.name
@@ -79,7 +80,7 @@ function startRegister(row: CompetitionResponse) {
   showRegister.value = true
 }
 
-async function handleRegister() {
+function handleRegister() {
   if (!registeringComp.value) return
   const f = registerForm.value
   const body =
@@ -90,17 +91,17 @@ async function handleRegister() {
           members: joinMembers(f.members),
         }
       : { competitionId: registeringComp.value.id }
-  savingRegister.value = true
-  try {
-    await registerCompetition(body)
-    message.success(t('practice.common.operationSuccess'))
-    showRegister.value = false
-    await loadMyRegistrations()
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.operationFail'))
-  } finally {
-    savingRegister.value = false
-  }
+  return withSavingRegister(async () => {
+    try {
+      await registerCompetition(body)
+      message.success(t('practice.common.operationSuccess'))
+      showRegister.value = false
+      await loadMyRegistrations()
+    } catch (e) {
+      if (!isReportedError(e))
+        message.error((e as Error).message || t('practice.common.operationFail'))
+    }
+  })
 }
 
 const competitionRowKey = (row: CompetitionResponse) => row.id
@@ -150,19 +151,18 @@ const availableColumns = computed<DataTableColumns<CompetitionResponse>>(() => [
 ])
 
 // ---- 我的报名 ----
-const myRegLoading = ref(false)
+const { loading: myRegLoading, withLoading: withMyRegLoading } = useLoading()
 const myRegistrations = ref<RegistrationResponse[]>([])
 
-async function loadMyRegistrations() {
-  myRegLoading.value = true
-  try {
-    const res = await fetchMyCompetitionRegistrations()
-    myRegistrations.value = res.data
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.loadFail'))
-  } finally {
-    myRegLoading.value = false
-  }
+function loadMyRegistrations() {
+  return withMyRegLoading(async () => {
+    try {
+      const res = await fetchMyCompetitionRegistrations()
+      myRegistrations.value = res.data
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+    }
+  })
 }
 
 async function handleRevoke(id: number) {
@@ -171,7 +171,7 @@ async function handleRevoke(id: number) {
     message.success(t('practice.common.revokeSuccess'))
     await loadMyRegistrations()
   } catch (e) {
-    message.error((e as Error).message || t('practice.common.revokeFail'))
+    if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.revokeFail'))
   }
 }
 
@@ -250,21 +250,20 @@ const myRegColumns = computed<DataTableColumns<RegistrationResponse>>(() => [
 const showResult = ref(false)
 const viewingReg = ref<RegistrationResponse | null>(null)
 const myResult = ref<CompetitionResultResponse | null>(null)
-const resultLoading = ref(false)
+const { loading: resultLoading, withLoading: withResultLoading } = useLoading()
 
-async function openMyResult(row: RegistrationResponse) {
+function openMyResult(row: RegistrationResponse) {
   viewingReg.value = row
   myResult.value = null
   showResult.value = true
-  resultLoading.value = true
-  try {
-    const res = await fetchMyCompetitionResult(row.competitionId)
-    myResult.value = res.data
-  } catch (e) {
-    message.error((e as Error).message || t('practice.common.loadFail'))
-  } finally {
-    resultLoading.value = false
-  }
+  return withResultLoading(async () => {
+    try {
+      const res = await fetchMyCompetitionResult(row.competitionId)
+      myResult.value = res.data
+    } catch (e) {
+      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+    }
+  })
 }
 
 const myResultColumns = computed<DataTableColumns<RegistrationResponse>>(() => [
