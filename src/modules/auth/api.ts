@@ -1,4 +1,5 @@
 import { api } from '@/shared/api'
+import { clientIpHeaders } from '@/shared/utils/clientIp'
 import type { Result } from '@/shared/types'
 import type {
   ChangePasswordParams,
@@ -12,7 +13,11 @@ import type {
 
 export const authApi = {
   async login(params: LoginParams): Promise<UserSession> {
-    const result = await api.post<Result<UserSession>>('/login', params)
+    // 仅登录请求携带客户端私网 IP,供后端 NAT 场景(同宿舍楼同公网 IP)下的登录限流区分;
+    // 登录后的限流/风控由后端按账户维度处理,不再携带该头
+    const result = await api.post<Result<UserSession>>('/login', params, {
+      headers: await clientIpHeaders(),
+    })
     return result.data
   },
 
