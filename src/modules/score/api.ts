@@ -1,6 +1,4 @@
 import { api } from '@/shared/api'
-import { accessToken, refreshAccessToken } from '@/shared/tokenManager'
-import { API_BASE_URL } from '@/config'
 import type { PageResult, Result } from '@/shared/types'
 import type { Semester } from '@/modules/curriculum/types'
 import type {
@@ -81,34 +79,12 @@ export function fetchScoreStatistics(
   return api.get(`/scores/statistics${qs ? `?${qs}` : ''}`)
 }
 
-// ---- 导出（二进制文件流，非 Result 封装，绕过 api 封装） ----
+// ---- 导出（二进制文件流，非 Result 封装，走 api.download） ----
 
-export async function exportScores(teachInfoId: number, format: 'excel' | 'pdf'): Promise<void> {
-  const url = `${API_BASE_URL}/scores/export?teachInfoId=${teachInfoId}&format=${format}`
-  const doFetch = (): Promise<Response> =>
-    fetch(url, { headers: { Authorization: `Bearer ${accessToken.value}` } })
-
-  let res = await doFetch()
-  if (res.status === 401) {
-    const outcome = await refreshAccessToken()
-    if (outcome === 'success') res = await doFetch()
-  }
-  if (!res.ok) throw new Error(`导出失败: HTTP ${res.status}`)
-
-  const blob = await res.blob()
-  const disp = res.headers.get('Content-Disposition') ?? ''
-  let filename = `scores.${format === 'excel' ? 'xlsx' : 'pdf'}`
-  const match = disp.match(/filename\*=UTF-8''([^;]+)/i)
-  if (match?.[1]) filename = decodeURIComponent(match[1])
-
-  const objectUrl = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = objectUrl
-  a.download = filename
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(objectUrl)
+export function exportScores(teachInfoId: number, format: 'excel' | 'pdf'): Promise<void> {
+  return api.download(`/scores/export?teachInfoId=${teachInfoId}&format=${format}`, {
+    fallbackName: `scores.${format === 'excel' ? 'xlsx' : 'pdf'}`,
+  })
 }
 
 // ---- 成绩复核 ----
