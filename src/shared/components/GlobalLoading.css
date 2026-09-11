@@ -1,6 +1,8 @@
+/* 固定在视口底部居中:顶部是 Naive UI 消息(message)的默认渲染区,
+   加载条放底部避免与「登录成功」等消息重叠遮挡 */
 .global-loading {
   position: fixed;
-  top: 12px;
+  bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 6000;
@@ -30,7 +32,7 @@
   flex-shrink: 0;
 }
 
-/* 淡入淡出过渡 */
+/* 淡入淡出过渡(从下方浮入) */
 .global-loading-enter-active,
 .global-loading-leave-active {
   transition:
@@ -41,5 +43,5 @@
 .global-loading-enter-from,
 .global-loading-leave-to {
   opacity: 0;
-  transform: translateX(-50%) translateY(-8px);
+  transform: translateX(-50%) translateY(8px);
 }
