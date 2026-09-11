@@ -45,7 +45,7 @@ import { fetchCourses } from '@/modules/course/api'
 import { isPublicCourse } from '@/modules/course/utils'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import { useLoading } from '@/shared/composables/useLoading'
-import { isReportedError } from '@/shared/api'
+import { BusinessError, HttpError, isReportedError } from '@/shared/api'
 import PagedSelect from '@/shared/components/PagedSelect.vue'
 import type { ClassName } from '@/modules/class-names/types'
 import type { College } from '@/modules/college/types'
@@ -62,7 +62,9 @@ const score = ref('')
 const scheduleId = ref<number | null>(null)
 const { loading: solving, withLoading: withSolving } = useLoading()
 const lessons = ref<ScheduledLesson[]>([])
+const MAX_POLL_FAILURES = 3 // 轮询连续失败容忍次数(仅针对网络抖动)
 let pollTimer: ReturnType<typeof setInterval> | null = null
+let pollFailCount = 0
 
 // ---- Data preview ----
 const showData = ref(false)
@@ -527,10 +529,12 @@ async function handleDeleteSingle(row: DraftItem) {
 // ---- Scheduling ----
 function startPolling() {
   if (!scheduleId.value) return
+  pollFailCount = 0
   pollTimer = setInterval(async () => {
     try {
-      // 求解轮询:不触发全局加载条(求解期间每 3s 一次,页面已有自身进度展示)
-      const res = await getSolution(scheduleId.value!, { loading: false })
+      // 求解轮询:不触发全局加载条、错误不自动弹窗(求解期间每 3s 一次,失败统一由下方处理)
+      const res = await getSolution(scheduleId.value!, { loading: false, silent: true })
+      pollFailCount = 0
       const data = res.data
       status.value = data.solverStatus
       score.value = data.score
@@ -538,8 +542,14 @@ function startPolling() {
         lessons.value = data.lessonList
         stopPolling()
       }
-    } catch {
-      // polling error, keep trying
+    } catch (e) {
+      // 业务错误(不可行解、方案不存在等)是终态,立即停止;网络抖动容忍连续失败后再放弃
+      const terminal = e instanceof BusinessError || e instanceof HttpError
+      pollFailCount++
+      if (!terminal && pollFailCount < MAX_POLL_FAILURES) return
+      stopPolling()
+      status.value = 'NOT_SOLVING'
+      message.error(terminal ? (e as Error).message : t('common.error.network'))
     }
   }, 3000)
 }
