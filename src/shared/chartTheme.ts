@@ -92,7 +92,7 @@ export function pieSweepAnimation(values: number[], minAngle = 0, totalMs = 2000
   // 镜像 echarts pieLayout 的角度分配:小于 minAngle 的扇区被钳制到 minAngle,
   // 剩余角度在其余扇区间按数值比例分配(全部被钳制时退化为均分)
   const FULL_ANGLE = 360
-  const angles = new Array<number>(values.length).fill(0)
+  const angles = Array.from<number>({ length: values.length }).fill(0)
   if (total > 0) {
     let restAngle = FULL_ANGLE
     let restValue = 0
