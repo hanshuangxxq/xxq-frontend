@@ -3,5 +3,5 @@ import type { Result } from '@/shared/types'
 import type { BatchImportRequest, BatchImportResult } from './types'
 
 export function batchImportUsers(body: BatchImportRequest): Promise<Result<BatchImportResult>> {
-  return api.post('/aAdmin/batch-import', body)
+  return api.post('/academic/batch-import', body)
 }
