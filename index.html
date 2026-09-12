@@ -14,6 +14,79 @@
       html.dark {
         background: #101014;
       }
+
+      /* ===== 启动 splash(首屏加载指示) =====
+         必须内联且零依赖:它要在 JS bundle 下载/解析、启动版本校验、偏好拉取
+         完成之前就渲染,依赖任何外部资源都会重新产生空白期。
+         颜色与 global.css 的语义变量保持一致,暗色由 <html> 的 .dark 类切换;
+         应用挂载完成后由 main.ts 淡出移除 */
+      #boot-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f5f6f8;
+        transition: opacity 0.25s ease;
+      }
+      html.dark #boot-splash {
+        background: #101014;
+      }
+      #boot-splash.boot-splash-leaving {
+        opacity: 0;
+        pointer-events: none;
+      }
+      .boot-splash-inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        font-family:
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+      }
+      .boot-splash-brand {
+        font-size: 22px;
+        font-weight: 600;
+        letter-spacing: 0.2em;
+        color: #1f2329;
+      }
+      html.dark .boot-splash-brand {
+        color: #e5e7eb;
+      }
+      .boot-splash-spinner {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 3px solid rgba(37, 99, 235, 0.2);
+        border-top-color: #2563eb;
+        animation: boot-splash-spin 0.8s linear infinite;
+      }
+      html.dark .boot-splash-spinner {
+        border-color: rgba(59, 130, 246, 0.25);
+        border-top-color: #3b82f6;
+      }
+      .boot-splash-text {
+        font-size: 13px;
+        color: #6b7280;
+      }
+      html.dark .boot-splash-text {
+        color: #9ca3af;
+      }
+      @keyframes boot-splash-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .boot-splash-spinner {
+          animation-duration: 1.6s;
+        }
+      }
     </style>
     <script>
       // 首帧防闪屏:样式与业务脚本加载前,按 localStorage 中用户主动设置的主题
@@ -35,6 +108,29 @@
   </head>
   <body>
     <div id="app"></div>
+    <!-- 启动 splash:浏览器解析到此处即渲染(早于一切 JS),
+         覆盖 bundle 加载、版本校验、偏好拉取的整个启动空窗;
+         应用挂载完成后由 main.ts 淡出移除 -->
+    <div id="boot-splash" role="status" aria-live="polite">
+      <div class="boot-splash-inner">
+        <div class="boot-splash-brand">XXQ</div>
+        <div class="boot-splash-spinner" aria-hidden="true"></div>
+        <div class="boot-splash-text">加载中…</div>
+      </div>
+    </div>
+    <script>
+      // splash 文案跟随浏览器语言(此刻 i18n 尚未加载,仅区分中文/其他)
+      ;(function () {
+        try {
+          if (!(navigator.language || '').toLowerCase().startsWith('zh')) {
+            var t = document.querySelector('#boot-splash .boot-splash-text')
+            if (t) t.textContent = 'Loading…'
+          }
+        } catch (e) {
+          /* 文案保持默认中文 */
+        }
+      })()
+    </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
