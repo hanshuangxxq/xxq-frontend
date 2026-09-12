@@ -12,7 +12,6 @@ import {
   NInput,
   NInputNumber,
   NSelect,
-  NSpin,
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
@@ -29,7 +28,6 @@ import type { ClassName } from '@/modules/class-names/types'
 const { t } = useI18n()
 const message = useMessage()
 
-const { loading, withLoading } = useLoading()
 const data = ref<Student[]>([])
 const { pagination, reset } = useRemotePagination(loadData)
 
@@ -79,26 +77,24 @@ const columns: DataTableColumns<Student> = [
   },
 ]
 
-function loadData() {
-  return withLoading(async () => {
-    try {
-      const q: StudentQuery = {
-        page: pagination.page,
-        pageSize: pagination.pageSize,
-      }
-      if (filterName.value) q.name = filterName.value
-      if (filterGradeId.value != null) q.gradeId = filterGradeId.value
-      if (filterClassName.value) q.className = filterClassName.value
-      if (filterMajor.value) q.major = filterMajor.value
-      if (filterUnassigned.value !== null) q.unassigned = true
-      const res = await fetchStudents(q)
-      data.value = res.data.records
-      pagination.itemCount = res.data.total
-    } catch (e) {
-      if (!isReportedError(e))
-        message.error((e as Error).message || t('student-management.loadFail'))
+async function loadData() {
+  try {
+    const q: StudentQuery = {
+      page: pagination.page,
+      pageSize: pagination.pageSize,
     }
-  })
+    if (filterName.value) q.name = filterName.value
+    if (filterGradeId.value != null) q.gradeId = filterGradeId.value
+    if (filterClassName.value) q.className = filterClassName.value
+    if (filterMajor.value) q.major = filterMajor.value
+    if (filterUnassigned.value !== null) q.unassigned = true
+    const res = await fetchStudents(q)
+    data.value = res.data.records
+    pagination.itemCount = res.data.total
+  } catch (e) {
+    if (!isReportedError(e))
+      message.error((e as Error).message || t('student-management.loadFail'))
+  }
 }
 
 function handleQuery() {
@@ -238,19 +234,17 @@ onMounted(() => {
       </NCard>
 
       <NCard>
-        <NSpin :show="loading">
-          <NDataTable
-            :columns="columns"
-            :data="data"
-            :row-key="studentRowKey"
-            :single-line="false"
-            :bordered="false"
-            remote
-            :pagination="pagination"
-          >
-            <template #empty>{{ $t('student-management.empty') }}</template>
-          </NDataTable>
-        </NSpin>
+        <NDataTable
+          :columns="columns"
+          :data="data"
+          :row-key="studentRowKey"
+          :single-line="false"
+          :bordered="false"
+          remote
+          :pagination="pagination"
+        >
+          <template #empty>{{ $t('student-management.empty') }}</template>
+        </NDataTable>
       </NCard>
     </NSpace>
 

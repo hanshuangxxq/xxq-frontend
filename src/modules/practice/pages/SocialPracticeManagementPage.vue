@@ -13,7 +13,6 @@ import {
   NInputNumber,
   NSelect,
   NTag,
-  NSpin,
   NPopconfirm,
   NTabs,
   NTabPane,
@@ -90,25 +89,22 @@ const reportStatusOptions = computed(() => [
 ])
 
 // ============ 项目 ============
-const { loading: practiceLoading, withLoading: withPracticeLoading } = useLoading()
 const practices = ref<SocialPracticeResponse[]>([])
 const { pagination: prPagination, reset: resetPr } = useRemotePagination(loadPractices)
 const filterPrStatus = ref<SocialPracticeStatusCode | null>(null)
 
-function loadPractices() {
-  return withPracticeLoading(async () => {
-    try {
-      const res = await fetchSocialPractices({
-        status: filterPrStatus.value ?? undefined,
-        page: prPagination.page,
-        pageSize: prPagination.pageSize,
-      })
-      practices.value = res.data.records
-      prPagination.itemCount = res.data.total
-    } catch (e) {
-      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
-    }
-  })
+async function loadPractices() {
+  try {
+    const res = await fetchSocialPractices({
+      status: filterPrStatus.value ?? undefined,
+      page: prPagination.page,
+      pageSize: prPagination.pageSize,
+    })
+    practices.value = res.data.records
+    prPagination.itemCount = res.data.total
+  } catch (e) {
+    if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+  }
 }
 
 function handlePrFilterChange() {
@@ -217,25 +213,22 @@ function handleSavePr() {
 const showApps = ref(false)
 const appsOf = ref<SocialPracticeResponse | null>(null)
 const apps = ref<SocialPracticeApplicationResponse[]>([])
-const { loading: appLoading, withLoading: withAppLoading } = useLoading()
 const { pagination: appPagination, reset: resetApp } = useRemotePagination(loadApps)
 
-function loadApps() {
+async function loadApps() {
   if (!appsOf.value) return
   const target = appsOf.value
-  return withAppLoading(async () => {
-    try {
-      const res = await fetchSocialPracticeApplications(
-        target.id,
-        appPagination.page,
-        appPagination.pageSize,
-      )
-      apps.value = res.data.records
-      appPagination.itemCount = res.data.total
-    } catch (e) {
-      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
-    }
-  })
+  try {
+    const res = await fetchSocialPracticeApplications(
+      target.id,
+      appPagination.page,
+      appPagination.pageSize,
+    )
+    apps.value = res.data.records
+    appPagination.itemCount = res.data.total
+  } catch (e) {
+    if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+  }
 }
 
 function openApps(row: SocialPracticeResponse) {
@@ -280,26 +273,23 @@ function handleSaveReviewApp() {
 }
 
 // ============ 报告 ============
-const { loading: reportLoading, withLoading: withReportLoading } = useLoading()
 const reports = ref<SocialPracticeReportResponse[]>([])
 const { pagination: reportPagination, reset: resetReport } = useRemotePagination(loadReports)
 const filterReportStatus = ref<ReportStatusCode | null>(null)
 let reportsLoaded = false
 
-function loadReports() {
-  return withReportLoading(async () => {
-    try {
-      const res = await fetchSocialPracticeReports({
-        status: filterReportStatus.value ?? undefined,
-        page: reportPagination.page,
-        pageSize: reportPagination.pageSize,
-      })
-      reports.value = res.data.records
-      reportPagination.itemCount = res.data.total
-    } catch (e) {
-      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
-    }
-  })
+async function loadReports() {
+  try {
+    const res = await fetchSocialPracticeReports({
+      status: filterReportStatus.value ?? undefined,
+      page: reportPagination.page,
+      pageSize: reportPagination.pageSize,
+    })
+    reports.value = res.data.records
+    reportPagination.itemCount = res.data.total
+  } catch (e) {
+    if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+  }
 }
 
 function handleReportFilterChange() {
@@ -609,22 +599,20 @@ onMounted(() => {
                 }}</NButton>
               </NSpace>
             </template>
-            <NSpin :show="practiceLoading">
-              <NDataTable
-                :columns="practiceColumns"
-                :data="practices"
-                :row-key="socialPracticeRowKey"
-                :single-line="false"
-                :bordered="false"
-                :scroll-x="1270"
-                remote
-                :pagination="prPagination"
-              >
-                <template #empty
-                  ><EmptyState :description="$t('practice.common.empty')"
-                /></template>
-              </NDataTable>
-            </NSpin>
+            <NDataTable
+              :columns="practiceColumns"
+              :data="practices"
+              :row-key="socialPracticeRowKey"
+              :single-line="false"
+              :bordered="false"
+              :scroll-x="1270"
+              remote
+              :pagination="prPagination"
+            >
+              <template #empty
+                ><EmptyState :description="$t('practice.common.empty')"
+              /></template>
+            </NDataTable>
           </NCard>
         </NTabPane>
 
@@ -649,22 +637,20 @@ onMounted(() => {
                 }}</NButton>
               </NSpace>
             </template>
-            <NSpin :show="reportLoading">
-              <NDataTable
-                :columns="reportColumns"
-                :data="reports"
-                :row-key="socialPracticeReportRowKey"
-                :single-line="false"
-                :bordered="false"
-                :scroll-x="980"
-                remote
-                :pagination="reportPagination"
-              >
-                <template #empty
-                  ><EmptyState :description="$t('practice.common.empty')"
-                /></template>
-              </NDataTable>
-            </NSpin>
+            <NDataTable
+              :columns="reportColumns"
+              :data="reports"
+              :row-key="socialPracticeReportRowKey"
+              :single-line="false"
+              :bordered="false"
+              :scroll-x="980"
+              remote
+              :pagination="reportPagination"
+            >
+              <template #empty
+                ><EmptyState :description="$t('practice.common.empty')"
+              /></template>
+            </NDataTable>
           </NCard>
         </NTabPane>
       </NTabs>
@@ -735,20 +721,18 @@ onMounted(() => {
         :title="$t('practice.socialPractice.applicationsOf', { title: appsOf?.title ?? '' })"
         class="practice-app-modal"
       >
-        <NSpin :show="appLoading">
-          <NDataTable
-            :columns="appColumns"
-            :data="apps"
-            :row-key="socialPracticeApplicationRowKey"
-            :single-line="false"
-            :bordered="false"
-            :scroll-x="920"
-            remote
-            :pagination="appPagination"
-          >
-            <template #empty><EmptyState :description="$t('practice.common.empty')" /></template>
-          </NDataTable>
-        </NSpin>
+        <NDataTable
+          :columns="appColumns"
+          :data="apps"
+          :row-key="socialPracticeApplicationRowKey"
+          :single-line="false"
+          :bordered="false"
+          :scroll-x="920"
+          remote
+          :pagination="appPagination"
+        >
+          <template #empty><EmptyState :description="$t('practice.common.empty')" /></template>
+        </NDataTable>
       </NModal>
 
       <!-- 申报审核 -->

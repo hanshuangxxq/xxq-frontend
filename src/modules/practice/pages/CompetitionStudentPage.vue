@@ -11,7 +11,6 @@ import {
   NFormItem,
   NInput,
   NTag,
-  NSpin,
   NPopconfirm,
   NTabs,
   NTabPane,
@@ -47,18 +46,15 @@ const { isStudent } = useRoleCheck()
 const activeTab = ref('available')
 
 // ---- 可报名竞赛 ----
-const { loading: availLoading, withLoading: withAvailLoading } = useLoading()
 const available = ref<CompetitionResponse[]>([])
 
-function loadAvailable() {
-  return withAvailLoading(async () => {
-    try {
-      const res = await fetchAvailableCompetitions()
-      available.value = res.data
-    } catch (e) {
-      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
-    }
-  })
+async function loadAvailable() {
+  try {
+    const res = await fetchAvailableCompetitions()
+    available.value = res.data
+  } catch (e) {
+    if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+  }
 }
 
 const showRegister = ref(false)
@@ -151,18 +147,15 @@ const availableColumns = computed<DataTableColumns<CompetitionResponse>>(() => [
 ])
 
 // ---- 我的报名 ----
-const { loading: myRegLoading, withLoading: withMyRegLoading } = useLoading()
 const myRegistrations = ref<RegistrationResponse[]>([])
 
-function loadMyRegistrations() {
-  return withMyRegLoading(async () => {
-    try {
-      const res = await fetchMyCompetitionRegistrations()
-      myRegistrations.value = res.data
-    } catch (e) {
-      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
-    }
-  })
+async function loadMyRegistrations() {
+  try {
+    const res = await fetchMyCompetitionRegistrations()
+    myRegistrations.value = res.data
+  } catch (e) {
+    if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+  }
 }
 
 async function handleRevoke(id: number) {
@@ -311,59 +304,53 @@ onMounted(() => {
         <!-- 可报名竞赛 -->
         <NTabPane name="available" :tab="$t('practice.competition.tabAvailable')">
           <NCard>
-            <NSpin :show="availLoading">
-              <NDataTable
-                :columns="availableColumns"
-                :data="available"
-                :row-key="competitionRowKey"
-                :single-line="false"
-                :bordered="false"
-                :scroll-x="1000"
-              >
-                <template #empty
-                  ><EmptyState :description="$t('practice.common.empty')"
-                /></template>
-              </NDataTable>
-            </NSpin>
+            <NDataTable
+              :columns="availableColumns"
+              :data="available"
+              :row-key="competitionRowKey"
+              :single-line="false"
+              :bordered="false"
+              :scroll-x="1000"
+            >
+              <template #empty
+                ><EmptyState :description="$t('practice.common.empty')"
+              /></template>
+            </NDataTable>
           </NCard>
         </NTabPane>
 
         <!-- 我的报名 -->
         <NTabPane name="myRegistrations" :tab="$t('practice.competition.tabMyRegistrations')">
           <NCard>
-            <NSpin :show="myRegLoading">
-              <NDataTable
-                :columns="myRegColumns"
-                :data="myRegistrations"
-                :row-key="registrationRowKey"
-                :single-line="false"
-                :bordered="false"
-                :scroll-x="980"
-              >
-                <template #empty
-                  ><EmptyState :description="$t('practice.common.empty')"
-                /></template>
-              </NDataTable>
-            </NSpin>
+            <NDataTable
+              :columns="myRegColumns"
+              :data="myRegistrations"
+              :row-key="registrationRowKey"
+              :single-line="false"
+              :bordered="false"
+              :scroll-x="980"
+            >
+              <template #empty
+                ><EmptyState :description="$t('practice.common.empty')"
+              /></template>
+            </NDataTable>
           </NCard>
         </NTabPane>
 
         <!-- 我的结果 -->
         <NTabPane name="myResults" :tab="$t('practice.competition.tabMyResults')">
           <NCard>
-            <NSpin :show="myRegLoading">
-              <NDataTable
-                :columns="myResultColumns"
-                :data="myRegistrations"
-                :row-key="registrationRowKey"
-                :single-line="false"
-                :bordered="false"
-              >
-                <template #empty
-                  ><EmptyState :description="$t('practice.common.empty')"
-                /></template>
-              </NDataTable>
-            </NSpin>
+            <NDataTable
+              :columns="myResultColumns"
+              :data="myRegistrations"
+              :row-key="registrationRowKey"
+              :single-line="false"
+              :bordered="false"
+            >
+              <template #empty
+                ><EmptyState :description="$t('practice.common.empty')"
+              /></template>
+            </NDataTable>
           </NCard>
         </NTabPane>
       </NTabs>
@@ -416,31 +403,29 @@ onMounted(() => {
         :title="$t('practice.competition.viewResult')"
         class="practice-form-modal"
       >
-        <NSpin :show="resultLoading">
-          <EmptyState
-            v-if="!resultLoading && !myResult"
-            :description="$t('practice.competition.myResultEmpty')"
-          />
-          <NDescriptions v-else label-placement="left" bordered :column="1">
-            <NDescriptionsItem :label="$t('practice.competition.competitionName')">
-              {{ myResult?.competitionName }}
-            </NDescriptionsItem>
-            <NDescriptionsItem :label="$t('practice.competition.award')">
-              <NTag v-if="myResult" type="success" size="small" :bordered="false">{{
-                myResult.award
-              }}</NTag>
-            </NDescriptionsItem>
-            <NDescriptionsItem :label="$t('practice.common.score')">
-              {{ myResult?.score ?? '-' }}
-            </NDescriptionsItem>
-            <NDescriptionsItem :label="$t('practice.common.comment')">
-              {{ myResult?.comment || '-' }}
-            </NDescriptionsItem>
-            <NDescriptionsItem :label="$t('practice.competition.awardTime')">
-              {{ formatDateTime(myResult?.awardTime) }}
-            </NDescriptionsItem>
-          </NDescriptions>
-        </NSpin>
+        <EmptyState
+          v-if="!resultLoading && !myResult"
+          :description="$t('practice.competition.myResultEmpty')"
+        />
+        <NDescriptions v-else label-placement="left" bordered :column="1">
+          <NDescriptionsItem :label="$t('practice.competition.competitionName')">
+            {{ myResult?.competitionName }}
+          </NDescriptionsItem>
+          <NDescriptionsItem :label="$t('practice.competition.award')">
+            <NTag v-if="myResult" type="success" size="small" :bordered="false">{{
+              myResult.award
+            }}</NTag>
+          </NDescriptionsItem>
+          <NDescriptionsItem :label="$t('practice.common.score')">
+            {{ myResult?.score ?? '-' }}
+          </NDescriptionsItem>
+          <NDescriptionsItem :label="$t('practice.common.comment')">
+            {{ myResult?.comment || '-' }}
+          </NDescriptionsItem>
+          <NDescriptionsItem :label="$t('practice.competition.awardTime')">
+            {{ formatDateTime(myResult?.awardTime) }}
+          </NDescriptionsItem>
+        </NDescriptions>
       </NModal>
     </template>
   </div>

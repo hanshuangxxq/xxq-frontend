@@ -13,7 +13,6 @@ import {
   NDatePicker,
   NSelect,
   NPopconfirm,
-  NSpin,
   NEmpty,
   NTag,
   useMessage,
@@ -241,20 +240,18 @@ onMounted(loadData)
         <template v-if="isAcademicAdmin" #header-extra>
           <NButton type="primary" @click="startCreate">{{ $t('semester.add') }}</NButton>
         </template>
-        <NSpin :show="loading">
-          <NEmpty
-            v-if="!loading && data.length === 0"
-            :description="$t('semester.empty')"
-          />
-          <NDataTable
-            v-else
-            :columns="allColumns"
-            :data="data"
-            :row-key="semesterRowKey"
-            :single-line="false"
-            :bordered="false"
-          />
-        </NSpin>
+        <NEmpty
+          v-if="!loading && data.length === 0"
+          :description="$t('semester.empty')"
+        />
+        <NDataTable
+          v-else
+          :columns="allColumns"
+          :data="data"
+          :row-key="semesterRowKey"
+          :single-line="false"
+          :bordered="false"
+        />
       </NCard>
     </NSpace>
 

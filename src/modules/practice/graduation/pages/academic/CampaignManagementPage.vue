@@ -3,7 +3,6 @@ import { ref, computed, h, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
-  NSpin,
   NEmpty,
   NButton,
   NDataTable,
@@ -40,7 +39,6 @@ const message = useMessage()
 const { isAcademicAdmin } = useRoleCheck()
 
 const campaigns = ref<CampaignResponse[]>([])
-const { loading, withLoading } = useLoading()
 const { pagination, reset } = useRemotePagination(loadCampaigns)
 const filterStatus = ref<CampaignStatusCode | null>(null)
 
@@ -52,21 +50,19 @@ const statusOptions = computed(() => [
   { label: t('graduation.common.campaignClosed'), value: 'CLOSED' as CampaignStatusCode },
 ])
 
-function loadCampaigns(): Promise<void> {
-  return withLoading(async () => {
-    try {
-      const res = await fetchCampaigns({
-        status: filterStatus.value ?? undefined,
-        page: pagination.page,
-        pageSize: pagination.pageSize,
-      })
-      campaigns.value = res.data.records
-      pagination.itemCount = res.data.total
-    } catch (e) {
-      if (!isReportedError(e))
-        message.error((e as Error).message || t('graduation.common.loadFail'))
-    }
-  })
+async function loadCampaigns(): Promise<void> {
+  try {
+    const res = await fetchCampaigns({
+      status: filterStatus.value ?? undefined,
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+    })
+    campaigns.value = res.data.records
+    pagination.itemCount = res.data.total
+  } catch (e) {
+    if (!isReportedError(e))
+      message.error((e as Error).message || t('graduation.common.loadFail'))
+  }
 }
 
 function handleFilterChange(): void {
@@ -398,20 +394,18 @@ onMounted(() => {
             </NButton>
           </NSpace>
         </template>
-        <NSpin :show="loading">
-          <NDataTable
-            :columns="columns"
-            :data="campaigns"
-            :row-key="campaignRowKey"
-            :single-line="false"
-            :bordered="false"
-            :scroll-x="1200"
-            remote
-            :pagination="pagination"
-          >
-            <template #empty><NEmpty :description="$t('graduation.common.empty')" /></template>
-          </NDataTable>
-        </NSpin>
+        <NDataTable
+          :columns="columns"
+          :data="campaigns"
+          :row-key="campaignRowKey"
+          :single-line="false"
+          :bordered="false"
+          :scroll-x="1200"
+          remote
+          :pagination="pagination"
+        >
+          <template #empty><NEmpty :description="$t('graduation.common.empty')" /></template>
+        </NDataTable>
       </NCard>
 
       <!-- 创建/编辑弹窗 -->

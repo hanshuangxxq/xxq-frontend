@@ -6,7 +6,6 @@ import {
   NTabs,
   NTabPane,
   NModal,
-  NSpin,
   NEmpty,
   NTag,
   NDataTable,
@@ -506,21 +505,19 @@ onMounted(async () => {
       <NTabs v-model:value="activeTab" type="line" animated>
         <!-- Student: Class Courses -->
         <NTabPane v-if="isStudent" name="courses" :tab="$t('curriculum.tabCourses')">
-          <NSpin :show="classCoursesLoading">
-            <NEmpty
-              v-if="!classCoursesLoading && classCourses.length === 0"
-              :description="$t('curriculum.empty')"
-            />
-            <div v-else class="course-card-grid">
-              <NCard
-                v-for="(course, index) in classCourses"
-                :key="`${course.courseName}-${index}`"
-                class="course-card"
-              >
-                <div class="course-card-name">{{ course.courseName }}</div>
-              </NCard>
-            </div>
-          </NSpin>
+          <NEmpty
+            v-if="!classCoursesLoading && classCourses.length === 0"
+            :description="$t('curriculum.empty')"
+          />
+          <div v-else class="course-card-grid">
+            <NCard
+              v-for="(course, index) in classCourses"
+              :key="`${course.courseName}-${index}`"
+              class="course-card"
+            >
+              <div class="course-card-name">{{ course.courseName }}</div>
+            </NCard>
+          </div>
         </NTabPane>
 
         <!-- Student: Schedule -->
@@ -540,73 +537,69 @@ onMounted(async () => {
               </div>
             </NScrollbar>
           </div>
-          <NSpin :show="loading">
-            <NEmpty v-if="!loading && data.length === 0" :description="$t('curriculum.empty')" />
-            <div v-else class="timetable-wrapper">
-              <table class="timetable">
-                <thead>
-                  <tr>
-                    <th class="timetable-time-header"></th>
-                    <th v-for="day in DAYS" :key="day" class="timetable-day-header">
-                      <div>{{ getDayLabel(day) }}</div>
-                      <div class="timetable-day-date">{{ getDayDate(day) }}</div>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="slot in orderedTimeSlots" :key="slot.timeId">
-                    <td class="timetable-time-cell">{{ slot.label }}</td>
-                    <td
-                      v-for="day in DAYS"
-                      :key="day"
-                      class="timetable-cell"
-                      :class="{ 'timetable-cell--filled': getCourseAt(slot.timeId, day) }"
-                      @click="openCourseDetailAt(slot.timeId, day)"
-                    >
-                      <template v-if="getCourseAt(slot.timeId, day)">
-                        <div class="cell-course-name">
-                          {{ getCourseAt(slot.timeId, day)?.courseName }}
-                        </div>
-                        <div class="cell-teacher">
-                          {{ getCourseAt(slot.timeId, day)?.teacherName }}
-                        </div>
-                        <div class="cell-location">
-                          {{ getCourseAt(slot.timeId, day)?.building }}
-                          {{ getCourseAt(slot.timeId, day)?.classroom }}
-                        </div>
-                      </template>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </NSpin>
+          <NEmpty v-if="!loading && data.length === 0" :description="$t('curriculum.empty')" />
+          <div v-else class="timetable-wrapper">
+            <table class="timetable">
+              <thead>
+                <tr>
+                  <th class="timetable-time-header"></th>
+                  <th v-for="day in DAYS" :key="day" class="timetable-day-header">
+                    <div>{{ getDayLabel(day) }}</div>
+                    <div class="timetable-day-date">{{ getDayDate(day) }}</div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="slot in orderedTimeSlots" :key="slot.timeId">
+                  <td class="timetable-time-cell">{{ slot.label }}</td>
+                  <td
+                    v-for="day in DAYS"
+                    :key="day"
+                    class="timetable-cell"
+                    :class="{ 'timetable-cell--filled': getCourseAt(slot.timeId, day) }"
+                    @click="openCourseDetailAt(slot.timeId, day)"
+                  >
+                    <template v-if="getCourseAt(slot.timeId, day)">
+                      <div class="cell-course-name">
+                        {{ getCourseAt(slot.timeId, day)?.courseName }}
+                      </div>
+                      <div class="cell-teacher">
+                        {{ getCourseAt(slot.timeId, day)?.teacherName }}
+                      </div>
+                      <div class="cell-location">
+                        {{ getCourseAt(slot.timeId, day)?.building }}
+                        {{ getCourseAt(slot.timeId, day)?.classroom }}
+                      </div>
+                    </template>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </NTabPane>
 
         <!-- Student: Learning Progress -->
         <NTabPane v-if="isStudent" name="progress" :tab="$t('curriculum.tabProgress')">
-          <NSpin :show="progressLoading">
-            <NEmpty v-if="!progressLoading && !hasProgress" :description="$t('analysis.pgEmpty')" />
-            <template v-else-if="hasProgress">
-              <div class="progress-header">
-                <span
-                  >{{ $t('analysis.pgCurrentWeek') }}：{{ progress?.currentWeek ?? '-'
-                  }}{{ $t('analysis.pgWeekUnit') }}</span
-                >
-                <span v-if="progress?.semesterName"
-                  >{{ $t('analysis.pgSemester') }}：{{ progress.semesterName }}</span
-                >
-              </div>
-              <NDataTable
-                :columns="progressColumns"
-                :data="progress?.courses ?? []"
-                :row-key="progressRowKey"
-                :single-line="false"
-                :bordered="false"
-                :scroll-x="1000"
-              />
-            </template>
-          </NSpin>
+          <NEmpty v-if="!progressLoading && !hasProgress" :description="$t('analysis.pgEmpty')" />
+          <template v-else-if="hasProgress">
+            <div class="progress-header">
+              <span
+                >{{ $t('analysis.pgCurrentWeek') }}：{{ progress?.currentWeek ?? '-'
+                }}{{ $t('analysis.pgWeekUnit') }}</span
+              >
+              <span v-if="progress?.semesterName"
+                >{{ $t('analysis.pgSemester') }}：{{ progress.semesterName }}</span
+              >
+            </div>
+            <NDataTable
+              :columns="progressColumns"
+              :data="progress?.courses ?? []"
+              :row-key="progressRowKey"
+              :single-line="false"
+              :bordered="false"
+              :scroll-x="1000"
+            />
+          </template>
         </NTabPane>
       </NTabs>
     </NCard>
@@ -616,36 +609,32 @@ onMounted(async () => {
       <NTabs v-model:value="activeTab" type="line" animated>
         <!-- Teacher: My Courses -->
         <NTabPane name="myCourses" :tab="$t('curriculum.tabMyCourses')">
-          <NSpin :show="teacherLoading">
-            <NEmpty
-              v-if="!teacherLoading && teacherCourses.length === 0"
-              :description="$t('curriculum.empty')"
-            />
-            <NDataTable
-              v-else
-              :columns="teacherColumns"
-              :data="teacherCourses"
-              :row-key="teacherRowKey"
-              :single-line="false"
-              :bordered="false"
-            />
-          </NSpin>
+          <NEmpty
+            v-if="!teacherLoading && teacherCourses.length === 0"
+            :description="$t('curriculum.empty')"
+          />
+          <NDataTable
+            v-else
+            :columns="teacherColumns"
+            :data="teacherCourses"
+            :row-key="teacherRowKey"
+            :single-line="false"
+            :bordered="false"
+          />
         </NTabPane>
 
         <!-- Teacher: My Course Exams -->
         <NTabPane name="myExams" :tab="$t('exam.tcTitle')">
-          <NSpin :show="examLoading">
-            <NEmpty v-if="!examLoading && exams.length === 0" :description="$t('exam.tcEmpty')" />
-            <NDataTable
-              v-else
-              :columns="examColumns"
-              :data="exams"
-              :row-key="examRowKey"
-              :single-line="false"
-              :bordered="false"
-              :scroll-x="1230"
-            />
-          </NSpin>
+          <NEmpty v-if="!examLoading && exams.length === 0" :description="$t('exam.tcEmpty')" />
+          <NDataTable
+            v-else
+            :columns="examColumns"
+            :data="exams"
+            :row-key="examRowKey"
+            :single-line="false"
+            :bordered="false"
+            :scroll-x="1230"
+          />
         </NTabPane>
       </NTabs>
     </NCard>

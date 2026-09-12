@@ -7,7 +7,6 @@ import {
   NSpace,
   NButton,
   NPopconfirm,
-  NSpin,
   NEmpty,
   NTag,
   NCollapse,
@@ -278,58 +277,56 @@ onMounted(loadAll)
       </NCard>
 
       <NCard :title="$t('selection.classResults')">
-        <NSpin :show="loading">
-          <NAlert v-if="campaign && campaign.status !== 'FINALIZED'" type="info" :show-icon="false">
-            {{ $t('selection.noClassResults') }}
-          </NAlert>
-          <NEmpty
-            v-else-if="!loading && classes.length === 0"
-            :description="$t('selection.noStudentsSelected')"
-          />
-          <NCollapse v-else arrow-placement="left">
-            <NCollapseItem
-              v-for="cls in classes"
-              :key="cls.classId"
-              :name="String(cls.classId)"
-              :title="`${cls.courseName} - ${$t('selection.classNo')} ${cls.classNo} (${cls.studentCount} ${$t('selection.studentCount')})`"
-            >
-              <template #header-extra>
-                <NSpace :size="8" align="center" @click.stop>
-                  <NTag v-if="cls.teacherName" size="small" type="info" :bordered="false">
-                    {{ $t('selection.teacher') }}: {{ cls.teacherName }}
-                  </NTag>
-                  <NTag v-else size="small" type="warning" :bordered="false">
-                    {{ $t('selection.unassignedTeacher') }}
-                  </NTag>
-                  <NButton size="small" @click="openAssignTeacher(cls)">
-                    {{
-                      cls.teacherId ? $t('selection.changeTeacher') : $t('selection.assignTeacher')
-                    }}
-                  </NButton>
-                  <NPopconfirm
-                    v-if="cls.teacherId"
-                    :on-positive-click="() => handleUnassignTeacher(cls)"
-                  >
-                    <template #trigger>
-                      <NButton size="small" type="warning" quaternary>
-                        {{ $t('selection.unassignTeacher') }}
-                      </NButton>
-                    </template>
-                    {{ $t('selection.unassignTeacherConfirm') }}
-                  </NPopconfirm>
-                </NSpace>
-              </template>
-              <NDataTable
-                :columns="memberColumns"
-                :data="cls.members"
-                :row-key="memberRowKey"
-                :single-line="false"
-                :bordered="false"
-                size="small"
-              />
-            </NCollapseItem>
-          </NCollapse>
-        </NSpin>
+        <NAlert v-if="campaign && campaign.status !== 'FINALIZED'" type="info" :show-icon="false">
+          {{ $t('selection.noClassResults') }}
+        </NAlert>
+        <NEmpty
+          v-else-if="!loading && classes.length === 0"
+          :description="$t('selection.noStudentsSelected')"
+        />
+        <NCollapse v-else arrow-placement="left">
+          <NCollapseItem
+            v-for="cls in classes"
+            :key="cls.classId"
+            :name="String(cls.classId)"
+            :title="`${cls.courseName} - ${$t('selection.classNo')} ${cls.classNo} (${cls.studentCount} ${$t('selection.studentCount')})`"
+          >
+            <template #header-extra>
+              <NSpace :size="8" align="center" @click.stop>
+                <NTag v-if="cls.teacherName" size="small" type="info" :bordered="false">
+                  {{ $t('selection.teacher') }}: {{ cls.teacherName }}
+                </NTag>
+                <NTag v-else size="small" type="warning" :bordered="false">
+                  {{ $t('selection.unassignedTeacher') }}
+                </NTag>
+                <NButton size="small" @click="openAssignTeacher(cls)">
+                  {{
+                    cls.teacherId ? $t('selection.changeTeacher') : $t('selection.assignTeacher')
+                  }}
+                </NButton>
+                <NPopconfirm
+                  v-if="cls.teacherId"
+                  :on-positive-click="() => handleUnassignTeacher(cls)"
+                >
+                  <template #trigger>
+                    <NButton size="small" type="warning" quaternary>
+                      {{ $t('selection.unassignTeacher') }}
+                    </NButton>
+                  </template>
+                  {{ $t('selection.unassignTeacherConfirm') }}
+                </NPopconfirm>
+              </NSpace>
+            </template>
+            <NDataTable
+              :columns="memberColumns"
+              :data="cls.members"
+              :row-key="memberRowKey"
+              :single-line="false"
+              :bordered="false"
+              size="small"
+            />
+          </NCollapseItem>
+        </NCollapse>
       </NCard>
     </NSpace>
 

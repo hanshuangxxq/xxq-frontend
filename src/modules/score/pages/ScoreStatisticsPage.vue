@@ -8,7 +8,6 @@ import {
   NInput,
   NButton,
   NDataTable,
-  NSpin,
   NEmpty,
   useMessage,
   type DataTableColumns,
@@ -327,41 +326,39 @@ onMounted(() => {
 
       <!-- 图表 + 明细 -->
       <NCard>
-        <NSpin :show="loading">
-          <NEmpty v-if="!loading && !hasData" :description="$t('score.statEmpty')" />
-          <template v-else>
-            <div class="chart-full">
-              <div class="chart-title">{{ $t('score.statLevelDist') }}</div>
+        <NEmpty v-if="!loading && !hasData" :description="$t('score.statEmpty')" />
+        <template v-else>
+          <div class="chart-full">
+            <div class="chart-title">{{ $t('score.statLevelDist') }}</div>
+            <div class="chart-box chart-box-tall">
+              <BaseChart :option="levelStackOption" />
+            </div>
+          </div>
+          <div class="chart-row">
+            <div class="chart-card">
+              <div class="chart-title">{{ $t('score.statLevelPie') }}</div>
               <div class="chart-box chart-box-tall">
-                <BaseChart :option="levelStackOption" :loading="loading" />
+                <BaseChart :option="levelPieOption" />
               </div>
             </div>
-            <div class="chart-row">
-              <div class="chart-card">
-                <div class="chart-title">{{ $t('score.statLevelPie') }}</div>
-                <div class="chart-box chart-box-tall">
-                  <BaseChart :option="levelPieOption" :loading="loading" />
-                </div>
-              </div>
-              <div class="chart-card">
-                <div class="chart-title">{{ $t('score.statAvgPass') }}</div>
-                <div class="chart-box chart-box-tall">
-                  <BaseChart :option="avgPassOption" :loading="loading" />
-                </div>
+            <div class="chart-card">
+              <div class="chart-title">{{ $t('score.statAvgPass') }}</div>
+              <div class="chart-box chart-box-tall">
+                <BaseChart :option="avgPassOption" />
               </div>
             </div>
+          </div>
 
-            <div class="table-title">{{ $t('score.statTitle') }}</div>
-            <NDataTable
-              :columns="columns"
-              :data="data"
-              :row-key="statisticsRowKey"
-              :single-line="false"
-              :bordered="false"
-              :scroll-x="1100"
-            />
-          </template>
-        </NSpin>
+          <div class="table-title">{{ $t('score.statTitle') }}</div>
+          <NDataTable
+            :columns="columns"
+            :data="data"
+            :row-key="statisticsRowKey"
+            :single-line="false"
+            :bordered="false"
+            :scroll-x="1100"
+          />
+        </template>
       </NCard>
     </NSpace>
   </div>

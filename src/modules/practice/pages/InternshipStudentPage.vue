@@ -12,7 +12,6 @@ import {
   NInput,
   NSelect,
   NTag,
-  NSpin,
   NUpload,
   NPopconfirm,
   NTabs,
@@ -62,18 +61,15 @@ const activeTab = ref('available')
 const MAX_SIZE = 20 * 1024 * 1024
 
 // ---- 可报名实习 ----
-const { loading: availLoading, withLoading: withAvailLoading } = useLoading()
 const available = ref<InternshipResponse[]>([])
 
-function loadAvailable() {
-  return withAvailLoading(async () => {
-    try {
-      const res = await fetchAvailableInternships()
-      available.value = res.data
-    } catch (e) {
-      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
-    }
-  })
+async function loadAvailable() {
+  try {
+    const res = await fetchAvailableInternships()
+    available.value = res.data
+  } catch (e) {
+    if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+  }
 }
 
 const showApply = ref(false)
@@ -168,18 +164,15 @@ const availableColumns = computed<DataTableColumns<InternshipResponse>>(() => [
 ])
 
 // ---- 我的报名 ----
-const { loading: myAppLoading, withLoading: withMyAppLoading } = useLoading()
 const myApplications = ref<InternshipApplicationResponse[]>([])
 
-function loadMyApplications() {
-  return withMyAppLoading(async () => {
-    try {
-      const res = await fetchMyInternshipApplications()
-      myApplications.value = res.data
-    } catch (e) {
-      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
-    }
-  })
+async function loadMyApplications() {
+  try {
+    const res = await fetchMyInternshipApplications()
+    myApplications.value = res.data
+  } catch (e) {
+    if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+  }
 }
 
 async function handleRevoke(id: number) {
@@ -431,18 +424,15 @@ const reportColumns = computed<DataTableColumns<InternshipReportResponse>>(() =>
 ])
 
 // ---- 可报名培训 ----
-const { loading: availTrainLoading, withLoading: withAvailTrainLoading } = useLoading()
 const availableTrainings = ref<TrainingResponse[]>([])
 
-function loadAvailableTrainings() {
-  return withAvailTrainLoading(async () => {
-    try {
-      const res = await fetchAvailableTrainings()
-      availableTrainings.value = res.data
-    } catch (e) {
-      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
-    }
-  })
+async function loadAvailableTrainings() {
+  try {
+    const res = await fetchAvailableTrainings()
+    availableTrainings.value = res.data
+  } catch (e) {
+    if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+  }
 }
 
 async function handleEnroll(row: TrainingResponse) {
@@ -502,18 +492,15 @@ const availTrainColumns = computed<DataTableColumns<TrainingResponse>>(() => [
 ])
 
 // ---- 我的培训 ----
-const { loading: myTrainLoading, withLoading: withMyTrainLoading } = useLoading()
 const myTrainings = ref<TrainingEnrollmentResponse[]>([])
 
-function loadMyTrainings() {
-  return withMyTrainLoading(async () => {
-    try {
-      const res = await fetchMyTrainingEnrollments()
-      myTrainings.value = res.data
-    } catch (e) {
-      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
-    }
-  })
+async function loadMyTrainings() {
+  try {
+    const res = await fetchMyTrainingEnrollments()
+    myTrainings.value = res.data
+  } catch (e) {
+    if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+  }
 }
 
 async function handleCancelEnroll(id: number) {
@@ -593,40 +580,36 @@ onMounted(() => {
         <!-- 可报名实习 -->
         <NTabPane name="available" :tab="$t('practice.internship.tabAvailable')">
           <NCard>
-            <NSpin :show="availLoading">
-              <NDataTable
-                :columns="availableColumns"
-                :data="available"
-                :row-key="internshipRowKey"
-                :single-line="false"
-                :bordered="false"
-                :scroll-x="980"
-              >
-                <template #empty
-                  ><EmptyState :description="$t('practice.common.empty')"
-                /></template>
-              </NDataTable>
-            </NSpin>
+            <NDataTable
+              :columns="availableColumns"
+              :data="available"
+              :row-key="internshipRowKey"
+              :single-line="false"
+              :bordered="false"
+              :scroll-x="980"
+            >
+              <template #empty
+                ><EmptyState :description="$t('practice.common.empty')"
+              /></template>
+            </NDataTable>
           </NCard>
         </NTabPane>
 
         <!-- 我的报名 -->
         <NTabPane name="myApplications" :tab="$t('practice.internship.tabMyApplications')">
           <NCard>
-            <NSpin :show="myAppLoading">
-              <NDataTable
-                :columns="myAppColumns"
-                :data="myApplications"
-                :row-key="internshipApplicationRowKey"
-                :single-line="false"
-                :bordered="false"
-                :scroll-x="1080"
-              >
-                <template #empty
-                  ><EmptyState :description="$t('practice.common.empty')"
-                /></template>
-              </NDataTable>
-            </NSpin>
+            <NDataTable
+              :columns="myAppColumns"
+              :data="myApplications"
+              :row-key="internshipApplicationRowKey"
+              :single-line="false"
+              :bordered="false"
+              :scroll-x="1080"
+            >
+              <template #empty
+                ><EmptyState :description="$t('practice.common.empty')"
+              /></template>
+            </NDataTable>
           </NCard>
         </NTabPane>
 
@@ -642,65 +625,59 @@ onMounted(() => {
                 {{ $t('practice.internship.submitReport') }}
               </NButton>
             </template>
-            <NSpin :show="reportLoading">
-              <EmptyState
-                v-if="!reportLoading && myReports.length === 0"
-                :description="$t('practice.common.empty')"
-              />
-              <NDataTable
-                v-else
-                :columns="reportColumns"
-                :data="myReports"
-                :row-key="internshipReportRowKey"
-                :single-line="false"
-                :bordered="false"
-                :scroll-x="1000"
-              >
-                <template #empty
-                  ><EmptyState :description="$t('practice.common.empty')"
-                /></template>
-              </NDataTable>
-            </NSpin>
+            <EmptyState
+              v-if="!reportLoading && myReports.length === 0"
+              :description="$t('practice.common.empty')"
+            />
+            <NDataTable
+              v-else
+              :columns="reportColumns"
+              :data="myReports"
+              :row-key="internshipReportRowKey"
+              :single-line="false"
+              :bordered="false"
+              :scroll-x="1000"
+            >
+              <template #empty
+                ><EmptyState :description="$t('practice.common.empty')"
+              /></template>
+            </NDataTable>
           </NCard>
         </NTabPane>
 
         <!-- 可报名培训 -->
         <NTabPane name="availableTrainings" :tab="$t('practice.internship.tabAvailableTrainings')">
           <NCard>
-            <NSpin :show="availTrainLoading">
-              <NDataTable
-                :columns="availTrainColumns"
-                :data="availableTrainings"
-                :row-key="trainingRowKey"
-                :single-line="false"
-                :bordered="false"
-                :scroll-x="920"
-              >
-                <template #empty
-                  ><EmptyState :description="$t('practice.common.empty')"
-                /></template>
-              </NDataTable>
-            </NSpin>
+            <NDataTable
+              :columns="availTrainColumns"
+              :data="availableTrainings"
+              :row-key="trainingRowKey"
+              :single-line="false"
+              :bordered="false"
+              :scroll-x="920"
+            >
+              <template #empty
+                ><EmptyState :description="$t('practice.common.empty')"
+              /></template>
+            </NDataTable>
           </NCard>
         </NTabPane>
 
         <!-- 我的培训 -->
         <NTabPane name="myTrainings" :tab="$t('practice.internship.tabMyTrainings')">
           <NCard>
-            <NSpin :show="myTrainLoading">
-              <NDataTable
-                :columns="myTrainColumns"
-                :data="myTrainings"
-                :row-key="trainingEnrollmentRowKey"
-                :single-line="false"
-                :bordered="false"
-                :scroll-x="700"
-              >
-                <template #empty
-                  ><EmptyState :description="$t('practice.common.empty')"
-                /></template>
-              </NDataTable>
-            </NSpin>
+            <NDataTable
+              :columns="myTrainColumns"
+              :data="myTrainings"
+              :row-key="trainingEnrollmentRowKey"
+              :single-line="false"
+              :bordered="false"
+              :scroll-x="700"
+            >
+              <template #empty
+                ><EmptyState :description="$t('practice.common.empty')"
+              /></template>
+            </NDataTable>
           </NCard>
         </NTabPane>
       </NTabs>

@@ -5,7 +5,6 @@ import {
   NCard,
   NDataTable,
   NTag,
-  NSpin,
   NEmpty,
   NTabs,
   NTabPane,
@@ -106,58 +105,56 @@ onMounted(loadData)
 <template>
   <div class="my-exams-page">
     <NCard :title="$t('exam.myTitle')">
-      <NSpin :show="loading">
-        <NEmpty v-if="!loading && data.length === 0" :description="$t('exam.myEmpty')" />
-        <NTabs v-else v-model:value="activeTab" type="line" placement="left" animated>
-          <NTabPane name="normal" :tab="$t('exam.myTabNormal')">
-            <NEmpty
-              v-if="normalExams.length === 0"
-              :description="$t('exam.myEmpty')"
-            />
-            <NDataTable
-              v-else
-              :columns="columns"
-              :data="normalExams"
-              :row-key="examRowKey"
-              :single-line="false"
-              :bordered="false"
-              :scroll-x="1230"
-            />
-          </NTabPane>
+      <NEmpty v-if="!loading && data.length === 0" :description="$t('exam.myEmpty')" />
+      <NTabs v-else v-model:value="activeTab" type="line" placement="left" animated>
+        <NTabPane name="normal" :tab="$t('exam.myTabNormal')">
+          <NEmpty
+            v-if="normalExams.length === 0"
+            :description="$t('exam.myEmpty')"
+          />
+          <NDataTable
+            v-else
+            :columns="columns"
+            :data="normalExams"
+            :row-key="examRowKey"
+            :single-line="false"
+            :bordered="false"
+            :scroll-x="1230"
+          />
+        </NTabPane>
 
-          <NTabPane name="makeup" :tab="$t('exam.myTabMakeup')">
-            <NEmpty
-              v-if="makeupExams.length === 0"
-              :description="$t('exam.myEmpty')"
-            />
-            <NDataTable
-              v-else
-              :columns="columns"
-              :data="makeupExams"
-              :row-key="examRowKey"
-              :single-line="false"
-              :bordered="false"
-              :scroll-x="1230"
-            />
-          </NTabPane>
+        <NTabPane name="makeup" :tab="$t('exam.myTabMakeup')">
+          <NEmpty
+            v-if="makeupExams.length === 0"
+            :description="$t('exam.myEmpty')"
+          />
+          <NDataTable
+            v-else
+            :columns="columns"
+            :data="makeupExams"
+            :row-key="examRowKey"
+            :single-line="false"
+            :bordered="false"
+            :scroll-x="1230"
+          />
+        </NTabPane>
 
-          <NTabPane name="retake" :tab="$t('exam.myTabRetake')">
-            <NEmpty
-              v-if="retakeExams.length === 0"
-              :description="$t('exam.myEmpty')"
-            />
-            <NDataTable
-              v-else
-              :columns="columns"
-              :data="retakeExams"
-              :row-key="examRowKey"
-              :single-line="false"
-              :bordered="false"
-              :scroll-x="1230"
-            />
-          </NTabPane>
-        </NTabs>
-      </NSpin>
+        <NTabPane name="retake" :tab="$t('exam.myTabRetake')">
+          <NEmpty
+            v-if="retakeExams.length === 0"
+            :description="$t('exam.myEmpty')"
+          />
+          <NDataTable
+            v-else
+            :columns="columns"
+            :data="retakeExams"
+            :row-key="examRowKey"
+            :single-line="false"
+            :bordered="false"
+            :scroll-x="1230"
+          />
+        </NTabPane>
+      </NTabs>
     </NCard>
   </div>
 </template>

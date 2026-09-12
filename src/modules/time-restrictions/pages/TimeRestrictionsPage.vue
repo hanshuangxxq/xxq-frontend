@@ -12,7 +12,6 @@ import {
   NSelect,
   NInput,
   NPopconfirm,
-  NSpin,
   NEmpty,
   NTag,
   useMessage,
@@ -233,20 +232,18 @@ onMounted(loadData)
         <template v-if="isAcademicAdmin" #header-extra>
           <NButton type="primary" @click="startCreate">{{ $t('time-restrictions.add') }}</NButton>
         </template>
-        <NSpin :show="loading">
-          <NEmpty
-            v-if="!loading && restrictions.length === 0"
-            :description="$t('time-restrictions.empty')"
-          />
-          <NDataTable
-            v-else
-            :columns="isAcademicAdmin ? adminColumns : columns"
-            :data="restrictions"
-            :row-key="timeRestrictionRowKey"
-            :single-line="false"
-            :bordered="false"
-          />
-        </NSpin>
+        <NEmpty
+          v-if="!loading && restrictions.length === 0"
+          :description="$t('time-restrictions.empty')"
+        />
+        <NDataTable
+          v-else
+          :columns="isAcademicAdmin ? adminColumns : columns"
+          :data="restrictions"
+          :row-key="timeRestrictionRowKey"
+          :single-line="false"
+          :bordered="false"
+        />
       </NCard>
     </NSpace>
 

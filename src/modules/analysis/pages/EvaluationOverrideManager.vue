@@ -9,7 +9,6 @@ import {
   NDescriptions,
   NDescriptionsItem,
   NTag,
-  NSpin,
   NPopconfirm,
   NAlert,
   useMessage,
@@ -64,24 +63,21 @@ async function loadTemplates() {
 }
 
 // ---- 当前覆盖 ----
-const { loading: currentLoading, withLoading: withCurrentLoading } = useLoading()
 const currentTemplate = ref<EvaluationTemplateDto | null>(null)
 const selectedTemplateId = ref<number | null>(null)
 const { loading: saving, withLoading: withSaving } = useLoading()
 
-function loadCurrentOverride(teachInfoId: number) {
-  return withCurrentLoading(async () => {
-    currentTemplate.value = null
-    selectedTemplateId.value = null
-    try {
-      const res = await fetchEvaluationOverride(teachInfoId)
-      currentTemplate.value = res.data
-      selectedTemplateId.value = res.data?.id ?? null
-    } catch (e) {
-      if (!isReportedError(e))
-        message.error((e as Error).message || t('analysis.evOverrideSaveFail'))
-    }
-  })
+async function loadCurrentOverride(teachInfoId: number) {
+  currentTemplate.value = null
+  selectedTemplateId.value = null
+  try {
+    const res = await fetchEvaluationOverride(teachInfoId)
+    currentTemplate.value = res.data
+    selectedTemplateId.value = res.data?.id ?? null
+  } catch (e) {
+    if (!isReportedError(e))
+      message.error((e as Error).message || t('analysis.evOverrideSaveFail'))
+  }
 }
 
 function handleCourseChange(id: number | null) {
@@ -148,47 +144,45 @@ onMounted(() => {
         />
       </div>
 
-      <NSpin :show="currentLoading">
-        <template v-if="selectedTeachInfoId != null">
-          <NDescriptions :column="1" label-placement="left" bordered>
-            <NDescriptionsItem :label="$t('analysis.evOverrideCurrent')">
-              <NTag v-if="currentTemplate" type="info" size="small" :bordered="false">
-                {{ currentTemplate.name }}
-              </NTag>
-              <span v-else class="override-none">{{ $t('analysis.evOverrideNoOverride') }}</span>
-            </NDescriptionsItem>
-          </NDescriptions>
+      <template v-if="selectedTeachInfoId != null">
+        <NDescriptions :column="1" label-placement="left" bordered>
+          <NDescriptionsItem :label="$t('analysis.evOverrideCurrent')">
+            <NTag v-if="currentTemplate" type="info" size="small" :bordered="false">
+              {{ currentTemplate.name }}
+            </NTag>
+            <span v-else class="override-none">{{ $t('analysis.evOverrideNoOverride') }}</span>
+          </NDescriptionsItem>
+        </NDescriptions>
 
-          <div class="override-row" style="margin-top: 16px">
-            <span class="override-label">{{ $t('analysis.evOverrideTemplate') }}</span>
-            <NSelect
-              v-model:value="selectedTemplateId"
-              :options="templateOptions"
-              :placeholder="$t('analysis.evOverrideSelectTemplate')"
-              style="width: 360px; max-width: 100%"
-            />
-          </div>
+        <div class="override-row" style="margin-top: 16px">
+          <span class="override-label">{{ $t('analysis.evOverrideTemplate') }}</span>
+          <NSelect
+            v-model:value="selectedTemplateId"
+            :options="templateOptions"
+            :placeholder="$t('analysis.evOverrideSelectTemplate')"
+            style="width: 360px; max-width: 100%"
+          />
+        </div>
 
-          <div class="override-actions">
-            <NButton
-              type="primary"
-              :loading="saving"
-              :disabled="selectedTemplateId == null"
-              @click="handleSaveOverride"
-            >
-              {{ $t('analysis.evOverrideSetBtn') }}
-            </NButton>
-            <NPopconfirm @positive-click="handleClearOverride">
-              <template #trigger>
-                <NButton type="error" :loading="saving" :disabled="currentTemplate == null">
-                  {{ $t('analysis.evOverrideClearBtn') }}
-                </NButton>
-              </template>
-              {{ $t('analysis.evOverrideClearConfirm') }}
-            </NPopconfirm>
-          </div>
-        </template>
-      </NSpin>
+        <div class="override-actions">
+          <NButton
+            type="primary"
+            :loading="saving"
+            :disabled="selectedTemplateId == null"
+            @click="handleSaveOverride"
+          >
+            {{ $t('analysis.evOverrideSetBtn') }}
+          </NButton>
+          <NPopconfirm @positive-click="handleClearOverride">
+            <template #trigger>
+              <NButton type="error" :loading="saving" :disabled="currentTemplate == null">
+                {{ $t('analysis.evOverrideClearBtn') }}
+              </NButton>
+            </template>
+            {{ $t('analysis.evOverrideClearConfirm') }}
+          </NPopconfirm>
+        </div>
+      </template>
     </NSpace>
   </NCard>
 </template>

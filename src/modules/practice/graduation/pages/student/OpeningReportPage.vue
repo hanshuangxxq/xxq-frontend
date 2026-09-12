@@ -3,7 +3,6 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
-  NSpin,
   NEmpty,
   NButton,
   NModal,
@@ -179,75 +178,73 @@ async function handleDownload(): Promise<void> {
       </NCard>
 
       <NCard :title="$t('graduation.student.openingTitle')" class="content-card">
-        <NSpin :show="loading">
-          <NEmpty
-            v-if="!loading && campaignId != null && !report"
-            :description="$t('graduation.common.notSubmitted')"
-          />
-          <template v-if="report">
-            <div class="report-head">
-              <NSpace align="center" :size="12">
-                <b class="report-title">{{ report.title }}</b>
-                <NTag :type="openingStatusTagType(report.status)" size="small" :bordered="false">
-                  {{ report.status }}
-                </NTag>
-              </NSpace>
-              <span class="report-meta"
-                >{{ $t('graduation.common.submitTime') }}：{{
-                  formatDateTime(report.submitTime)
-                }}</span
-              >
-            </div>
-            <div class="report-content">{{ report.content }}</div>
-            <div v-if="report.fileOriginal" class="report-attachment">
-              {{ $t('graduation.common.attachment') }}：{{ report.fileOriginal }}
-              <NButton size="small" quaternary @click="handleDownload">
-                {{ $t('graduation.common.download') }}
-              </NButton>
-            </div>
-            <div v-if="report.status === '需修改' && report.reviewComment" class="revision-hint">
-              <b
-                >{{ $t('graduation.student.openingReviewTeacher') }}：{{
-                  report.reviewTeacherName ?? '-'
-                }}</b
-              >
-              <div>{{ $t('graduation.common.reviewComment') }}：{{ report.reviewComment }}</div>
-            </div>
-            <div v-if="report.reviewTime" class="report-meta" style="margin-top: 8px">
-              {{ $t('graduation.common.reviewTime') }}：{{ formatDateTime(report.reviewTime) }}
-            </div>
-            <div class="report-actions">
-              <NButton
-                v-if="report.status === '已提交' || report.status === '需修改'"
-                type="primary"
-                :disabled="!windowOpen"
-                @click="startSubmit"
-              >
-                {{ $t('graduation.student.resubmitOpening') }}
-              </NButton>
-              <span v-if="!windowOpen" class="window-hint">
-                {{ $t('graduation.common.windowOutside') }}
-              </span>
-              <span v-if="report.status === '已通过'" class="readonly-hint">
-                {{ $t('graduation.student.openingApprovedReadonly') }}
-              </span>
+        <NEmpty
+          v-if="!loading && campaignId != null && !report"
+          :description="$t('graduation.common.notSubmitted')"
+        />
+        <template v-if="report">
+          <div class="report-head">
+            <NSpace align="center" :size="12">
+              <b class="report-title">{{ report.title }}</b>
+              <NTag :type="openingStatusTagType(report.status)" size="small" :bordered="false">
+                {{ report.status }}
+              </NTag>
+            </NSpace>
+            <span class="report-meta"
+              >{{ $t('graduation.common.submitTime') }}：{{
+                formatDateTime(report.submitTime)
+              }}</span
+            >
+          </div>
+          <div class="report-content">{{ report.content }}</div>
+          <div v-if="report.fileOriginal" class="report-attachment">
+            {{ $t('graduation.common.attachment') }}：{{ report.fileOriginal }}
+            <NButton size="small" quaternary @click="handleDownload">
+              {{ $t('graduation.common.download') }}
+            </NButton>
+          </div>
+          <div v-if="report.status === '需修改' && report.reviewComment" class="revision-hint">
+            <b
+              >{{ $t('graduation.student.openingReviewTeacher') }}：{{
+                report.reviewTeacherName ?? '-'
+              }}</b
+            >
+            <div>{{ $t('graduation.common.reviewComment') }}：{{ report.reviewComment }}</div>
+          </div>
+          <div v-if="report.reviewTime" class="report-meta" style="margin-top: 8px">
+            {{ $t('graduation.common.reviewTime') }}：{{ formatDateTime(report.reviewTime) }}
+          </div>
+          <div class="report-actions">
+            <NButton
+              v-if="report.status === '已提交' || report.status === '需修改'"
+              type="primary"
+              :disabled="!windowOpen"
+              @click="startSubmit"
+            >
+              {{ $t('graduation.student.resubmitOpening') }}
+            </NButton>
+            <span v-if="!windowOpen" class="window-hint">
+              {{ $t('graduation.common.windowOutside') }}
+            </span>
+            <span v-if="report.status === '已通过'" class="readonly-hint">
+              {{ $t('graduation.student.openingApprovedReadonly') }}
+            </span>
+          </div>
+        </template>
+        <div v-if="!loading && !report && campaignId != null" class="report-actions">
+          <template v-if="gateChecked">
+            <NButton v-if="gateOpen && windowOpen" type="primary" @click="startSubmit">
+              {{ $t('graduation.student.submitOpening') }}
+            </NButton>
+            <div v-else class="gate-hint">
+              {{
+                !gateOpen
+                  ? $t('graduation.student.openingGateHint')
+                  : $t('graduation.common.windowOutside')
+              }}
             </div>
           </template>
-          <div v-if="!loading && !report && campaignId != null" class="report-actions">
-            <template v-if="gateChecked">
-              <NButton v-if="gateOpen && windowOpen" type="primary" @click="startSubmit">
-                {{ $t('graduation.student.submitOpening') }}
-              </NButton>
-              <div v-else class="gate-hint">
-                {{
-                  !gateOpen
-                    ? $t('graduation.student.openingGateHint')
-                    : $t('graduation.common.windowOutside')
-                }}
-              </div>
-            </template>
-          </div>
-        </NSpin>
+        </div>
       </NCard>
 
       <!-- 提交/重提弹窗 -->

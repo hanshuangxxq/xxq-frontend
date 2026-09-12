@@ -3,7 +3,6 @@ import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
-  NSpin,
   NEmpty,
   NButton,
   NDataTable,
@@ -294,20 +293,18 @@ const columns = computed<DataTableColumns<ThesisResponse>>(() => [
           </NSpace>
         </template>
         <div class="flow-hint">{{ $t('graduation.academic.exportPackageFlow') }}</div>
-        <NSpin :show="loading">
-          <NEmpty v-if="!loading && !list.length" :description="$t('graduation.common.empty')" />
-          <NDataTable
-            v-else
-            :columns="columns"
-            :data="list"
-            :row-key="thesisRowKey"
-            :single-line="false"
-            :bordered="false"
-            :scroll-x="920"
-          >
-            <template #empty><NEmpty :description="$t('graduation.common.empty')" /></template>
-          </NDataTable>
-        </NSpin>
+        <NEmpty v-if="!loading && !list.length" :description="$t('graduation.common.empty')" />
+        <NDataTable
+          v-else
+          :columns="columns"
+          :data="list"
+          :row-key="thesisRowKey"
+          :single-line="false"
+          :bordered="false"
+          :scroll-x="920"
+        >
+          <template #empty><NEmpty :description="$t('graduation.common.empty')" /></template>
+        </NDataTable>
       </NCard>
 
       <!-- 登记查重弹窗 -->

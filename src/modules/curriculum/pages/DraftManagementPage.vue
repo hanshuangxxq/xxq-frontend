@@ -9,7 +9,6 @@ import {
   NInput,
   NSelect,
   NPopconfirm,
-  NSpin,
   NEmpty,
   NTag,
   NGrid,
@@ -386,17 +385,15 @@ onMounted(() => {
 
       <!-- All Drafts -->
       <NCard :title="$t('teach-drafts.title')">
-        <NSpin :show="loading">
-          <NEmpty v-if="!loading && drafts.length === 0" :description="$t('teach-drafts.empty')" />
-          <NDataTable
-            v-else
-            :columns="draftColumns"
-            :data="drafts"
-            :row-key="draftRowKey"
-            :single-line="false"
-            :bordered="false"
-          />
-        </NSpin>
+        <NEmpty v-if="!loading && drafts.length === 0" :description="$t('teach-drafts.empty')" />
+        <NDataTable
+          v-else
+          :columns="draftColumns"
+          :data="drafts"
+          :row-key="draftRowKey"
+          :single-line="false"
+          :bordered="false"
+        />
       </NCard>
     </NSpace>
   </div>

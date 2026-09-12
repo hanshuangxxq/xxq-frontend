@@ -3,7 +3,6 @@ import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
-  NSpin,
   NEmpty,
   NButton,
   NDataTable,
@@ -253,42 +252,38 @@ const reviewerColumns = computed<DataTableColumns<ScoreResponse>>(() => [
       <NCard :title="$t('graduation.teacher.scoreEntryTitle')" class="content-card">
         <NTabs v-model:value="activeTab" type="line" animated>
           <NTabPane name="advisor" :tab="$t('graduation.teacher.advisorTab')">
-            <NSpin :show="loading">
-              <NEmpty
-                v-if="!loading && !advisorRows.length"
-                :description="$t('graduation.common.empty')"
-              />
-              <NDataTable
-                v-else
-                :columns="advisorColumns"
-                :data="advisorRows"
-                :row-key="scoreRowKey"
-                :single-line="false"
-                :bordered="false"
-                :scroll-x="720"
-              >
-                <template #empty><NEmpty :description="$t('graduation.common.empty')" /></template>
-              </NDataTable>
-            </NSpin>
+            <NEmpty
+              v-if="!loading && !advisorRows.length"
+              :description="$t('graduation.common.empty')"
+            />
+            <NDataTable
+              v-else
+              :columns="advisorColumns"
+              :data="advisorRows"
+              :row-key="scoreRowKey"
+              :single-line="false"
+              :bordered="false"
+              :scroll-x="720"
+            >
+              <template #empty><NEmpty :description="$t('graduation.common.empty')" /></template>
+            </NDataTable>
           </NTabPane>
           <NTabPane name="reviewer" :tab="$t('graduation.teacher.reviewerTab')">
-            <NSpin :show="loading">
-              <NEmpty
-                v-if="!loading && !reviewerRows.length"
-                :description="$t('graduation.common.empty')"
-              />
-              <NDataTable
-                v-else
-                :columns="reviewerColumns"
-                :data="reviewerRows"
-                :row-key="scoreRowKey"
-                :single-line="false"
-                :bordered="false"
-                :scroll-x="620"
-              >
-                <template #empty><NEmpty :description="$t('graduation.common.empty')" /></template>
-              </NDataTable>
-            </NSpin>
+            <NEmpty
+              v-if="!loading && !reviewerRows.length"
+              :description="$t('graduation.common.empty')"
+            />
+            <NDataTable
+              v-else
+              :columns="reviewerColumns"
+              :data="reviewerRows"
+              :row-key="scoreRowKey"
+              :single-line="false"
+              :bordered="false"
+              :scroll-x="620"
+            >
+              <template #empty><NEmpty :description="$t('graduation.common.empty')" /></template>
+            </NDataTable>
           </NTabPane>
         </NTabs>
       </NCard>

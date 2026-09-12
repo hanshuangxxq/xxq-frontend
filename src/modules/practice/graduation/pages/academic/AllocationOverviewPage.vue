@@ -3,7 +3,6 @@ import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
-  NSpin,
   NEmpty,
   NButton,
   NDataTable,
@@ -189,19 +188,17 @@ const columns = computed<DataTableColumns<AssignmentOverviewRow>>(() => [
             </NButton>
           </NSpace>
         </template>
-        <NSpin :show="loading">
-          <NDataTable
-            :columns="columns"
-            :data="rows"
-            :row-key="overviewRowKey"
-            :row-class-name="rowClassName"
-            :single-line="false"
-            :bordered="false"
-            :scroll-x="860"
-          >
-            <template #empty><NEmpty :description="$t('graduation.common.empty')" /></template>
-          </NDataTable>
-        </NSpin>
+        <NDataTable
+          :columns="columns"
+          :data="rows"
+          :row-key="overviewRowKey"
+          :row-class-name="rowClassName"
+          :single-line="false"
+          :bordered="false"
+          :scroll-x="860"
+        >
+          <template #empty><NEmpty :description="$t('graduation.common.empty')" /></template>
+        </NDataTable>
       </NCard>
 
       <!-- 未分配学生清单弹窗（F-R-38：姓名等从看板合并） -->
@@ -211,23 +208,21 @@ const columns = computed<DataTableColumns<AssignmentOverviewRow>>(() => [
         :title="$t('graduation.academic.unassignedTitle')"
         class="graduation-unassigned-modal"
       >
-        <NSpin :show="loading">
-          <NEmpty
-            v-if="!loading && !unassignedDetail.length"
-            :description="$t('graduation.common.empty')"
-          />
-          <NDataTable
-            v-else
-            :columns="unassignedColumns"
-            :data="unassignedDetail"
-            :row-key="dashboardRowKey"
-            :single-line="false"
-            :bordered="false"
-            :scroll-x="680"
-          >
-            <template #empty><NEmpty :description="$t('graduation.common.empty')" /></template>
-          </NDataTable>
-        </NSpin>
+        <NEmpty
+          v-if="!loading && !unassignedDetail.length"
+          :description="$t('graduation.common.empty')"
+        />
+        <NDataTable
+          v-else
+          :columns="unassignedColumns"
+          :data="unassignedDetail"
+          :row-key="dashboardRowKey"
+          :single-line="false"
+          :bordered="false"
+          :scroll-x="680"
+        >
+          <template #empty><NEmpty :description="$t('graduation.common.empty')" /></template>
+        </NDataTable>
       </NModal>
     </template>
   </div>

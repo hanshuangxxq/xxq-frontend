@@ -3,7 +3,6 @@ import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
-  NSpin,
   NEmpty,
   NButton,
   NModal,
@@ -30,19 +29,16 @@ const message = useMessage()
 const { isStudent } = useRoleCheck()
 
 const proposals = ref<ProposalResponse[]>([])
-const { loading, withLoading } = useLoading()
 
-function loadProposals() {
-  return withLoading(async () => {
-    try {
-      const res = await fetchMyProposals()
-      proposals.value = res.data ?? []
-    } catch (e) {
-      if (!isReportedError(e)) {
-        message.error((e as Error).message || t('graduation.common.loadFail'))
-      }
+async function loadProposals() {
+  try {
+    const res = await fetchMyProposals()
+    proposals.value = res.data ?? []
+  } catch (e) {
+    if (!isReportedError(e)) {
+      message.error((e as Error).message || t('graduation.common.loadFail'))
     }
-  })
+  }
 }
 
 // ===== 修改重提弹窗（F-R-15）=====
@@ -96,66 +92,64 @@ onMounted(() => {
   <div class="graduation-page">
     <ForbiddenState v-if="!isStudent" />
     <template v-else>
-      <NSpin :show="loading">
-        <NEmpty v-if="!proposals.length" :description="$t('graduation.student.myProposalEmpty')" />
-        <NSpace v-else vertical :size="16">
-          <NCard v-for="p in proposals" :key="p.id" class="proposal-card">
-            <template #header>
-              <NSpace align="center" :size="12">
-                <b>{{ p.title }}</b>
-                <NTag :type="proposalStatusTagType(p.status)" size="small" :bordered="false">
-                  {{ p.status }}
-                </NTag>
-              </NSpace>
-            </template>
-            <template #header-extra>
-              <span class="proposal-meta"
-                >{{ $t('graduation.common.submitTime') }}：{{ formatDateTime(p.submitTime) }}</span
+      <NEmpty v-if="!proposals.length" :description="$t('graduation.student.myProposalEmpty')" />
+      <NSpace v-else vertical :size="16">
+        <NCard v-for="p in proposals" :key="p.id" class="proposal-card">
+          <template #header>
+            <NSpace align="center" :size="12">
+              <b>{{ p.title }}</b>
+              <NTag :type="proposalStatusTagType(p.status)" size="small" :bordered="false">
+                {{ p.status }}
+              </NTag>
+            </NSpace>
+          </template>
+          <template #header-extra>
+            <span class="proposal-meta"
+              >{{ $t('graduation.common.submitTime') }}：{{ formatDateTime(p.submitTime) }}</span
+            >
+          </template>
+          <div class="proposal-content">{{ p.content }}</div>
+          <div v-if="p.status === '已驳回' && p.rejectReason" class="reject-reason">
+            <b>{{ $t('graduation.common.rejectReasonHighlight') }}：</b>{{ p.rejectReason }}
+          </div>
+          <template v-if="p.reviews.length">
+            <NDivider style="margin: 12px 0" />
+            <span class="flow-title">{{ $t('graduation.common.approvalFlow') }}</span>
+            <NTimeline style="margin-top: 8px">
+              <NTimelineItem
+                v-for="(r, i) in p.reviews"
+                :key="i"
+                :type="r.action === '驳回' ? 'error' : 'success'"
               >
-            </template>
-            <div class="proposal-content">{{ p.content }}</div>
-            <div v-if="p.status === '已驳回' && p.rejectReason" class="reject-reason">
-              <b>{{ $t('graduation.common.rejectReasonHighlight') }}：</b>{{ p.rejectReason }}
-            </div>
-            <template v-if="p.reviews.length">
-              <NDivider style="margin: 12px 0" />
-              <span class="flow-title">{{ $t('graduation.common.approvalFlow') }}</span>
-              <NTimeline style="margin-top: 8px">
-                <NTimelineItem
-                  v-for="(r, i) in p.reviews"
-                  :key="i"
-                  :type="r.action === '驳回' ? 'error' : 'success'"
-                >
-                  <template #header>
-                    <NSpace align="center" :size="8">
-                      <b>{{ r.stage }}</b>
-                      <NTag
-                        size="tiny"
-                        :type="r.action === '驳回' ? 'error' : 'success'"
-                        :bordered="false"
-                      >
-                        {{ r.action }}
-                      </NTag>
-                    </NSpace>
-                  </template>
-                  <span class="flow-line">
-                    {{ $t('graduation.common.reviewer') }}：{{ r.reviewerName }} ·
-                    {{ formatDateTime(r.reviewTime) }}
-                  </span>
-                  <div v-if="r.comment" class="flow-comment">{{ r.comment }}</div>
-                </NTimelineItem>
-              </NTimeline>
-            </template>
-            <template #footer>
-              <NSpace justify="end">
-                <NButton v-if="p.status === '已驳回'" type="primary" @click="startResubmit(p)">
-                  {{ $t('graduation.student.resubmitProposal') }}
-                </NButton>
-              </NSpace>
-            </template>
-          </NCard>
-        </NSpace>
-      </NSpin>
+                <template #header>
+                  <NSpace align="center" :size="8">
+                    <b>{{ r.stage }}</b>
+                    <NTag
+                      size="tiny"
+                      :type="r.action === '驳回' ? 'error' : 'success'"
+                      :bordered="false"
+                    >
+                      {{ r.action }}
+                    </NTag>
+                  </NSpace>
+                </template>
+                <span class="flow-line">
+                  {{ $t('graduation.common.reviewer') }}：{{ r.reviewerName }} ·
+                  {{ formatDateTime(r.reviewTime) }}
+                </span>
+                <div v-if="r.comment" class="flow-comment">{{ r.comment }}</div>
+              </NTimelineItem>
+            </NTimeline>
+          </template>
+          <template #footer>
+            <NSpace justify="end">
+              <NButton v-if="p.status === '已驳回'" type="primary" @click="startResubmit(p)">
+                {{ $t('graduation.student.resubmitProposal') }}
+              </NButton>
+            </NSpace>
+          </template>
+        </NCard>
+      </NSpace>
 
       <!-- 修改重提弹窗 -->
       <NModal

@@ -14,7 +14,6 @@ import {
   NSelect,
   NSwitch,
   NPopconfirm,
-  NSpin,
   NEmpty,
   NTag,
   NAlert,
@@ -325,18 +324,16 @@ onMounted(() => {
     <template #header-extra>
       <NButton type="primary" @click="startCreate">{{ $t('analysis.evTemplateAdd') }}</NButton>
     </template>
-    <NSpin :show="loading">
-      <NEmpty v-if="!loading && data.length === 0" :description="$t('analysis.evTemplateEmpty')" />
-      <NDataTable
-        v-else
-        :columns="columns"
-        :data="data"
-        :row-key="evaluationTemplateRowKey"
-        :single-line="false"
-        :bordered="false"
-        :scroll-x="1000"
-      />
-    </NSpin>
+    <NEmpty v-if="!loading && data.length === 0" :description="$t('analysis.evTemplateEmpty')" />
+    <NDataTable
+      v-else
+      :columns="columns"
+      :data="data"
+      :row-key="evaluationTemplateRowKey"
+      :single-line="false"
+      :bordered="false"
+      :scroll-x="1000"
+    />
   </NCard>
 
   <NModal

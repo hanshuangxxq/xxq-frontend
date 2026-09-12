@@ -12,7 +12,6 @@ import {
   NInput,
   NSelect,
   NPopconfirm,
-  NSpin,
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
@@ -36,7 +35,6 @@ const { t } = useI18n()
 const message = useMessage()
 const { canManageLocals } = useRoleCheck()
 
-const { loading, withLoading } = useLoading()
 const data = ref<Local[]>([])
 const { pagination, reset } = useRemotePagination(loadData)
 
@@ -89,20 +87,18 @@ const columns = computed<DataTableColumns<Local>>(() => {
   ]
 })
 
-function loadData() {
-  return withLoading(async () => {
-    try {
-      const res = await fetchLocals({
-        type: filterType.value ?? undefined,
-        page: pagination.page,
-        pageSize: pagination.pageSize,
-      })
-      data.value = res.data.records
-      pagination.itemCount = res.data.total
-    } catch (e) {
-      if (!isReportedError(e)) message.error((e as Error).message || t('locals.loadFail'))
-    }
-  })
+async function loadData() {
+  try {
+    const res = await fetchLocals({
+      type: filterType.value ?? undefined,
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+    })
+    data.value = res.data.records
+    pagination.itemCount = res.data.total
+  } catch (e) {
+    if (!isReportedError(e)) message.error((e as Error).message || t('locals.loadFail'))
+  }
 }
 
 function handleTypeChange() {
@@ -218,19 +214,17 @@ onMounted(() => {
             </NButton>
           </NSpace>
         </template>
-        <NSpin :show="loading">
-          <NDataTable
-            :columns="columns"
-            :data="data"
-            :row-key="localRowKey"
-            :single-line="false"
-            :bordered="false"
-            remote
-            :pagination="pagination"
-          >
-            <template #empty>{{ $t('locals.empty') }}</template>
-          </NDataTable>
-        </NSpin>
+        <NDataTable
+          :columns="columns"
+          :data="data"
+          :row-key="localRowKey"
+          :single-line="false"
+          :bordered="false"
+          remote
+          :pagination="pagination"
+        >
+          <template #empty>{{ $t('locals.empty') }}</template>
+        </NDataTable>
       </NCard>
     </NSpace>
 

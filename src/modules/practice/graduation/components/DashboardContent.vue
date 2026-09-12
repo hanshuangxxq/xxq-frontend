@@ -2,7 +2,6 @@
 import { ref, computed, h, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
-  NSpin,
   NEmpty,
   NButton,
   NDataTable,
@@ -44,7 +43,6 @@ const { t } = useI18n()
 const message = useMessage()
 
 const rows = ref<DashboardRow[]>([])
-const { loading, withLoading } = useLoading()
 const { loading: exportingXlsx, withLoading: withExportingXlsx } = useLoading()
 const { loading: exportingCsv, withLoading: withExportingCsv } = useLoading()
 /** 当前导出中的格式（null = 未在导出），供导出按钮 loading/disabled 判断 */
@@ -71,25 +69,23 @@ const statusFilterOptions = computed(() => [
 
 const collegeOptions = computed(() => colleges.value.map((c) => ({ label: c.name, value: c.id })))
 
-function loadData(): Promise<void> {
-  return withLoading(async () => {
-    if (props.campaignId == null) return
-    try {
-      const query: DashboardQuery = {
-        status: (filterStatus.value as DashboardQuery['status']) ?? undefined,
-        keyword: keyword.value || undefined,
-        collegeId: collegeId.value ?? undefined,
-        page: pagination.page,
-        pageSize: pagination.pageSize,
-      }
-      const res = await fetchDashboard(props.campaignId, query)
-      rows.value = res.data.records
-      pagination.itemCount = res.data.total
-    } catch (e) {
-      if (!isReportedError(e))
-        message.error((e as Error).message || t('graduation.common.loadFail'))
+async function loadData(): Promise<void> {
+  if (props.campaignId == null) return
+  try {
+    const query: DashboardQuery = {
+      status: (filterStatus.value as DashboardQuery['status']) ?? undefined,
+      keyword: keyword.value || undefined,
+      collegeId: collegeId.value ?? undefined,
+      page: pagination.page,
+      pageSize: pagination.pageSize,
     }
-  })
+    const res = await fetchDashboard(props.campaignId, query)
+    rows.value = res.data.records
+    pagination.itemCount = res.data.total
+  } catch (e) {
+    if (!isReportedError(e))
+      message.error((e as Error).message || t('graduation.common.loadFail'))
+  }
 }
 
 function handleFilterChange(): void {
@@ -273,21 +269,19 @@ function rowClassName(row: DashboardRow): string {
       <span v-if="scopeLabel" class="scope-label">{{ scopeLabel }}</span>
       <span class="export-hint">{{ $t('graduation.academic.exportHint') }}</span>
     </NSpace>
-    <NSpin :show="loading">
-      <NDataTable
-        :columns="columns"
-        :data="rows"
-        :row-key="dashboardRowKey"
-        :row-class-name="rowClassName"
-        :single-line="false"
-        :bordered="false"
-        :scroll-x="1560"
-        remote
-        :pagination="pagination"
-      >
-        <template #empty><NEmpty :description="$t('graduation.common.empty')" /></template>
-      </NDataTable>
-    </NSpin>
+    <NDataTable
+      :columns="columns"
+      :data="rows"
+      :row-key="dashboardRowKey"
+      :row-class-name="rowClassName"
+      :single-line="false"
+      :bordered="false"
+      :scroll-x="1560"
+      remote
+      :pagination="pagination"
+    >
+      <template #empty><NEmpty :description="$t('graduation.common.empty')" /></template>
+    </NDataTable>
   </div>
 </template>
 

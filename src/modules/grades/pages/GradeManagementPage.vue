@@ -11,7 +11,6 @@ import {
   NFormItem,
   NInput,
   NPopconfirm,
-  NSpin,
   NEmpty,
   useMessage,
   type DataTableColumns,
@@ -160,17 +159,15 @@ onMounted(loadData)
         <template v-if="isAcademicAdmin" #header-extra>
           <NButton type="primary" @click="startCreate">{{ $t('grades.add') }}</NButton>
         </template>
-        <NSpin :show="loading">
-          <NEmpty v-if="!loading && data.length === 0" :description="$t('grades.empty')" />
-          <NDataTable
-            v-else
-            :columns="columns"
-            :data="data"
-            :row-key="gradeRowKey"
-            :single-line="false"
-            :bordered="false"
-          />
-        </NSpin>
+        <NEmpty v-if="!loading && data.length === 0" :description="$t('grades.empty')" />
+        <NDataTable
+          v-else
+          :columns="columns"
+          :data="data"
+          :row-key="gradeRowKey"
+          :single-line="false"
+          :bordered="false"
+        />
       </NCard>
     </NSpace>
 

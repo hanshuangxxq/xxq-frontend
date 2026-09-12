@@ -12,7 +12,6 @@ import {
   NInput,
   NSelect,
   NPopconfirm,
-  NSpin,
   NEmpty,
   useMessage,
   type DataTableColumns,
@@ -165,17 +164,15 @@ onMounted(() => {
         <template v-if="isAcademicAdmin" #header-extra>
           <NButton type="primary" @click="startCreate">{{ $t('majors.add') }}</NButton>
         </template>
-        <NSpin :show="loading">
-          <NEmpty v-if="!loading && data.length === 0" :description="$t('majors.empty')" />
-          <NDataTable
-            v-else
-            :columns="columns"
-            :data="data"
-            :row-key="majorRowKey"
-            :single-line="false"
-            :bordered="false"
-          />
-        </NSpin>
+        <NEmpty v-if="!loading && data.length === 0" :description="$t('majors.empty')" />
+        <NDataTable
+          v-else
+          :columns="columns"
+          :data="data"
+          :row-key="majorRowKey"
+          :single-line="false"
+          :bordered="false"
+        />
       </NCard>
     </NSpace>
 

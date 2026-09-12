@@ -3,7 +3,6 @@ import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
-  NSpin,
   NEmpty,
   NButton,
   NDataTable,
@@ -168,23 +167,21 @@ const columns = computed<DataTableColumns<OpeningReportResponse>>(() => [
       </NCard>
 
       <NCard :title="$t('graduation.teacher.openingReviewTitle')" class="content-card">
-        <NSpin :show="loading">
-          <NEmpty
-            v-if="!loading && !list.length"
-            :description="$t('graduation.teacher.noPendingReview')"
-          />
-          <NDataTable
-            v-else
-            :columns="columns"
-            :data="list"
-            :row-key="openingReportRowKey"
-            :single-line="false"
-            :bordered="false"
-            :scroll-x="820"
-          >
-            <template #empty><NEmpty :description="$t('graduation.common.empty')" /></template>
-          </NDataTable>
-        </NSpin>
+        <NEmpty
+          v-if="!loading && !list.length"
+          :description="$t('graduation.teacher.noPendingReview')"
+        />
+        <NDataTable
+          v-else
+          :columns="columns"
+          :data="list"
+          :row-key="openingReportRowKey"
+          :single-line="false"
+          :bordered="false"
+          :scroll-x="820"
+        >
+          <template #empty><NEmpty :description="$t('graduation.common.empty')" /></template>
+        </NDataTable>
       </NCard>
 
       <ReviewModal

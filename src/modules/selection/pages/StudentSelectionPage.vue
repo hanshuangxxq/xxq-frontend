@@ -10,7 +10,6 @@ import {
   NPopconfirm,
   NDataTable,
   NEmpty,
-  NSpin,
   NAlert,
   NProgress,
   useMessage,
@@ -308,212 +307,208 @@ onMounted(loadAll)
   <div class="student-selection-page">
     <h2 class="page-title">{{ $t('selection.studentTitle') }}</h2>
     <NSpace vertical :size="16">
-      <NSpin :show="loading">
-        <NEmpty
-          v-if="!loading && groupedSelections.length === 0"
-          :description="$t('selection.noOpenCampaigns')"
-        />
-        <NSpace v-else vertical :size="16">
-          <NCard
-            v-for="group in groupedSelections"
-            :key="group.groupId"
-            class="group-card"
-          >
-            <template #header>
-              <span class="group-card-title">{{ group.groupName }}</span>
-            </template>
-            <template v-if="group.groupMax != null" #header-extra>
-              <NTag
-                :type="group.selectedInGroup >= group.groupMax ? 'warning' : 'info'"
-                size="small"
-                :bordered="false"
-              >
-                {{
-                  t('selection.groupProgress', {
-                    selected: group.selectedInGroup,
-                    max: group.groupMax,
-                  })
-                }}
-              </NTag>
-            </template>
-
-            <NEmpty
-              v-if="group.campaigns.length === 0"
+      <NEmpty
+        v-if="!loading && groupedSelections.length === 0"
+        :description="$t('selection.noOpenCampaigns')"
+      />
+      <NSpace v-else vertical :size="16">
+        <NCard
+          v-for="group in groupedSelections"
+          :key="group.groupId"
+          class="group-card"
+        >
+          <template #header>
+            <span class="group-card-title">{{ group.groupName }}</span>
+          </template>
+          <template v-if="group.groupMax != null" #header-extra>
+            <NTag
+              :type="group.selectedInGroup >= group.groupMax ? 'warning' : 'info'"
               size="small"
-              :description="$t('selection.groupCoursesEmpty')"
-            />
-            <div v-else class="campaign-list">
-              <div
-                v-for="campaign in group.campaigns"
-                :key="campaign.id"
-                class="campaign-row"
-              >
-                <div class="campaign-row-main">
-                  <div class="campaign-row-header">
-                    <span class="campaign-row-name">{{ campaign.name }}</span>
-                    <NTag size="small" type="info" :bordered="false">
-                      {{ $t('selection.publicElectiveTag') }}
-                    </NTag>
-                    <NTag
-                      :type="windowStatusTagType[campaignWindowStatus(campaign)]"
-                      size="small"
-                      :bordered="false"
-                    >
-                      {{ windowStatusLabel(campaignWindowStatus(campaign)) }}
-                    </NTag>
-                    <span
-                      v-if="campaignCountdown(campaign)"
-                      class="countdown-text"
-                    >
-                      {{ campaignCountdown(campaign) }}
-                    </span>
-                  </div>
+              :bordered="false"
+            >
+              {{
+                t('selection.groupProgress', {
+                  selected: group.selectedInGroup,
+                  max: group.groupMax,
+                })
+              }}
+            </NTag>
+          </template>
 
-                  <div class="campaign-row-attrs">
-                    <span class="attr-item">
-                      <span class="attr-label">{{ $t('selection.courseCode') }}</span>
-                      <span class="attr-value">{{ campaign.courseCode }}</span>
-                    </span>
-                    <span class="attr-item">
-                      <span class="attr-label">{{ $t('selection.credit') }}</span>
-                      <span class="attr-value">{{ campaign.credit }}</span>
-                    </span>
-                    <span v-if="campaign.courseHour != null" class="attr-item">
-                      <span class="attr-label">{{ $t('selection.courseHour') }}</span>
-                      <span class="attr-value">{{ campaign.courseHour }}</span>
-                    </span>
-                  </div>
-
-                  <div class="campaign-row-capacity">
-                    <span
-                      class="capacity-text"
-                      :class="{ 'capacity-full': campaign.remaining <= 0 }"
-                    >
-                      {{
-                        t('selection.capacityProgress', {
-                          selected: campaign.selectedCount,
-                          total: campaign.capacity,
-                        })
-                      }}
-                    </span>
-                    <NProgress
-                      type="line"
-                      :percentage="capacityPercentage(campaign)"
-                      :show-indicator="false"
-                      :height="6"
-                      :color="capacityColor(campaign)"
-                      :rail-color="'#e8e8e8'"
-                      style="flex: 1; min-width: 120px"
-                    />
-                    <span
-                      class="capacity-remaining"
-                      :class="{ 'capacity-full': campaign.remaining <= 0 }"
-                    >
-                      {{ $t('selection.remainingSlots', { n: campaign.remaining }) }}
-                    </span>
-                  </div>
-
-                  <div class="campaign-row-context">
-                    <span>{{ $t('selection.semester') }}: {{ campaign.semesterName }}</span>
-                    <span>
-                      {{ $t('selection.startTime') }}: {{ formatDateTime(campaign.startTime) }}
-                    </span>
-                    <span>
-                      {{ $t('selection.endTime') }}: {{ formatDateTime(campaign.endTime) }}
-                    </span>
-                    <span>
-                      {{
-                        $t('selection.weekRangeValue', {
-                          start: campaign.startWeek,
-                          end: campaign.endWeek,
-                        })
-                      }}
-                    </span>
-                  </div>
-
-                  <div v-if="campaign.description" class="campaign-row-desc">
-                    {{ campaign.description }}
-                  </div>
-                </div>
-                <div class="campaign-row-actions">
-                  <div v-if="findActiveRecord(campaign.id)" class="selected-actions">
-                    <NTag type="success" size="small" :bordered="false">
-                      {{ $t('selection.SELECTED') }}
-                    </NTag>
-                    <NPopconfirm
-                      :on-positive-click="() => {
-                        const rec = findActiveRecord(campaign.id)
-                        if (rec) handleDrop(rec.id)
-                      }"
-                    >
-                      <template #trigger>
-                        <NButton
-                          size="small"
-                          type="error"
-                          :disabled="campaignWindowStatus(campaign) !== 'in'"
-                        >
-                          {{ $t('selection.dropCourse') }}
-                        </NButton>
-                      </template>
-                      {{ $t('selection.dropConfirm') }}
-                    </NPopconfirm>
-                  </div>
-                  <NTooltip v-else-if="campaignWindowStatus(campaign) !== 'in'">
-                    <template #trigger>
-                      <NButton size="small" type="primary" disabled>
-                        {{ $t('selection.selectCourse') }}
-                      </NButton>
-                    </template>
-                    {{ $t('selection.notInWindowHint') }}
-                  </NTooltip>
-                  <NTooltip v-else-if="campaign.remaining <= 0">
-                    <template #trigger>
-                      <NButton size="small" type="primary" disabled>
-                        {{ $t('selection.selectCourse') }}
-                      </NButton>
-                    </template>
-                    {{ $t('selection.full') }}
-                  </NTooltip>
-                  <NTooltip
-                    v-else-if="group.groupMax != null && group.selectedInGroup >= group.groupMax"
-                  >
-                    <template #trigger>
-                      <NButton size="small" type="primary" disabled>
-                        {{ $t('selection.selectCourse') }}
-                      </NButton>
-                    </template>
-                    {{ t('selection.groupMaxReached', { n: group.groupMax }) }}
-                  </NTooltip>
-                  <NButton
-                    v-else
+          <NEmpty
+            v-if="group.campaigns.length === 0"
+            size="small"
+            :description="$t('selection.groupCoursesEmpty')"
+          />
+          <div v-else class="campaign-list">
+            <div
+              v-for="campaign in group.campaigns"
+              :key="campaign.id"
+              class="campaign-row"
+            >
+              <div class="campaign-row-main">
+                <div class="campaign-row-header">
+                  <span class="campaign-row-name">{{ campaign.name }}</span>
+                  <NTag size="small" type="info" :bordered="false">
+                    {{ $t('selection.publicElectiveTag') }}
+                  </NTag>
+                  <NTag
+                    :type="windowStatusTagType[campaignWindowStatus(campaign)]"
                     size="small"
-                    type="primary"
-                    @click="handleSelect(campaign)"
+                    :bordered="false"
                   >
-                    {{ $t('selection.selectCourse') }}
-                  </NButton>
+                    {{ windowStatusLabel(campaignWindowStatus(campaign)) }}
+                  </NTag>
+                  <span
+                    v-if="campaignCountdown(campaign)"
+                    class="countdown-text"
+                  >
+                    {{ campaignCountdown(campaign) }}
+                  </span>
+                </div>
+
+                <div class="campaign-row-attrs">
+                  <span class="attr-item">
+                    <span class="attr-label">{{ $t('selection.courseCode') }}</span>
+                    <span class="attr-value">{{ campaign.courseCode }}</span>
+                  </span>
+                  <span class="attr-item">
+                    <span class="attr-label">{{ $t('selection.credit') }}</span>
+                    <span class="attr-value">{{ campaign.credit }}</span>
+                  </span>
+                  <span v-if="campaign.courseHour != null" class="attr-item">
+                    <span class="attr-label">{{ $t('selection.courseHour') }}</span>
+                    <span class="attr-value">{{ campaign.courseHour }}</span>
+                  </span>
+                </div>
+
+                <div class="campaign-row-capacity">
+                  <span
+                    class="capacity-text"
+                    :class="{ 'capacity-full': campaign.remaining <= 0 }"
+                  >
+                    {{
+                      t('selection.capacityProgress', {
+                        selected: campaign.selectedCount,
+                        total: campaign.capacity,
+                      })
+                    }}
+                  </span>
+                  <NProgress
+                    type="line"
+                    :percentage="capacityPercentage(campaign)"
+                    :show-indicator="false"
+                    :height="6"
+                    :color="capacityColor(campaign)"
+                    :rail-color="'#e8e8e8'"
+                    style="flex: 1; min-width: 120px"
+                  />
+                  <span
+                    class="capacity-remaining"
+                    :class="{ 'capacity-full': campaign.remaining <= 0 }"
+                  >
+                    {{ $t('selection.remainingSlots', { n: campaign.remaining }) }}
+                  </span>
+                </div>
+
+                <div class="campaign-row-context">
+                  <span>{{ $t('selection.semester') }}: {{ campaign.semesterName }}</span>
+                  <span>
+                    {{ $t('selection.startTime') }}: {{ formatDateTime(campaign.startTime) }}
+                  </span>
+                  <span>
+                    {{ $t('selection.endTime') }}: {{ formatDateTime(campaign.endTime) }}
+                  </span>
+                  <span>
+                    {{
+                      $t('selection.weekRangeValue', {
+                        start: campaign.startWeek,
+                        end: campaign.endWeek,
+                      })
+                    }}
+                  </span>
+                </div>
+
+                <div v-if="campaign.description" class="campaign-row-desc">
+                  {{ campaign.description }}
                 </div>
               </div>
+              <div class="campaign-row-actions">
+                <div v-if="findActiveRecord(campaign.id)" class="selected-actions">
+                  <NTag type="success" size="small" :bordered="false">
+                    {{ $t('selection.SELECTED') }}
+                  </NTag>
+                  <NPopconfirm
+                    :on-positive-click="() => {
+                      const rec = findActiveRecord(campaign.id)
+                      if (rec) handleDrop(rec.id)
+                    }"
+                  >
+                    <template #trigger>
+                      <NButton
+                        size="small"
+                        type="error"
+                        :disabled="campaignWindowStatus(campaign) !== 'in'"
+                      >
+                        {{ $t('selection.dropCourse') }}
+                      </NButton>
+                    </template>
+                    {{ $t('selection.dropConfirm') }}
+                  </NPopconfirm>
+                </div>
+                <NTooltip v-else-if="campaignWindowStatus(campaign) !== 'in'">
+                  <template #trigger>
+                    <NButton size="small" type="primary" disabled>
+                      {{ $t('selection.selectCourse') }}
+                    </NButton>
+                  </template>
+                  {{ $t('selection.notInWindowHint') }}
+                </NTooltip>
+                <NTooltip v-else-if="campaign.remaining <= 0">
+                  <template #trigger>
+                    <NButton size="small" type="primary" disabled>
+                      {{ $t('selection.selectCourse') }}
+                    </NButton>
+                  </template>
+                  {{ $t('selection.full') }}
+                </NTooltip>
+                <NTooltip
+                  v-else-if="group.groupMax != null && group.selectedInGroup >= group.groupMax"
+                >
+                  <template #trigger>
+                    <NButton size="small" type="primary" disabled>
+                      {{ $t('selection.selectCourse') }}
+                    </NButton>
+                  </template>
+                  {{ t('selection.groupMaxReached', { n: group.groupMax }) }}
+                </NTooltip>
+                <NButton
+                  v-else
+                  size="small"
+                  type="primary"
+                  @click="handleSelect(campaign)"
+                >
+                  {{ $t('selection.selectCourse') }}
+                </NButton>
+              </div>
             </div>
-          </NCard>
-        </NSpace>
-      </NSpin>
+          </div>
+        </NCard>
+      </NSpace>
 
       <NCard v-if="groupedSelections.length > 0" :title="$t('selection.myRecords')">
-        <NSpin :show="loading">
-          <NAlert v-if="records.length === 0 && !loading" type="info" :show-icon="false">
-            {{ $t('selection.noRecords') }}
-          </NAlert>
-          <NDataTable
-            v-else
-            :columns="recordColumns"
-            :data="records"
-            :row-key="recordRowKey"
-            :single-line="false"
-            :bordered="false"
-            :scroll-x="1100"
-          />
-        </NSpin>
+        <NAlert v-if="records.length === 0 && !loading" type="info" :show-icon="false">
+          {{ $t('selection.noRecords') }}
+        </NAlert>
+        <NDataTable
+          v-else
+          :columns="recordColumns"
+          :data="records"
+          :row-key="recordRowKey"
+          :single-line="false"
+          :bordered="false"
+          :scroll-x="1100"
+        />
       </NCard>
     </NSpace>
   </div>

@@ -16,7 +16,6 @@ import {
   NSelect,
   NDatePicker,
   NPopconfirm,
-  NSpin,
   NTag,
   NDivider,
   useMessage,
@@ -55,7 +54,6 @@ const { isAcademicAdmin } = useRoleCheck()
 const localeStore = useLocaleStore()
 const dateLocale = computed(() => localeStore.naiveConfig().dateLocale)
 
-const { loading, withLoading } = useLoading()
 const data = ref<Campaign[]>([])
 const semesters = ref<Semester[]>([])
 const { pagination } = useRemotePagination(loadData)
@@ -77,20 +75,18 @@ function isExpired(endTime: string): boolean {
   return new Date(endTime) < new Date()
 }
 
-function loadData() {
-  return withLoading(async () => {
-    try {
-      const [campaignRes, semesterRes] = await Promise.all([
-        fetchCampaigns(pagination.page, pagination.pageSize),
-        fetchAllSemesters(),
-      ])
-      data.value = campaignRes.data.records
-      pagination.itemCount = campaignRes.data.total
-      semesters.value = semesterRes.data
-    } catch (e) {
-      if (!isReportedError(e)) message.error((e as Error).message || t('selection.loadFail'))
-    }
-  })
+async function loadData() {
+  try {
+    const [campaignRes, semesterRes] = await Promise.all([
+      fetchCampaigns(pagination.page, pagination.pageSize),
+      fetchAllSemesters(),
+    ])
+    data.value = campaignRes.data.records
+    pagination.itemCount = campaignRes.data.total
+    semesters.value = semesterRes.data
+  } catch (e) {
+    if (!isReportedError(e)) message.error((e as Error).message || t('selection.loadFail'))
+  }
 }
 
 function goDetail(id: number) {
@@ -404,20 +400,18 @@ onMounted(loadData)
             <NButton type="primary" @click="startCreate">{{ $t('selection.add') }}</NButton>
           </NSpace>
         </template>
-        <NSpin :show="loading">
-          <NDataTable
-            :columns="columns"
-            :data="data"
-            :row-key="campaignRowKey"
-            :single-line="false"
-            :bordered="false"
-            :scroll-x="1500"
-            remote
-            :pagination="pagination"
-          >
-            <template #empty>{{ $t('selection.empty') }}</template>
-          </NDataTable>
-        </NSpin>
+        <NDataTable
+          :columns="columns"
+          :data="data"
+          :row-key="campaignRowKey"
+          :single-line="false"
+          :bordered="false"
+          :scroll-x="1500"
+          remote
+          :pagination="pagination"
+        >
+          <template #empty>{{ $t('selection.empty') }}</template>
+        </NDataTable>
       </NCard>
     </NSpace>
 

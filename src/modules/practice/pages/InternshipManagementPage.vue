@@ -13,7 +13,6 @@ import {
   NInputNumber,
   NSelect,
   NTag,
-  NSpin,
   NPopconfirm,
   NTabs,
   NTabPane,
@@ -106,25 +105,22 @@ function projectStatusCodeOf(status: string): string {
 }
 
 // ============ 实习项目 ============
-const { loading: internshipLoading, withLoading: withInternshipLoading } = useLoading()
 const internships = ref<InternshipResponse[]>([])
 const { pagination: intPagination, reset: resetInt } = useRemotePagination(loadInternships)
 const filterIntStatus = ref<InternshipStatusCode | null>(null)
 
-function loadInternships() {
-  return withInternshipLoading(async () => {
-    try {
-      const res = await fetchInternships({
-        status: filterIntStatus.value ?? undefined,
-        page: intPagination.page,
-        pageSize: intPagination.pageSize,
-      })
-      internships.value = res.data.records
-      intPagination.itemCount = res.data.total
-    } catch (e) {
-      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
-    }
-  })
+async function loadInternships() {
+  try {
+    const res = await fetchInternships({
+      status: filterIntStatus.value ?? undefined,
+      page: intPagination.page,
+      pageSize: intPagination.pageSize,
+    })
+    internships.value = res.data.records
+    intPagination.itemCount = res.data.total
+  } catch (e) {
+    if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+  }
 }
 
 function handleIntFilterChange() {
@@ -233,25 +229,22 @@ function handleSaveInt() {
 const showIntApps = ref(false)
 const intAppsOf = ref<InternshipResponse | null>(null)
 const intApps = ref<InternshipApplicationResponse[]>([])
-const { loading: intAppLoading, withLoading: withIntAppLoading } = useLoading()
 const { pagination: intAppPagination, reset: resetIntApp } = useRemotePagination(loadIntApps)
 
-function loadIntApps() {
+async function loadIntApps() {
   const item = intAppsOf.value
   if (!item) return
-  return withIntAppLoading(async () => {
-    try {
-      const res = await fetchInternshipApplications(
-        item.id,
-        intAppPagination.page,
-        intAppPagination.pageSize,
-      )
-      intApps.value = res.data.records
-      intAppPagination.itemCount = res.data.total
-    } catch (e) {
-      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
-    }
-  })
+  try {
+    const res = await fetchInternshipApplications(
+      item.id,
+      intAppPagination.page,
+      intAppPagination.pageSize,
+    )
+    intApps.value = res.data.records
+    intAppPagination.itemCount = res.data.total
+  } catch (e) {
+    if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+  }
 }
 
 function openIntApps(row: InternshipResponse) {
@@ -296,26 +289,23 @@ function handleSaveReviewIntApp() {
 }
 
 // ============ 实习报告 ============
-const { loading: reportLoading, withLoading: withReportLoading } = useLoading()
 const reports = ref<InternshipReportResponse[]>([])
 const { pagination: reportPagination, reset: resetReport } = useRemotePagination(loadReports)
 const filterReportStatus = ref<ReportStatusCode | null>(null)
 let reportsLoaded = false
 
-function loadReports() {
-  return withReportLoading(async () => {
-    try {
-      const res = await fetchInternshipReports({
-        status: filterReportStatus.value ?? undefined,
-        page: reportPagination.page,
-        pageSize: reportPagination.pageSize,
-      })
-      reports.value = res.data.records
-      reportPagination.itemCount = res.data.total
-    } catch (e) {
-      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
-    }
-  })
+async function loadReports() {
+  try {
+    const res = await fetchInternshipReports({
+      status: filterReportStatus.value ?? undefined,
+      page: reportPagination.page,
+      pageSize: reportPagination.pageSize,
+    })
+    reports.value = res.data.records
+    reportPagination.itemCount = res.data.total
+  } catch (e) {
+    if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+  }
 }
 
 function handleReportFilterChange() {
@@ -378,26 +368,23 @@ function handleSaveReviewReport() {
 }
 
 // ============ 培训课程 ============
-const { loading: trainingLoading, withLoading: withTrainingLoading } = useLoading()
 const trainings = ref<TrainingResponse[]>([])
 const { pagination: trainPagination, reset: resetTrain } = useRemotePagination(loadTrainings)
 const filterTrainStatus = ref<TrainingStatusCode | null>(null)
 let trainingsLoaded = false
 
-function loadTrainings() {
-  return withTrainingLoading(async () => {
-    try {
-      const res = await fetchTrainings({
-        status: filterTrainStatus.value ?? undefined,
-        page: trainPagination.page,
-        pageSize: trainPagination.pageSize,
-      })
-      trainings.value = res.data.records
-      trainPagination.itemCount = res.data.total
-    } catch (e) {
-      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
-    }
-  })
+async function loadTrainings() {
+  try {
+    const res = await fetchTrainings({
+      status: filterTrainStatus.value ?? undefined,
+      page: trainPagination.page,
+      pageSize: trainPagination.pageSize,
+    })
+    trainings.value = res.data.records
+    trainPagination.itemCount = res.data.total
+  } catch (e) {
+    if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+  }
 }
 
 function handleTrainFilterChange() {
@@ -517,25 +504,22 @@ function handleSaveTrain() {
 const showTrainEnrollments = ref(false)
 const trainEnrollOf = ref<TrainingResponse | null>(null)
 const enrollments = ref<TrainingEnrollmentResponse[]>([])
-const { loading: enrollLoading, withLoading: withEnrollLoading } = useLoading()
 const { pagination: enrollPagination, reset: resetEnroll } = useRemotePagination(loadEnrollments)
 
-function loadEnrollments() {
+async function loadEnrollments() {
   const train = trainEnrollOf.value
   if (!train) return
-  return withEnrollLoading(async () => {
-    try {
-      const res = await fetchTrainingEnrollments(
-        train.id,
-        enrollPagination.page,
-        enrollPagination.pageSize,
-      )
-      enrollments.value = res.data.records
-      enrollPagination.itemCount = res.data.total
-    } catch (e) {
-      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
-    }
-  })
+  try {
+    const res = await fetchTrainingEnrollments(
+      train.id,
+      enrollPagination.page,
+      enrollPagination.pageSize,
+    )
+    enrollments.value = res.data.records
+    enrollPagination.itemCount = res.data.total
+  } catch (e) {
+    if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+  }
 }
 
 function openTrainEnrollments(row: TrainingResponse) {
@@ -900,22 +884,20 @@ onMounted(() => {
                 </NButton>
               </NSpace>
             </template>
-            <NSpin :show="internshipLoading">
-              <NDataTable
-                :columns="internshipColumns"
-                :data="internships"
-                :row-key="internshipRowKey"
-                :single-line="false"
-                :bordered="false"
-                :scroll-x="1330"
-                remote
-                :pagination="intPagination"
-              >
-                <template #empty
-                  ><EmptyState :description="$t('practice.common.empty')"
-                /></template>
-              </NDataTable>
-            </NSpin>
+            <NDataTable
+              :columns="internshipColumns"
+              :data="internships"
+              :row-key="internshipRowKey"
+              :single-line="false"
+              :bordered="false"
+              :scroll-x="1330"
+              remote
+              :pagination="intPagination"
+            >
+              <template #empty
+                ><EmptyState :description="$t('practice.common.empty')"
+              /></template>
+            </NDataTable>
           </NCard>
         </NTabPane>
 
@@ -940,22 +922,20 @@ onMounted(() => {
                 }}</NButton>
               </NSpace>
             </template>
-            <NSpin :show="reportLoading">
-              <NDataTable
-                :columns="reportColumns"
-                :data="reports"
-                :row-key="internshipReportRowKey"
-                :single-line="false"
-                :bordered="false"
-                :scroll-x="980"
-                remote
-                :pagination="reportPagination"
-              >
-                <template #empty
-                  ><EmptyState :description="$t('practice.common.empty')"
-                /></template>
-              </NDataTable>
-            </NSpin>
+            <NDataTable
+              :columns="reportColumns"
+              :data="reports"
+              :row-key="internshipReportRowKey"
+              :single-line="false"
+              :bordered="false"
+              :scroll-x="980"
+              remote
+              :pagination="reportPagination"
+            >
+              <template #empty
+                ><EmptyState :description="$t('practice.common.empty')"
+              /></template>
+            </NDataTable>
           </NCard>
         </NTabPane>
 
@@ -983,22 +963,20 @@ onMounted(() => {
                 </NButton>
               </NSpace>
             </template>
-            <NSpin :show="trainingLoading">
-              <NDataTable
-                :columns="trainingColumns"
-                :data="trainings"
-                :row-key="trainingRowKey"
-                :single-line="false"
-                :bordered="false"
-                :scroll-x="1330"
-                remote
-                :pagination="trainPagination"
-              >
-                <template #empty
-                  ><EmptyState :description="$t('practice.common.empty')"
-                /></template>
-              </NDataTable>
-            </NSpin>
+            <NDataTable
+              :columns="trainingColumns"
+              :data="trainings"
+              :row-key="trainingRowKey"
+              :single-line="false"
+              :bordered="false"
+              :scroll-x="1330"
+              remote
+              :pagination="trainPagination"
+            >
+              <template #empty
+                ><EmptyState :description="$t('practice.common.empty')"
+              /></template>
+            </NDataTable>
           </NCard>
         </NTabPane>
       </NTabs>
@@ -1069,20 +1047,18 @@ onMounted(() => {
         :title="$t('practice.internship.applicationsOf', { title: intAppsOf?.title ?? '' })"
         class="practice-app-modal"
       >
-        <NSpin :show="intAppLoading">
-          <NDataTable
-            :columns="intAppColumns"
-            :data="intApps"
-            :row-key="internshipApplicationRowKey"
-            :single-line="false"
-            :bordered="false"
-            :scroll-x="760"
-            remote
-            :pagination="intAppPagination"
-          >
-            <template #empty><EmptyState :description="$t('practice.common.empty')" /></template>
-          </NDataTable>
-        </NSpin>
+        <NDataTable
+          :columns="intAppColumns"
+          :data="intApps"
+          :row-key="internshipApplicationRowKey"
+          :single-line="false"
+          :bordered="false"
+          :scroll-x="760"
+          remote
+          :pagination="intAppPagination"
+        >
+          <template #empty><EmptyState :description="$t('practice.common.empty')" /></template>
+        </NDataTable>
       </NModal>
 
       <!-- 报名审核 -->
@@ -1226,19 +1202,17 @@ onMounted(() => {
         :title="$t('practice.internship.enrollmentsOf', { title: trainEnrollOf?.title ?? '' })"
         class="practice-app-modal"
       >
-        <NSpin :show="enrollLoading">
-          <NDataTable
-            :columns="enrollmentColumns"
-            :data="enrollments"
-            :row-key="trainingEnrollmentRowKey"
-            :single-line="false"
-            :bordered="false"
-            remote
-            :pagination="enrollPagination"
-          >
-            <template #empty><EmptyState :description="$t('practice.common.empty')" /></template>
-          </NDataTable>
-        </NSpin>
+        <NDataTable
+          :columns="enrollmentColumns"
+          :data="enrollments"
+          :row-key="trainingEnrollmentRowKey"
+          :single-line="false"
+          :bordered="false"
+          remote
+          :pagination="enrollPagination"
+        >
+          <template #empty><EmptyState :description="$t('practice.common.empty')" /></template>
+        </NDataTable>
       </NModal>
     </template>
   </div>

@@ -6,7 +6,6 @@ import {
   NSpace,
   NSelect,
   NDataTable,
-  NSpin,
   NEmpty,
   NTag,
   NModal,
@@ -258,51 +257,49 @@ onMounted(() => {
 
       <!-- 教师本人 -->
       <template v-if="isTeacher">
-        <NSpin :show="myLoading">
-          <NEmpty v-if="!myLoading && !myQuality" :description="$t('analysis.tqEmpty')" />
-          <template v-else-if="myQuality">
-            <div class="stat-band">
-              <StatCard
-                :label="$t('analysis.tqAvgEvaluationScore')"
-                :value="myQuality.avgEvaluationScore"
-                tone="primary"
-              />
-              <StatCard
-                :label="$t('analysis.tqEvalCount')"
-                :value="myQuality.evalCount"
-                tone="default"
-              />
-              <StatCard
-                :label="$t('analysis.tqCourseCount')"
-                :value="myQuality.courseCount"
-                tone="default"
-              />
-              <StatCard
-                :label="$t('analysis.tqCourseAvgScore')"
-                :value="myQuality.courseAvgScore"
-                tone="success"
-              />
-              <StatCard
-                :label="$t('analysis.tqCoursePassRate')"
-                :value="myQuality.coursePassRate"
-                suffix="%"
-                tone="warning"
-              />
-              <StatCard
-                :label="$t('analysis.tqStudentCount')"
-                :value="myQuality.studentCount"
-                tone="default"
-              />
+        <NEmpty v-if="!myLoading && !myQuality" :description="$t('analysis.tqEmpty')" />
+        <template v-else-if="myQuality">
+          <div class="stat-band">
+            <StatCard
+              :label="$t('analysis.tqAvgEvaluationScore')"
+              :value="myQuality.avgEvaluationScore"
+              tone="primary"
+            />
+            <StatCard
+              :label="$t('analysis.tqEvalCount')"
+              :value="myQuality.evalCount"
+              tone="default"
+            />
+            <StatCard
+              :label="$t('analysis.tqCourseCount')"
+              :value="myQuality.courseCount"
+              tone="default"
+            />
+            <StatCard
+              :label="$t('analysis.tqCourseAvgScore')"
+              :value="myQuality.courseAvgScore"
+              tone="success"
+            />
+            <StatCard
+              :label="$t('analysis.tqCoursePassRate')"
+              :value="myQuality.coursePassRate"
+              suffix="%"
+              tone="warning"
+            />
+            <StatCard
+              :label="$t('analysis.tqStudentCount')"
+              :value="myQuality.studentCount"
+              tone="default"
+            />
+          </div>
+          <NCard>
+            <div class="chart-title">{{ $t('analysis.tqDimensionAverages') }}</div>
+            <NEmpty v-if="!hasItems(myQuality)" :description="$t('analysis.tqNoItems')" />
+            <div v-else class="chart-box">
+              <BaseChart :option="myRadarOption" />
             </div>
-            <NCard>
-              <div class="chart-title">{{ $t('analysis.tqDimensionAverages') }}</div>
-              <NEmpty v-if="!hasItems(myQuality)" :description="$t('analysis.tqNoItems')" />
-              <div v-else class="chart-box">
-                <BaseChart :option="myRadarOption" :loading="myLoading" />
-              </div>
-            </NCard>
-          </template>
-        </NSpin>
+          </NCard>
+        </template>
       </template>
 
       <!-- 管理员/院系列表 -->
@@ -310,26 +307,24 @@ onMounted(() => {
         <NCard v-if="listLoading || list.length > 0">
           <div class="chart-title">{{ $t('analysis.tqComparison') }}</div>
           <div class="chart-box">
-            <BaseChart :option="comparisonOption" :loading="listLoading" />
+            <BaseChart :option="comparisonOption" />
           </div>
         </NCard>
         <NCard>
-          <NSpin :show="listLoading">
-            <NEmpty
-              v-if="!listLoading && list.length === 0"
-              :description="$t('analysis.tqEmpty')"
-            />
-            <NDataTable
-              v-else
-              :columns="listColumns"
-              :data="list"
-              :row-key="teacherQualityRowKey"
-              :single-line="false"
-              :bordered="false"
-              :scroll-x="1000"
-              :pagination="listPagination"
-            />
-          </NSpin>
+          <NEmpty
+            v-if="!listLoading && list.length === 0"
+            :description="$t('analysis.tqEmpty')"
+          />
+          <NDataTable
+            v-else
+            :columns="listColumns"
+            :data="list"
+            :row-key="teacherQualityRowKey"
+            :single-line="false"
+            :bordered="false"
+            :scroll-x="1000"
+            :pagination="listPagination"
+          />
         </NCard>
       </template>
     </NSpace>

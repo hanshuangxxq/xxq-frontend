@@ -3,7 +3,6 @@ import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
-  NSpin,
   NEmpty,
   NTag,
   NSpace,
@@ -70,39 +69,37 @@ const showTotal = computed(
       </NCard>
 
       <NCard :title="$t('graduation.student.myScoreTitle')" class="content-card">
-        <NSpin :show="loading">
-          <NEmpty
-            v-if="!loading && campaignId != null && !score"
-            :description="$t('graduation.student.scoreNotPublished')"
-          />
-          <template v-if="score">
-            <NSpace align="center" :size="12" style="margin-bottom: 16px">
-              <NTag :type="scoreStatusTagType(score.status)" size="small" :bordered="false">
-                {{ score.status }}
-              </NTag>
-              <span v-if="!isPublished" class="unpublished-hint">
-                {{ $t('graduation.student.scoreUnpublishedHint') }}
-              </span>
-            </NSpace>
-            <NDescriptions :column="3" bordered size="small">
-              <NDescriptionsItem :label="$t('graduation.student.advisorScore')">
-                {{ score.advisorScore ?? '-' }}
-              </NDescriptionsItem>
-              <NDescriptionsItem :label="$t('graduation.student.reviewerScore')">
-                {{ score.reviewerScore ?? '-' }}
-              </NDescriptionsItem>
-              <NDescriptionsItem :label="$t('graduation.student.defenseScore')">
-                {{ score.defenseScore ?? '-' }}
-              </NDescriptionsItem>
-              <NDescriptionsItem :label="$t('graduation.student.totalScore')">
-                {{ showTotal ? score.totalScore : '-' }}
-              </NDescriptionsItem>
-              <NDescriptionsItem :label="$t('graduation.common.publishTime')" :span="2">
-                {{ formatDateTime(score.publishTime) }}
-              </NDescriptionsItem>
-            </NDescriptions>
-          </template>
-        </NSpin>
+        <NEmpty
+          v-if="!loading && campaignId != null && !score"
+          :description="$t('graduation.student.scoreNotPublished')"
+        />
+        <template v-if="score">
+          <NSpace align="center" :size="12" style="margin-bottom: 16px">
+            <NTag :type="scoreStatusTagType(score.status)" size="small" :bordered="false">
+              {{ score.status }}
+            </NTag>
+            <span v-if="!isPublished" class="unpublished-hint">
+              {{ $t('graduation.student.scoreUnpublishedHint') }}
+            </span>
+          </NSpace>
+          <NDescriptions :column="3" bordered size="small">
+            <NDescriptionsItem :label="$t('graduation.student.advisorScore')">
+              {{ score.advisorScore ?? '-' }}
+            </NDescriptionsItem>
+            <NDescriptionsItem :label="$t('graduation.student.reviewerScore')">
+              {{ score.reviewerScore ?? '-' }}
+            </NDescriptionsItem>
+            <NDescriptionsItem :label="$t('graduation.student.defenseScore')">
+              {{ score.defenseScore ?? '-' }}
+            </NDescriptionsItem>
+            <NDescriptionsItem :label="$t('graduation.student.totalScore')">
+              {{ showTotal ? score.totalScore : '-' }}
+            </NDescriptionsItem>
+            <NDescriptionsItem :label="$t('graduation.common.publishTime')" :span="2">
+              {{ formatDateTime(score.publishTime) }}
+            </NDescriptionsItem>
+          </NDescriptions>
+        </template>
       </NCard>
     </template>
   </div>

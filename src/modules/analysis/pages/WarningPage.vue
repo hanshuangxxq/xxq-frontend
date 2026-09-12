@@ -6,7 +6,6 @@ import {
   NSpace,
   NSelect,
   NDataTable,
-  NSpin,
   NEmpty,
   NTag,
   NTabs,
@@ -185,7 +184,6 @@ interface ConfigRow {
 }
 
 const configRows = ref<ConfigRow[]>([])
-const { loading: configLoading, withLoading: withConfigLoading } = useLoading()
 const { loading: configSaving, withLoading: withConfigSaving } = useLoading()
 
 // 中文描述 -> code
@@ -224,32 +222,30 @@ function defaultConfigRows(): ConfigRow[] {
   ]
 }
 
-function loadConfig() {
-  return withConfigLoading(async () => {
-    try {
-      const res = await getWarningConfig()
-      const byCode = new Map<WarningLevelCode, WarningConfigDto>()
-      for (const c of res.data) {
-        const code = descToCode[c.level] ?? (c.level as WarningLevelCode)
-        byCode.set(code, c)
-      }
-      configRows.value = defaultConfigRows().map((row) => {
-        const dto = byCode.get(row.code)
-        return dto
-          ? {
-              ...row,
-              gpaThreshold: dto.gpaThreshold,
-              failCountThreshold: dto.failCountThreshold,
-              semesterFailThreshold: dto.semesterFailThreshold,
-              enabled: dto.enabled === 1,
-            }
-          : row
-      })
-    } catch (e) {
-      if (!isReportedError(e)) message.error((e as Error).message || t('analysis.wrnLoadFail'))
-      configRows.value = defaultConfigRows()
+async function loadConfig() {
+  try {
+    const res = await getWarningConfig()
+    const byCode = new Map<WarningLevelCode, WarningConfigDto>()
+    for (const c of res.data) {
+      const code = descToCode[c.level] ?? (c.level as WarningLevelCode)
+      byCode.set(code, c)
     }
-  })
+    configRows.value = defaultConfigRows().map((row) => {
+      const dto = byCode.get(row.code)
+      return dto
+        ? {
+            ...row,
+            gpaThreshold: dto.gpaThreshold,
+            failCountThreshold: dto.failCountThreshold,
+            semesterFailThreshold: dto.semesterFailThreshold,
+            enabled: dto.enabled === 1,
+          }
+        : row
+    })
+  } catch (e) {
+    if (!isReportedError(e)) message.error((e as Error).message || t('analysis.wrnLoadFail'))
+    configRows.value = defaultConfigRows()
+  }
 }
 
 function saveConfig() {
@@ -323,37 +319,35 @@ onMounted(() => {
     <!-- 学生自查 -->
     <template v-if="isStudent">
       <NCard :title="$t('analysis.wrnMyWarnings')">
-        <NSpin :show="myLoading">
-          <NEmpty
-            v-if="!myLoading && myWarnings.length === 0"
-            :description="$t('analysis.wrnEmpty')"
-          />
-          <div v-else class="warning-card-list">
-            <div
-              v-for="w in myWarnings"
-              :key="w.id"
-              class="warning-card"
-              :style="{ borderLeftColor: warningLevelColor(w.level) }"
-            >
-              <div class="warning-card-head">
-                <NTag :type="warningLevelTagType(w.level)" size="small" :bordered="false">
-                  {{ w.level }}
-                </NTag>
-                <NTag :type="warningStatusTagType(w.status)" size="small" :bordered="false">
-                  {{ w.status }}
-                </NTag>
-                <span class="warning-card-time">{{ formatDateTime(w.createTime) }}</span>
-              </div>
-              <div class="warning-card-reason">{{ w.reason }}</div>
-              <div class="warning-card-meta">
-                <span>{{ $t('analysis.wrnGpa') }}：{{ w.gpa }}</span>
-                <span>{{ $t('analysis.wrnFailCount') }}：{{ w.failCount }}</span>
-                <span>{{ $t('analysis.wrnSemesterFailCount') }}：{{ w.semesterFailCount }}</span>
-                <span>{{ $t('analysis.wrnSemester') }}：{{ w.semesterName }}</span>
-              </div>
+        <NEmpty
+          v-if="!myLoading && myWarnings.length === 0"
+          :description="$t('analysis.wrnEmpty')"
+        />
+        <div v-else class="warning-card-list">
+          <div
+            v-for="w in myWarnings"
+            :key="w.id"
+            class="warning-card"
+            :style="{ borderLeftColor: warningLevelColor(w.level) }"
+          >
+            <div class="warning-card-head">
+              <NTag :type="warningLevelTagType(w.level)" size="small" :bordered="false">
+                {{ w.level }}
+              </NTag>
+              <NTag :type="warningStatusTagType(w.status)" size="small" :bordered="false">
+                {{ w.status }}
+              </NTag>
+              <span class="warning-card-time">{{ formatDateTime(w.createTime) }}</span>
+            </div>
+            <div class="warning-card-reason">{{ w.reason }}</div>
+            <div class="warning-card-meta">
+              <span>{{ $t('analysis.wrnGpa') }}：{{ w.gpa }}</span>
+              <span>{{ $t('analysis.wrnFailCount') }}：{{ w.failCount }}</span>
+              <span>{{ $t('analysis.wrnSemesterFailCount') }}：{{ w.semesterFailCount }}</span>
+              <span>{{ $t('analysis.wrnSemester') }}：{{ w.semesterName }}</span>
             </div>
           </div>
-        </NSpin>
+        </div>
       </NCard>
     </template>
 
@@ -396,22 +390,20 @@ onMounted(() => {
             </div>
 
             <NCard>
-              <NSpin :show="dashLoading">
-                <NEmpty
-                  v-if="!dashLoading && dashWarnings.length === 0"
-                  :description="$t('analysis.wrnEmpty')"
-                />
-                <NDataTable
-                  v-else
-                  :columns="dashColumns"
-                  :data="dashWarnings"
-                  :row-key="warningRowKey"
-                  :single-line="false"
-                  :bordered="false"
-                  :scroll-x="1400"
-                  :pagination="dashPagination"
-                />
-              </NSpin>
+              <NEmpty
+                v-if="!dashLoading && dashWarnings.length === 0"
+                :description="$t('analysis.wrnEmpty')"
+              />
+              <NDataTable
+                v-else
+                :columns="dashColumns"
+                :data="dashWarnings"
+                :row-key="warningRowKey"
+                :single-line="false"
+                :bordered="false"
+                :scroll-x="1400"
+                :pagination="dashPagination"
+              />
             </NCard>
           </NSpace>
         </NTabPane>
@@ -422,67 +414,65 @@ onMounted(() => {
             <NAlert type="info" :show-icon="true" class="config-hint">
               {{ $t('analysis.wrnConfigHint') }}
             </NAlert>
-            <NSpin :show="configLoading">
-              <div class="config-table">
-                <div class="config-row config-head">
-                  <div>{{ $t('analysis.wrnLevel') }}</div>
-                  <div>{{ $t('analysis.wrnGpaThreshold') }}</div>
-                  <div>{{ $t('analysis.wrnFailCountThreshold') }}</div>
-                  <div>{{ $t('analysis.wrnSemesterFailThreshold') }}</div>
-                  <div>{{ $t('analysis.wrnEnabled') }}</div>
+            <div class="config-table">
+              <div class="config-row config-head">
+                <div>{{ $t('analysis.wrnLevel') }}</div>
+                <div>{{ $t('analysis.wrnGpaThreshold') }}</div>
+                <div>{{ $t('analysis.wrnFailCountThreshold') }}</div>
+                <div>{{ $t('analysis.wrnSemesterFailThreshold') }}</div>
+                <div>{{ $t('analysis.wrnEnabled') }}</div>
+              </div>
+              <div
+                v-for="row in configRows"
+                :key="row.code"
+                class="config-row"
+                :style="{ borderLeftColor: warningLevelColor(row.label) }"
+              >
+                <div class="config-level">
+                  <span
+                    class="config-level-dot"
+                    :style="{ background: warningLevelColor(row.label) }"
+                  ></span>
+                  {{ row.label }}
                 </div>
-                <div
-                  v-for="row in configRows"
-                  :key="row.code"
-                  class="config-row"
-                  :style="{ borderLeftColor: warningLevelColor(row.label) }"
-                >
-                  <div class="config-level">
-                    <span
-                      class="config-level-dot"
-                      :style="{ background: warningLevelColor(row.label) }"
-                    ></span>
-                    {{ row.label }}
-                  </div>
-                  <div>
-                    <NInputNumber
-                      v-model:value="row.gpaThreshold"
-                      :min="0"
-                      :max="5"
-                      :step="0.1"
-                      size="small"
-                      style="width: 110px"
-                    />
-                  </div>
-                  <div>
-                    <NInputNumber
-                      v-model:value="row.failCountThreshold"
-                      :min="0"
-                      :step="1"
-                      size="small"
-                      style="width: 110px"
-                    />
-                  </div>
-                  <div>
-                    <NInputNumber
-                      v-model:value="row.semesterFailThreshold"
-                      :min="0"
-                      :step="1"
-                      size="small"
-                      style="width: 110px"
-                    />
-                  </div>
-                  <div>
-                    <NSwitch v-model:value="row.enabled" size="small" />
-                  </div>
+                <div>
+                  <NInputNumber
+                    v-model:value="row.gpaThreshold"
+                    :min="0"
+                    :max="5"
+                    :step="0.1"
+                    size="small"
+                    style="width: 110px"
+                  />
+                </div>
+                <div>
+                  <NInputNumber
+                    v-model:value="row.failCountThreshold"
+                    :min="0"
+                    :step="1"
+                    size="small"
+                    style="width: 110px"
+                  />
+                </div>
+                <div>
+                  <NInputNumber
+                    v-model:value="row.semesterFailThreshold"
+                    :min="0"
+                    :step="1"
+                    size="small"
+                    style="width: 110px"
+                  />
+                </div>
+                <div>
+                  <NSwitch v-model:value="row.enabled" size="small" />
                 </div>
               </div>
-              <div class="config-actions">
-                <NButton type="primary" :loading="configSaving" @click="saveConfig">
-                  {{ $t('analysis.wrnSaveConfig') }}
-                </NButton>
-              </div>
-            </NSpin>
+            </div>
+            <div class="config-actions">
+              <NButton type="primary" :loading="configSaving" @click="saveConfig">
+                {{ $t('analysis.wrnSaveConfig') }}
+              </NButton>
+            </div>
           </NCard>
         </NTabPane>
 

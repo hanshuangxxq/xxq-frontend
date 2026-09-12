@@ -3,7 +3,6 @@ import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
-  NSpin,
   NEmpty,
   NButton,
   NModal,
@@ -36,10 +35,8 @@ const message = useMessage()
 const { isStudent } = useRoleCheck()
 
 const campaigns = ref<CampaignResponse[]>([])
-const { loading, withLoading } = useLoading()
 const myProposals = ref<ProposalResponse[]>([])
 const myAssignment = ref<AssignmentResponse | null>(null)
-const { loading: assignmentLoading, withLoading: withAssignmentLoading } = useLoading()
 
 /** 选题窗口内才允许进入申报 */
 function inTopicWindow(c: CampaignResponse): boolean {
@@ -64,29 +61,25 @@ function hasActiveProposal(campaignId: number): boolean {
   return !!p && p.status !== '已驳回'
 }
 
-function loadCampaigns() {
-  return withLoading(async () => {
-    try {
-      const res = await fetchAvailableCampaigns()
-      campaigns.value = res.data ?? []
-      const pRes = await fetchMyProposals()
-      myProposals.value = pRes.data ?? []
-    } catch {
-      /* 已展示错误 */
-    }
-  })
+async function loadCampaigns() {
+  try {
+    const res = await fetchAvailableCampaigns()
+    campaigns.value = res.data ?? []
+    const pRes = await fetchMyProposals()
+    myProposals.value = pRes.data ?? []
+  } catch {
+    /* 已展示错误 */
+  }
 }
 
 // 我的指导关系（对全部可见活动展示，无活动时为空）
-function loadAssignments() {
-  return withAssignmentLoading(async () => {
-    try {
-      const res = await fetchMyAssignments()
-      myAssignment.value = res.data?.[0] ?? null
-    } catch {
-      myAssignment.value = null
-    }
-  })
+async function loadAssignments() {
+  try {
+    const res = await fetchMyAssignments()
+    myAssignment.value = res.data?.[0] ?? null
+  } catch {
+    myAssignment.value = null
+  }
 }
 
 // ===== 选题申报弹窗 =====
@@ -150,59 +143,57 @@ onMounted(() => {
   <div class="graduation-page">
     <ForbiddenState v-if="!isStudent" />
     <template v-else>
-      <NSpin :show="loading">
-        <NEmpty
-          v-if="!campaigns.length"
-          :description="$t('graduation.student.noAvailableCampaign')"
-        />
-        <NSpace v-else vertical :size="16">
-          <NCard v-for="c in campaigns" :key="c.id" :title="c.name" class="campaign-card">
-            <template #header-extra>
-              <NTag :type="campaignStatusTagType(c.status)" size="small" :bordered="false">
-                {{ c.status }}
-              </NTag>
-            </template>
-            <NSpace vertical :size="8">
-              <span class="campaign-row">
-                {{ $t('graduation.common.topicWindow') }}： {{ formatDateTime(c.topicStartTime) }} ~
-                {{ formatDateTime(c.topicEndTime) }}
-              </span>
-              <span :class="['campaign-row', 'window-hint']">{{ windowState(c) }}</span>
+      <NEmpty
+        v-if="!campaigns.length"
+        :description="$t('graduation.student.noAvailableCampaign')"
+      />
+      <NSpace v-else vertical :size="16">
+        <NCard v-for="c in campaigns" :key="c.id" :title="c.name" class="campaign-card">
+          <template #header-extra>
+            <NTag :type="campaignStatusTagType(c.status)" size="small" :bordered="false">
+              {{ c.status }}
+            </NTag>
+          </template>
+          <NSpace vertical :size="8">
+            <span class="campaign-row">
+              {{ $t('graduation.common.topicWindow') }}： {{ formatDateTime(c.topicStartTime) }} ~
+              {{ formatDateTime(c.topicEndTime) }}
+            </span>
+            <span :class="['campaign-row', 'window-hint']">{{ windowState(c) }}</span>
+          </NSpace>
+          <template #footer>
+            <NSpace justify="end">
+              <template v-if="hasActiveProposal(c.id)">
+                <NTag type="info" size="small" :bordered="false">
+                  {{ $t('graduation.student.hasActiveProposal') }}
+                </NTag>
+                <NTag
+                  v-if="proposalOf(c.id)?.status === '审批完毕'"
+                  type="success"
+                  size="small"
+                  :bordered="false"
+                >
+                  {{ proposalOf(c.id)?.status }}
+                </NTag>
+              </template>
+              <template v-else>
+                <NButton
+                  v-if="inTopicWindow(c)"
+                  type="primary"
+                  @click="proposalOf(c.id) ? startResubmit(c) : startDeclare(c)"
+                >
+                  {{
+                    proposalOf(c.id)
+                      ? $t('graduation.student.resubmitProposal')
+                      : $t('graduation.student.goTopic')
+                  }}
+                </NButton>
+                <NButton v-else disabled>{{ $t('graduation.student.topicBtnOutside') }}</NButton>
+              </template>
             </NSpace>
-            <template #footer>
-              <NSpace justify="end">
-                <template v-if="hasActiveProposal(c.id)">
-                  <NTag type="info" size="small" :bordered="false">
-                    {{ $t('graduation.student.hasActiveProposal') }}
-                  </NTag>
-                  <NTag
-                    v-if="proposalOf(c.id)?.status === '审批完毕'"
-                    type="success"
-                    size="small"
-                    :bordered="false"
-                  >
-                    {{ proposalOf(c.id)?.status }}
-                  </NTag>
-                </template>
-                <template v-else>
-                  <NButton
-                    v-if="inTopicWindow(c)"
-                    type="primary"
-                    @click="proposalOf(c.id) ? startResubmit(c) : startDeclare(c)"
-                  >
-                    {{
-                      proposalOf(c.id)
-                        ? $t('graduation.student.resubmitProposal')
-                        : $t('graduation.student.goTopic')
-                    }}
-                  </NButton>
-                  <NButton v-else disabled>{{ $t('graduation.student.topicBtnOutside') }}</NButton>
-                </template>
-              </NSpace>
-            </template>
-          </NCard>
-        </NSpace>
-      </NSpin>
+          </template>
+        </NCard>
+      </NSpace>
 
       <!-- 我的指导关系（§4.3） -->
       <NCard
@@ -210,51 +201,47 @@ onMounted(() => {
         class="assignment-card"
         style="margin-top: 16px"
       >
-        <NSpin :show="assignmentLoading">
-          <template v-if="myAssignment">
-            <NSpace align="center" :size="12">
-              <span class="assignment-row">
-                {{ $t('graduation.common.teacher') }}：
-                <b>{{ myAssignment.teacherName }}</b>
-              </span>
-              <NTag
-                :type="assignmentSourceTagType(myAssignment.source)"
-                size="small"
-                :bordered="false"
-              >
-                {{ myAssignment.source }}
-              </NTag>
-              <span class="assignment-row"
-                >{{ $t('graduation.common.assignTime') }}：{{
-                  formatDateTime(myAssignment.assignTime)
-                }}</span
-              >
-            </NSpace>
-            <NSpace
-              v-if="myAssignment.prevTeacherName"
-              align="center"
-              :size="12"
-              style="margin-top: 8px"
+        <template v-if="myAssignment">
+          <NSpace align="center" :size="12">
+            <span class="assignment-row">
+              {{ $t('graduation.common.teacher') }}：
+              <b>{{ myAssignment.teacherName }}</b>
+            </span>
+            <NTag
+              :type="assignmentSourceTagType(myAssignment.source)"
+              size="small"
+              :bordered="false"
             >
-              <NTag type="warning" size="small" :bordered="false">
-                {{ $t('graduation.common.prevTeacher') }}：{{ myAssignment.prevTeacherName }}
-              </NTag>
-              <span class="assignment-row">
-                {{ $t('graduation.common.reassignReason') }}：{{
-                  myAssignment.reassignReason ?? '-'
-                }}
-              </span>
-              <span class="assignment-row">
-                {{ $t('graduation.common.reassignTime') }}：{{
-                  formatDateTime(myAssignment.reassignTime)
-                }}
-              </span>
-            </NSpace>
-          </template>
-          <template v-else>
-            <span class="assignment-row">{{ $t('graduation.common.notAssigned') }}</span>
-          </template>
-        </NSpin>
+              {{ myAssignment.source }}
+            </NTag>
+            <span class="assignment-row"
+              >{{ $t('graduation.common.assignTime') }}：{{
+                formatDateTime(myAssignment.assignTime)
+              }}</span
+            >
+          </NSpace>
+          <NSpace
+            v-if="myAssignment.prevTeacherName"
+            align="center"
+            :size="12"
+            style="margin-top: 8px"
+          >
+            <NTag type="warning" size="small" :bordered="false">
+              {{ $t('graduation.common.prevTeacher') }}：{{ myAssignment.prevTeacherName }}
+            </NTag>
+            <span class="assignment-row">
+              {{ $t('graduation.common.reassignReason') }}：{{ myAssignment.reassignReason ?? '-' }}
+            </span>
+            <span class="assignment-row">
+              {{ $t('graduation.common.reassignTime') }}：{{
+                formatDateTime(myAssignment.reassignTime)
+              }}
+            </span>
+          </NSpace>
+        </template>
+        <template v-else>
+          <span class="assignment-row">{{ $t('graduation.common.notAssigned') }}</span>
+        </template>
       </NCard>
 
       <!-- 选题申报弹窗 -->

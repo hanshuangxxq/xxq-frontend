@@ -9,7 +9,6 @@ import {
   NInputNumber,
   NSelect,
   NTag,
-  NSpin,
   NEmpty,
   NAlert,
   useMessage,
@@ -382,18 +381,16 @@ onMounted(loadExamOptions)
               </NButton>
             </NSpace>
           </template>
-          <NSpin :show="loadingRoster">
-            <NEmpty v-if="!loadingRoster && rosterRows.length === 0" :description="$t('score.mgEmpty')" />
-            <NDataTable
-              v-else
-              :columns="rosterColumns"
-              :data="rosterRows"
-              :row-key="rosterRowKey"
-              :single-line="false"
-              :bordered="false"
-              :max-height="460"
-            />
-          </NSpin>
+          <NEmpty v-if="!loadingRoster && rosterRows.length === 0" :description="$t('score.mgEmpty')" />
+          <NDataTable
+            v-else
+            :columns="rosterColumns"
+            :data="rosterRows"
+            :row-key="rosterRowKey"
+            :single-line="false"
+            :bordered="false"
+            :max-height="460"
+          />
         </NCard>
       </template>
       <NCard v-else>

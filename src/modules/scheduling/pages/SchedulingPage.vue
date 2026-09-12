@@ -738,41 +738,37 @@ onUnmounted(() => {
               </template>
             </NPopconfirm>
           </template>
-          <NSpin :show="draftLoading">
-            <NEmpty
-              v-if="!draftLoading && drafts.length === 0"
-              :description="$t('teach-drafts.empty')"
-            />
-            <NDataTable
-              v-else
-              :columns="draftColumns"
-              :data="drafts"
-              :row-key="draftRowKey"
-              :single-line="false"
-              :bordered="false"
-              :max-height="400"
-            />
-          </NSpin>
+          <NEmpty
+            v-if="!draftLoading && drafts.length === 0"
+            :description="$t('teach-drafts.empty')"
+          />
+          <NDataTable
+            v-else
+            :columns="draftColumns"
+            :data="drafts"
+            :row-key="draftRowKey"
+            :single-line="false"
+            :bordered="false"
+            :max-height="400"
+          />
         </NCard>
       </template>
 
       <!-- Data Preview -->
       <NCard v-if="showData" :title="$t('scheduling.dataTitle')">
-        <NSpin :show="dataLoading">
-          <NEmpty
-            v-if="!dataLoading && teachInfoList.length === 0"
-            :description="$t('scheduling.dataEmpty')"
-          />
-          <NDataTable
-            v-else-if="teachInfoList.length > 0"
-            :columns="dataColumns"
-            :data="teachInfoList"
-            :row-key="teachInfoRowKey"
-            :single-line="false"
-            :bordered="false"
-            :max-height="400"
-          />
-        </NSpin>
+        <NEmpty
+          v-if="!dataLoading && teachInfoList.length === 0"
+          :description="$t('scheduling.dataEmpty')"
+        />
+        <NDataTable
+          v-else-if="teachInfoList.length > 0"
+          :columns="dataColumns"
+          :data="teachInfoList"
+          :row-key="teachInfoRowKey"
+          :single-line="false"
+          :bordered="false"
+          :max-height="400"
+        />
       </NCard>
 
       <!-- Solver Status -->

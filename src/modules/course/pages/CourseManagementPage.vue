@@ -12,7 +12,6 @@ import {
   NFormItem,
   NInput,
   NPopconfirm,
-  NSpin,
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
@@ -29,7 +28,6 @@ const message = useMessage()
 const router = useRouter()
 const { canManageCourses } = useRoleCheck()
 
-const { loading, withLoading } = useLoading()
 const data = ref<Course[]>([])
 const { pagination } = useRemotePagination(loadData)
 
@@ -77,17 +75,15 @@ const columns = computed<DataTableColumns<Course>>(() => {
   ]
 })
 
-function loadData() {
-  return withLoading(async () => {
-    try {
-      const res = await fetchCourses(pagination.page, pagination.pageSize)
-      data.value = res.data.records
-      pagination.itemCount = res.data.total
-    } catch (e) {
-      if (!isReportedError(e))
-        message.error((e as Error).message || t('course-management.loadFail'))
-    }
-  })
+async function loadData() {
+  try {
+    const res = await fetchCourses(pagination.page, pagination.pageSize)
+    data.value = res.data.records
+    pagination.itemCount = res.data.total
+  } catch (e) {
+    if (!isReportedError(e))
+      message.error((e as Error).message || t('course-management.loadFail'))
+  }
 }
 
 const showForm = ref(false)
@@ -173,19 +169,17 @@ onMounted(loadData)
         <template v-if="canManageCourses" #header-extra>
           <NButton type="primary" @click="startCreate">{{ $t('course-management.add') }}</NButton>
         </template>
-        <NSpin :show="loading">
-          <NDataTable
-            :columns="columns"
-            :data="data"
-            :row-key="courseRowKey"
-            :single-line="false"
-            :bordered="false"
-            remote
-            :pagination="pagination"
-          >
-            <template #empty>{{ $t('course-management.empty') }}</template>
-          </NDataTable>
-        </NSpin>
+        <NDataTable
+          :columns="columns"
+          :data="data"
+          :row-key="courseRowKey"
+          :single-line="false"
+          :bordered="false"
+          remote
+          :pagination="pagination"
+        >
+          <template #empty>{{ $t('course-management.empty') }}</template>
+        </NDataTable>
       </NCard>
     </NSpace>
 

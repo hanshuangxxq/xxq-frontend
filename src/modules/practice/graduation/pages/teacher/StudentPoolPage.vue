@@ -3,7 +3,6 @@ import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
-  NSpin,
   NEmpty,
   NButton,
   NDataTable,
@@ -194,23 +193,21 @@ const poolColumns = computed<DataTableColumns<TeacherPickPoolRow>>(() => [
         <template #header-extra>
           <span class="pool-hint">{{ $t('graduation.teacher.poolHint') }}</span>
         </template>
-        <NSpin :show="loading">
-          <NEmpty
-            v-if="!loading && !pool.length"
-            :description="$t('graduation.teacher.poolEmpty')"
-          />
-          <NDataTable
-            v-else
-            :columns="poolColumns"
-            :data="pool"
-            :row-key="poolRowKey"
-            :single-line="false"
-            :bordered="false"
-            :scroll-x="1080"
-          >
-            <template #empty><NEmpty :description="$t('graduation.common.empty')" /></template>
-          </NDataTable>
-        </NSpin>
+        <NEmpty
+          v-if="!loading && !pool.length"
+          :description="$t('graduation.teacher.poolEmpty')"
+        />
+        <NDataTable
+          v-else
+          :columns="poolColumns"
+          :data="pool"
+          :row-key="poolRowKey"
+          :single-line="false"
+          :bordered="false"
+          :scroll-x="1080"
+        >
+          <template #empty><NEmpty :description="$t('graduation.common.empty')" /></template>
+        </NDataTable>
       </NCard>
     </template>
   </div>

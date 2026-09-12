@@ -13,7 +13,6 @@ import {
   NInputNumber,
   NSelect,
   NTag,
-  NSpin,
   NPopconfirm,
   NDatePicker,
   NRadioGroup,
@@ -61,7 +60,6 @@ const { t } = useI18n()
 const message = useMessage()
 const { isAcademicAdmin } = useRoleCheck()
 
-const { loading, withLoading } = useLoading()
 const competitions = ref<CompetitionResponse[]>([])
 const { pagination, reset } = useRemotePagination(loadData)
 const filterStatus = ref<CompetitionStatusCode | null>(null)
@@ -93,20 +91,18 @@ const awardOptions = computed(() => [
   { label: t('practice.competition.awardParticipation'), value: 'PARTICIPATION' as AwardCode },
 ])
 
-function loadData() {
-  return withLoading(async () => {
-    try {
-      const res = await fetchCompetitions({
-        status: filterStatus.value ?? undefined,
-        page: pagination.page,
-        pageSize: pagination.pageSize,
-      })
-      competitions.value = res.data.records
-      pagination.itemCount = res.data.total
-    } catch (e) {
-      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
-    }
-  })
+async function loadData() {
+  try {
+    const res = await fetchCompetitions({
+      status: filterStatus.value ?? undefined,
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+    })
+    competitions.value = res.data.records
+    pagination.itemCount = res.data.total
+  } catch (e) {
+    if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+  }
 }
 
 function handleFilterChange() {
@@ -231,25 +227,22 @@ function handleSave() {
 const showRegistrations = ref(false)
 const registrationsOf = ref<CompetitionResponse | null>(null)
 const registrations = ref<RegistrationResponse[]>([])
-const { loading: regLoading, withLoading: withRegLoading } = useLoading()
 const { pagination: regPagination, reset: resetReg } = useRemotePagination(loadRegistrations)
 
-function loadRegistrations() {
+async function loadRegistrations() {
   const comp = registrationsOf.value
   if (!comp) return
-  return withRegLoading(async () => {
-    try {
-      const res = await fetchCompetitionRegistrations(
-        comp.id,
-        regPagination.page,
-        regPagination.pageSize,
-      )
-      registrations.value = res.data.records
-      regPagination.itemCount = res.data.total
-    } catch (e) {
-      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
-    }
-  })
+  try {
+    const res = await fetchCompetitionRegistrations(
+      comp.id,
+      regPagination.page,
+      regPagination.pageSize,
+    )
+    registrations.value = res.data.records
+    regPagination.itemCount = res.data.total
+  } catch (e) {
+    if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+  }
 }
 
 function openRegistrations(row: CompetitionResponse) {
@@ -596,20 +589,18 @@ onMounted(() => {
             }}</NButton>
           </NSpace>
         </template>
-        <NSpin :show="loading">
-          <NDataTable
-            :columns="columns"
-            :data="competitions"
-            :row-key="competitionRowKey"
-            :single-line="false"
-            :bordered="false"
-            :scroll-x="1640"
-            remote
-            :pagination="pagination"
-          >
-            <template #empty><EmptyState :description="$t('practice.common.empty')" /></template>
-          </NDataTable>
-        </NSpin>
+        <NDataTable
+          :columns="columns"
+          :data="competitions"
+          :row-key="competitionRowKey"
+          :single-line="false"
+          :bordered="false"
+          :scroll-x="1640"
+          remote
+          :pagination="pagination"
+        >
+          <template #empty><EmptyState :description="$t('practice.common.empty')" /></template>
+        </NDataTable>
       </NCard>
 
       <!-- 竞赛表单 -->
@@ -686,20 +677,18 @@ onMounted(() => {
         :title="$t('practice.competition.registrationsOf', { name: registrationsOf?.name ?? '' })"
         class="practice-app-modal"
       >
-        <NSpin :show="regLoading">
-          <NDataTable
-            :columns="registrationColumns"
-            :data="registrations"
-            :row-key="registrationRowKey"
-            :single-line="false"
-            :bordered="false"
-            :scroll-x="900"
-            remote
-            :pagination="regPagination"
-          >
-            <template #empty><EmptyState :description="$t('practice.common.empty')" /></template>
-          </NDataTable>
-        </NSpin>
+        <NDataTable
+          :columns="registrationColumns"
+          :data="registrations"
+          :row-key="registrationRowKey"
+          :single-line="false"
+          :bordered="false"
+          :scroll-x="900"
+          remote
+          :pagination="regPagination"
+        >
+          <template #empty><EmptyState :description="$t('practice.common.empty')" /></template>
+        </NDataTable>
       </NModal>
 
       <!-- 报名审核 -->
@@ -741,20 +730,18 @@ onMounted(() => {
         :title="$t('practice.competition.resultsOf', { name: resultsOf?.name ?? '' })"
         class="practice-result-modal"
       >
-        <NSpin :show="resultsLoading">
-          <EmptyState
-            v-if="!resultsLoading && results.length === 0"
-            :description="$t('practice.common.empty')"
-          />
-          <NDataTable
-            v-else
-            :columns="resultColumns"
-            :data="results"
-            :row-key="competitionResultRowKey"
-            :single-line="false"
-            :bordered="false"
-          />
-        </NSpin>
+        <EmptyState
+          v-if="!resultsLoading && results.length === 0"
+          :description="$t('practice.common.empty')"
+        />
+        <NDataTable
+          v-else
+          :columns="resultColumns"
+          :data="results"
+          :row-key="competitionResultRowKey"
+          :single-line="false"
+          :bordered="false"
+        />
         <div class="result-form-title">{{ $t('practice.competition.enterResult') }}</div>
         <NForm :model="resultForm" label-placement="top">
           <NSpace :size="12" wrap>

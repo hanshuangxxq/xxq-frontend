@@ -13,7 +13,6 @@ import {
   NInputNumber,
   NSelect,
   NTag,
-  NSpin,
   NEmpty,
   NPopconfirm,
   NRadioGroup,
@@ -460,23 +459,21 @@ onMounted(() => {
           </NSpace>
         </template>
         <div class="filter-hint">{{ $t('score.rvClickFilter') }}</div>
-        <NSpin :show="loading">
-          <NEmpty
-            v-if="!loading && filteredReviews.length === 0"
-            :description="$t('score.rvEmpty')"
-          />
-          <NDataTable
-            v-else
-            :columns="columns"
-            :data="filteredReviews"
-            :row-key="reviewRowKey"
-            :row-props="rowProps"
-            :single-line="false"
-            :bordered="false"
-            :scroll-x="1100"
-            :pagination="reviewPagination"
-          />
-        </NSpin>
+        <NEmpty
+          v-if="!loading && filteredReviews.length === 0"
+          :description="$t('score.rvEmpty')"
+        />
+        <NDataTable
+          v-else
+          :columns="columns"
+          :data="filteredReviews"
+          :row-key="reviewRowKey"
+          :row-props="rowProps"
+          :single-line="false"
+          :bordered="false"
+          :scroll-x="1100"
+          :pagination="reviewPagination"
+        />
       </NCard>
     </NSpace>
 

@@ -15,7 +15,6 @@ import {
   NTimePicker,
   NInputNumber,
   NTag,
-  NSpin,
   NPopconfirm,
   NAlert,
   useMessage,
@@ -47,7 +46,6 @@ import { calcDurationMinutes } from '../utils'
 const { t } = useI18n()
 const message = useMessage()
 
-const { loading, withLoading } = useLoading()
 const data = ref<ExamView[]>([])
 /** 考试列表本地分页（需客户端过滤补考/重修，故分块拉全量后客户端分页） */
 const examPagination = reactive({
@@ -126,28 +124,26 @@ async function loadSemesters() {
   }
 }
 
-function loadData() {
-  return withLoading(async () => {
-    try {
-      const sel = filterCourseKey.value ? parseCourseKey(filterCourseKey.value) : null
-      // 服务端 examType 无法表达「期末或期中、排除补考」，故分块拉全量后客户端过滤+分页
-      const all = await fetchAllPages((page, pageSize) =>
-        fetchExams({
-          semesterId: filterSemesterId.value ?? undefined,
-          courseId: sel?.id,
-          source: sel?.source === 'SELECTION_CAMPAIGN' ? 'SELECTION_CAMPAIGN' : undefined,
-          examType: filterExamType.value ?? undefined,
-          page,
-          pageSize,
-        }),
-      )
-      // 仅展示期末/期中（补考/重修在专门页面）
-      data.value = all.filter((e) => e.examType === '期末考试' || e.examType === '期中考试')
-    } catch (e) {
-      if (!isReportedError(e)) message.error((e as Error).message || t('exam.mgLoadFail'))
-      data.value = []
-    }
-  })
+async function loadData() {
+  try {
+    const sel = filterCourseKey.value ? parseCourseKey(filterCourseKey.value) : null
+    // 服务端 examType 无法表达「期末或期中、排除补考」，故分块拉全量后客户端过滤+分页
+    const all = await fetchAllPages((page, pageSize) =>
+      fetchExams({
+        semesterId: filterSemesterId.value ?? undefined,
+        courseId: sel?.id,
+        source: sel?.source === 'SELECTION_CAMPAIGN' ? 'SELECTION_CAMPAIGN' : undefined,
+        examType: filterExamType.value ?? undefined,
+        page,
+        pageSize,
+      }),
+    )
+    // 仅展示期末/期中（补考/重修在专门页面）
+    data.value = all.filter((e) => e.examType === '期末考试' || e.examType === '期中考试')
+  } catch (e) {
+    if (!isReportedError(e)) message.error((e as Error).message || t('exam.mgLoadFail'))
+    data.value = []
+  }
 }
 
 function handleReset() {
@@ -503,19 +499,17 @@ onMounted(() => {
       </NCard>
 
       <NCard>
-        <NSpin :show="loading">
-          <NDataTable
-            :columns="columns"
-            :data="data"
-            :row-key="examRowKey"
-            :single-line="false"
-            :bordered="false"
-            :scroll-x="1450"
-            :pagination="examPagination"
-          >
-            <template #empty>{{ $t('exam.mgEmpty') }}</template>
-          </NDataTable>
-        </NSpin>
+        <NDataTable
+          :columns="columns"
+          :data="data"
+          :row-key="examRowKey"
+          :single-line="false"
+          :bordered="false"
+          :scroll-x="1450"
+          :pagination="examPagination"
+        >
+          <template #empty>{{ $t('exam.mgEmpty') }}</template>
+        </NDataTable>
       </NCard>
     </NSpace>
 

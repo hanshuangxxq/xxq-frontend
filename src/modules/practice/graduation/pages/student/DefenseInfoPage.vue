@@ -3,7 +3,6 @@ import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
-  NSpin,
   NEmpty,
   NDataTable,
   NSpace,
@@ -102,23 +101,21 @@ const columns = computed<DataTableColumns<DefenseResponse>>(() => [
       </NCard>
 
       <NCard :title="$t('graduation.student.defenseTitle')" class="content-card">
-        <NSpin :show="loading">
-          <NEmpty
-            v-if="!loading && !list.length"
-            :description="$t('graduation.student.defenseEmpty')"
-          />
-          <NDataTable
-            v-else
-            :columns="columns"
-            :data="list"
-            :row-key="defenseRowKey"
-            :single-line="false"
-            :bordered="false"
-            :scroll-x="760"
-          >
-            <template #empty><NEmpty :description="$t('graduation.common.empty')" /></template>
-          </NDataTable>
-        </NSpin>
+        <NEmpty
+          v-if="!loading && !list.length"
+          :description="$t('graduation.student.defenseEmpty')"
+        />
+        <NDataTable
+          v-else
+          :columns="columns"
+          :data="list"
+          :row-key="defenseRowKey"
+          :single-line="false"
+          :bordered="false"
+          :scroll-x="760"
+        >
+          <template #empty><NEmpty :description="$t('graduation.common.empty')" /></template>
+        </NDataTable>
       </NCard>
     </template>
   </div>

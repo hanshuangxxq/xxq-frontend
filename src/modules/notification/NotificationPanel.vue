@@ -6,7 +6,6 @@ import {
   NDrawerContent,
   NTabs,
   NTab,
-  NSpin,
   NEmpty,
   NTag,
   NButton,
@@ -62,45 +61,43 @@ async function handleDelete(id: number) {
         <NTab name="read">{{ t('notification.read') }}</NTab>
       </NTabs>
 
-      <NSpin :show="store.loading">
-        <NEmpty
-          v-if="store.notifications.length === 0"
-          :description="t('notification.empty')"
-          class="empty-state"
-        />
-        <div v-else class="notification-list">
-          <div
-            v-for="n in store.notifications"
-            :key="n.id"
-            class="notification-item"
-            :class="{ unread: n.isRead === 0 }"
-          >
-            <div class="item-header">
-              <NTag size="small" :bordered="false">{{ n.type }}</NTag>
-              <NTime :time="toTimestamp(n.createTime)" type="datetime" class="item-time" />
-            </div>
-            <div class="item-title">{{ n.title }}</div>
-            <div v-if="n.content" class="item-content">{{ n.content }}</div>
-            <div class="item-actions">
-              <NButton
-                v-if="n.isRead === 0"
-                size="tiny"
-                text
-                type="primary"
-                @click="handleMarkRead(n.id)"
-              >
-                {{ t('notification.markRead') }}
-              </NButton>
-              <NPopconfirm @positive-click="handleDelete(n.id)">
-                <template #trigger>
-                  <NButton size="tiny" text type="error">{{ t('notification.delete') }}</NButton>
-                </template>
-                {{ t('notification.deleteConfirm') }}
-              </NPopconfirm>
-            </div>
+      <NEmpty
+        v-if="store.notifications.length === 0"
+        :description="t('notification.empty')"
+        class="empty-state"
+      />
+      <div v-else class="notification-list">
+        <div
+          v-for="n in store.notifications"
+          :key="n.id"
+          class="notification-item"
+          :class="{ unread: n.isRead === 0 }"
+        >
+          <div class="item-header">
+            <NTag size="small" :bordered="false">{{ n.type }}</NTag>
+            <NTime :time="toTimestamp(n.createTime)" type="datetime" class="item-time" />
+          </div>
+          <div class="item-title">{{ n.title }}</div>
+          <div v-if="n.content" class="item-content">{{ n.content }}</div>
+          <div class="item-actions">
+            <NButton
+              v-if="n.isRead === 0"
+              size="tiny"
+              text
+              type="primary"
+              @click="handleMarkRead(n.id)"
+            >
+              {{ t('notification.markRead') }}
+            </NButton>
+            <NPopconfirm @positive-click="handleDelete(n.id)">
+              <template #trigger>
+                <NButton size="tiny" text type="error">{{ t('notification.delete') }}</NButton>
+              </template>
+              {{ t('notification.deleteConfirm') }}
+            </NPopconfirm>
           </div>
         </div>
-      </NSpin>
+      </div>
       <div v-if="store.pages > 1" class="panel-pagination">
         <NButton size="small" quaternary :disabled="store.page <= 1" @click="store.prevPage">
           {{ $t('common.pagedSelect.prev') }}

@@ -35,7 +35,6 @@ use([
 
 const props = defineProps<{
   option: EChartsOption
-  loading?: boolean
 }>()
 
 // 统一放慢所有图表动画（echarts 默认入场 1000ms、数据更新 300ms）；
@@ -48,7 +47,7 @@ const mergedOption = computed<EChartsOption>(() => ({
 </script>
 
 <template>
-  <VChart class="base-chart" :option="mergedOption" :loading="loading" autoresize />
+  <VChart class="base-chart" :option="mergedOption" autoresize />
 </template>
 
 <style scoped src="./BaseChart.css"></style>

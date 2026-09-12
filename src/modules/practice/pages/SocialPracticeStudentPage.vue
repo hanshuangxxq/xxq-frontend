@@ -12,7 +12,6 @@ import {
   NInput,
   NSelect,
   NTag,
-  NSpin,
   NUpload,
   NPopconfirm,
   NTabs,
@@ -62,18 +61,15 @@ const activeTab = ref('available')
 const MAX_SIZE = 20 * 1024 * 1024
 
 // ---- 可申报项目 ----
-const { loading: availLoading, withLoading: withAvailLoading } = useLoading()
 const available = ref<SocialPracticeResponse[]>([])
 
-function loadAvailable() {
-  return withAvailLoading(async () => {
-    try {
-      const res = await fetchAvailableSocialPractices()
-      available.value = res.data
-    } catch (e) {
-      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
-    }
-  })
+async function loadAvailable() {
+  try {
+    const res = await fetchAvailableSocialPractices()
+    available.value = res.data
+  } catch (e) {
+    if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+  }
 }
 
 const showApply = ref(false)
@@ -171,18 +167,15 @@ const availableColumns = computed<DataTableColumns<SocialPracticeResponse>>(() =
 ])
 
 // ---- 我的申报 ----
-const { loading: myAppLoading, withLoading: withMyAppLoading } = useLoading()
 const myApplications = ref<SocialPracticeApplicationResponse[]>([])
 
-function loadMyApplications() {
-  return withMyAppLoading(async () => {
-    try {
-      const res = await fetchMySocialPracticeApplications()
-      myApplications.value = res.data
-    } catch (e) {
-      if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
-    }
-  })
+async function loadMyApplications() {
+  try {
+    const res = await fetchMySocialPracticeApplications()
+    myApplications.value = res.data
+  } catch (e) {
+    if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
+  }
 }
 
 async function handleRevoke(id: number) {
@@ -452,40 +445,36 @@ onMounted(() => {
         <!-- 可申报项目 -->
         <NTabPane name="available" :tab="$t('practice.socialPractice.tabAvailable')">
           <NCard>
-            <NSpin :show="availLoading">
-              <NDataTable
-                :columns="availableColumns"
-                :data="available"
-                :row-key="socialPracticeRowKey"
-                :single-line="false"
-                :bordered="false"
-                :scroll-x="880"
-              >
-                <template #empty
-                  ><EmptyState :description="$t('practice.common.empty')"
-                /></template>
-              </NDataTable>
-            </NSpin>
+            <NDataTable
+              :columns="availableColumns"
+              :data="available"
+              :row-key="socialPracticeRowKey"
+              :single-line="false"
+              :bordered="false"
+              :scroll-x="880"
+            >
+              <template #empty
+                ><EmptyState :description="$t('practice.common.empty')"
+              /></template>
+            </NDataTable>
           </NCard>
         </NTabPane>
 
         <!-- 我的申报 -->
         <NTabPane name="myApplications" :tab="$t('practice.socialPractice.tabMyApplications')">
           <NCard>
-            <NSpin :show="myAppLoading">
-              <NDataTable
-                :columns="myAppColumns"
-                :data="myApplications"
-                :row-key="socialPracticeApplicationRowKey"
-                :single-line="false"
-                :bordered="false"
-                :scroll-x="1120"
-              >
-                <template #empty
-                  ><EmptyState :description="$t('practice.common.empty')"
-                /></template>
-              </NDataTable>
-            </NSpin>
+            <NDataTable
+              :columns="myAppColumns"
+              :data="myApplications"
+              :row-key="socialPracticeApplicationRowKey"
+              :single-line="false"
+              :bordered="false"
+              :scroll-x="1120"
+            >
+              <template #empty
+                ><EmptyState :description="$t('practice.common.empty')"
+              /></template>
+            </NDataTable>
           </NCard>
         </NTabPane>
 
@@ -501,25 +490,23 @@ onMounted(() => {
                 {{ $t('practice.socialPractice.submitReport') }}
               </NButton>
             </template>
-            <NSpin :show="reportLoading">
-              <EmptyState
-                v-if="!reportLoading && myReports.length === 0"
-                :description="$t('practice.common.empty')"
-              />
-              <NDataTable
-                v-else
-                :columns="reportColumns"
-                :data="myReports"
-                :row-key="socialPracticeReportRowKey"
-                :single-line="false"
-                :bordered="false"
-                :scroll-x="1000"
-              >
-                <template #empty
-                  ><EmptyState :description="$t('practice.common.empty')"
-                /></template>
-              </NDataTable>
-            </NSpin>
+            <EmptyState
+              v-if="!reportLoading && myReports.length === 0"
+              :description="$t('practice.common.empty')"
+            />
+            <NDataTable
+              v-else
+              :columns="reportColumns"
+              :data="myReports"
+              :row-key="socialPracticeReportRowKey"
+              :single-line="false"
+              :bordered="false"
+              :scroll-x="1000"
+            >
+              <template #empty
+                ><EmptyState :description="$t('practice.common.empty')"
+              /></template>
+            </NDataTable>
           </NCard>
         </NTabPane>
       </NTabs>

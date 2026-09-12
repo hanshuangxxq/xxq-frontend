@@ -3,7 +3,6 @@ import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
-  NSpin,
   NEmpty,
   NButton,
   NDataTable,
@@ -233,20 +232,18 @@ const logColumns = computed<DataTableColumns<GuidanceLogResponse>>(() => [
         class="content-card"
         style="margin-top: 16px"
       >
-        <NSpin :show="loading">
-          <NEmpty v-if="!loading && !logs.length" :description="$t('graduation.common.empty')" />
-          <NDataTable
-            v-else
-            :columns="logColumns"
-            :data="logs"
-            :row-key="guidanceLogRowKey"
-            :single-line="false"
-            :bordered="false"
-            :scroll-x="720"
-          >
-            <template #empty><NEmpty :description="$t('graduation.common.empty')" /></template>
-          </NDataTable>
-        </NSpin>
+        <NEmpty v-if="!loading && !logs.length" :description="$t('graduation.common.empty')" />
+        <NDataTable
+          v-else
+          :columns="logColumns"
+          :data="logs"
+          :row-key="guidanceLogRowKey"
+          :single-line="false"
+          :bordered="false"
+          :scroll-x="720"
+        >
+          <template #empty><NEmpty :description="$t('graduation.common.empty')" /></template>
+        </NDataTable>
       </NCard>
     </template>
   </div>

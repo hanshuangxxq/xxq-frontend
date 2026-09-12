@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { NCard, NSpin, NEmpty, NDataTable, NTag, useMessage, type DataTableColumns } from 'naive-ui'
+import { NCard, NEmpty, NDataTable, NTag, useMessage, type DataTableColumns } from 'naive-ui'
 import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import CampaignContextSelector from '../../components/CampaignContextSelector.vue'
 import { fetchOperationLogs } from '../../api'
@@ -90,25 +90,23 @@ const columns = computed<DataTableColumns<OperationLogResponse>>(() => [
       </NCard>
 
       <NCard :title="$t('graduation.academic.operationLogTitle')" class="content-card">
-        <NSpin :show="loading">
-          <NEmpty
-            v-if="!loading && !logs.length"
-            :description="$t('graduation.academic.logEmpty')"
-          />
-          <NDataTable
-            v-else
-            :columns="columns"
-            :data="logs"
-            :row-key="operationLogRowKey"
-            :single-line="false"
-            :bordered="false"
-            :scroll-x="1000"
-            remote
-            :pagination="pagination"
-          >
-            <template #empty><NEmpty :description="$t('graduation.common.empty')" /></template>
-          </NDataTable>
-        </NSpin>
+        <NEmpty
+          v-if="!loading && !logs.length"
+          :description="$t('graduation.academic.logEmpty')"
+        />
+        <NDataTable
+          v-else
+          :columns="columns"
+          :data="logs"
+          :row-key="operationLogRowKey"
+          :single-line="false"
+          :bordered="false"
+          :scroll-x="1000"
+          remote
+          :pagination="pagination"
+        >
+          <template #empty><NEmpty :description="$t('graduation.common.empty')" /></template>
+        </NDataTable>
       </NCard>
     </template>
   </div>

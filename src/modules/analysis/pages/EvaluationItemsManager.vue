@@ -12,7 +12,6 @@ import {
   NInput,
   NInputNumber,
   NPopconfirm,
-  NSpin,
   NEmpty,
   useMessage,
   type DataTableColumns,
@@ -175,18 +174,16 @@ onMounted(loadData)
     <template #header-extra>
       <NButton type="primary" @click="startCreate">{{ $t('analysis.evItemAdd') }}</NButton>
     </template>
-    <NSpin :show="loading">
-      <NEmpty v-if="!loading && data.length === 0" :description="$t('analysis.evItemEmpty')" />
-      <NDataTable
-        v-else
-        :columns="columns"
-        :data="data"
-        :row-key="evaluationItemRowKey"
-        :single-line="false"
-        :bordered="false"
-        :scroll-x="900"
-      />
-    </NSpin>
+    <NEmpty v-if="!loading && data.length === 0" :description="$t('analysis.evItemEmpty')" />
+    <NDataTable
+      v-else
+      :columns="columns"
+      :data="data"
+      :row-key="evaluationItemRowKey"
+      :single-line="false"
+      :bordered="false"
+      :scroll-x="900"
+    />
   </NCard>
 
   <NModal

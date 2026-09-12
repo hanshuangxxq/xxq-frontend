@@ -7,7 +7,6 @@ import {
   NTabPane,
   NSelect,
   NDataTable,
-  NSpin,
   NEmpty,
   NButton,
   NInput,
@@ -287,45 +286,43 @@ onMounted(() => {
       </NTabPane>
       <NTabPane name="period" :tab="$t('analysis.evPeriodTitle')">
         <NCard>
-          <NSpin :show="periodLoading">
-            <template v-if="period">
-              <NDescriptions :column="2" label-placement="left" bordered>
-                <NDescriptionsItem :label="$t('analysis.evPeriodStatus')">
-                  <NTag :type="periodOpen ? 'success' : 'warning'" size="small" :bordered="false">
-                    {{ periodOpen ? $t('analysis.evPeriodOpen') : $t('analysis.evPeriodClosed') }}
-                  </NTag>
-                </NDescriptionsItem>
-                <NDescriptionsItem :label="$t('analysis.evSemester')">
-                  {{ period.semesterName || '-' }}
-                </NDescriptionsItem>
-                <NDescriptionsItem :label="$t('analysis.evPeriodOpenTime')">
-                  {{ formatDateTime(period.openTime) }}
-                </NDescriptionsItem>
-                <NDescriptionsItem :label="$t('analysis.evPeriodCloseTime')">
-                  {{ formatDateTime(period.closeTime) }}
-                </NDescriptionsItem>
-              </NDescriptions>
-              <div class="period-actions">
-                <NButton
-                  type="primary"
-                  :disabled="periodOpen"
-                  :loading="periodActionLoading"
-                  @click="handleOpenPeriod"
-                >
-                  {{ $t('analysis.evOpenBtn') }}
-                </NButton>
-                <NButton
-                  type="error"
-                  :disabled="!periodOpen"
-                  :loading="periodActionLoading"
-                  @click="handleClosePeriod"
-                >
-                  {{ $t('analysis.evCloseBtn') }}
-                </NButton>
-              </div>
-            </template>
-            <NEmpty v-else-if="!periodLoading" :description="$t('analysis.evEmpty')" />
-          </NSpin>
+          <template v-if="period">
+            <NDescriptions :column="2" label-placement="left" bordered>
+              <NDescriptionsItem :label="$t('analysis.evPeriodStatus')">
+                <NTag :type="periodOpen ? 'success' : 'warning'" size="small" :bordered="false">
+                  {{ periodOpen ? $t('analysis.evPeriodOpen') : $t('analysis.evPeriodClosed') }}
+                </NTag>
+              </NDescriptionsItem>
+              <NDescriptionsItem :label="$t('analysis.evSemester')">
+                {{ period.semesterName || '-' }}
+              </NDescriptionsItem>
+              <NDescriptionsItem :label="$t('analysis.evPeriodOpenTime')">
+                {{ formatDateTime(period.openTime) }}
+              </NDescriptionsItem>
+              <NDescriptionsItem :label="$t('analysis.evPeriodCloseTime')">
+                {{ formatDateTime(period.closeTime) }}
+              </NDescriptionsItem>
+            </NDescriptions>
+            <div class="period-actions">
+              <NButton
+                type="primary"
+                :disabled="periodOpen"
+                :loading="periodActionLoading"
+                @click="handleOpenPeriod"
+              >
+                {{ $t('analysis.evOpenBtn') }}
+              </NButton>
+              <NButton
+                type="error"
+                :disabled="!periodOpen"
+                :loading="periodActionLoading"
+                @click="handleClosePeriod"
+              >
+                {{ $t('analysis.evCloseBtn') }}
+              </NButton>
+            </div>
+          </template>
+          <NEmpty v-else-if="!periodLoading" :description="$t('analysis.evEmpty')" />
         </NCard>
       </NTabPane>
       <NTabPane name="override" :tab="$t('analysis.evOverride')">
@@ -337,118 +334,114 @@ onMounted(() => {
     <NTabs v-else-if="isStudent" v-model:value="studentTab" type="line" animated>
       <NTabPane name="submit" :tab="$t('analysis.evSubmit')">
         <NCard>
-          <NSpin :show="periodLoading || formLoading">
-            <template v-if="!periodLoading">
+          <template v-if="!periodLoading">
+            <NEmpty
+              v-if="!periodOpen"
+              :description="period?.message || $t('analysis.evNoPeriod')"
+            />
+            <template v-else>
               <NEmpty
-                v-if="!periodOpen"
-                :description="period?.message || $t('analysis.evNoPeriod')"
+                v-if="courseOptions.length === 0"
+                :description="$t('analysis.evNoCourses')"
               />
-              <template v-else>
-                <NEmpty
-                  v-if="courseOptions.length === 0"
-                  :description="$t('analysis.evNoCourses')"
-                />
-                <NForm v-else label-placement="top" class="eval-form">
-                  <NFormItem :label="$t('analysis.evSelectCourse')" required>
-                    <NSelect
-                      :value="selectedTeachInfoId"
-                      :options="courseOptions"
-                      :placeholder="$t('analysis.evSelectCoursePlaceholder')"
-                      filterable
-                      style="max-width: 420px"
-                      @update:value="handleCourseChange"
+              <NForm v-else label-placement="top" class="eval-form">
+                <NFormItem :label="$t('analysis.evSelectCourse')" required>
+                  <NSelect
+                    :value="selectedTeachInfoId"
+                    :options="courseOptions"
+                    :placeholder="$t('analysis.evSelectCoursePlaceholder')"
+                    filterable
+                    style="max-width: 420px"
+                    @update:value="handleCourseChange"
+                  />
+                </NFormItem>
+
+                <template v-if="selectedTeachInfoId != null && formRows.length > 0">
+                  <div v-if="currentTemplateName" class="eval-template-name">
+                    {{ $t('analysis.evTemplate') }}：{{ currentTemplateName }}
+                  </div>
+
+                  <div class="eval-rates">
+                    <NFormItem v-for="it in formRows" :key="it.itemId" :label="it.itemName">
+                      <div class="eval-score-row">
+                        <NRate
+                          v-if="it.maxScore <= 10"
+                          v-model:value="it.score"
+                          :count="it.maxScore"
+                          :allow-clear="it.required === 0"
+                        />
+                        <NInputNumber
+                          v-else
+                          v-model:value="it.score"
+                          :min="it.required === 1 ? 1 : 0"
+                          :max="it.maxScore"
+                          :step="1"
+                        />
+                        <NTag
+                          v-if="it.required === 1"
+                          type="error"
+                          size="small"
+                          :bordered="false"
+                        >
+                          {{ $t('analysis.evRequired') }}
+                        </NTag>
+                        <NTag v-else size="small" :bordered="false">
+                          {{ $t('analysis.evOptional') }}
+                        </NTag>
+                        <span class="eval-score-meta">
+                          {{ $t('analysis.evMaxScore') }} {{ it.maxScore }}
+                        </span>
+                      </div>
+                    </NFormItem>
+                  </div>
+
+                  <div class="eval-hint">{{ $t('analysis.evScoreHint') }}</div>
+
+                  <NFormItem :label="$t('analysis.evComment')">
+                    <NInput
+                      v-model:value="comment"
+                      type="textarea"
+                      :autosize="{ minRows: 3, maxRows: 6 }"
+                      :placeholder="$t('analysis.evCommentPlaceholder')"
+                      maxlength="512"
+                      show-count
+                      style="max-width: 600px"
                     />
                   </NFormItem>
 
-                  <template v-if="selectedTeachInfoId != null && formRows.length > 0">
-                    <div v-if="currentTemplateName" class="eval-template-name">
-                      {{ $t('analysis.evTemplate') }}：{{ currentTemplateName }}
-                    </div>
+                  <div class="eval-hint eval-hint-update">{{ $t('analysis.evUpdateHint') }}</div>
 
-                    <div class="eval-rates">
-                      <NFormItem v-for="it in formRows" :key="it.itemId" :label="it.itemName">
-                        <div class="eval-score-row">
-                          <NRate
-                            v-if="it.maxScore <= 10"
-                            v-model:value="it.score"
-                            :count="it.maxScore"
-                            :allow-clear="it.required === 0"
-                          />
-                          <NInputNumber
-                            v-else
-                            v-model:value="it.score"
-                            :min="it.required === 1 ? 1 : 0"
-                            :max="it.maxScore"
-                            :step="1"
-                          />
-                          <NTag
-                            v-if="it.required === 1"
-                            type="error"
-                            size="small"
-                            :bordered="false"
-                          >
-                            {{ $t('analysis.evRequired') }}
-                          </NTag>
-                          <NTag v-else size="small" :bordered="false">
-                            {{ $t('analysis.evOptional') }}
-                          </NTag>
-                          <span class="eval-score-meta">
-                            {{ $t('analysis.evMaxScore') }} {{ it.maxScore }}
-                          </span>
-                        </div>
-                      </NFormItem>
-                    </div>
-
-                    <div class="eval-hint">{{ $t('analysis.evScoreHint') }}</div>
-
-                    <NFormItem :label="$t('analysis.evComment')">
-                      <NInput
-                        v-model:value="comment"
-                        type="textarea"
-                        :autosize="{ minRows: 3, maxRows: 6 }"
-                        :placeholder="$t('analysis.evCommentPlaceholder')"
-                        maxlength="512"
-                        show-count
-                        style="max-width: 600px"
-                      />
-                    </NFormItem>
-
-                    <div class="eval-hint eval-hint-update">{{ $t('analysis.evUpdateHint') }}</div>
-
-                    <div class="eval-actions">
-                      <NButton type="primary" :loading="submitting" @click="handleSubmit">
-                        {{ $t('analysis.evSubmitBtn') }}
-                      </NButton>
-                    </div>
-                  </template>
-                  <NEmpty
-                    v-else-if="selectedTeachInfoId != null && !formLoading"
-                    :description="$t('analysis.evFormNoTemplate')"
-                  />
-                </NForm>
-              </template>
+                  <div class="eval-actions">
+                    <NButton type="primary" :loading="submitting" @click="handleSubmit">
+                      {{ $t('analysis.evSubmitBtn') }}
+                    </NButton>
+                  </div>
+                </template>
+                <NEmpty
+                  v-else-if="selectedTeachInfoId != null && !formLoading"
+                  :description="$t('analysis.evFormNoTemplate')"
+                />
+              </NForm>
             </template>
-          </NSpin>
+          </template>
         </NCard>
       </NTabPane>
 
       <NTabPane name="my" :tab="$t('analysis.evMyEvaluations')">
         <NCard>
-          <NSpin :show="myLoading">
-            <NEmpty
-              v-if="!myLoading && myEvaluations.length === 0"
-              :description="$t('analysis.evEmpty')"
-            />
-            <NDataTable
-              v-else
-              :columns="myColumns"
-              :data="myEvaluations"
-              :row-key="myEvaluationRowKey"
-              :single-line="false"
-              :bordered="false"
-              :scroll-x="1200"
-            />
-          </NSpin>
+          <NEmpty
+            v-if="!myLoading && myEvaluations.length === 0"
+            :description="$t('analysis.evEmpty')"
+          />
+          <NDataTable
+            v-else
+            :columns="myColumns"
+            :data="myEvaluations"
+            :row-key="myEvaluationRowKey"
+            :single-line="false"
+            :bordered="false"
+            :scroll-x="1200"
+          />
         </NCard>
       </NTabPane>
     </NTabs>

@@ -3,7 +3,6 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
-  NSpin,
   NEmpty,
   NButton,
   NModal,
@@ -160,81 +159,79 @@ async function handleDownload(): Promise<void> {
       </NCard>
 
       <NCard :title="$t('graduation.student.midtermTitle')" class="content-card">
-        <NSpin :show="loading">
-          <NEmpty
-            v-if="!loading && campaignId != null && !midterm"
-            :description="$t('graduation.common.notSubmitted')"
-          />
-          <template v-if="midterm">
-            <div class="report-head">
-              <NSpace align="center" :size="12">
-                <NTag
-                  :type="midterm.status === '已评审' ? 'success' : 'warning'"
-                  size="small"
-                  :bordered="false"
-                >
-                  {{ midterm.status }}
-                </NTag>
-                <NTag
-                  v-if="midterm.conclusion"
-                  :type="midtermConclusionTagType(midterm.conclusion)"
-                  size="small"
-                  :bordered="false"
-                >
-                  {{ $t('graduation.student.midtermConclusion') }}：{{ midterm.conclusion }}
-                </NTag>
-              </NSpace>
-              <span class="report-meta"
-                >{{ $t('graduation.common.submitTime') }}：{{
-                  formatDateTime(midterm.submitTime)
-                }}</span
+        <NEmpty
+          v-if="!loading && campaignId != null && !midterm"
+          :description="$t('graduation.common.notSubmitted')"
+        />
+        <template v-if="midterm">
+          <div class="report-head">
+            <NSpace align="center" :size="12">
+              <NTag
+                :type="midterm.status === '已评审' ? 'success' : 'warning'"
+                size="small"
+                :bordered="false"
               >
-            </div>
-            <div class="report-content">{{ midterm.content }}</div>
-            <div v-if="midterm.fileOriginal" class="report-attachment">
-              {{ $t('graduation.common.attachment') }}：{{ midterm.fileOriginal }}
-              <NButton size="small" quaternary @click="handleDownload">
-                {{ $t('graduation.common.download') }}
-              </NButton>
-            </div>
-            <div v-if="midterm.reviewComment" class="review-note">
-              <b>{{ $t('graduation.common.reviewComment') }}：</b>{{ midterm.reviewComment }}
-            </div>
-            <div v-if="midterm.reviewTime" class="report-meta" style="margin-top: 8px">
-              {{ $t('graduation.common.reviewTime') }}：{{ formatDateTime(midterm.reviewTime) }}
-            </div>
-            <div class="report-actions">
-              <NButton
-                v-if="midterm.status === '已提交'"
-                type="primary"
-                :disabled="!windowOpen"
-                @click="startSubmit"
+                {{ midterm.status }}
+              </NTag>
+              <NTag
+                v-if="midterm.conclusion"
+                :type="midtermConclusionTagType(midterm.conclusion)"
+                size="small"
+                :bordered="false"
               >
-                {{ $t('graduation.student.resubmitMidterm') }}
-              </NButton>
-              <span v-if="!windowOpen" class="window-hint">
-                {{ $t('graduation.common.windowOutside') }}
-              </span>
-              <span v-if="midterm.status === '已评审'" class="readonly-hint">
-                {{ $t('graduation.student.midtermReviewedReadonly') }}
-              </span>
+                {{ $t('graduation.student.midtermConclusion') }}：{{ midterm.conclusion }}
+              </NTag>
+            </NSpace>
+            <span class="report-meta"
+              >{{ $t('graduation.common.submitTime') }}：{{
+                formatDateTime(midterm.submitTime)
+              }}</span
+            >
+          </div>
+          <div class="report-content">{{ midterm.content }}</div>
+          <div v-if="midterm.fileOriginal" class="report-attachment">
+            {{ $t('graduation.common.attachment') }}：{{ midterm.fileOriginal }}
+            <NButton size="small" quaternary @click="handleDownload">
+              {{ $t('graduation.common.download') }}
+            </NButton>
+          </div>
+          <div v-if="midterm.reviewComment" class="review-note">
+            <b>{{ $t('graduation.common.reviewComment') }}：</b>{{ midterm.reviewComment }}
+          </div>
+          <div v-if="midterm.reviewTime" class="report-meta" style="margin-top: 8px">
+            {{ $t('graduation.common.reviewTime') }}：{{ formatDateTime(midterm.reviewTime) }}
+          </div>
+          <div class="report-actions">
+            <NButton
+              v-if="midterm.status === '已提交'"
+              type="primary"
+              :disabled="!windowOpen"
+              @click="startSubmit"
+            >
+              {{ $t('graduation.student.resubmitMidterm') }}
+            </NButton>
+            <span v-if="!windowOpen" class="window-hint">
+              {{ $t('graduation.common.windowOutside') }}
+            </span>
+            <span v-if="midterm.status === '已评审'" class="readonly-hint">
+              {{ $t('graduation.student.midtermReviewedReadonly') }}
+            </span>
+          </div>
+        </template>
+        <div v-if="!loading && !midterm && campaignId != null" class="report-actions">
+          <template v-if="gateChecked">
+            <NButton v-if="gateOpen && windowOpen" type="primary" @click="startSubmit">
+              {{ $t('graduation.student.submitMidterm') }}
+            </NButton>
+            <div v-else class="gate-hint">
+              {{
+                !gateOpen
+                  ? $t('graduation.student.midtermGateHint')
+                  : $t('graduation.common.windowOutside')
+              }}
             </div>
           </template>
-          <div v-if="!loading && !midterm && campaignId != null" class="report-actions">
-            <template v-if="gateChecked">
-              <NButton v-if="gateOpen && windowOpen" type="primary" @click="startSubmit">
-                {{ $t('graduation.student.submitMidterm') }}
-              </NButton>
-              <div v-else class="gate-hint">
-                {{
-                  !gateOpen
-                    ? $t('graduation.student.midtermGateHint')
-                    : $t('graduation.common.windowOutside')
-                }}
-              </div>
-            </template>
-          </div>
-        </NSpin>
+        </div>
       </NCard>
 
       <!-- 提交/重提弹窗 -->

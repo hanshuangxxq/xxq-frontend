@@ -16,12 +16,14 @@ export interface UseLoadingReturn {
    *   data.value = res.data
    * })
    * ```
-   * 模板中绑定 `:loading="loading"`(NDataTable/NButton)或 `<NSpin :show="loading">`。
+   * 模板中绑定:仅用于「操作进行中」状态(NButton 的 `:loading`)或
+   * `v-if="!loading && ..."` 空状态守卫。数据区域(表格/图表/面板)不得再绑
+   * 本地加载圈 —— 等待反馈统一由全局 GlobalLoading 承担(见 @/shared/loading)。
    */
   withLoading: <T>(task: () => Promise<T>) => Promise<T>
 }
 
-/** 页面/区块级加载状态:配合 NSpin、NDataTable、NButton 的 loading 属性使用 */
+/** 「操作进行中」状态:配合 NButton 的 loading 属性使用;数据加载等待一律走全局 GlobalLoading */
 export function useLoading(): UseLoadingReturn {
   const pending = ref(0)
   const loading = computed(() => pending.value > 0)

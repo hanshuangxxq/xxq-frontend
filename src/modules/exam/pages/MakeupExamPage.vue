@@ -14,7 +14,6 @@ import {
   NSelect,
   NDatePicker,
   NTimePicker,
-  NSpin,
   NEmpty,
   useMessage,
   type DataTableColumns,
@@ -446,27 +445,25 @@ onMounted(() => {
           />
           <NButton type="primary" @click="loadCandidates">{{ $t('exam.mkQuery') }}</NButton>
         </NSpace>
-        <NSpin :show="loadingCand">
-          <NEmpty
-            v-if="!loadingCand && candidates.length === 0"
-            class="candidates-empty"
-            :description="$t('exam.mkNoCandidates')"
+        <NEmpty
+          v-if="!loadingCand && candidates.length === 0"
+          class="candidates-empty"
+          :description="$t('exam.mkNoCandidates')"
+        />
+        <template v-else>
+          <NDataTable
+            :columns="candidateColumns"
+            :data="candidates"
+            :row-key="candidateRowKey"
+            :single-line="false"
+            :bordered="false"
           />
-          <template v-else>
-            <NDataTable
-              :columns="candidateColumns"
-              :data="candidates"
-              :row-key="candidateRowKey"
-              :single-line="false"
-              :bordered="false"
-            />
-            <div class="chart-card">
-              <div class="chart-box">
-                <BaseChart :option="failDistOption" :loading="loadingCand" />
-              </div>
+          <div class="chart-card">
+            <div class="chart-box">
+              <BaseChart :option="failDistOption" />
             </div>
-          </template>
-        </NSpin>
+          </div>
+        </template>
       </NCard>
 
       <NCard :title="$t('exam.mkList')">
@@ -480,21 +477,19 @@ onMounted(() => {
             @update:value="loadMakeupExams"
           />
         </template>
-        <NSpin :show="loadingList">
-          <NEmpty
-            v-if="!loadingList && makeupExams.length === 0"
-            :description="$t('exam.mkEmpty')"
-          />
-          <NDataTable
-            v-else
-            :columns="makeupListColumns"
-            :data="makeupExams"
-            :row-key="examRowKey"
-            :single-line="false"
-            :bordered="false"
-            :scroll-x="1130"
-          />
-        </NSpin>
+        <NEmpty
+          v-if="!loadingList && makeupExams.length === 0"
+          :description="$t('exam.mkEmpty')"
+        />
+        <NDataTable
+          v-else
+          :columns="makeupListColumns"
+          :data="makeupExams"
+          :row-key="examRowKey"
+          :single-line="false"
+          :bordered="false"
+          :scroll-x="1130"
+        />
       </NCard>
     </NSpace>
 
@@ -595,21 +590,19 @@ onMounted(() => {
       :title="$t('exam.mkEnterTitle')"
       class="makeup-grade-modal"
     >
-      <NSpin :show="loadingGrades">
-        <NEmpty
-          v-if="!loadingGrades && gradeRows.length === 0"
-          :description="$t('exam.mkNoCandidates')"
-        />
-        <NDataTable
-          v-else
-          :columns="gradeColumns"
-          :data="gradeRows"
-          :row-key="gradeRowKey"
-          :single-line="false"
-          :bordered="false"
-          :max-height="420"
-        />
-      </NSpin>
+      <NEmpty
+        v-if="!loadingGrades && gradeRows.length === 0"
+        :description="$t('exam.mkNoCandidates')"
+      />
+      <NDataTable
+        v-else
+        :columns="gradeColumns"
+        :data="gradeRows"
+        :row-key="gradeRowKey"
+        :single-line="false"
+        :bordered="false"
+        :max-height="420"
+      />
       <template #footer>
         <NSpace justify="end">
           <NButton @click="showGrades = false">{{ $t('exam.mkCancel') }}</NButton>

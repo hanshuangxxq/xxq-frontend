@@ -12,7 +12,6 @@ import {
   NInput,
   NSelect,
   NPopconfirm,
-  NSpin,
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
@@ -29,7 +28,6 @@ const { t } = useI18n()
 const message = useMessage()
 const { canManageClassNames } = useRoleCheck()
 
-const { loading, withLoading } = useLoading()
 const data = ref<ClassName[]>([])
 const { pagination } = useRemotePagination(loadData)
 
@@ -92,16 +90,14 @@ const columns = computed<DataTableColumns<ClassName>>(() => {
   ]
 })
 
-function loadData() {
-  return withLoading(async () => {
-    try {
-      const res = await fetchClassNames(pagination.page, pagination.pageSize)
-      data.value = res.data.records
-      pagination.itemCount = res.data.total
-    } catch (e) {
-      if (!isReportedError(e)) message.error((e as Error).message || t('class-names.loadFail'))
-    }
-  })
+async function loadData() {
+  try {
+    const res = await fetchClassNames(pagination.page, pagination.pageSize)
+    data.value = res.data.records
+    pagination.itemCount = res.data.total
+  } catch (e) {
+    if (!isReportedError(e)) message.error((e as Error).message || t('class-names.loadFail'))
+  }
 }
 
 const showForm = ref(false)
@@ -166,19 +162,17 @@ onMounted(() => {
         <template v-if="canManageClassNames" #header-extra>
           <NButton type="primary" @click="startCreate">{{ $t('class-names.add') }}</NButton>
         </template>
-        <NSpin :show="loading">
-          <NDataTable
-            :columns="columns"
-            :data="data"
-            :row-key="classNameRowKey"
-            :single-line="false"
-            :bordered="false"
-            remote
-            :pagination="pagination"
-          >
-            <template #empty>{{ $t('class-names.empty') }}</template>
-          </NDataTable>
-        </NSpin>
+        <NDataTable
+          :columns="columns"
+          :data="data"
+          :row-key="classNameRowKey"
+          :single-line="false"
+          :bordered="false"
+          remote
+          :pagination="pagination"
+        >
+          <template #empty>{{ $t('class-names.empty') }}</template>
+        </NDataTable>
       </NCard>
     </NSpace>
 

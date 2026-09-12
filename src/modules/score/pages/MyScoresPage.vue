@@ -6,7 +6,6 @@ import {
   NSpace,
   NSelect,
   NDataTable,
-  NSpin,
   NEmpty,
   NTag,
   NButton,
@@ -445,81 +444,75 @@ onMounted(() => {
       <NCard>
         <NTabs v-model:value="activeTab" type="line" animated>
           <NTabPane name="detail" :tab="$t('score.myTabDetail')">
-            <NSpin :show="loading">
-              <NEmpty v-if="!loading && !hasData" :description="$t('score.myEmpty')" />
-              <NDataTable
-                v-else
-                :columns="columns"
-                :data="scores"
-                :row-key="scoreRowKey"
-                :single-line="false"
-                :bordered="false"
-                :scroll-x="900"
-              />
-            </NSpin>
+            <NEmpty v-if="!loading && !hasData" :description="$t('score.myEmpty')" />
+            <NDataTable
+              v-else
+              :columns="columns"
+              :data="scores"
+              :row-key="scoreRowKey"
+              :single-line="false"
+              :bordered="false"
+              :scroll-x="900"
+            />
           </NTabPane>
 
           <NTabPane name="analysis" :tab="$t('score.myTabAnalysis')">
-            <NSpin :show="loading">
-              <NEmpty v-if="!loading && !hasData" :description="$t('score.myEmpty')" />
-              <template v-else>
-                <div class="chart-row">
-                  <div class="chart-card">
-                    <div class="chart-title">{{ $t('score.myScoreBar') }}</div>
-                    <div class="chart-box chart-box-tall">
-                      <BaseChart :option="scoreBarOption" :loading="loading" />
-                    </div>
-                  </div>
-                  <div class="chart-card">
-                    <div class="chart-title">{{ $t('score.myLevelPie') }}</div>
-                    <div class="chart-box chart-box-tall">
-                      <BaseChart :option="levelPieOption" :loading="loading" />
-                    </div>
+            <NEmpty v-if="!loading && !hasData" :description="$t('score.myEmpty')" />
+            <template v-else>
+              <div class="chart-row">
+                <div class="chart-card">
+                  <div class="chart-title">{{ $t('score.myScoreBar') }}</div>
+                  <div class="chart-box chart-box-tall">
+                    <BaseChart :option="scoreBarOption" />
                   </div>
                 </div>
-              </template>
-            </NSpin>
+                <div class="chart-card">
+                  <div class="chart-title">{{ $t('score.myLevelPie') }}</div>
+                  <div class="chart-box chart-box-tall">
+                    <BaseChart :option="levelPieOption" />
+                  </div>
+                </div>
+              </div>
+            </template>
           </NTabPane>
 
           <NTabPane name="profile" :tab="$t('score.myTabProfile')">
-            <NSpin :show="profileLoading">
-              <NEmpty v-if="!profileLoading && !profile" :description="$t('analysis.pfEmpty')" />
-              <template v-else-if="profile">
-                <div class="stat-band">
-                  <StatCard
-                    :label="$t('analysis.pfCumulativeGpa')"
-                    :value="profile.cumulativeGpa"
-                    tone="primary"
-                  />
-                  <StatCard
-                    :label="$t('analysis.pfSemesterGpa')"
-                    :value="profile.semesterGpa"
-                    tone="success"
-                  />
-                  <StatCard
-                    :label="$t('analysis.pfTotalCredits')"
-                    :value="profile.totalCredits"
-                    tone="default"
-                  />
-                  <StatCard
-                    :label="$t('analysis.pfEarnedCredits')"
-                    :value="profile.earnedCredits"
-                    tone="default"
-                  />
-                  <StatCard
-                    :label="$t('analysis.pfFailCount')"
-                    :value="profile.failCount"
-                    :tone="profile.failCount > 0 ? 'error' : 'default'"
-                  />
-                  <StatCard :label="$t('analysis.pfClassRank')" :value="rankText" tone="primary" />
-                </div>
-                <div class="chart-title">{{ $t('analysis.pfSubjectTrend') }}</div>
-                <div class="chart-box chart-box-tall">
-                  <NEmpty v-if="!hasProfileSubjects" :description="$t('analysis.pfEmpty')" />
-                  <BaseChart v-else :option="profileSubjectOption" :loading="profileLoading" />
-                </div>
-              </template>
-            </NSpin>
+            <NEmpty v-if="!profileLoading && !profile" :description="$t('analysis.pfEmpty')" />
+            <template v-else-if="profile">
+              <div class="stat-band">
+                <StatCard
+                  :label="$t('analysis.pfCumulativeGpa')"
+                  :value="profile.cumulativeGpa"
+                  tone="primary"
+                />
+                <StatCard
+                  :label="$t('analysis.pfSemesterGpa')"
+                  :value="profile.semesterGpa"
+                  tone="success"
+                />
+                <StatCard
+                  :label="$t('analysis.pfTotalCredits')"
+                  :value="profile.totalCredits"
+                  tone="default"
+                />
+                <StatCard
+                  :label="$t('analysis.pfEarnedCredits')"
+                  :value="profile.earnedCredits"
+                  tone="default"
+                />
+                <StatCard
+                  :label="$t('analysis.pfFailCount')"
+                  :value="profile.failCount"
+                  :tone="profile.failCount > 0 ? 'error' : 'default'"
+                />
+                <StatCard :label="$t('analysis.pfClassRank')" :value="rankText" tone="primary" />
+              </div>
+              <div class="chart-title">{{ $t('analysis.pfSubjectTrend') }}</div>
+              <div class="chart-box chart-box-tall">
+                <NEmpty v-if="!hasProfileSubjects" :description="$t('analysis.pfEmpty')" />
+                <BaseChart v-else :option="profileSubjectOption" />
+              </div>
+            </template>
           </NTabPane>
         </NTabs>
       </NCard>

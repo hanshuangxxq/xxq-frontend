@@ -3,7 +3,6 @@ import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
-  NSpin,
   NEmpty,
   NButton,
   NModal,
@@ -270,29 +269,27 @@ function handleReassign(): Promise<void> {
       </NAlert>
 
       <NCard :title="$t('graduation.dept.unassignedList')" class="content-card">
-        <NSpin :show="loading">
-          <NEmpty
-            v-if="!loading && !unassignedStudents.length"
-            :description="$t('graduation.common.empty')"
-          />
-          <div v-else class="student-row-list">
-            <div v-for="r in unassignedStudents" :key="r.studentId" class="student-row">
-              <NSpace align="center" :size="12" style="flex: 1; min-width: 0">
-                <span class="row-main">{{ r.studentNo }} {{ r.studentName }}</span>
-                <span class="row-sub">{{ r.className }}</span>
-                <span class="row-sub ellipsis">{{ r.proposalTitle ?? '-' }}</span>
-              </NSpace>
-              <NButton
-                size="small"
-                type="primary"
-                :disabled="!allocationOpen"
-                @click="startAllocate(r)"
-              >
-                {{ $t('graduation.dept.allocate') }}
-              </NButton>
-            </div>
+        <NEmpty
+          v-if="!loading && !unassignedStudents.length"
+          :description="$t('graduation.common.empty')"
+        />
+        <div v-else class="student-row-list">
+          <div v-for="r in unassignedStudents" :key="r.studentId" class="student-row">
+            <NSpace align="center" :size="12" style="flex: 1; min-width: 0">
+              <span class="row-main">{{ r.studentNo }} {{ r.studentName }}</span>
+              <span class="row-sub">{{ r.className }}</span>
+              <span class="row-sub ellipsis">{{ r.proposalTitle ?? '-' }}</span>
+            </NSpace>
+            <NButton
+              size="small"
+              type="primary"
+              :disabled="!allocationOpen"
+              @click="startAllocate(r)"
+            >
+              {{ $t('graduation.dept.allocate') }}
+            </NButton>
           </div>
-        </NSpin>
+        </div>
       </NCard>
 
       <NCard
@@ -300,36 +297,34 @@ function handleReassign(): Promise<void> {
         class="content-card"
         style="margin-top: 16px"
       >
-        <NSpin :show="loading">
-          <div class="teacher-strip">
-            <template v-if="teacherChips.length">
-              <span v-for="[tid, info] in teacherChips" :key="tid" class="teacher-chip">
-                {{ info.name }}：{{ info.count }}/{{ supervisorCapacity ?? '-' }}
-              </span>
-            </template>
-            <span v-else class="row-sub">{{ $t('graduation.common.noData') }}</span>
+        <div class="teacher-strip">
+          <template v-if="teacherChips.length">
+            <span v-for="[tid, info] in teacherChips" :key="tid" class="teacher-chip">
+              {{ info.name }}：{{ info.count }}/{{ supervisorCapacity ?? '-' }}
+            </span>
+          </template>
+          <span v-else class="row-sub">{{ $t('graduation.common.noData') }}</span>
+        </div>
+        <NEmpty
+          v-if="!loading && !assignedStudents.length"
+          :description="$t('graduation.common.empty')"
+        />
+        <div v-else class="student-row-list" style="margin-top: 12px">
+          <div v-for="r in assignedStudents" :key="r.studentId" class="student-row">
+            <NSpace align="center" :size="12" style="flex: 1; min-width: 0">
+              <span class="row-main">{{ r.studentNo }} {{ r.studentName }}</span>
+              <span class="row-sub"
+                >{{ $t('graduation.common.teacher') }}：{{ r.teacherName }}</span
+              >
+              <NTag v-if="r.assignmentSource" size="small" :bordered="false">
+                {{ r.assignmentSource }}
+              </NTag>
+            </NSpace>
+            <NButton size="small" :disabled="!allocationOpen" @click="startReassign(r)">
+              {{ $t('graduation.dept.reassign') }}
+            </NButton>
           </div>
-          <NEmpty
-            v-if="!loading && !assignedStudents.length"
-            :description="$t('graduation.common.empty')"
-          />
-          <div v-else class="student-row-list" style="margin-top: 12px">
-            <div v-for="r in assignedStudents" :key="r.studentId" class="student-row">
-              <NSpace align="center" :size="12" style="flex: 1; min-width: 0">
-                <span class="row-main">{{ r.studentNo }} {{ r.studentName }}</span>
-                <span class="row-sub"
-                  >{{ $t('graduation.common.teacher') }}：{{ r.teacherName }}</span
-                >
-                <NTag v-if="r.assignmentSource" size="small" :bordered="false">
-                  {{ r.assignmentSource }}
-                </NTag>
-              </NSpace>
-              <NButton size="small" :disabled="!allocationOpen" @click="startReassign(r)">
-                {{ $t('graduation.dept.reassign') }}
-              </NButton>
-            </div>
-          </div>
-        </NSpin>
+        </div>
       </NCard>
 
       <!-- 指定分配弹窗 -->

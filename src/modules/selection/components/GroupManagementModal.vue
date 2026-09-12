@@ -11,7 +11,6 @@ import {
   NSpace,
   NDataTable,
   NPopconfirm,
-  NSpin,
   NTooltip,
   NTag,
   useMessage,
@@ -42,7 +41,6 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const message = useMessage()
 
-const { loading, withLoading } = useLoading()
 const groups = ref<SelectionGroup[]>([])
 const { pagination } = useRemotePagination(loadGroups)
 
@@ -57,16 +55,14 @@ function formatDateTime(s: string | null | undefined): string {
   return s ? s.replace('T', ' ') : ''
 }
 
-function loadGroups() {
-  return withLoading(async () => {
-    try {
-      const res = await fetchAllGroups(pagination.page, pagination.pageSize)
-      groups.value = res.data.records
-      pagination.itemCount = res.data.total
-    } catch (e) {
-      if (!isReportedError(e)) message.error((e as Error).message || t('selection.loadFail'))
-    }
-  })
+async function loadGroups() {
+  try {
+    const res = await fetchAllGroups(pagination.page, pagination.pageSize)
+    groups.value = res.data.records
+    pagination.itemCount = res.data.total
+  } catch (e) {
+    if (!isReportedError(e)) message.error((e as Error).message || t('selection.loadFail'))
+  }
 }
 
 watch(
@@ -359,21 +355,19 @@ async function handleUnbind(campaignId: number) {
         {{ $t('selection.addGroup') }}
       </NButton>
     </div>
-    <NSpin :show="loading">
-      <NDataTable
-        :columns="groupColumns"
-        :data="groups"
-        :row-key="groupRowKey"
-        :single-line="false"
-        :bordered="false"
-        :max-height="400"
-        :scroll-x="1100"
-        remote
-        :pagination="pagination"
-      >
-        <template #empty>{{ $t('selection.groupEmpty') }}</template>
-      </NDataTable>
-    </NSpin>
+    <NDataTable
+      :columns="groupColumns"
+      :data="groups"
+      :row-key="groupRowKey"
+      :single-line="false"
+      :bordered="false"
+      :max-height="400"
+      :scroll-x="1100"
+      remote
+      :pagination="pagination"
+    >
+      <template #empty>{{ $t('selection.groupEmpty') }}</template>
+    </NDataTable>
 
     <NModal
       v-model:show="showGroupForm"
@@ -419,22 +413,20 @@ async function handleUnbind(campaignId: number) {
       "
       class="binding-management-modal"
     >
-      <NSpin :show="bindingLoading">
-        <NEmpty
-          v-if="!bindingLoading && bindableCampaigns.length === 0"
-          :description="$t('selection.empty')"
-        />
-        <NDataTable
-          v-else
-          :columns="bindingColumns"
-          :data="bindableCampaigns"
-          :row-key="campaignRowKey"
-          :single-line="false"
-          :bordered="false"
-          :max-height="420"
-          :scroll-x="700"
-        />
-      </NSpin>
+      <NEmpty
+        v-if="!bindingLoading && bindableCampaigns.length === 0"
+        :description="$t('selection.empty')"
+      />
+      <NDataTable
+        v-else
+        :columns="bindingColumns"
+        :data="bindableCampaigns"
+        :row-key="campaignRowKey"
+        :single-line="false"
+        :bordered="false"
+        :max-height="420"
+        :scroll-x="700"
+      />
     </NModal>
   </NModal>
 </template>

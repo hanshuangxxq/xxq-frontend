@@ -3,7 +3,6 @@ import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
-  NSpin,
   NEmpty,
   NButton,
   NModal,
@@ -289,28 +288,26 @@ const thesisColumns = computed<DataTableColumns<ThesisResponse>>(() => [
             {{ $t('graduation.common.windowOutside') }}
           </span>
         </template>
-        <NSpin :show="loading">
-          <template v-if="!theses.length && campaignId != null && !loading">
-            <template v-if="!gateChecked || !gateOpen">
-              <NEmpty :description="$t('graduation.student.emptyThesis')" />
-              <div class="gate-hint" style="margin-top: 12px">
-                {{ $t('graduation.student.thesisGateHint') }}
-              </div>
-            </template>
-            <NEmpty v-else :description="$t('graduation.student.emptyThesis')" />
+        <template v-if="!theses.length && campaignId != null && !loading">
+          <template v-if="!gateChecked || !gateOpen">
+            <NEmpty :description="$t('graduation.student.emptyThesis')" />
+            <div class="gate-hint" style="margin-top: 12px">
+              {{ $t('graduation.student.thesisGateHint') }}
+            </div>
           </template>
-          <NDataTable
-            v-else
-            :columns="thesisColumns"
-            :data="theses"
-            :row-key="thesisRowKey"
-            :single-line="false"
-            :bordered="false"
-            :scroll-x="1080"
-          >
-            <template #empty><NEmpty :description="$t('graduation.common.empty')" /></template>
-          </NDataTable>
-        </NSpin>
+          <NEmpty v-else :description="$t('graduation.student.emptyThesis')" />
+        </template>
+        <NDataTable
+          v-else
+          :columns="thesisColumns"
+          :data="theses"
+          :row-key="thesisRowKey"
+          :single-line="false"
+          :bordered="false"
+          :scroll-x="1080"
+        >
+          <template #empty><NEmpty :description="$t('graduation.common.empty')" /></template>
+        </NDataTable>
       </NCard>
 
       <!-- 提交/重提弹窗 -->
