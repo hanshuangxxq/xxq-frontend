@@ -8,6 +8,7 @@ export interface College {
   updateTime: string
 }
 
+/** 新建院系请求;collegeCode/collegeNo 均可选 */
 export interface CollegeCreateRequest {
   collegeName: string
   collegeCode?: string

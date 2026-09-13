@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * 院系管理页:院系列表展示与新建/编辑/删除;列表不分页(数据量小),空数据时展示空状态占位。
+ * 新建按钮与操作列仅对教务管理员渲染,其余角色只读浏览。
+ */
 import { ref, computed, h, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -63,6 +67,7 @@ const baseColumns = computed<DataTableColumns<College>>(() => [
   },
 ])
 
+// 仅教务管理员渲染操作列,其余角色只读
 const columns = computed<DataTableColumns<College>>(() => {
   if (!isAcademicAdmin.value) return baseColumns.value
   return [
@@ -134,6 +139,7 @@ function startEdit(row: College) {
 function handleSave() {
   const f = form.value
   if (!f.collegeName.trim()) return message.warning(t('college.nameRequired'))
+  // 可选字段输入空白时转为 undefined 提交,由后端按"非空才更新"忽略,避免空串覆盖已有值
   const body: CollegeCreateRequest = {
     collegeName: f.collegeName.trim(),
     collegeCode: f.collegeCode.trim() || undefined,
