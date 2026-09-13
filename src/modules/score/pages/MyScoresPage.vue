@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * 学生「我的成绩」页：学期切换、成绩明细表、成绩分布图表（条形图/等级饼图），
+ * 并融合学情分析学习画像（GPA、班级排名、分科目趋势）；学生可对成绩发起复核申请。
+ */
 import { ref, computed, h, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -49,6 +53,7 @@ const semesterMap = computed(() => {
   return m
 })
 
+// 学期 id -> 名称映射；id 不在下拉内（当前学期无成绩）时回退拼接展示
 function semesterLabel(id: number): string {
   return semesterMap.value.get(id) ?? `${t('score.mySemester')} ${id}`
 }

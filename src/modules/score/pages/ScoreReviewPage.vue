@@ -1,4 +1,9 @@
 <script setup lang="ts">
+/**
+ * 成绩复核页（学生/教师/教务三角色共用）：
+ * 学生提交复核申请、对教师回复可升级为教务处理；教师回复并可更正总评；
+ * 教务对已升级复核终审（解决或驳回）。状态统计带可点击筛选。
+ */
 import { ref, computed, h, reactive, onMounted, type VNode } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -57,6 +62,7 @@ const reviewPagination = reactive({
   pageSizes: [10, 20, 50],
 })
 
+/** 响应中文状态 -> 请求 code 映射（后端响应带中文描述，过滤/统计按 code 对齐） */
 const STATUS_CODE_MAP: Record<ReviewStatus, ReviewStatusCode> = {
   待教师处理: 'PENDING',
   教师已回复: 'TEACHER_REPLIED',
@@ -146,6 +152,7 @@ function openDetail(row: ReviewView) {
   showDrawer.value = true
 }
 
+/** 详情抽屉打开期间列表已刷新时同步最新数据，避免抽屉展示旧状态 */
 function syncSelected() {
   if (selected.value == null) return
   const fresh = reviews.value.find((r) => r.id === selected.value!.id)
@@ -420,6 +427,7 @@ const rowProps = (row: ReviewView) => ({
 })
 
 onMounted(() => {
+  // 教务默认只看「已升级教务」待办，学生预载成绩选项供申请复核选择
   if (isAcademicAdmin.value) statusFilter.value = 'ESCALATED'
   if (isStudent.value) loadMyScores()
   loadData()

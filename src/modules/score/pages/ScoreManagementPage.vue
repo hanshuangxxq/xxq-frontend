@@ -1,4 +1,9 @@
 <script setup lang="ts">
+/**
+ * 教师成绩录入页：选定期末/期中考试后配置平时占比，按名单行内录入/修改平时分与期末分，
+ * 实时预览总评与等级，支持导出 excel/pdf 与批量保存；锁定行不可改，
+ * 补考/重修成绩在考试模块录入，本页仅处理「正常」成绩。
+ */
 import { ref, computed, h, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -33,6 +38,7 @@ import { computeTotal, levelOf, levelTagType } from '../utils'
 const { t } = useI18n()
 const message = useMessage()
 
+/** 名单行：学生基础信息 + 已录成绩预填值（regular/final 为 null 表示尚未录入） */
 interface RosterRow extends ScoreRosterDto {
   regular: number | null
   final: number | null
@@ -303,6 +309,7 @@ const rosterColumns = computed<DataTableColumns<RosterRow>>(() => [
   },
 ])
 
+/** 切换考试时联动加载占比配置与名单 */
 watch(selectedExamId, (v) => {
   if (v != null) loadConfigAndRoster()
 })

@@ -42,6 +42,7 @@ export interface ScoreView {
 export interface ScoreConfig {
   id: number
   teachInfoId: number
+  /** 平时分占比(%) */
   regularRatio: number
   createUserId: number
   createTime: string
@@ -86,6 +87,7 @@ export interface ScoreStatisticsDto {
   passRate: number
 }
 
+/** 成绩统计查询条件（全部可选；source 不传时按 course_id 过滤，公选课须显式传 SELECTION_CAMPAIGN） */
 export interface ScoreStatisticsQuery {
   courseId?: number
   /** 公选课须传 SELECTION_CAMPAIGN，否则按 course_id 过滤查不到公选课成绩 */
@@ -110,9 +112,13 @@ export interface ReviewView {
   currentTotalScore: number
   reason: string
   status: ReviewStatus
+  /** 教师回复，教师未处理时为 null */
   teacherReply: string | null
+  /** 教务终审回复，未终审时为 null */
   adminReply: string | null
+  /** 升级教务时间，未升级时为 null */
   escalateTime: string | null
+  /** 终审时间，未终审时为 null */
   resolvedTime: string | null
   createTime: string
 }
@@ -126,12 +132,15 @@ export interface ReviewApplyRequest {
 /** 教师回复 */
 export interface ReviewReplyRequest {
   reply: string
+  /** 可选：更正后的总评，不传或传 null 表示维持原分 */
   newTotalScore?: number | null
 }
 
 /** 教务终审 */
 export interface ReviewResolveRequest {
   reply: string
+  /** 可选：更正后的总评，不传或传 null 表示维持原分 */
   newTotalScore?: number | null
+  /** true 解决 / false 驳回 */
   resolved: boolean
 }

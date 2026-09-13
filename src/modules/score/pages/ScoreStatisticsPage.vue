@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * 成绩统计页（院系/教务）：按课程聚合的优良中及格不及格分布、平均分与及格率，
+ * 支持按课程（含公选课，经 courseKey 携带 source）、班级名、学期筛选。
+ */
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -86,6 +90,7 @@ function handleReset() {
   loadData()
 }
 
+/** 行 key：courseId 与 courseName 组合标识（公选课 courseId 无业务含义，组合保证唯一） */
 const statisticsRowKey = (row: ScoreStatisticsDto) => `${row.courseId}:${row.courseName}`
 
 const columns = computed<DataTableColumns<ScoreStatisticsDto>>(() => [
