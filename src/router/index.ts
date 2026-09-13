@@ -4,8 +4,13 @@ import { useAuthStore } from '@/stores/useAuthStore'
 import { rememberVisitedPath } from '@/shared/utils/lastVisitedPage'
 import MainLayout from '@/modules/layout/MainLayout.vue'
 
+/** 免登录白名单:未登录用户仅可访问这些路径,其余一律重定向到 /login */
 const WHITELIST = ['/login']
 
+/**
+ * 路由表:主布局(MainLayout)下的子路由 + 认证模块路由(登录页等)。
+ * 所有页面组件均按需动态导入;meta.titleKey 为标题 i18n 键,meta.roles 声明可访问角色。
+ */
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
@@ -411,6 +416,10 @@ const router = createRouter({
   routes,
 })
 
+/**
+ * 全局前置守卫:未登录跳 /login;已登录访问 /login 时整页回落地页;
+ * meta.roles 角色不匹配时跳 403。
+ */
 router.beforeEach((to) => {
   const authStore = useAuthStore()
 
