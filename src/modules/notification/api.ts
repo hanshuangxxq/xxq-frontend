@@ -7,6 +7,7 @@ import type {
   UnreadCountData,
 } from './types'
 
+/** 站内通知 REST API（实时推送走 ws.ts 的 WebSocket，这里负责列表/已读/删除/发送） */
 export const notificationApi = {
   /** 获取未读数 */
   async getUnreadCount(): Promise<number> {

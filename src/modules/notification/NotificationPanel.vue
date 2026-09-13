@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 站内通知面板（右侧抽屉）：全部/未读/已读三页签筛选，支持单条已读、全部已读与删除；数据与分页由 useNotificationStore 管理 */
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {

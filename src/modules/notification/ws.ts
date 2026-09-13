@@ -2,12 +2,17 @@ import { API_BASE_URL } from '@/config'
 import type { RefreshOutcome } from '@/shared/tokenManager'
 import type { NotificationResponse, WsPushMessage } from './types'
 
+/** 通知 WebSocket 的回调集合，由调用方（store）注入，连接各生命周期事件 */
 export interface NotificationSocketHandlers {
   /** 获取当前 WS 连接 URL（含 token） */
   getUrl: () => string
+  /** 连接建立（用于更新在线状态） */
   onOpen: () => void
+  /** 连接断开（用于更新在线状态） */
   onClose: () => void
+  /** 收到未读数推送（建连时服务端立即下发一次） */
   onCount: (count: number) => void
+  /** 收到新通知推送 */
   onNotification: (data: NotificationResponse) => void
   /** 是否还应重连（通常判断是否仍处于登录态） */
   shouldReconnect: () => boolean
@@ -15,9 +20,9 @@ export interface NotificationSocketHandlers {
   refreshToken: () => Promise<RefreshOutcome>
 }
 
-const HEARTBEAT_INTERVAL = 30_000
-const INITIAL_BACKOFF = 1_000
-const MAX_BACKOFF = 30_000
+const HEARTBEAT_INTERVAL = 30_000 // 心跳间隔，到点发 ping 兼作保活
+const INITIAL_BACKOFF = 1_000 // 断线重连初始退避（ms）
+const MAX_BACKOFF = 30_000 // 退避上限（ms），达到后按上限固定间隔重试
 
 /** 由 API_BASE_URL 推导 WS 基础地址（绝对地址取其 host；相对地址取当前页 origin） */
 function resolveWsBaseUrl(): string {
@@ -52,6 +57,7 @@ export class NotificationSocket {
     this.handlers = handlers
   }
 
+  /** 建立连接（已有连接时幂等跳过）；建连失败或断线走指数退避重连 */
   connect(): void {
     if (this.ws) return
     this.manualClose = false
@@ -88,6 +94,7 @@ export class NotificationSocket {
     }
   }
 
+  /** 主动断开（登出时调用）：置 manualClose 阻止后续自动重连 */
   disconnect(): void {
     this.manualClose = true
     this.stopHeartbeat()
