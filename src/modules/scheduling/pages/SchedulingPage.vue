@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 排课页（教务）：触发求解器自动排课并按 3s 轮询结果，维护授课草稿（新增/删除/按班清空），预览待排输入数据 */
 import { ref, h, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -166,6 +167,7 @@ function draftRowKey(row: DraftItem): string {
   return `${row.courseId}-${row.teacherId}-${row.className}`
 }
 
+// 复合键：课程+班级+星期+时段 唯一定位一条授课安排
 const teachInfoRowKey = (row: TeachInfo) =>
   `${row.courseName}-${row.className}-${row.dayOfWeek}-${row.timeId}`
 const lessonRowKey = (row: ScheduledLesson) => row.id
@@ -581,6 +583,7 @@ function handleSolve() {
 }
 
 async function handleStop() {
+  // 通知后端停止求解，同时中断本地轮询
   if (!scheduleId.value) return
   try {
     await stopSolving(scheduleId.value)
