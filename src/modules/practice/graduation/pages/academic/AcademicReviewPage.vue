@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 教务-学术审核:对院系初审通过的选题做终审,通过即审批完毕,驳回则退回学生修改 */
 import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -71,6 +72,7 @@ function handleReview(value: { approve?: boolean; comment?: string }): Promise<v
     } catch (e) {
       if (!isReportedError(e))
         message.error((e as Error).message || t('graduation.common.operationFail'))
+      // 操作失败也重拉列表,避免前端展示与后端实际状态不一致
       await loadList()
     }
   })

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 院系-学生分配:选题截止后开放指定分配与改派,展示未分配学生清单、本院系教师名下负载,改派需填原因并留痕 */
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -113,6 +114,7 @@ function teacherLabelOf(teacher: Teacher): string {
 }
 
 const fetchTeachersPage = (page: number, pageSize: number) => fetchTeachers(page, pageSize)
+// 教师下拉取值统一用 Teacher.userId(与后端教师身份标识一致)
 const teacherValueOf = (tch: Teacher) => tch.userId
 
 // ===== 指定分配弹窗 =====

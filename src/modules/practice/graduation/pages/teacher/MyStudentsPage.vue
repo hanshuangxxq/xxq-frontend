@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 教师-我的学生:查看名下指导学生及匹配来源、改派留痕;教师自选的学生在选题截止前可放弃 */
 import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {

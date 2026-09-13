@@ -142,6 +142,7 @@ function handleChange(id: number | null): void {
   if (id != null) localStorage.setItem(storageKey.value, String(id))
 }
 
+// 外部(如角色切换)把 campaignId 置为不在列表里的值时,清空已下发的活动上下文,避免页面拿到过期活动
 watch(
   () => props.campaignId,
   () => {

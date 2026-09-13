@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 学生-我的成绩:查看本人指导/评阅/答辩分项与总评;总评仅在合成后展示,未发布时标注「非最终结果」 */
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 学生-我的论文:开题通过后提交论文文件,每次提交生成新版本;形式审查退回或查重不通过可重提,可查看各版本查重记录 */
 import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -107,6 +108,7 @@ const fileList = ref<UploadFileInfo[]>([])
 const { loading: saving, withLoading: withSaving } = useLoading()
 
 function startSubmit(): void {
+  // 重提时带出最新版题目,便于在原文基础上修改
   form.value = { title: latest.value?.title ?? '' }
   fileList.value = []
   showForm.value = true

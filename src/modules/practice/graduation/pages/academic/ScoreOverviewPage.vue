@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 教务-成绩总览:活动内全部学生的分项/总评成绩一览,学号与院系从看板行合并补充,支持按院系过滤与成绩表导出 */
 import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {

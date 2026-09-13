@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 学生-开题报告:选题审批完毕且已匹配指导教师后方可提交(含可选附件),通过前可反复重提,通过后只读 */
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -102,6 +103,7 @@ const fileList = ref<UploadFileInfo[]>([])
 const { loading: saving, withLoading: withSaving } = useLoading()
 
 function startSubmit(): void {
+  // 重提时带出上次题目与正文,便于在原文基础上修改
   form.value = {
     title: report.value?.title ?? '',
     content: report.value?.content ?? '',

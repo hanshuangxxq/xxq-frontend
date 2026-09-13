@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 院系-本院看板:查看本院系学生的选题/匹配/中期进展,数据范围由后端按院系身份过滤,展示由 DashboardContent 承载 */
 import { ref } from 'vue'
 import { NCard } from 'naive-ui'
 import ForbiddenState from '@/shared/components/ForbiddenState.vue'

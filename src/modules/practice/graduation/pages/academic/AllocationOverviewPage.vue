@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 教务-分配总览:各指导教师选定/指派人数与余量一览,可按院系过滤未分配统计,并查看未分配学生清单 */
 import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -63,6 +64,7 @@ function loadData(): Promise<void> {
   return withLoading(async () => {
     if (campaignId.value == null) return
     try {
+      // 未分配接口只返回学生 id,需拉看板行补全姓名/班级/院系等展示字段
       const [oRes, uRes, dRes] = await Promise.all([
         fetchAssignmentOverview(campaignId.value),
         fetchUnassignedStudentIds(campaignId.value, collegeId.value),
@@ -99,6 +101,7 @@ function onCampaignChange(id: number | null): void {
   }
 }
 
+// 院系筛选只作用于未分配统计(unassigned 支持 collegeId),教师总览表始终是全活动口径
 function onCollegeChange(): void {
   if (campaignId.value != null) void loadData()
 }

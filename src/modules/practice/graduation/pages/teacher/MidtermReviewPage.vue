@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 教师-中期评审:评审名下学生的中期检查,给出结论(正常/警告/严重滞后),意见选填,可下载中期附件 */
 import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {

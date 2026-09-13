@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 学生-我的选题:跨活动展示本人全部选题及两级审核流水(不按活动过滤),被驳回后可修改重提(内容不少于 100 字) */
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {

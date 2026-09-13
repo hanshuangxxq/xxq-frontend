@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 教师-学生池:查看本院系学生的选题情况并选定自己的指导学生,达到活动自由选择上限或学生已被匹配后不可再选 */
 import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {

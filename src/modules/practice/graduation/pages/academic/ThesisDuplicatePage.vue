@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 教务-论文查重管理:查看活动内全部论文版本,对最新版登记查重结果(重复率/平台/结论),支持下载论文与按状态打包导出 */
 import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -144,6 +145,7 @@ function handleRegister(): Promise<void> {
     } catch (e) {
       if (!isReportedError(e))
         message.error((e as Error).message || t('graduation.common.operationFail'))
+      // 登记失败也重拉列表,与后端实际状态对齐
       await loadList()
     }
   })

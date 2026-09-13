@@ -54,6 +54,7 @@ const conclusionOptions = [
   },
 ]
 
+// 每次打开弹窗重置表单,避免带出上一次的审核结论与意见
 watch(
   () => props.show,
   (v) => {
@@ -78,6 +79,7 @@ function handleSubmit(): void {
     message.warning(t('graduation.common.rejectReasonRequired'))
     return
   }
+  // 通过时意见选填且空串不下发;驳回时意见必填(已在上面校验)
   emit('submit', {
     approve: approve.value,
     comment: approve.value ? comment.value || undefined : comment.value,

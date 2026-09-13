@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 学生-答辩信息:查看本人在活动内的答辩安排(答辩组、时间地点、评阅人、答辩组教师) */
 import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {

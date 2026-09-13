@@ -61,6 +61,7 @@ export type GraduationScoreStatusCode = 'INCOMPLETE' | 'COMPLETE' | 'PUBLISHED'
 
 // ===== 毕设活动 =====
 
+/** 创建毕设活动请求;opening/midterm/thesis 时间窗留空表示该阶段不启用,三项 weight 为总评合成权重 */
 export interface CampaignCreateRequest {
   name: string
   allowedGradeIds: number[]
@@ -79,6 +80,7 @@ export interface CampaignCreateRequest {
   defenseWeight?: number
 }
 
+/** 更新毕设活动,全字段可选;时间窗传 null 表示停用该阶段 */
 export interface CampaignUpdateRequest {
   name?: string
   allowedGradeIds?: number[]
@@ -97,6 +99,7 @@ export interface CampaignUpdateRequest {
   defenseWeight?: number
 }
 
+/** 毕设活动详情/列表行;status 为中文描述,流转操作传 CampaignStatusCode */
 export interface CampaignResponse {
   id: number
   name: string
@@ -118,6 +121,7 @@ export interface CampaignResponse {
   createTime: string
 }
 
+/** 教务活动分页查询;status 用 code 过滤 */
 export interface CampaignQuery {
   status?: CampaignStatusCode
   page?: number
@@ -126,17 +130,20 @@ export interface CampaignQuery {
 
 // ===== 选题申报 =====
 
+/** 学生选题申报(在活动选题时间窗内提交,先经院系初审再教务终审) */
 export interface ProposalDeclareRequest {
   campaignId: number
   title: string
   content: string
 }
 
+/** 选题审核请求,院系初审/教务终审通用;comment 为审核意见 */
 export interface ProposalReviewRequest {
   approve: boolean
   comment?: string
 }
 
+/** 单条审核记录(一次院系初审或一次教务终审) */
 export interface ProposalReviewView {
   stage: string
   action: string
@@ -146,6 +153,7 @@ export interface ProposalReviewView {
   comment: string | null
 }
 
+/** 选题详情;status 为中文描述,reviews 记录两级审核流水 */
 export interface ProposalResponse {
   id: number
   campaignId: number
@@ -155,6 +163,7 @@ export interface ProposalResponse {
   title: string
   content: string
   status: ProposalStatus
+  /** 驳回原因,仅已驳回时有值 */
   rejectReason: string | null
   submitTime: string
   reviews: ProposalReviewView[]
@@ -162,17 +171,20 @@ export interface ProposalResponse {
 
 // ===== 师生匹配 =====
 
+/** 教师从学生池选定学生,建立指导关系 */
 export interface PickRequest {
   campaignId: number
   studentId: number
 }
 
+/** 院系把学生直接指派给指导教师 */
 export interface AllocationRequest {
   campaignId: number
   studentId: number
   teacherId: number
 }
 
+/** 院系改派指导教师;reason 必填,用于改派留痕 */
 export interface ReassignRequest {
   campaignId: number
   studentId: number
@@ -180,6 +192,7 @@ export interface ReassignRequest {
   reason: string
 }
 
+/** 师生匹配记录;source 区分教师自选/院系指定,prevTeacher* 与 reassign* 记录最近一次改派 */
 export interface AssignmentResponse {
   id: number
   campaignId: number
@@ -190,12 +203,17 @@ export interface AssignmentResponse {
   teacherName: string
   source: AssignmentSource
   assignTime: string
+  /** 改派前原指导教师 id,无改派历史为 null */
   prevTeacherId: number | null
+  /** 改派前原指导教师姓名 */
   prevTeacherName: string | null
+  /** 最近一次改派原因,无改派为 null */
   reassignReason: string | null
+  /** 最近一次改派时间 */
   reassignTime: string | null
 }
 
+/** 教师学生池行;proposalStatus 为 null 表示该生未申报选题,assigned 表示已被匹配 */
 export interface TeacherPickPoolRow {
   studentId: number
   studentNo: string
@@ -204,17 +222,21 @@ export interface TeacherPickPoolRow {
   proposalTitle: string | null
   proposalContent: string | null
   proposalStatus: ProposalStatus | null
+  /** 是否已被匹配(被某位教师选定或院系指派) */
   assigned: boolean
   assignmentSource: AssignmentSource | null
 }
 
+/** 分配总览行(按指导教师聚合);pickedCount 为教师自选数,allocatedCount 为院系指派数 */
 export interface AssignmentOverviewRow {
   teacherId: number
   teacherName: string
   teacherNo: string
   pickedCount: number
   allocatedCount: number
+  /** 指导名额上限(来自活动 supervisorCapacity) */
   capacity: number
+  /** 剩余可分配名额 */
   freeCount: number
 }
 
@@ -223,6 +245,7 @@ export interface AssignmentOverviewRow {
 /** 看板状态筛选 code（含聚合值 NOT_SUBMITTED / PENDING） */
 export type DashboardStatusFilter = 'NOT_SUBMITTED' | 'PENDING' | ProposalStatusCode
 
+/** 看板行(学生粒度聚合各环节进展);proposal 相关字段为 null 表示未提交选题,assignment/teacher 相关字段为 null 表示未匹配教师,midterm 相关字段为 null 表示未提交中期 */
 export interface DashboardRow {
   studentId: number
   studentNo: string
@@ -245,6 +268,7 @@ export interface DashboardRow {
   midtermConclusion: MidtermConclusion | null
 }
 
+/** 活动操作日志;action 为操作描述文本,detail 为业务详情 */
 export interface OperationLogResponse {
   id: number
   campaignId: number
@@ -260,17 +284,20 @@ export interface OperationLogResponse {
 
 // ===== 过程管理 =====
 
+/** 学生提交开题报告;附件走 multipart 表单,此处仅 JSON 字段 */
 export interface OpeningReportSubmitRequest {
   campaignId: number
   title: string
   content: string
 }
 
+/** 教师审核开题报告;approve=false 表示需修改 */
 export interface OpeningReportReviewRequest {
   approve: boolean
   comment?: string
 }
 
+/** 开题报告详情;fileOriginal 为附件原始文件名,review* 为 null 表示未审核 */
 export interface OpeningReportResponse {
   id: number
   campaignId: number
@@ -288,16 +315,19 @@ export interface OpeningReportResponse {
   reviewTime: string | null
 }
 
+/** 学生提交中期检查内容;附件走 multipart 表单 */
 export interface MidtermSubmitRequest {
   campaignId: number
   content: string
 }
 
+/** 教师评审中期检查;conclusion 用 code,对应中文见 MidtermConclusion */
 export interface MidtermReviewRequest {
   conclusion: MidtermConclusionCode
   comment?: string
 }
 
+/** 中期检查详情;conclusion 为 null 表示未评审 */
 export interface MidtermResponse {
   id: number
   campaignId: number
@@ -307,6 +337,7 @@ export interface MidtermResponse {
   content: string
   fileOriginal: string | null
   status: '已提交' | '已评审'
+  /** 评审结论,未评审为 null */
   conclusion: MidtermConclusion | null
   submitTime: string
   reviewTeacherId: number | null
@@ -315,14 +346,17 @@ export interface MidtermResponse {
   reviewTime: string | null
 }
 
+/** 教师登记指导日志;logTime 为指导发生时间,form 用 code */
 export interface GuidanceLogCreateRequest {
   campaignId: number
   studentId: number
   logTime: string
+  /** 指导形式 code,对应中文见 GuidanceForm */
   form: GuidanceFormCode
   summary: string
 }
 
+/** 指导日志;form 为中文描述 */
 export interface GuidanceLogResponse {
   id: number
   campaignId: number
@@ -336,16 +370,19 @@ export interface GuidanceLogResponse {
 
 // ===== 论文与查重 =====
 
+/** 学生提交论文;论文文件走 multipart 表单,此处仅 JSON 字段 */
 export interface ThesisSubmitRequest {
   campaignId: number
   title: string
 }
 
+/** 教师形式审查;approve=false 表示退回修改 */
 export interface ThesisReviewRequest {
   approve: boolean
   comment?: string
 }
 
+/** 论文版本记录;学生每次提交生成一个新版本,isLatest 标记最新,duplicateChecks 嵌套查重记录 */
 export interface ThesisResponse {
   id: number
   campaignId: number
@@ -353,9 +390,13 @@ export interface ThesisResponse {
   studentId: number
   studentName: string
   title: string
+  /** 存储文件名(下载接口使用) */
   fileName: string
+  /** 原始文件名(界面展示用) */
   fileOriginal: string
+  /** 版本号,每次提交递增 */
   version: number
+  /** 是否最新版本:1 最新,0 历史版本 */
   isLatest: number
   status: ThesisStatus
   submitTime: string
@@ -366,6 +407,7 @@ export interface ThesisResponse {
   duplicateChecks: DuplicateCheckResponse[]
 }
 
+/** 教务登记查重结果;duplicateRate 为重复率百分数,checkTime 为查重时间 */
 export interface DuplicateCheckRegisterRequest {
   thesisId: number
   duplicateRate: number
@@ -375,6 +417,7 @@ export interface DuplicateCheckRegisterRequest {
   comment?: string
 }
 
+/** 查重记录;result 为中文描述 */
 export interface DuplicateCheckResponse {
   id: number
   thesisId: number
@@ -388,6 +431,7 @@ export interface DuplicateCheckResponse {
   createTime: string
 }
 
+/** 论文分页查询(预留类型,当前列表接口直接展开传参) */
 export interface ThesisQuery {
   status?: ThesisStatusCode
   page?: number
@@ -396,6 +440,7 @@ export interface ThesisQuery {
 
 // ===== 答辩与成绩 =====
 
+/** 答辩安排请求;reviewerId 为评阅教师,defenseTeacherIds 为答辩组教师 */
 export interface DefenseArrangeRequest {
   campaignId: number
   studentId: number
@@ -406,6 +451,7 @@ export interface DefenseArrangeRequest {
   defenseTeacherIds?: number[]
 }
 
+/** 答辩安排详情;未安排的字段为 null */
 export interface DefenseResponse {
   id: number
   campaignId: number
@@ -421,17 +467,20 @@ export interface DefenseResponse {
   defenseTeacherNames: string[]
 }
 
+/** 单项成绩录入请求;指导/评阅/答辩三个环节共用同一结构 */
 export interface ScoreSubmitRequest {
   campaignId: number
   studentId: number
   score: number
 }
 
+/** 成绩确认请求;后端校验三项分项齐备后合成总评 */
 export interface ScoreConfirmRequest {
   campaignId: number
   studentId: number
 }
 
+/** 成绩;advisor/reviewer/defense 分项为 null 表示未录入,totalScore 为 null 表示未合成,confirm 与 publish 相关字段记录确认/发布留痕 */
 export interface ScoreResponse {
   id: number
   campaignId: number
@@ -453,10 +502,12 @@ export interface ScoreResponse {
   defenseBy: number | null
   defenseName: string | null
   defenseTime: string | null
+  /** 合成总评,未合成为 null */
   totalScore: number | null
   status: GraduationScoreStatus
   confirmBy: number | null
   confirmName: string | null
   confirmTime: string | null
+  /** 成绩发布时间,未发布为 null */
   publishTime: string | null
 }

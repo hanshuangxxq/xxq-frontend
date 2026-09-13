@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 学生-中期检查:开题通过后方可提交中期内容(含可选附件),评审前可重提,评审后只读 */
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -95,6 +96,7 @@ const fileList = ref<UploadFileInfo[]>([])
 const { loading: saving, withLoading: withSaving } = useLoading()
 
 function startSubmit(): void {
+  // 重提时带出上次内容,便于在原文基础上修改
   form.value = { content: midterm.value?.content ?? '' }
   fileList.value = []
   showForm.value = true

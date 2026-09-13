@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 学生-活动报名:展示本人可见的进行中活动,在选题窗口内申报/重提选题,并展示当前指导教师与改派留痕 */
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {

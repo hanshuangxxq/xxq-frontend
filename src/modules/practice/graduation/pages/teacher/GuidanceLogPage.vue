@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 教师-指导日志:为名下学生登记指导记录(时间/形式/内容),按学生筛选查看历史日志 */
 import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {

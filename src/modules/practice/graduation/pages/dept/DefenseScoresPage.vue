@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 院系-答辩成绩:查看活动内学生三项分项成绩,录入答辩分数;分项齐备合成总评后可确认发布,发布后不可再改 */
 import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {

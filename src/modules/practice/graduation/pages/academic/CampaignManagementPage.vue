@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 教务-毕设活动管理:活动的创建/编辑/状态流转(草稿-进行中-已结束),选题开始后关键字段锁定只能顺延,总评三项权重之和须为 100 */
 import { ref, computed, h, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -157,6 +158,7 @@ function emptyForm(): CampaignForm {
     midtermEndTs: null,
     thesisStartTs: null,
     thesisEndTs: null,
+    // 默认权重:指导 30 + 评阅 20 + 答辩 50 = 100,提交前仍会做权重和校验
     advisorWeight: 30,
     reviewerWeight: 20,
     defenseWeight: 50,

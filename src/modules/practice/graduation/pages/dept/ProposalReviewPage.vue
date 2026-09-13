@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 院系-开题审核:对本院系学生提交的选题做初审,通过进入教务终审,驳回退回学生 */
 import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {

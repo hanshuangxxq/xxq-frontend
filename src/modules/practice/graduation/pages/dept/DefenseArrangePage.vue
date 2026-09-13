@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 院系-答辩安排:为活动内学生安排/调整答辩(答辩组、时间地点、评阅人、答辩组教师),同一学生重复提交即为更新 */
 import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -96,6 +97,7 @@ const { loading: saving, withLoading: withSaving } = useLoading()
 const fetchTeachersPage = (page: number, pageSize: number) => fetchTeachers(page, pageSize)
 const reviewerLabelOf = (tch: Teacher) => `${tch.name}（${tch.department || '-'}）`
 const panelLabelOf = (tch: Teacher) => tch.name
+// 教师下拉取值统一用 Teacher.userId(与后端教师身份标识一致)
 const teacherValueOf = (tch: Teacher) => tch.userId
 
 function onReviewerChange(v: string | number | null | Array<string | number>): void {

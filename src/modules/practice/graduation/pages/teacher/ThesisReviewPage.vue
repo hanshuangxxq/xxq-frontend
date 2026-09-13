@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 教师-论文形式审查:对名下学生最新版论文做形式审查(通过/退回),可展开查看同一学生的历史版本与查重记录 */
 import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {

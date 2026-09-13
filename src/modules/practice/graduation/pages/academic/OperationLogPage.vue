@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 教务-操作日志:查看活动内关键业务操作留痕(操作人/动作/目标对象/详情),用于追溯与审计 */
 import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { NCard, NEmpty, NDataTable, NTag, useMessage, type DataTableColumns } from 'naive-ui'

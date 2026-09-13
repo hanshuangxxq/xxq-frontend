@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 教师-开题审核:审核名下学生的开题报告(通过/需修改),驳回时须填意见,可下载开题附件 */
 import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {

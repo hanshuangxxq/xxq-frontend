@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 教师-成绩录入:分「指导评分」「评阅评分」两个页签录入分数;学生论文须查重通过才开放录入,成绩已发布后为只读 */
 import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
