@@ -1,4 +1,7 @@
 <script setup lang="ts">
+/**
+ * 我的考试（学生）。按正考/补考/重修三个 Tab 查看自己的考试安排，整体按考试日期升序。
+ */
 import { ref, computed, h, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -25,6 +28,7 @@ const data = ref<ExamView[]>([])
 
 const activeTab = ref('normal')
 
+// 接口返回全部考试类型，前端按类型拆到三个 Tab
 const normalExams = computed(() =>
   data.value.filter((e) => e.examType === '期末考试' || e.examType === '期中考试'),
 )

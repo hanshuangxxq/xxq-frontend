@@ -83,6 +83,7 @@ export interface MakeupCandidateDto {
   studentUserId: number
   studentName: string
   studentNo: string
+  /** 原成绩记录 id（score 表主键） */
   scoreId: number
   totalScore: number
   scoreLevel: string
@@ -102,6 +103,7 @@ export interface MakeupExamCreateRequest {
   courseId: number
   examType: 'MAKEUP' | 'RETAKE'
   semesterId: number
+  /** 来源学期（可选）：限定从哪个学期的不及格名单取考生 */
   sourceSemesterId?: number
   examDate: string
   startTime: string

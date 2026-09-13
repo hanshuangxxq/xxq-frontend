@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * 正考管理（教务）。期末/期中考试的排考：按班级查询可排考课程（合班自动命中）、建考/改考/删考与多条件筛选。
+ * 补考/重修不在此页（见 MakeupExamPage）；因服务端无法表达「排除补考」的过滤，列表分块拉全量后客户端过滤分页。
+ */
 import { ref, computed, h, reactive, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -102,6 +106,7 @@ function statusTagType(status: string): 'success' | 'info' | 'warning' | 'error'
   }
 }
 
+// 响应状态为中文描述，编辑回显与提交需转回 code
 function statusToCode(status: string): ExamStatusCode | null {
   switch (status) {
     case '已安排':

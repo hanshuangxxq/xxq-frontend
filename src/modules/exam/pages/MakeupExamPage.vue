@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * 补考/重修管理（教务）。查询课程不及格候选名单（含分数段分布图表）、创建补考/重修考试、录入补考/重修成绩。
+ * 候选名单即建考的考生来源；成绩录入只提交填写了分数的学生行。
+ */
 import { ref, computed, h, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -68,6 +72,7 @@ const makeupTypeOptions = computed(() => [
   { label: t('exam.typeRetake'), value: 'RETAKE' as const },
 ])
 
+// 须先选定课程（公选课按选课活动来源过滤），再查该课程的不及格名单
 async function loadCandidates() {
   if (candCourseKey.value == null) {
     message.warning(t('exam.mkCandidateCoursePlaceholder'))
@@ -106,6 +111,7 @@ const candidateColumns = computed<DataTableColumns<MakeupCandidateDto>>(() => [
   { title: t('exam.mkScoreLevel'), key: 'scoreLevel', width: 90, align: 'center' },
 ])
 
+// 不及格分数段分布（60 分及格，最高不及格分 59）：<50 / 50-54 / 55-59
 const failDistOption = computed<EChartsOption>(() => {
   let low = 0
   let mid = 0
