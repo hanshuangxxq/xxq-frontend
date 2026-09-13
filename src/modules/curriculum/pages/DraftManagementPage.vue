@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * 排课草稿管理（院系）。院系按「班级 + 多条课程/教师/周次组合」批量提交排课草稿，
+ * 并查看草稿、按班级或按条清理；草稿是正式排课（teach-info）前的暂存，提交后由后端转正式授课安排。
+ */
 import { ref, onMounted, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -40,6 +44,7 @@ import type { College } from '@/modules/college/types'
 import type { Course } from '@/modules/course/types'
 import type { Teacher } from '@/modules/curriculum/types'
 
+// 草稿 id 可能为 null，用 课程+教师+班级 组合作行键
 function draftRowKey(row: DraftItem): string {
   return `${row.courseId}-${row.teacherId}-${row.className}`
 }
@@ -221,6 +226,7 @@ function onEntryEndWeekChange(entry: DraftEntry, v: string) {
   entry.endWeek = v ? parseInt(v, 10) : null
 }
 
+// 多选班级合并为一个逗号分隔的 className；仅提交同时选定课程与教师的完整条目
 async function handleSubmit() {
   if (selectedClasses.value.length === 0) {
     message.warning(t('teach-drafts.classNamePlaceholder'))

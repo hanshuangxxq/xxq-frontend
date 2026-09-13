@@ -76,6 +76,7 @@ export interface PublicCourseDto extends TeachInfoBase {
  */
 export type TeachInfo = RequiredCourseDto | ElectiveCourseDto | PracticeCourseDto | PublicCourseDto
 
+/** 学生班级课程卡片视图（无授课安排 id，仅展示用） */
 export interface ClassCourse {
   courseName: string
   teacherName: string
@@ -87,33 +88,39 @@ export interface ClassCourse {
   classroom: string
 }
 
+/** 班级课程响应：携带当周周一日期（推算表头日期用）；旧版接口返回纯数组，页面已做兼容 */
 export interface ClassCourseResponse {
   mondayDate: string
   courses: ClassCourse[]
 }
 
+/** 授课安排列表响应：当周周一日期 + 课程列表 */
 export interface TeachInfoListResponse {
   mondayDate: string
   courses: TeachInfo[]
 }
 
+/** 周课表视图：按星期几分桶的课程列表 */
 export interface WeekSchedule {
   weekNumber: number
   scheduleByDay: Record<string, TeachInfo[]>
 }
 
+/** 节次（上课时间段，如 08:00-08:45），课表行头数据源 */
 export interface TimeSlot {
   id: number
   startPeriod: string
   endPeriod: string
 }
 
+/** 授课安排查询参数（全部可选，缺省查全部） */
 export interface TeachInfoQuery {
   teacherId?: number
   courseId?: number
   week?: number
 }
 
+/** 创建/更新授课安排请求（排课要素 timeId/localId/dayOfWeek/周次均可选，由排课流程逐步补齐） */
 export interface TeachInfoForm {
   courseId: number
   teacherId: number
@@ -126,11 +133,13 @@ export interface TeachInfoForm {
   semesterId?: number
 }
 
+/** 创建/更新节次请求 */
 export interface TimeForm {
   startPeriod: string
   endPeriod: string
 }
 
+/** 排课草稿条目（院系暂存的授课安排，提交后由后端转正式 teach-info） */
 export interface TeachInfoDraft {
   courseId: number
   teacherId: number
@@ -154,12 +163,14 @@ export interface Teacher {
   collegeId: number | null
 }
 
+/** 草稿按班级统计：班级列表、各班草稿条数、总条数 */
 export interface DraftClassSummary {
   classes: string[]
   countByClass: Record<string, number>
   totalDrafts: number
 }
 
+/** 草稿条目视图；id 可能为 null（未落库），timeId/localId/dayOfWeek 为 null 表示尚未排定时间与地点 */
 export interface DraftItem {
   id: number | null
   courseId: number
@@ -176,6 +187,7 @@ export interface DraftItem {
   semesterId: number | null
 }
 
+/** 学期视图；status：CURRENT 当前学期 / HISTORICAL 历史学期 / FUTURE 未来学期 */
 export interface Semester {
   id: number
   name: string
@@ -186,6 +198,7 @@ export interface Semester {
   status: 'CURRENT' | 'HISTORICAL' | 'FUTURE'
 }
 
+/** 学期创建/编辑表单（编辑场景留空的字段由页面沿用原值后再提交） */
 export interface SemesterForm {
   name: string
   startWeek?: number

@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * 学期管理（教务）。维护学期的周次范围、起止日期与状态（CURRENT/HISTORICAL/FUTURE）；
+ * 当前学期驱动课表默认周次与排课归属，其他角色只读。
+ */
 import { ref, computed, h, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -158,6 +162,7 @@ function startCreate() {
   showForm.value = true
 }
 
+// 编辑采用「留空即不改」：原值放 placeholder 提示，提交时由 originalForm 补全（见 handleSave）
 function startEdit(row: Semester) {
   formMode.value = 'edit'
   editingId.value = row.id
@@ -186,6 +191,7 @@ function handleSave() {
       if (formMode.value === 'create') {
         await createSemester(form.value)
       } else {
+        // 留空字段沿用原值，仅提交显式修改过的字段
         const payload: SemesterForm = {
           name: form.value.name || originalForm.value.name,
           startWeek:

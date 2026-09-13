@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * 课程表页面。学生：班级课程卡片、周课表网格、个人学习进度（学情分析）；
+ * 教师：任课课程列表与所授课程的考试安排。按角色渲染不同 Tab 组。
+ */
 import { ref, computed, h, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -42,6 +46,7 @@ const { t } = useI18n()
 const message = useMessage()
 const { isTeacher, isStudent } = useRoleCheck()
 
+// 默认 Tab 按角色区分：学生进班级课程，教师进我的课程
 const activeTab = ref(isStudent.value ? 'courses' : 'myCourses')
 
 const timeMap = ref<Map<number, TimeSlot>>(new Map())
@@ -479,6 +484,7 @@ function loadData() {
   })
 }
 
+// 切换到课表 Tab 时才懒加载节次与课表数据（首屏不请求）
 watch(activeTab, (tab) => {
   if (tab === 'schedule') {
     if (timeMap.value.size === 0) loadTimes()
