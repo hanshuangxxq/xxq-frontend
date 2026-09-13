@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * 专业管理（教务）。维护专业名称及所属院系（院系下拉来自 college 模块）；
+ * 仅教务可增删改，其他角色只读。
+ */
 import { ref, computed, h, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -93,6 +97,7 @@ function loadData() {
   return withLoading(async () => {
     try {
       const res = await fetchMajors()
+      // 按专业名自然排序（zh-CN + numeric）
       data.value = res.data.sort((a, b) =>
         a.majorName.localeCompare(b.majorName, 'zh-CN', { numeric: true }),
       )
