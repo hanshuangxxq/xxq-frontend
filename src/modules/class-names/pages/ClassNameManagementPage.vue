@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * 班级管理页:行政班的分页列表查询与新建/编辑/删除,院系下拉用于展示和选择所属院系。
+ * 新建按钮与操作列仅对教务管理员渲染,其余角色只读浏览。
+ */
 import { ref, computed, h, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -37,11 +41,13 @@ const collegeOptions = computed(() =>
   colleges.value.map((c) => ({ label: c.collegeName, value: c.id })),
 )
 
+// 院系 id -> 名称;下拉数据未加载或找不到对应院系时回退 '-'
 function collegeNameOf(id: number | null): string {
   if (id == null) return '-'
   return colleges.value.find((c) => c.id === id)?.collegeName ?? '-'
 }
 
+// 院系下拉选项来源;加载失败时置空,列表院系列回退显示 '-'
 async function loadColleges() {
   try {
     const res = await fetchColleges()
@@ -64,6 +70,7 @@ const baseColumns = computed<DataTableColumns<ClassName>>(() => [
   },
 ])
 
+// 无管理权限时不渲染操作列,仅保留基础列只读浏览
 const columns = computed<DataTableColumns<ClassName>>(() => {
   if (!canManageClassNames.value) return baseColumns.value
   return [
@@ -122,6 +129,7 @@ function startEdit(row: ClassName) {
   showForm.value = true
 }
 
+// 新建/编辑共用弹窗,按 formMode 分发到创建或更新接口
 function handleSave() {
   return withSaving(async () => {
     try {
