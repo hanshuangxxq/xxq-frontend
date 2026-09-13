@@ -43,6 +43,7 @@ const menuBase = {
   itemIconColorActive: 'var(--app-primary)',
 }
 
+/** 浅色主题覆盖(项目默认主题) */
 export const lightThemeOverrides: GlobalThemeOverrides = {
   common: { ...commonBase },
   Button: { ...buttonBase },
@@ -56,6 +57,7 @@ export const lightThemeOverrides: GlobalThemeOverrides = {
   Menu: { ...menuBase },
 }
 
+/** 深色主题覆盖:主色调亮一档,表格/卡片底色与边框适配深色背景 */
 export const darkThemeOverrides: GlobalThemeOverrides = {
   common: {
     ...commonBase,

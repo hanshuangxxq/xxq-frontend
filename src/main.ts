@@ -23,6 +23,10 @@ function dismissBootSplash() {
   window.setTimeout(() => splash.remove(), 400)
 }
 
+/**
+ * 应用启动流程:版本校验 -> 创建应用 -> 预拉偏好 -> 挂载 -> 淡出 splash。
+ * 任何一步失败都会向上抛出,启动 splash 停留在屏幕上提示加载中。
+ */
 async function bootstrap() {
   // 启动时先校验版本:浏览器重新打开/手动刷新若命中了缓存的旧页面,
   // 在此检测到新版本并自动强制刷新;返回 true 表示即将刷新,不再继续启动旧版应用

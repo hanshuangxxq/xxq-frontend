@@ -52,8 +52,10 @@ import enPractice from '@/locales/en/practice.json'
 import enGraduation from '@/locales/en/graduation.json'
 import enNotFound from '@/locales/en/not-found.json'
 
+/** 支持的语言:简体中文(默认)与英文 */
 export type SupportedLocale = 'zh-CN' | 'en'
 
+/** 支持的语言列表(供设置界面渲染选项) */
 export const SUPPORTED_LOCALES: SupportedLocale[] = ['zh-CN', 'en']
 
 /** 探测系统语言:浏览器语言为中文则 zh-CN,否则 en(当前仅支持这两种语言) */
@@ -125,6 +127,7 @@ const i18n = createI18n({
   },
 })
 
+/** 供 main.ts 安装到 Vue 应用;直接导出默认实例供 api 层等非组件环境使用 t() */
 export function setupI18n() {
   return i18n
 }

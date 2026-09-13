@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * 应用根组件:向 Naive UI 注入语言/主题配置,并挂载全局单例组件
+ * (路由出口、主题冲突弹窗、全局加载指示)。
+ */
 import { computed } from 'vue'
 import { NConfigProvider, NMessageProvider, darkTheme } from 'naive-ui'
 import { useLocaleStore } from '@/stores/useLocaleStore'
