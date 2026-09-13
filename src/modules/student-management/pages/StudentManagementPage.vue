@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * 学生管理页（教务）：学生列表服务端分页 + 姓名/年级/班级/专业/未分配多条件筛选，
+ * 编辑弹窗维护学号/班级/专业/年级/入学年份，留空的字段保留原值不修改。
+ */
 import { ref, computed, h, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -97,6 +101,7 @@ async function loadData() {
   }
 }
 
+// 查询/重置前先 reset() 把分页归回第一页，避免带着旧页码查新条件
 function handleQuery() {
   reset()
   loadData()
@@ -135,6 +140,7 @@ function onClassNameChange(v: string | number | null | Array<string | number>) {
   form.value.className = (v as string) ?? ''
 }
 
+/** 打开编辑弹窗：原值同时存为 placeholder 与回填基准，表单本身从空值开始 */
 function startEdit(row: Student) {
   editingStudentId.value = row.studentId
   editingStudentName.value = row.name
@@ -152,6 +158,7 @@ function startEdit(row: Student) {
 function handleSave() {
   return withSaving(async () => {
     try {
+      // 留空字段回退原值，保证提交体完整、未修改项不被清空
       const body: StudentUpdateForm = {
         studentNo: form.value.studentNo || originalForm.value.studentNo,
         className: form.value.className || originalForm.value.className,

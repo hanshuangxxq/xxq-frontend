@@ -2,6 +2,7 @@ import { api } from '@/shared/api'
 import type { PageResult, Result } from '@/shared/types'
 import type { Student, StudentQuery, StudentUpdateForm, Major } from './types'
 
+/** 分页查询学生列表，支持年级/班级/专业/姓名/未分配过滤 GET /students */
 export function fetchStudents(query?: StudentQuery): Promise<Result<PageResult<Student>>> {
   const params = new URLSearchParams()
   if (query?.gradeId != null) params.set('gradeId', String(query.gradeId))
@@ -15,6 +16,7 @@ export function fetchStudents(query?: StudentQuery): Promise<Result<PageResult<S
   return api.get(`/students${qs ? `?${qs}` : ''}`)
 }
 
+/** 更新学生档案（学号/班级/专业/年级/入学年份） PUT /students/{studentId} */
 export function updateStudent(
   studentId: number,
   body: StudentUpdateForm,
@@ -22,6 +24,7 @@ export function updateStudent(
   return api.put(`/students/${studentId}`, body)
 }
 
+/** 查询专业列表（编辑弹窗专业下拉用） GET /majors */
 export function fetchMajors(): Promise<Result<Major[]>> {
   return api.get('/majors')
 }
