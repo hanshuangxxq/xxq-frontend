@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * 主布局侧边栏：按当前用户角色渲染菜单（顶部独立项 + 可折叠分组，手风琴展开），
+ * 底部为头像与用户下拉（通知/设置/退出登录）；折叠状态读写均经偏好同步到后端。
+ */
 import { computed, h, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -111,6 +115,7 @@ function renderNotificationLabel() {
   )
 }
 
+/** 头像下拉菜单：通知（带未读角标）/ 设置 / 退出登录 */
 const userMenuOptions = computed(() => [
   { label: renderNotificationLabel, key: 'notification', icon: renderSvgIcon(informationSvg) },
   { label: t('layout.settings'), key: 'settings', icon: renderSvgIcon(settingSvg) },

@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * 主布局：侧边栏 + 内容区（面包屑、路由出口带淡入滑出过渡、通知面板）。
+ * 挂载时连接通知通道并加载个性化偏好；卸载时断开通知、复位偏好状态。
+ */
 import { computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'

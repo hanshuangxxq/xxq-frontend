@@ -27,6 +27,7 @@ export interface MenuGroup {
   children: MenuLeaf[]
 }
 
+/** 全部角色：顶部个人中心等所有角色通用的入口 */
 const ALL_ROLES: UserType[] = ['student', 'teacher', 'department', 'academic_admin']
 
 /** 顶部独立项 */

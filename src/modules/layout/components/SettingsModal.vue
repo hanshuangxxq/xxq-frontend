@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * 设置弹窗：语言切换、修改密码、外观主题（明/暗/跟随系统）。
+ * 语言与主题的读写都经 preferenceStore 落库并同步到后端 /api/preferences/me。
+ */
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
