@@ -13,6 +13,12 @@ import {
 } from '@/shared/tokenManager'
 import { ApiNetworkError, HttpError } from '@/shared/api'
 
+/**
+ * 认证 store:当前用户会话的唯一权威来源(角色、资料、登录态)。
+ * - 初始化时从 localStorage 恢复上次会话(token 本身由 @/shared/tokenManager 管理)
+ * - 通过 setPerformRefresh 向 tokenManager 注入刷新实现,api 层 401 时自动换新 token
+ * - 登出分两步:logout() 通知后端,clearSession() 在跳转登录页后清空本地会话
+ */
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<UserSession | null>(null)
 
@@ -26,6 +32,10 @@ export const useAuthStore = defineStore('auth', () => {
   /** 登出流程进行中:路由守卫据此允许已登录用户进入 /login,以便先跳转再清理会话 */
   const isLoggingOut = ref(false)
 
+  /**
+   * 执行 token 刷新(注入 tokenManager 的实现,不对外使用)。
+   * 网络/服务器错误保留会话(后端可能在重启);仅认证失败才清空会话。
+   */
   async function doRefresh(): Promise<RefreshOutcome> {
     const rt = refreshToken.value
     if (!rt) return 'auth_failed'
@@ -59,6 +69,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   setPerformRefresh(doRefresh)
 
+  /** 登录:成功后写入会话、token 并持久化用户资料 */
   async function login(params: LoginParams) {
     const session = await authApi.login(params)
     user.value = session
@@ -87,6 +98,7 @@ export const useAuthStore = defineStore('auth', () => {
     isLoggingOut.value = false
   }
 
+  /** 用户资料变更后(如改头像/改名)重新持久化到 localStorage */
   function persistUser() {
     if (user.value) saveUser(user.value)
   }

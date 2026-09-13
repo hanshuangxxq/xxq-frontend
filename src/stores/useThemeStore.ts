@@ -1,8 +1,10 @@
 import { computed, ref, watch } from 'vue'
 import { defineStore } from 'pinia'
 
+/** 主题模式:浅色 / 深色 / 跟随系统 */
 export type ThemeMode = 'light' | 'dark' | 'system'
 
+/** 可选主题模式列表(供设置界面渲染选项) */
 export const THEME_MODES: readonly ThemeMode[] = ['light', 'dark', 'system']
 
 const THEME_STORAGE_KEY = 'xxq-theme'
@@ -19,6 +21,7 @@ export function readStoredTheme(): ThemeMode | null {
   }
 }
 
+/** 持久化主题模式到本机;失败静默(隐私模式等) */
 function storeTheme(mode: ThemeMode) {
   try {
     localStorage.setItem(THEME_STORAGE_KEY, mode)
@@ -45,6 +48,7 @@ export const useThemeStore = defineStore('theme', () => {
     mode.value === 'system' ? systemDark.value : mode.value === 'dark',
   )
 
+  /** 切换主题模式并持久化到本机(远端同步由 usePreferenceStore.setTheme 负责) */
   function setMode(next: ThemeMode) {
     mode.value = next
     storeTheme(next)

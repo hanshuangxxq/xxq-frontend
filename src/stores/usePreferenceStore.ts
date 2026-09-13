@@ -87,16 +87,19 @@ export const usePreferenceStore = defineStore('preference', () => {
     }
   }
 
+  /** 设置侧边栏折叠状态并同步远端 */
   function setSidebarCollapsed(value: boolean) {
     sidebarCollapsed.value = value
     save({ sidebarCollapsed: value })
   }
 
+  /** 设置主题模式(本机立即生效 + 同步远端) */
   function setTheme(mode: ThemeMode) {
     themeStore.setMode(mode)
     save({ theme: mode })
   }
 
+  /** 设置界面语言(立即生效 + 同步远端) */
   function setLang(locale: SupportedLocale) {
     localeStore.setLocale(locale)
     save({ lang: locale })
