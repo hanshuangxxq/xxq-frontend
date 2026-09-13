@@ -2,6 +2,7 @@ import { api } from '@/shared/api'
 import type { PageResult, Result } from '@/shared/types'
 import type { Course, CourseForm, CourseSource } from './types'
 
+/** 分页查询课程列表 GET /courses,返回 PageResult;常规课与公选课同表混排,公选课以 source 标识 */
 export function fetchCourses(
   page?: number,
   pageSize?: number,
@@ -22,10 +23,12 @@ export function fetchCourse(id: number, source?: CourseSource): Promise<Result<C
   return api.get(`/courses/${id}${qs}`)
 }
 
+/** 创建常规课 POST /courses(公选课由选课活动模块创建,不走此接口) */
 export function createCourse(body: CourseForm): Promise<Result<Course>> {
   return api.post('/courses', body)
 }
 
+/** 更新常规课 PUT /courses/{id}(公选课不可走此接口,须到选课活动下维护) */
 export function updateCourse(id: number, body: CourseForm): Promise<Result<Course>> {
   return api.put(`/courses/${id}`, body)
 }

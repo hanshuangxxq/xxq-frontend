@@ -1,4 +1,9 @@
 <script setup lang="ts">
+/**
+ * 课程管理页:课程分页列表(常规课与公选课同表混排)与新建/编辑/删除。
+ * 公选课的"编辑"跳转选课活动详情页(其 CRUD 走选课模块接口),删除必须携带 source;
+ * 新建按钮与操作列仅对教务管理员渲染。
+ */
 import { ref, computed, h, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -101,6 +106,7 @@ const emptyForm = (): CourseForm => ({
 
 const form = ref<CourseForm>(emptyForm())
 
+// 学分/课时允许留空:清空输入时存 null,由后端校验;NInput 的值为字符串,需转 number
 function onCreditChange(v: string) {
   form.value.credit = v ? parseInt(v, 10) : null
 }
@@ -129,6 +135,7 @@ function startEdit(row: Course) {
   showForm.value = true
 }
 
+// 保存常规课;公选课不进入本弹窗(编辑已跳转选课活动页)
 function handleSave() {
   return withSaving(async () => {
     try {
