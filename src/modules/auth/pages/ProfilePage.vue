@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * 个人中心页:展示当前登录用户的完整资料,可编辑邮箱/电话/性别/个人简介并上传头像;
+ * 按用户类型(学生/教师/院系管理员/教务管理员)展示各自的扩展字段。
+ */
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {

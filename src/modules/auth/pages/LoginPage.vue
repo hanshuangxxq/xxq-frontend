@@ -1,4 +1,9 @@
 <script setup lang="ts">
+/**
+ * 登录页:所有角色共用的账号密码登录入口。
+ * 挂载时即启动客户端私网 IP 探测(供后端登录限流),提交登录时直接带上;
+ * 登录成功整页跳回落地页,连续失败由 useLoginGuard 阶梯锁定。
+ */
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { NForm, NFormItem, NInput, NButton, NCard, useMessage } from 'naive-ui'
