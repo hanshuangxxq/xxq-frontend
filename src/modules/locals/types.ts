@@ -22,6 +22,7 @@ export const LOCAL_TYPE_REQUIRES_MANAGER: ReadonlySet<LocalTypeCode> = new Set([
   'COMPUTER_ROOM',
 ])
 
+/** 教室视图（响应中 type 固定为中文描述） */
 export interface Local {
   id: number
   building: string
@@ -35,6 +36,7 @@ export interface Local {
   managerName: string | null
 }
 
+/** 教室创建/编辑表单 */
 export interface LocalForm {
   building: string
   classRoom: string
@@ -45,6 +47,7 @@ export interface LocalForm {
   managerId: number | null
 }
 
+/** 教室列表查询参数 */
 export interface LocalQuery {
   /** 按类型筛选，推荐传 name */
   type?: LocalTypeCode

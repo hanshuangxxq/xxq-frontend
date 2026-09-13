@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * 教室管理（教务）。维护教学楼/教室、容量、类型（普通教室/实验室/机房/报告厅）与管理者；
+ * 实验室/机房必须指定管理者，列表服务端分页并支持按类型筛选，其他角色只读。
+ */
 import { ref, computed, h, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -101,6 +105,7 @@ async function loadData() {
   }
 }
 
+// 切换类型筛选后重置分页再查询
 function handleTypeChange() {
   reset()
   loadData()
