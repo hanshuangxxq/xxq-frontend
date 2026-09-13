@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 时段限制管理页：教务维护禁排/预留时段（预留需填课程 id），其他角色只读查看 */
 import { ref, computed, h, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -160,6 +161,7 @@ const emptyForm = (): TimeRestrictionForm => ({
 
 const form = ref<TimeRestrictionForm>(emptyForm())
 
+// 课程 id 输入为纯文本，空串表示清空（null）
 function onCourseIdChange(v: string) {
   form.value.courseId = v ? parseInt(v, 10) : null
 }
@@ -188,6 +190,7 @@ function handleSave() {
   return withSaving(async () => {
     try {
       const body = { ...form.value }
+      // 禁排不针对具体课程，清掉 courseId 避免残留无意义关联
       if (body.restrictionType === 'BLOCKED') {
         body.courseId = null
       }
