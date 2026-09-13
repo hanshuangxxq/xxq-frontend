@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * 批量导入页(仅教务管理员):以可编辑表格逐行录入学生/教师账号(用户名/密码必填),
+ * 一次性提交批量创建;提交成功后下方展示逐条导入结果与失败原因。
+ */
 import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -44,6 +48,7 @@ interface RowData {
   department: string
 }
 
+// 行主键自增;用独立 key 而非数组下标,删除中间行后剩余行的 key 保持稳定
 let nextKey = 0
 
 function createRow(): RowData {
@@ -61,6 +66,7 @@ function createRow(): RowData {
 
 const rows = ref<RowData[]>([createRow()])
 const { loading: submitting, withLoading: withSubmitting } = useLoading()
+// 最近一次导入的汇总结果(总数/成功数/失败数/逐条明细),非空时展示结果卡片
 const importResult = ref<{
   total: number
   successCount: number
@@ -72,11 +78,13 @@ function addRow() {
   rows.value = [...rows.value, createRow()]
 }
 
+// 至少保留一行,避免清空后无法提交
 function removeRow(key: number) {
   if (rows.value.length <= 1) return
   rows.value = rows.value.filter((r) => r.key !== key)
 }
 
+// 提交前的本地校验:用户名/密码必填,其余可选字段留空则不提交
 function validateRows(): string | null {
   for (let i = 0; i < rows.value.length; i++) {
     const row = rows.value[i]!
@@ -90,6 +98,7 @@ function validateRows(): string | null {
   return null
 }
 
+// 逐行 trim 后组装请求体:可选字段为空则整字段省略,班级仅学生类型携带,性别"未知"不传
 function handleSubmit() {
   const validationError = validateRows()
   if (validationError) {
