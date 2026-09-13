@@ -47,83 +47,101 @@ export type SocialPracticeStatusCode = 'DRAFT' | 'OPEN' | 'CLOSED'
 
 // ===== 实习与培训 =====
 
+/** 创建实习项目请求 */
 export interface InternshipCreateRequest {
+  /** 所属学期,缺省表示不关联 */
   semesterId?: number | null
   title: string
   company?: string
   description?: string
+  /** 负责教师 user.id,可选 */
   supervisorId?: number | null
   startTime?: string | null
   endTime?: string | null
   capacity: number
 }
 
+/** 更新实习项目请求,字段均可选 */
 export interface InternshipUpdateRequest {
   title?: string
   company?: string
   description?: string
+  /** 负责教师 user.id,可选 */
   supervisorId?: number | null
   startTime?: string | null
   endTime?: string | null
   capacity?: number
 }
 
+/** 学生报名实习请求 */
 export interface InternshipApplyRequest {
   internshipId: number
   applyReason?: string
 }
 
+/** 报名审核请求(approved=true 通过,false 驳回) */
 export interface InternshipReviewRequest {
   approved: boolean
   reviewComment?: string
 }
 
+/** 提交实习报告请求(附件单独作为文件上传) */
 export interface InternshipReportSubmitRequest {
   internshipId: number
   title: string
   summary?: string
 }
 
+/** 实习报告评审请求(分数+评语,均可选) */
 export interface InternshipReportReviewRequest {
   score?: number
   feedback?: string
 }
 
+/** 创建培训课程请求 */
 export interface TrainingCreateRequest {
+  /** 所属学期,缺省表示不关联 */
   semesterId?: number | null
   title: string
   description?: string
+  /** 授课教师 user.id,可选 */
   teacherId?: number | null
   startTime?: string | null
   endTime?: string | null
   capacity: number
 }
 
+/** 更新培训课程请求,字段均可选 */
 export interface TrainingUpdateRequest {
   title?: string
   description?: string
+  /** 授课教师 user.id,可选 */
   teacherId?: number | null
   startTime?: string | null
   endTime?: string | null
   capacity?: number
 }
 
+/** 实习项目详情 */
 export interface InternshipResponse {
   id: number
   semesterId: number
   title: string
   company: string | null
   description: string | null
+  /** 负责教师 user.id */
   supervisorId: number
   supervisorName: string
   startTime: string | null
   endTime: string | null
   capacity: number
+  /** 已选人数:仅统计审核通过的报名,待审核不占容量 */
   selectedCount: number
   status: InternshipStatus
   createTime: string
 }
 
+/** 实习报名记录 */
 export interface InternshipApplicationResponse {
   id: number
   internshipId: number
@@ -133,10 +151,12 @@ export interface InternshipApplicationResponse {
   status: AuditStatus
   applyReason: string | null
   applyTime: string
+  /** 审核/评审时间,待审核为 null */
   reviewTime: string | null
   reviewComment: string | null
 }
 
+/** 实习报告(含评审结果) */
 export interface InternshipReportResponse {
   id: number
   internshipId: number
@@ -145,29 +165,35 @@ export interface InternshipReportResponse {
   studentName: string
   title: string
   summary: string | null
+  /** 附件原始文件名,下载时展示 */
   fileOriginal: string | null
   submitTime: string
   score: number | null
   feedback: string | null
+  /** 审核/评审时间,待审核为 null */
   reviewTime: string | null
   status: ReportStatus
 }
 
+/** 培训课程详情 */
 export interface TrainingResponse {
   id: number
   semesterId: number
   title: string
   description: string | null
+  /** 授课教师 user.id */
   teacherId: number
   teacherName: string
   startTime: string | null
   endTime: string | null
   capacity: number
+  /** 已报名人数(报名即占用名额,无审核环节) */
   enrolledCount: number
   status: TrainingStatus
   createTime: string
 }
 
+/** 培训报名记录 */
 export interface TrainingEnrollmentResponse {
   id: number
   courseId: number
@@ -178,6 +204,7 @@ export interface TrainingEnrollmentResponse {
   status: EnrollStatus
 }
 
+/** 实习项目分页查询条件,status 传英文 code */
 export interface InternshipQuery {
   supervisorId?: number
   status?: InternshipStatusCode
@@ -185,12 +212,14 @@ export interface InternshipQuery {
   pageSize?: number
 }
 
+/** 实习报告分页查询条件,status 传英文 code */
 export interface InternshipReportQuery {
   status?: ReportStatusCode
   page?: number
   pageSize?: number
 }
 
+/** 培训课程分页查询条件,status 传英文 code */
 export interface TrainingQuery {
   teacherId?: number
   status?: TrainingStatusCode
@@ -200,7 +229,9 @@ export interface TrainingQuery {
 
 // ===== 竞赛管理 =====
 
+/** 创建竞赛请求 */
 export interface CompetitionCreateRequest {
+  /** 所属学期,缺省表示不关联 */
   semesterId?: number | null
   name: string
   description?: string
@@ -211,6 +242,7 @@ export interface CompetitionCreateRequest {
   contestTime?: string | null
 }
 
+/** 更新竞赛请求,字段均可选 */
 export interface CompetitionUpdateRequest {
   name?: string
   description?: string
@@ -221,17 +253,21 @@ export interface CompetitionUpdateRequest {
   contestTime?: string | null
 }
 
+/** 学生报名竞赛请求,个人赛不传 teamName/members */
 export interface RegistrationRequest {
   competitionId: number
   teamName?: string
+  /** 团队成员 user.id 逗号分隔串,个人赛不传 */
   members?: string
 }
 
+/** 竞赛报名审核请求 */
 export interface RegistrationReviewRequest {
   approved: boolean
   reviewComment?: string
 }
 
+/** 竞赛获奖结果录入请求,同一报名重复提交即覆盖更新 */
 export interface CompetitionResultRequest {
   competitionId: number
   registrationId: number
@@ -240,6 +276,7 @@ export interface CompetitionResultRequest {
   comment?: string
 }
 
+/** 竞赛详情 */
 export interface CompetitionResponse {
   id: number
   semesterId: number
@@ -254,6 +291,7 @@ export interface CompetitionResponse {
   createTime: string
 }
 
+/** 竞赛报名记录 */
 export interface RegistrationResponse {
   id: number
   competitionId: number
@@ -261,13 +299,16 @@ export interface RegistrationResponse {
   studentId: number
   studentName: string
   teamName: string | null
+  /** 团队成员 user.id 逗号分隔,个人赛为 null */
   members: string | null
   status: AuditStatus
   registerTime: string
+  /** 审核/评审时间,待审核为 null */
   reviewTime: string | null
   reviewComment: string | null
 }
 
+/** 竞赛获奖结果 */
 export interface CompetitionResultResponse {
   id: number
   competitionId: number
@@ -281,6 +322,7 @@ export interface CompetitionResultResponse {
   awardTime: string
 }
 
+/** 竞赛分页查询条件,status 传英文 code */
 export interface CompetitionQuery {
   status?: CompetitionStatusCode
   page?: number
@@ -289,7 +331,9 @@ export interface CompetitionQuery {
 
 // ===== 社会实践 =====
 
+/** 创建社会实践项目请求 */
 export interface SocialPracticeCreateRequest {
+  /** 所属学期,缺省表示不关联 */
   semesterId?: number | null
   title: string
   description?: string
@@ -299,6 +343,7 @@ export interface SocialPracticeCreateRequest {
   capacity: number
 }
 
+/** 更新社会实践项目请求,字段均可选 */
 export interface SocialPracticeUpdateRequest {
   title?: string
   description?: string
@@ -308,29 +353,35 @@ export interface SocialPracticeUpdateRequest {
   capacity?: number
 }
 
+/** 学生申报社会实践请求,个人申报不传 teamName/members */
 export interface SocialPracticeApplyRequest {
   practiceId: number
   teamName?: string
+  /** 团队成员 user.id 逗号分隔串,个人申报不传 */
   members?: string
   applyReason?: string
 }
 
+/** 社会实践申报审核请求 */
 export interface SocialPracticeReviewRequest {
   approved: boolean
   reviewComment?: string
 }
 
+/** 提交社会实践报告请求(附件单独作为文件上传) */
 export interface SocialPracticeReportSubmitRequest {
   practiceId: number
   title: string
   summary?: string
 }
 
+/** 社会实践报告评审请求(分数+评语,均可选) */
 export interface SocialPracticeReportReviewRequest {
   score?: number
   feedback?: string
 }
 
+/** 社会实践项目详情 */
 export interface SocialPracticeResponse {
   id: number
   semesterId: number
@@ -340,11 +391,13 @@ export interface SocialPracticeResponse {
   startTime: string | null
   endTime: string | null
   capacity: number
+  /** 已申报人数(含待审核),用于容量控制 */
   selectedCount: number
   status: SocialPracticeStatus
   createTime: string
 }
 
+/** 社会实践申报记录 */
 export interface SocialPracticeApplicationResponse {
   id: number
   practiceId: number
@@ -352,14 +405,17 @@ export interface SocialPracticeApplicationResponse {
   studentId: number
   studentName: string
   teamName: string | null
+  /** 团队成员 user.id 逗号分隔,个人申报为 null */
   members: string | null
   status: AuditStatus
   applyReason: string | null
   applyTime: string
+  /** 审核/评审时间,待审核为 null */
   reviewTime: string | null
   reviewComment: string | null
 }
 
+/** 社会实践报告(含评审结果) */
 export interface SocialPracticeReportResponse {
   id: number
   practiceId: number
@@ -368,20 +424,24 @@ export interface SocialPracticeReportResponse {
   studentName: string
   title: string
   summary: string | null
+  /** 附件原始文件名,下载时展示 */
   fileOriginal: string | null
   submitTime: string
   score: number | null
   feedback: string | null
+  /** 审核/评审时间,待审核为 null */
   reviewTime: string | null
   status: ReportStatus
 }
 
+/** 社会实践项目分页查询条件,status 传英文 code */
 export interface SocialPracticeQuery {
   status?: SocialPracticeStatusCode
   page?: number
   pageSize?: number
 }
 
+/** 社会实践报告分页查询条件,status 传英文 code */
 export interface SocialPracticeReportQuery {
   status?: ReportStatusCode
   page?: number

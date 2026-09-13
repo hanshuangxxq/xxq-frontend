@@ -1,4 +1,9 @@
 <script setup lang="ts">
+/**
+ * 社会实践管理页(仅教务)。两个 Tab:实践项目(CRUD/状态流转/申报审核)、
+ * 实践报告(评审打分/下载/删除)。报告列表懒加载,首次切到该 Tab 才拉取。
+ * 非教务角色展示 ForbiddenState。
+ */
 import { ref, computed, h, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -276,6 +281,7 @@ function handleSaveReviewApp() {
 const reports = ref<SocialPracticeReportResponse[]>([])
 const { pagination: reportPagination, reset: resetReport } = useRemotePagination(loadReports)
 const filterReportStatus = ref<ReportStatusCode | null>(null)
+// 报告列表首次切到该 Tab 才加载
 let reportsLoaded = false
 
 async function loadReports() {
@@ -351,6 +357,7 @@ function handleSaveReviewReport() {
   })
 }
 
+// 懒加载:报告 Tab 首次激活时才拉数据
 function onTabChange(name: string | number) {
   if (name === 'reports' && !reportsLoaded) {
     reportsLoaded = true
@@ -566,6 +573,7 @@ const reportColumns = computed<DataTableColumns<SocialPracticeReportResponse>>((
   },
 ])
 
+// 权限守卫:非教务不发起请求,模板侧以 ForbiddenState 兜底
 onMounted(() => {
   if (!isAcademicAdmin.value) return
   loadPractices()

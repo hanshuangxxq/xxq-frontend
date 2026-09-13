@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * 竞赛管理页(仅教务)。功能:竞赛 CRUD、状态流转(草稿/开放报名/报名关闭/已结束)、
+ * 报名审核、获奖结果录入(同一报名重复保存即覆盖)。非教务角色展示 ForbiddenState。
+ */
 import { ref, computed, h, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -329,6 +333,7 @@ function openResults(row: CompetitionResponse) {
         fetchAllPages((page, pageSize) => fetchCompetitionRegistrations(row.id, page, pageSize)),
       ])
       results.value = resList.data
+      // 仅审核通过的报名可录入获奖结果(后端同样校验,未通过报 409)
       approvedRegistrations.value = resRegs.filter((r) => r.status === '已通过')
     } catch (e) {
       if (!isReportedError(e)) message.error((e as Error).message || t('practice.common.loadFail'))
@@ -336,6 +341,7 @@ function openResults(row: CompetitionResponse) {
   })
 }
 
+// 保存即按报名 upsert:后端按 registrationId 覆盖旧结果,可重复保存修正
 function handleSaveResult() {
   const competition = resultsOf.value
   if (!competition) return
@@ -561,6 +567,7 @@ const resultColumns = computed<DataTableColumns<CompetitionResultResponse>>(() =
   },
 ])
 
+// 权限守卫:非教务不发起请求,模板侧以 ForbiddenState 兜底
 onMounted(() => {
   if (!isAcademicAdmin.value) return
   loadData()

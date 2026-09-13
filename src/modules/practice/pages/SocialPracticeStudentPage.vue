@@ -1,4 +1,9 @@
 <script setup lang="ts">
+/**
+ * 学生社会实践页(仅学生)。三个 Tab:可申报项目(个人/团队,团队成员从学生列表多选)、
+ * 我的申报(待审核可撤销)、我的报告(仅审核通过的项目可提交/重传,
+ * 重传为覆盖更新,已评审不可再改)。非学生角色展示 ForbiddenState。
+ */
 import { ref, computed, h, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -58,6 +63,7 @@ const message = useMessage()
 const { isStudent } = useRoleCheck()
 
 const activeTab = ref('available')
+// 报告附件大小上限 20MB,与 utils.validateUploadFile 的校验口径一致
 const MAX_SIZE = 20 * 1024 * 1024
 
 // ---- 可申报项目 ----
@@ -84,6 +90,7 @@ const { loading: savingApply, withLoading: withSavingApply } = useLoading()
 
 const fetchStudentsPage = (page: number, pageSize: number) => fetchStudents({ page, pageSize })
 const studentLabelOf = (s: Student) => s.name
+// 团队成员按 user.id 存储,提交时 joinMembers 拼成逗号分隔串
 const studentValueOf = (s: Student) => s.userId
 
 function startApply(row: SocialPracticeResponse) {
@@ -280,6 +287,7 @@ function loadMyReports() {
   })
 }
 
+// 仅审核通过的项目可提交实践报告
 const approvedPractices = computed(() => myApplications.value.filter((a) => a.status === '已通过'))
 const practiceOptions = computed(() =>
   approvedPractices.value.map((a) => ({ label: a.practiceTitle, value: a.practiceId })),
@@ -302,6 +310,7 @@ function startSubmitReport() {
   showReportForm.value = true
 }
 
+// 重传=覆盖更新同一报告(后端一人一份):仅"已提交"可重传,"已评审"后不可再改
 function startResubmitReport(row: SocialPracticeReportResponse) {
   reportFormMode.value = 'edit'
   reportForm.value = { practiceId: row.practiceId, title: row.title, summary: row.summary ?? '' }
@@ -429,6 +438,7 @@ const reportColumns = computed<DataTableColumns<SocialPracticeReportResponse>>((
   },
 ])
 
+// 权限守卫:非学生不发起请求,模板侧以 ForbiddenState 兜底
 onMounted(() => {
   if (!isStudent.value) return
   loadAvailable()

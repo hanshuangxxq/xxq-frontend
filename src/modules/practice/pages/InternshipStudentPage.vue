@@ -1,4 +1,9 @@
 <script setup lang="ts">
+/**
+ * 学生实习页(仅学生)。五个 Tab:可报名实习、我的报名(待审核可撤销)、我的实习报告
+ * (仅审核通过的项目可提交/重传,附件限 doc/docx/pdf/zip/rar 且 ≤20MB)、
+ * 可报名培训(报名即占位,无审核)、我的培训(可取消报名)。非学生角色展示 ForbiddenState。
+ */
 import { ref, computed, h, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -58,6 +63,7 @@ const message = useMessage()
 const { isStudent } = useRoleCheck()
 
 const activeTab = ref('available')
+// 报告附件大小上限 20MB,与 utils.validateUploadFile 的校验口径一致
 const MAX_SIZE = 20 * 1024 * 1024
 
 // ---- 可报名实习 ----
@@ -148,6 +154,7 @@ const availableColumns = computed<DataTableColumns<InternshipResponse>>(() => [
     key: 'actions',
     width: 100,
     render: (row) => {
+      // 已有待审核/已通过报名则禁用报名按钮,避免重复报名
       const applied = myApplications.value.some(
         (a) => a.internshipId === row.id && (a.status === '待审核' || a.status === '已通过'),
       )
@@ -268,6 +275,7 @@ function loadMyReports() {
   })
 }
 
+// 仅审核通过的实习项目可提交实习报告
 const approvedInternships = computed(() =>
   myApplications.value.filter((a) => a.status === '已通过'),
 )
@@ -292,6 +300,7 @@ function startSubmitReport() {
   showReportForm.value = true
 }
 
+// 重传=覆盖更新同一报告(后端一人一份):仅"已提交"可重传,"已评审"后不可再改
 function startResubmitReport(row: InternshipReportResponse) {
   reportFormMode.value = 'edit'
   reportForm.value = {
@@ -562,6 +571,7 @@ const myTrainColumns = computed<DataTableColumns<TrainingEnrollmentResponse>>(()
   },
 ])
 
+// 权限守卫:非学生不发起请求,模板侧以 ForbiddenState 兜底
 onMounted(() => {
   if (!isStudent.value) return
   loadAvailable()

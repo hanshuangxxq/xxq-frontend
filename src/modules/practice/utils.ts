@@ -1,5 +1,6 @@
 import { api } from '@/shared/api'
 
+/** NTag 的 type 属性取值,各状态->标签色映射函数的返回类型 */
 type TagType = 'success' | 'info' | 'warning' | 'error' | 'default'
 
 /** 下载实践模块文件（论文/报告），非 Result 封装，直接返回文件流。统一走 api.download。 */
@@ -190,6 +191,7 @@ export function validateUploadFile(file: File): 'type' | 'size' | null {
   return null
 }
 
+/** 数字补零到两位,供 tsToIso 拼接 ISO 时间用 */
 function pad(n: number): string {
   return String(n).padStart(2, '0')
 }

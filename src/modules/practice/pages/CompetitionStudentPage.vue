@@ -1,4 +1,9 @@
 <script setup lang="ts">
+/**
+ * 学生竞赛页(仅学生)。三个 Tab:可报名竞赛(个人/团队报名,团队成员从学生列表多选)、
+ * 我的报名(待审核可撤销)、我的结果(查看本人获奖,未获奖显示空态)。
+ * 非学生角色展示 ForbiddenState。
+ */
 import { ref, computed, h, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -68,6 +73,7 @@ const { loading: savingRegister, withLoading: withSavingRegister } = useLoading(
 
 const fetchStudentsPage = (page: number, pageSize: number) => fetchStudents({ page, pageSize })
 const studentLabelOf = (s: Student) => s.name
+// 团队成员按 user.id 存储,提交时 joinMembers 拼成逗号分隔串
 const studentValueOf = (s: Student) => s.userId
 
 function startRegister(row: CompetitionResponse) {
@@ -245,6 +251,7 @@ const viewingReg = ref<RegistrationResponse | null>(null)
 const myResult = ref<CompetitionResultResponse | null>(null)
 const { loading: resultLoading, withLoading: withResultLoading } = useLoading()
 
+// 未获奖时后端返回 null,弹窗展示空态
 function openMyResult(row: RegistrationResponse) {
   viewingReg.value = row
   myResult.value = null
@@ -289,6 +296,7 @@ const myResultColumns = computed<DataTableColumns<RegistrationResponse>>(() => [
   },
 ])
 
+// 权限守卫:非学生不发起请求,模板侧以 ForbiddenState 兜底
 onMounted(() => {
   if (!isStudent.value) return
   loadAvailable()

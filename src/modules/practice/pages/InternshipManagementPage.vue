@@ -1,4 +1,9 @@
 <script setup lang="ts">
+/**
+ * 实习与培训管理页(院系+教务)。三个 Tab:实习项目(CRUD/状态流转/报名审核)、
+ * 实习报告(评审打分/下载/删除)、培训课程(CRUD/状态流转/报名名单查看,报名无审核)。
+ * 模板中"新建实习"按钮仅院系可见,"新建培训"双角色可见。非管理角色展示 ForbiddenState。
+ */
 import { ref, computed, h, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -75,6 +80,7 @@ import type {
 const { t } = useI18n()
 const message = useMessage()
 const { isDepartment, isAcademicAdmin } = useRoleCheck()
+// 实习管理双角色:院系或教务均可进入
 const canManage = computed(() => isDepartment.value || isAcademicAdmin.value)
 
 const activeTab = ref('internships')
@@ -292,6 +298,7 @@ function handleSaveReviewIntApp() {
 const reports = ref<InternshipReportResponse[]>([])
 const { pagination: reportPagination, reset: resetReport } = useRemotePagination(loadReports)
 const filterReportStatus = ref<ReportStatusCode | null>(null)
+// 实习报告列表首次切到该 Tab 才加载
 let reportsLoaded = false
 
 async function loadReports() {
@@ -371,6 +378,7 @@ function handleSaveReviewReport() {
 const trainings = ref<TrainingResponse[]>([])
 const { pagination: trainPagination, reset: resetTrain } = useRemotePagination(loadTrainings)
 const filterTrainStatus = ref<TrainingStatusCode | null>(null)
+// 培训课程列表首次切到该 Tab 才加载
 let trainingsLoaded = false
 
 async function loadTrainings() {
@@ -529,6 +537,7 @@ function openTrainEnrollments(row: TrainingResponse) {
   loadEnrollments()
 }
 
+// 懒加载:非首屏 Tab 首次激活时才拉数据
 function onTabChange(name: string | number) {
   if (name === 'reports' && !reportsLoaded) {
     reportsLoaded = true
@@ -851,6 +860,7 @@ const enrollmentColumns = computed<DataTableColumns<TrainingEnrollmentResponse>>
   },
 ])
 
+// 权限守卫:非院系/教务不发起请求,模板侧以 ForbiddenState 兜底
 onMounted(() => {
   if (!canManage.value) return
   loadInternships()
