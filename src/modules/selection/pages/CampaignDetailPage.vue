@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * 选课活动详情页（教务）：活动基础信息与按状态流转的操作（关闭/结束选课），
+ * 活动结束后展示选课结果班级名单，并可逐个班级分配/更换/取消授课教师。
+ */
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -57,6 +61,7 @@ function formatDateTime(s: string | null | undefined): string {
   return s ? s.replace('T', ' ') : ''
 }
 
+/** 活动结束时间已过：开放中的活动视为可直接「结束」 */
 const isExpired = computed(() => {
   if (!campaign.value?.endTime) return false
   return new Date(campaign.value.endTime) < new Date()
@@ -83,6 +88,7 @@ async function loadClasses() {
 function loadAll() {
   return withLoading(async () => {
     await loadCampaign()
+    // 班级名单仅活动结束后生成，非结束态不发请求
     if (campaign.value?.status === 'FINALIZED') {
       await loadClasses()
     }
@@ -107,6 +113,7 @@ async function handleClose() {
   }
 }
 
+/** 结束选课：开放态先关闭再结束，完成后拉取班级名单 */
 async function handleFinalize() {
   try {
     if (campaign.value?.status === 'OPEN') {

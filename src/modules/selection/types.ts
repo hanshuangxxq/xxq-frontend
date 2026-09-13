@@ -1,5 +1,7 @@
+/** 活动状态：DRAFT 草稿 / OPEN 开放选课 / CLOSED 已关闭 / FINALIZED 已结束（已生成选课结果） */
 export type CampaignStatus = 'DRAFT' | 'OPEN' | 'CLOSED' | 'FINALIZED'
 
+/** 选课记录状态：SELECTED 已选 / DROPPED 已退 */
 export type SelectionRecordStatus = 'SELECTED' | 'DROPPED'
 
 /**
@@ -79,14 +81,18 @@ export interface CampaignForm {
   capacity: number
 }
 
+/** 选课组：将活动分组，并限制组内最多可选课程数 */
 export interface SelectionGroup {
   id: number
   name: string
+  /** 组内最多可选课程数 */
   maxCourses: number
+  /** 当前绑定活动数（大于 0 时不可删除） */
   campaignCount: number
   createTime: string
 }
 
+/** 新建/修改选课组表单 */
 export interface SelectionGroupForm {
   name: string
   maxCourses: number
@@ -97,13 +103,19 @@ export interface SelectionGroupForm {
  * 在 Campaign 基础上附加组上下文与实时选课状态。
  */
 export interface StudentCampaign extends Campaign {
+  /** 所属组可选上限，未分组活动为 null（不显示组进度） */
   groupMax: number | null
+  /** 本组内已选总数（跨活动累计） */
   selectedInGroup: number
+  /** 本活动已选人数 */
   selectedCount: number
+  /** 剩余名额 */
   remaining: number
+  /** 本人是否已选该活动 */
   selectedByMe: boolean
 }
 
+/** 选课记录（学生视角） */
 export interface SelectionRecord {
   id: number
   campaignId: number
@@ -113,13 +125,16 @@ export interface SelectionRecord {
   courseType: string | null
   status: SelectionRecordStatus
   selectTime: string
+  /** 退课时间，未退课时为 null */
   dropTime: string | null
 }
 
+/** 选课请求：仅需活动 ID */
 export interface SelectionRecordForm {
   campaignId: number
 }
 
+/** 选课结果班级成员 */
 export interface StudentSelectionMember {
   studentId: number
   studentName: string
@@ -127,12 +142,15 @@ export interface StudentSelectionMember {
   className: string
 }
 
+/** 选课结果班级：活动结束（finalize）后按容量拆分生成，可为每个班分配授课教师 */
 export interface SelectionClass {
   classId: number
   courseName: string
   classNo: number
   studentCount: number
+  /** 分配的授课教师，未分配时为 null */
   teacherId: number | null
+  /** 分配的授课教师姓名，未分配时为 null */
   teacherName: string | null
   members: StudentSelectionMember[]
 }

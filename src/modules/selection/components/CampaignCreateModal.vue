@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * 创建选课活动弹窗（教务）：活动即公选课，课程类型固定「公选」不可改；
+ * 分基本信息/课程信息/选课组绑定三段，提交前本地预校验，成功后回调刷新列表。
+ */
 import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -51,6 +55,7 @@ const semesterOptions = computed<SelectOption[]>(() =>
   props.semesters.map((s) => ({ label: s.name, value: s.id })),
 )
 
+/** 表单初值：默认 1-16 周、容量 30、课程类型固定公选 */
 function emptyForm(): CampaignForm {
   return {
     name: '',
@@ -74,6 +79,7 @@ const form = ref<CampaignForm>(emptyForm())
 watch(
   () => props.show,
   (show) => {
+    // 每次打开重置表单，避免残留上次输入
     if (show) {
       form.value = emptyForm()
     }
@@ -88,6 +94,7 @@ function onGroupChange(v: string | number | null | Array<string | number>) {
   form.value.groupId = v as number | null
 }
 
+/** 本地预校验：返回首个未通过项的提示文案，全部通过返回 null */
 function validate(): string | null {
   if (!form.value.name) return t('selection.nameRequired')
   if (!form.value.semesterId) return t('selection.semesterRequired')

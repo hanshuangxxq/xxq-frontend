@@ -1,4 +1,9 @@
 <script setup lang="ts">
+/**
+ * 选课活动管理页（教务）：活动列表服务端分页，草稿可编辑/删除/开启，
+ * 开放中可关闭（到期后直接结束），结束后查看选课结果；新建走 CampaignCreateModal，
+ * 选课组管理走 GroupManagementModal。
+ */
 import { ref, computed, h, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -71,6 +76,7 @@ function formatDateTime(s: string | null | undefined): string {
   return s ? s.replace('T', ' ') : ''
 }
 
+/** 结束时间已过：开放中的活动视为「可结束」而非「可关闭」 */
 function isExpired(endTime: string): boolean {
   return new Date(endTime) < new Date()
 }
@@ -372,6 +378,7 @@ async function handleClose(id: number) {
   }
 }
 
+/** 结束选课：开放态先关闭再结束，与详情页操作一致 */
 async function handleFinalize(id: number) {
   try {
     const item = data.value.find((c) => c.id === id)

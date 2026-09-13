@@ -1,4 +1,9 @@
 <script setup lang="ts">
+/**
+ * 选课组管理弹窗（教务）：组的增删改查（有活动绑定时禁删），
+ * 以及活动与组的绑定/解绑管理——绑定关系通过 updateCampaign 的 groupId/unbindGroup 字段维护，
+ * 仅草稿态活动可绑定/解绑。
+ */
 import { ref, computed, h, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -44,6 +49,7 @@ const message = useMessage()
 const groups = ref<SelectionGroup[]>([])
 const { pagination } = useRemotePagination(loadGroups)
 
+/** 活动状态对应的 NTag 展示类型 */
 const statusTagType: Record<CampaignStatus, 'default' | 'info' | 'warning' | 'success'> = {
   DRAFT: 'default',
   OPEN: 'success',
@@ -65,6 +71,7 @@ async function loadGroups() {
   }
 }
 
+// 弹窗打开时才拉取组列表（服务端分页）
 watch(
   () => props.show,
   (show) => {
@@ -179,6 +186,7 @@ function openEditGroup(row: SelectionGroup) {
   showGroupForm.value = true
 }
 
+/** 新建/编辑组共用一个表单弹窗，按模式区分提交接口 */
 function handleSaveGroup() {
   if (!groupForm.value.name) {
     message.warning(t('selection.groupNameRequired'))
@@ -232,6 +240,7 @@ async function openBindingModal(row: SelectionGroup) {
   await loadBindableCampaigns(row.id)
 }
 
+// 可绑定列表 = 未绑定任何组的活动 + 已绑定本组的活动（后端过滤）
 function loadBindableCampaigns(groupId: number) {
   return withBindingLoading(async () => {
     try {

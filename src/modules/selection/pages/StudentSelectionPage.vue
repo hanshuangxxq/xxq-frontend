@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * 学生选课页：按选课组分组展示开放中的公选活动（容量进度、选课窗口状态、截止倒计时），
+ * 窗口内可选课/退课，受组内可选上限约束；下方展示本人全部选课记录。
+ */
 import { ref, computed, h, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -23,6 +27,7 @@ import type { SelectionRecord, StudentCampaign } from '../types'
 const { t } = useI18n()
 const message = useMessage()
 
+/** 按选课组聚合的展示结构（无组活动归入虚拟未分组） */
 interface GroupedSelection {
   groupId: number
   groupName: string
@@ -39,6 +44,7 @@ const now = ref(Date.now())
 let rafHandle: number | undefined
 let lastTickSecond = Math.floor(Date.now() / 1000)
 
+// rAF 轮询当前时间：倒计时按秒展示，仅当秒变化时才更新响应式 now，避免每秒内多次重渲染
 function tick() {
   const current = Date.now()
   const currentSecond = Math.floor(current / 1000)
@@ -135,6 +141,7 @@ function capacityPercentage(c: StudentCampaign): number {
   return Math.min(100, Math.round((c.selectedCount / c.capacity) * 100))
 }
 
+// 容量配色：已满红色、选座率 >= 80% 黄色、充足绿色
 function capacityColor(c: StudentCampaign): string {
   if (c.remaining <= 0) return '#d03050'
   const ratio = c.capacity > 0 ? c.selectedCount / c.capacity : 0
@@ -142,6 +149,7 @@ function capacityColor(c: StudentCampaign): string {
   return '#18a058'
 }
 
+/** 本人在指定活动下仍处于「已选」状态的记录（退课按钮据此定位 recordId） */
 function findActiveRecord(campaignId: number): SelectionRecord | undefined {
   return records.value.find((r) => r.campaignId === campaignId && r.status === 'SELECTED')
 }
@@ -188,6 +196,7 @@ function loadAll() {
         records.value = []
         return
       }
+      // 逐活动并行拉取本人记录，单个活动失败不阻塞其余
       const recordResults = await Promise.all(
         list.map((c) => fetchMyRecords(c.id).catch(() => null)),
       )
