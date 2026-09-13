@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * 年级管理（教务）。维护学生年级（如 2023 级）的名称与描述；
+ * 仅教务可增删改，其他角色只读。
+ */
 import { ref, computed, h, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -85,6 +89,7 @@ function loadData() {
   return withLoading(async () => {
     try {
       const res = await fetchGrades()
+      // 按年级名称自然排序（zh-CN + numeric，避免「10级」排在「9级」前）
       data.value = res.data.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN', { numeric: true }))
     } catch (e) {
       if (!isReportedError(e)) message.error((e as Error).message || t('grades.loadFail'))
@@ -123,6 +128,7 @@ async function handleSave() {
     try {
       const payload: GradeForm = {
         name: form.value.name,
+        // 描述为空时不传该字段，避免把已有描述覆盖为空
         description: form.value.description || undefined,
       }
       if (formMode.value === 'create') {
