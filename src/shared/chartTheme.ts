@@ -1,6 +1,7 @@
 import { computed } from 'vue'
 import { useThemeStore } from '@/stores/useThemeStore'
 
+/** ECharts 主题令牌集合:坐标轴/分割线/tooltip/grid 等随明暗主题切换的通用配置 */
 export interface ChartThemeTokens {
   axisTextStyle: { color: string; fontSize: number }
   axisLine: { lineStyle: { color: string } }
@@ -16,6 +17,7 @@ export interface ChartThemeTokens {
   grid: { containLabel: boolean }
 }
 
+/** 浅色主题令牌(与 global.css 浅色系变量保持一致) */
 const lightTokens: ChartThemeTokens = {
   axisTextStyle: { color: '#606266', fontSize: 12 },
   axisLine: { lineStyle: { color: '#dcdfe6' } },
@@ -31,6 +33,7 @@ const lightTokens: ChartThemeTokens = {
   grid: { containLabel: true },
 }
 
+/** 深色主题令牌 */
 const darkTokens: ChartThemeTokens = {
   axisTextStyle: { color: '#9ca3af', fontSize: 12 },
   axisLine: { lineStyle: { color: '#3a3a42' } },

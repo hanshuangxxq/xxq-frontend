@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 统一空状态占位:NEmpty + 自定义图标,替代各页面各自绘制的空态 */
 import { NEmpty } from 'naive-ui'
 
 defineProps<{ description?: string }>()

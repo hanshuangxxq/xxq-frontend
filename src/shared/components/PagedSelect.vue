@@ -1,4 +1,9 @@
 <script setup lang="ts" generic="T">
+/**
+ * 小窗口分页下拉选择器:用于选项来自分页接口、无法一次拉全量的场景(如按名选人/选课程)。
+ * 每次展开回到第 1 页拉取最新数据;底部 action 区提供翻页;选中项不在当前页时
+ * 经 labelCache/initialLabel 兜底回显,避免出现「只显示 id」的情况。
+ */
 import { ref, shallowRef, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { NSelect, NButton } from 'naive-ui'

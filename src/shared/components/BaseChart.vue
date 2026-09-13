@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * 全站统一图表容器:按需注册 ECharts 模块、统一放慢动画节奏、跟随容器自适应尺寸。
+ * 页面只需传入 option(建议由 computed 产出以跟随主题令牌,见 @/shared/chartTheme)。
+ */
 import { computed } from 'vue'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'

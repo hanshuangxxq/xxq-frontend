@@ -1,8 +1,11 @@
 import { h } from 'vue'
 import { NButton, NPopconfirm, NSpace } from 'naive-ui'
 
+/** 表格操作列的单个操作定义 */
 export interface TableAction {
+  /** 按钮文案 */
   label: string
+  /** 点击回调(带 confirm 时由 NPopconfirm 的 onPositiveClick 触发) */
   onClick: () => void
   /** true 时渲染为描边红色按钮(删除等危险操作);缺省为主色实心按钮 */
   danger?: boolean
@@ -10,6 +13,7 @@ export interface TableAction {
   confirm?: string
 }
 
+/** 渲染单个操作按钮;withHandler 为 false 时不绑 onClick(交由外层 NPopconfirm 触发) */
 function renderButton(action: TableAction, withHandler: boolean) {
   return h(
     NButton,

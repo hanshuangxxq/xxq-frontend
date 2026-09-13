@@ -10,6 +10,7 @@ const MAX_RELOAD_ATTEMPTS = 2 // 同一目标版本最多强制刷新次数,防�
 let timer: number | undefined
 let lastCheckAt = 0
 
+/** 拉取服务器当前版本号(version.json);失败返回 null,由调用方决定后续 */
 async function fetchServerVersion(signal?: AbortSignal): Promise<string | null> {
   try {
     // version.json 是前端自身的静态资源(非后端 API),刻意不走 @/shared/api 封装:
@@ -83,6 +84,7 @@ export async function ensureLatestVersion(): Promise<boolean> {
   }
 }
 
+/** 检查到新版本后停止轮询,提示并自动强制刷新(受防循环守卫约束) */
 async function checkForUpdate() {
   lastCheckAt = Date.now()
   const serverVersion = await fetchServerVersion()
@@ -95,12 +97,14 @@ async function checkForUpdate() {
   }
 }
 
+/** 页面从后台切回前台时触发检查(距上次检查过近则跳过,避免频繁请求) */
 function onVisibilityChange() {
   if (document.visibilityState === 'visible' && Date.now() - lastCheckAt >= MIN_RECHECK_GAP) {
     void checkForUpdate()
   }
 }
 
+/** 停止轮询与可见性监听(发现新版本、即将刷新前调用) */
 function stopVersionCheck() {
   window.clearInterval(timer)
   document.removeEventListener('visibilitychange', onVisibilityChange)

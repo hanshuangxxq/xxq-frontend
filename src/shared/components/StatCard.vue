@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 统计指标卡:统一各看板/统计页的数字展示样式(标签 + 数值 + 可选单位/强调色) */
 import { computed } from 'vue'
 import { NStatistic } from 'naive-ui'
 
