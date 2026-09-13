@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 课程级评教模板覆盖管理页（教务）：为指定授课安排指定专用模板，清除覆盖后回退全局默认模板 */
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -46,6 +47,7 @@ async function loadCourses() {
 }
 
 // ---- 模板选项（仅启用） ----
+// 只有「启用」状态的模板可被指定为课程覆盖
 const templates = ref<EvaluationTemplateDto[]>([])
 const templateOptions = computed(() =>
   templates.value
@@ -72,6 +74,7 @@ async function loadCurrentOverride(teachInfoId: number) {
   selectedTemplateId.value = null
   try {
     const res = await fetchEvaluationOverride(teachInfoId)
+    // data 为 null 表示该课程未设置覆盖，学生评教走全局默认模板
     currentTemplate.value = res.data
     selectedTemplateId.value = res.data?.id ?? null
   } catch (e) {

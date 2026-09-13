@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 评教指标库管理页（教务）：维护评教指标的名称/描述/满分，列表展示被模板引用数 */
 import { ref, computed, h, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -126,6 +127,7 @@ function startEdit(row: EvaluationItemDto) {
   showForm.value = true
 }
 
+/** 保存指标：description 为空串时传 undefined，更新场景下该字段不落库即保持原值 */
 function handleSave() {
   const name = form.value.name.trim()
   if (!name) {

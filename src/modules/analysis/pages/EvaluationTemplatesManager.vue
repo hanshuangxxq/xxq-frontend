@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 评教模板管理页（教务）：模板 CRUD、设全局默认、启停，编辑模板内指标列表（增删/排序/必填） */
 import { ref, computed, h, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -145,6 +146,7 @@ const columns = computed<DataTableColumns<EvaluationTemplateDto>>(() => [
 ])
 
 async function handleSetDefault(id: number) {
+  // 后端保证同一时刻仅一个默认模板，原默认自动置为普通
   try {
     await setDefaultEvaluationTemplate(id)
     message.success(t('analysis.evSetDefaultSuccess'))
@@ -276,6 +278,7 @@ function handleSave() {
   }
   return withSaving(async () => {
     try {
+      // items 整体提交（后端按传入列表整体替换关联），required 布尔转 0/1
       const items = form.value.items.map((it) => ({
         itemId: it.itemId,
         sortOrder: it.sortOrder,

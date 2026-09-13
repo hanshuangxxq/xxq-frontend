@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 教师教学质量页：教师查看本人评教统计与指标雷达图；教务/院系按学期查看全员对比列表及单教师详情 */
 import { ref, computed, h, reactive, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -119,6 +120,7 @@ const listPagination = reactive({
 function loadList() {
   return withListLoading(async () => {
     try {
+      // 对比图需全集展示，故分块拉全量后由表格客户端分页
       list.value = await fetchAllPages((page, pageSize) =>
         fetchTeacherQualityList(filterSemesterId.value ?? undefined, page, pageSize),
       )

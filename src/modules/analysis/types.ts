@@ -26,6 +26,7 @@ export type ExamStatus = '无考试' | '已排考' | '已完成'
 
 // ---- #1 学生个人画像（融入「我的成绩」） ----
 
+/** 单学期 GPA 走势点 */
 export interface SemesterGpaTrend {
   semesterId: number
   semesterName: string
@@ -34,6 +35,7 @@ export interface SemesterGpaTrend {
   failCount: number
 }
 
+/** 单门课程成绩表现 */
 export interface SubjectPerformance {
   courseId: number
   courseName: string
@@ -44,6 +46,7 @@ export interface SubjectPerformance {
   gradePoint: number
 }
 
+/** 学生个人画像（GPA、学分、排名、科目明细与学期走势） */
 export interface StudentProfileDto {
   studentUserId: number
   studentName: string
@@ -51,6 +54,7 @@ export interface StudentProfileDto {
   className: string
   majorName: string
   enrollmentYear: number
+  /** 当前学期，无在读学期数据时为 null */
   semesterId: number | null
   semesterName: string | null
   cumulativeGpa: number
@@ -63,12 +67,15 @@ export interface StudentProfileDto {
   levelDistribution: Record<string, number>
   semesterTrend: SemesterGpaTrend[]
   subjects: SubjectPerformance[]
+  /** 班级排名，无排名数据时为 null */
   classRank: number | null
+  /** 班级人数，无排名数据时为 null */
   classSize: number | null
 }
 
 // ---- #2 学业预警 ----
 
+/** 单级预警阈值配置（响应，level 为中文描述） */
 export interface WarningConfigDto {
   id: number
   level: WarningLevel | string
@@ -79,6 +86,7 @@ export interface WarningConfigDto {
   enabled: number
 }
 
+/** 单级预警阈值配置（请求体单项，level 传 code） */
 export interface WarningConfigItem {
   level: WarningLevelCode | string
   gpaThreshold: number
@@ -87,10 +95,12 @@ export interface WarningConfigItem {
   enabled: number
 }
 
+/** 预警阈值保存请求（三级配置整体提交） */
 export interface WarningConfigRequest {
   configs: WarningConfigItem[]
 }
 
+/** 预警扫描结果统计（扫描/新增/解除人数，按级别分布） */
 export interface WarningScanResultDto {
   scannedCount: number
   warnedCount: number
@@ -99,6 +109,7 @@ export interface WarningScanResultDto {
   byLevel: Record<string, number>
 }
 
+/** 单条预警记录（学生维度） */
 export interface WarningItemDto {
   id: number
   studentUserId: number
@@ -106,6 +117,7 @@ export interface WarningItemDto {
   studentNo: string
   className: string
   level: WarningLevel | string
+  /** 触发预警的原因说明（由后端按阈值生成，如 GPA 低于阈值） */
   reason: string
   gpa: number
   failCount: number
@@ -116,6 +128,7 @@ export interface WarningItemDto {
   createTime: string
 }
 
+/** 预警名单分页查询参数 */
 export interface WarningQuery {
   semesterId?: number
   level?: WarningLevelCode | string
@@ -216,6 +229,7 @@ export interface EvaluationFormItem {
   required: number
 }
 
+/** 学生对某门课看到的评教表单（解析课程覆盖优先，否则全局默认模板） */
 export interface EvaluationFormDto {
   templateId: number
   templateName: string
@@ -272,22 +286,31 @@ export interface EvaluationStatusDto {
   closeTime: string | null
 }
 
+/** 教师教学质量统计（评教均分 + 教学运行指标） */
 export interface TeacherQualityDto {
   teacherId: number
   teacherName: string
+  /** 所属院系 */
   department: string
+  /** 评教加权均分（来自学生逐项评分） */
   avgEvaluationScore: number
+  /** 收到的评教份数 */
   evalCount: number
   /** 按指标名分组的原始分均值（替代旧 dimensionAverages） */
   itemAverages: Record<string, number>
+  /** 授课门数 */
   courseCount: number
+  /** 所授课程平均分 */
   courseAvgScore: number
+  /** 所授课程及格率（单位 %） */
   coursePassRate: number
+  /** 授课覆盖学生总数 */
   studentCount: number
 }
 
 // ---- #6 学习进度（融入「课表」） ----
 
+/** 单门课程学习进度 */
 export interface CourseProgress {
   teachInfoId: number
   courseId: number
@@ -295,17 +318,23 @@ export interface CourseProgress {
   teacherName: string
   startWeek: number
   endWeek: number
+  /** 进度百分比（0-100） */
   progressPercent: number
   status: ProgressStatus | string
   examStatus: ExamStatus | string
+  /** 成绩是否已录入 */
   scoreEntered: boolean
+  /** 课程总评成绩，未出分为 null */
   totalScore: number | null
 }
 
+/** 学生本学期学习进度总览 */
 export interface LearningProgressDto {
   studentUserId: number
   studentName: string
+  /** 学期名，无在读学期数据时为 null */
   semesterName: string | null
+  /** 当前教学周，不在学期内为 null */
   currentWeek: number | null
   courses: CourseProgress[]
 }

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 学业预警页：学生查看本人预警卡片；教务/院系查看预警看板，教务配置三级阈值并手动触发全量扫描 */
 import { ref, computed, h, reactive, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -230,6 +231,7 @@ async function loadConfig() {
       const code = descToCode[c.level] ?? (c.level as WarningLevelCode)
       byCode.set(code, c)
     }
+    // 以后端已配置级别为准，缺失级别回退默认值兜底展示
     configRows.value = defaultConfigRows().map((row) => {
       const dto = byCode.get(row.code)
       return dto

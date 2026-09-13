@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 评教中心页：教务侧管理指标库/模板/评教周期/课程覆盖；学生侧在开放周期内选课提交评教并查看历史评教 */
 import { ref, computed, h, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -133,6 +134,7 @@ function loadForm(teachInfoId: number) {
       formRows.value = res.data.items
         .slice()
         .sort((a, b) => a.sortOrder - b.sortOrder)
+        // 必填项预填满分（学生可下调），选填项默认 0 表示不评分
         .map((it) => ({ ...it, score: it.required === 1 ? it.maxScore : 0 }))
     } catch {
       // 错误提示由请求封装统一处理（如「暂未配置评教模板」）
@@ -165,6 +167,7 @@ function handleSubmit() {
   }
   return withSubmitting(async () => {
     try {
+      // 只提交打了分（score>=1）的指标，选填项留 0 即不提交
       const scores: { itemId: number; score: number }[] = []
       for (const it of formRows.value) {
         if (it.score >= 1) {
