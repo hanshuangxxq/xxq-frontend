@@ -2,7 +2,8 @@
   display: flex;
   flex-direction: column;
   position: relative;
-  min-height: 280px;
+  /* 固定高度,切换功能页签时弹窗尺寸不再抖动 */
+  height: 400px;
   min-width: 0;
   overflow: hidden;
 }
@@ -76,6 +77,8 @@ html.dark .settings-close-btn {
   flex: 1;
   min-width: 0;
   padding: 20px 20px;
+  /* 固定高度下内容超出时内部滚动,不再撑高弹窗 */
+  overflow-y: auto;
 }
 
 .settings-section-title {
@@ -91,12 +94,12 @@ html.dark .settings-close-btn {
 
 /* Global overrides for teleported modal elements */
 :global(.settings-modal) {
-  width: 440px !important;
+  width: 480px !important;
   max-width: 90vw !important;
 }
 
 :global(.settings-modal .n-card) {
-  width: 440px !important;
+  width: 480px !important;
   max-width: 90vw !important;
 }
 
