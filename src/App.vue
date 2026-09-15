@@ -10,9 +10,14 @@ import { useThemeStore } from '@/stores/useThemeStore'
 import { darkThemeOverrides, lightThemeOverrides } from '@/theme'
 import ThemeConflictDialog from '@/modules/layout/components/ThemeConflictDialog.vue'
 import GlobalLoading from '@/shared/components/GlobalLoading.vue'
+import { useDocumentHead } from '@/shared/composables/useDocumentHead'
 
 const localeStore = useLocaleStore()
 const themeStore = useThemeStore()
+
+// 按路由 meta.titleKey 与界面语言同步 <title> 与 <html lang>(纯静态 SPA 无 SSR,
+// 登录后页面统一 noindex,这里服务于标签页/书签/读屏,详见 useDocumentHead 注释)
+useDocumentHead()
 const naiveCfg = computed(() => localeStore.naiveConfig())
 const naiveTheme = computed(() => (themeStore.isDark ? darkTheme : null))
 const themeOverrides = computed(() =>
