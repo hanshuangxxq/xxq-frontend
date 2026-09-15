@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XXQ — Academic Affairs Management System for Universities</title>
+    <meta
+      name="description"
+      content="XXQ is an all-in-one academic affairs management system for universities, covering course selection, class scheduling, curriculum planning, grade entry and statistics, exams and make-up exams, the full graduation project workflow, internships, competitions and social practice, academic early warnings, teaching evaluations, and foundational data management."
+    >
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#f0f2f5">
+    <!-- Canonical and multilingual alternates; replace example.com with the real domain on deployment (see deploy/nginx.conf header) -->
+    <link rel="canonical" href="https://example.com/en/">
+    <link rel="alternate" hreflang="zh-CN" href="https://example.com/">
+    <link rel="alternate" hreflang="en" href="https://example.com/en/">
+    <link rel="alternate" hreflang="x-default" href="https://example.com/">
+    <!-- Link preview metadata; og:image intentionally omitted — no suitable raster asset yet -->
+    <meta property="og:site_name" content="XXQ">
+    <meta property="og:title" content="XXQ — Academic Affairs Management System for Universities">
+    <meta
+      property="og:description"
+      content="An all-in-one academic affairs platform for universities: course selection, scheduling, curricula, grades and exams, the full graduation project workflow, practical education, academic analytics, and master data."
+    >
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://example.com/en/">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="zh_CN">
+    <meta name="twitter:card" content="summary">
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/landing.css">
+    <script>
+      // Tag <html> with the signed-in state before render; CSS shows/hides guest vs user elements without flicker.
+      // The xxq-user session object is the source of truth (same as the SPA auth store); fall back to guest on any error
+      try {
+        var landingUser = localStorage.getItem('xxq-user')
+        if (landingUser && JSON.parse(landingUser).userId) {
+          document.documentElement.classList.add('logged-in')
+        }
+      } catch (e) {
+        /* ignore and render as guest */
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "name": "XXQ",
+            "url": "https://example.com/",
+            "inLanguage": ["zh-CN", "en"]
+          },
+          {
+            "@type": "SoftwareApplication",
+            "name": "XXQ Academic Affairs Management System",
+            "alternateName": "XXQ 高校教务管理系统",
+            "applicationCategory": "EducationalApplication",
+            "operatingSystem": "Web",
+            "url": "https://example.com/en/",
+            "inLanguage": ["zh-CN", "en"],
+            "description": "XXQ is an all-in-one academic affairs management system for universities, covering course selection, scheduling, curricula, grades and exams, the full graduation project workflow, internships, competitions and social practice, academic early warnings, teaching evaluations, and foundational data management.",
+            "featureList": [
+              "Course selection and enrollment campaigns",
+              "Class scheduling and teaching assignments",
+              "Curriculum (cultivation plan) management",
+              "Grade entry, statistics and review appeals",
+              "Exam and make-up exam management",
+              "Full graduation project workflow (topic selection, proposal, midterm, thesis, defense, grading)",
+              "Internship, competition and social practice management",
+              "Academic early warnings and teaching evaluations",
+              "Master data for students, majors, colleges, grade levels and classes, with batch import"
+            ]
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav container" aria-label="Main navigation">
+        <a class="brand" href="/en/">XXQ</a>
+        <ul class="nav-actions">
+          <li><a class="lang-switch" href="/" hreflang="zh-CN" lang="zh-CN">中文</a></li>
+          <li class="guest-only"><a class="btn btn-primary" href="/login">Sign In</a></li>
+          <li class="user-menu user-only">
+            <button
+              type="button"
+              class="avatar-btn"
+              aria-haspopup="menu"
+              aria-expanded="false"
+              aria-controls="user-dropdown"
+              aria-label="User menu"
+            >
+              <img class="avatar-img" alt="" hidden>
+              <span class="avatar-fallback" hidden></span>
+            </button>
+            <div class="user-dropdown" id="user-dropdown" hidden>
+              <p class="user-name"></p>
+              <a class="btn btn-primary btn-block" href="/profile">Enter System</a>
+              <button type="button" class="btn btn-ghost btn-block" data-logout>Sign Out</button>
+            </div>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <h1 id="hero-title">XXQ Academic Affairs Management System</h1>
+        <p class="hero-sub">
+          An all-in-one teaching management platform for universities — from course selection,
+          scheduling and curricula to grades, exams, graduation projects and practical education,
+          with students, faculty, departments and academic affairs working together in one place.
+        </p>
+        <a class="btn btn-primary btn-lg guest-only" href="/login">Sign In</a>
+      </section>
+
+      <section class="features container" aria-labelledby="features-title">
+        <h2 id="features-title">Feature Overview</h2>
+        <ul class="feature-grid">
+          <li class="card">
+            <h3>Teaching Operations</h3>
+            <p>
+              Enrollment campaigns with course selection and withdrawal, smart class scheduling and
+              teaching assignments, curriculum planning, and course administration — the entire
+              teaching operation online.
+            </p>
+          </li>
+          <li class="card">
+            <h3>Grades &amp; Exams</h3>
+            <p>
+              Grade entry and statistical analysis, exam and make-up exam scheduling, and student
+              grade review requests — fully traceable grade data.
+            </p>
+          </li>
+          <li class="card">
+            <h3>Practical Education</h3>
+            <p>
+              Unified management of internships, competitions and social practice; graduation
+              projects cover the full workflow from topic selection, proposal and midterm review to
+              thesis evaluation, defense arrangement and grade publication.
+            </p>
+          </li>
+          <li class="card">
+            <h3>Analytics &amp; Master Data</h3>
+            <p>
+              Academic early warnings, teaching evaluations and teaching-quality analytics;
+              centralized management of students, majors, colleges, grade levels and classes, with
+              batch import.
+            </p>
+          </li>
+        </ul>
+      </section>
+
+      <section class="roles container" aria-labelledby="roles-title">
+        <h2 id="roles-title">Four Roles, One Platform</h2>
+        <ul class="role-list">
+          <li class="card">
+            <h3>Students</h3>
+            <p>
+              Enroll in and drop courses, view timetables and exam schedules, check grades and
+              request reviews, select graduation project topics and submit theses, and register for
+              internships, competitions and social practice.
+            </p>
+          </li>
+          <li class="card">
+            <h3>Faculty</h3>
+            <p>
+              View teaching assignments, enter grades, advise graduation projects and review
+              proposals, midterms and theses, keep guidance logs, and see teaching evaluation
+              results.
+            </p>
+          </li>
+          <li class="card">
+            <h3>Departments</h3>
+            <p>
+              Review graduation project topics, allocate students, arrange defenses and publish
+              results, manage internships, and monitor progress with department dashboards.
+            </p>
+          </li>
+          <li class="card">
+            <h3>Academic Affairs</h3>
+            <p>
+              Manage curricula and scheduling, run enrollment campaigns and exam arrangements,
+              monitor academic warnings and teaching evaluations, maintain master data with batch
+              import, and oversee graduation projects on global dashboards.
+            </p>
+          </li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>
+        <small>© 2026 XXQ Academic Affairs Management System · <a href="/" hreflang="zh-CN" lang="zh-CN">中文</a></small>
+      </p>
+    </footer>
+
+    <script>
+      // Fill avatar/name and wire the dropdown when signed in; nothing to do for guests
+      ;(function () {
+        if (!document.documentElement.classList.contains('logged-in')) return
+
+        var user = null
+        try {
+          user = JSON.parse(localStorage.getItem('xxq-user'))
+        } catch (e) {
+          user = null
+        }
+        if (!user) return
+
+        // Avatar: prefix the filename with /api/avatar/ (same rule as the SPA avatarUrl());
+        // fall back to the first character of the user's name
+        var avatarImg = document.querySelector('.avatar-img')
+        var avatarFallback = document.querySelector('.avatar-fallback')
+        var avatar = user.avatar
+        if (avatar) {
+          var src = avatar
+          if (!/^(https?:)?\/\//.test(avatar)) {
+            src = '/api/avatar/' + avatar.replace(/^\/api\/avatar\//, '')
+          }
+          avatarImg.src = src
+          avatarImg.hidden = false
+        } else {
+          avatarFallback.textContent = (user.name || '?').charAt(0)
+          avatarFallback.hidden = false
+        }
+        document.querySelector('.user-name').textContent = user.name || ''
+
+        // Dropdown: click avatar to toggle, click outside or press Esc to close
+        var avatarBtn = document.querySelector('.avatar-btn')
+        var dropdown = document.querySelector('.user-dropdown')
+        function closeDropdown() {
+          dropdown.hidden = true
+          avatarBtn.setAttribute('aria-expanded', 'false')
+        }
+        avatarBtn.addEventListener('click', function (e) {
+          e.stopPropagation()
+          var opening = dropdown.hidden
+          dropdown.hidden = !opening
+          avatarBtn.setAttribute('aria-expanded', String(opening))
+        })
+        document.addEventListener('click', function (e) {
+          if (!dropdown.hidden && !dropdown.contains(e.target)) closeDropdown()
+        })
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape' && !dropdown.hidden) closeDropdown()
+        })
+
+        // Sign out: best-effort notify the backend, always clear the local session
+        document.querySelector('[data-logout]').addEventListener('click', function () {
+          var finish = function () {
+            try {
+              localStorage.removeItem('xxq-access-token')
+              localStorage.removeItem('xxq-refresh-token')
+              localStorage.removeItem('xxq-user-id')
+              localStorage.removeItem('xxq-user')
+            } catch (e) {
+              /* ignore */
+            }
+            location.reload()
+          }
+          var token = null
+          try {
+            token = localStorage.getItem('xxq-access-token')
+          } catch (e) {
+            token = null
+          }
+          if (!token) {
+            finish()
+            return
+          }
+          fetch('/api/login/logout', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer ' + token,
+            },
+          })
+            .catch(function () {
+              /* backend unreachable: continue local sign-out anyway */
+            })
+            .finally(function () {
+              finish()
+            })
+        })
+      })()
+    </script>
+  </body>
+</html>
