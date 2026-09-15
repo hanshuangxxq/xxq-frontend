@@ -1,0 +1,11 @@
+# XXQ 爬虫协议
+# 整站允许抓取;仅屏蔽后端接口与 WebSocket(返回 JSON/长连接,无可索引内容)。
+# 注意:切勿在此屏蔽应用路由(/login、/profile 等)。SPA 外壳 index.html 通过
+# <meta name="robots" content="noindex"> 声明不收录,若被 robots.txt 屏蔽,
+# 爬虫将无法读到该声明,反而可能把这些 URL 以无摘要裸链接形式收录。
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /ws
+
+Sitemap: https://example.com/sitemap.xml
