@@ -1,7 +1,9 @@
 {
   "app": {
     "title": "XXQ Frontend",
-    "welcome": "Welcome to XXQ Frontend"
+    "welcome": "Welcome to XXQ Frontend",
+    "siteName": "XXQ",
+    "fullTitle": "XXQ — Academic Affairs Management System"
   },
   "nav": {
     "home": "Home"
