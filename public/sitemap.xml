@@ -1,20 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- 站点地图:仅收录公开落地页(中文 / 与英文 /en/),登录后的应用路由均为 noindex 不入图。
-     部署时将 example.com 替换为实际域名;页面内容变更时更新 lastmod -->
+     域名与线上 nginx server_name 一致(当前为 http,启用 HTTPS 后需批量改为 https 并重新构建);
+     页面内容变更时更新 lastmod -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://example.com/</loc>
+    <loc>http://hanshauangxxq.cn/</loc>
     <lastmod>2026-09-15</lastmod>
-    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://example.com/"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/en/"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://example.com/"/>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="http://hanshauangxxq.cn/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="http://hanshauangxxq.cn/en/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="http://hanshauangxxq.cn/"/>
   </url>
   <url>
-    <loc>https://example.com/en/</loc>
+    <loc>http://hanshauangxxq.cn/en/</loc>
     <lastmod>2026-09-15</lastmod>
-    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://example.com/"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/en/"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://example.com/"/>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="http://hanshauangxxq.cn/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="http://hanshauangxxq.cn/en/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="http://hanshauangxxq.cn/"/>
   </url>
 </urlset>
