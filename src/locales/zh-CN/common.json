@@ -1,7 +1,9 @@
 {
   "app": {
     "title": "XXQ 前端",
-    "welcome": "欢迎使用 XXQ 前端应用"
+    "welcome": "欢迎使用 XXQ 前端应用",
+    "siteName": "XXQ",
+    "fullTitle": "XXQ — 高校教务管理系统"
   },
   "nav": {
     "home": "首页"
