@@ -8,4 +8,4 @@ Allow: /
 Disallow: /api/
 Disallow: /ws
 
-Sitemap: https://example.com/sitemap.xml
+Sitemap: http://hanshauangxxq.cn/sitemap.xml
