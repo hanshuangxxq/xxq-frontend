@@ -1,10 +1,35 @@
 <!DOCTYPE html>
-<html lang="">
+<!--
+  应用外壳(SPA 入口)。Nginx 对 / 与 /en/ 之外的地址一律返回本文件(见 deploy/nginx.conf),
+  而这些地址全部是登录后的应用页面,故统一声明 noindex:SEO 收录面由 deploy/landing
+  下的静态落地页承担。本文件的 meta 只服务于浏览器/读屏语义与链接分享预览(og),
+  请勿在此堆砌关键词。<html lang> 为默认语言中文,应用挂载后由 useDocumentHead
+  (src/shared/composables/useDocumentHead.ts)按实际界面语言与路由同步 <title>/lang
+-->
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8">
-    <link rel="icon" href="/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XXQ</title>
+    <title>XXQ — 高校教务管理系统</title>
+    <meta
+      name="description"
+      content="XXQ 高校教务管理系统:覆盖选课、排课、培养方案、成绩与考试、毕业设计、实习竞赛等实践教学的一体化教学管理平台。本页为系统应用入口,需登录后使用。"
+    >
+    <!-- 应用页面均需登录,不参与搜索引擎收录;落地页(deploy/landing)才是收录面 -->
+    <meta name="robots" content="noindex">
+    <!-- 与下方内联样式/splash 的明暗背景一致,供浏览器 UI(标签栏等)取色 -->
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f5f6f8">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#101014">
+    <!-- 链接分享预览:应用页统一展示站点级信息,不逐页生成;暂无合适位图资源,不声明 og:image -->
+    <meta property="og:site_name" content="XXQ">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="XXQ — 高校教务管理系统">
+    <meta
+      property="og:description"
+      content="面向高校的一体化教务管理系统:选课、排课、培养方案、成绩与考试、毕业设计与实践教学,学生、教师、院系、教务四端协同。"
+    >
+    <meta name="twitter:card" content="summary">
+    <link rel="icon" href="/favicon.ico">
     <style>
       /* 应用挂载前的兜底背景,与 global.css 的 --app-bg 一致,避免加载期白闪;
          暗色由下方内联脚本按本机存储的主题(无则跟随系统)预设 .dark 类决定 */
