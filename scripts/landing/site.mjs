@@ -96,6 +96,8 @@ function renderJsonLd(page) {
     description: page.description,
     isPartOf: { '@id': WEBSITE_ID },
     inLanguage: page.lang,
+    // 与 sitemap 的 lastmod 同源:内容数据里的显式日期,不取当前时间
+    dateModified: page.lastModified,
   }
   if (page.application) {
     webPage.about = { '@id': `${absUrl('/')}#software` }
@@ -164,6 +166,8 @@ function renderHead(page, alternates) {
     `<meta name="description" content="${esc(page.description)}">`,
     '<meta name="robots" content="index, follow">',
     '<meta name="theme-color" content="#f0f2f5">',
+    // 声明页面同时适配 PC 与移动端:百度移动适配的旧式声明(现代引擎看 viewport,无害)
+    '<meta name="applicable-device" content="pc,mobile">',
     '<!-- 规范链接与多语言互链 -->',
     `<link rel="canonical" href="${canonicalUrl(page)}">`,
   ]
@@ -215,7 +219,11 @@ function renderHead(page, alternates) {
 function renderSubnav(page, nav) {
   if (page.lang !== 'zh-CN') return ''
   const items = nav.features
-    .map((f) => `<li><a href="${f.path}">${esc(f.label)}</a></li>`)
+    .map((f) => {
+      // 当前页在导航里打 aria-current:读屏可辨,CSS 据此高亮
+      const current = f.path === page.urlPath ? ' aria-current="page"' : ''
+      return `<li><a href="${f.path}"${current}>${esc(f.label)}</a></li>`
+    })
     .join('\n')
   return `<nav class="subnav" aria-label="功能导航">
   <ul class="subnav-list container">
@@ -249,7 +257,7 @@ function renderHeader(page, nav) {
 
   return `<header class="site-header">
   <nav class="nav container" aria-label="${label.nav}">
-    <a class="brand" href="${page.lang === 'zh-CN' ? '/' : '/en/'}">${BRAND}</a>
+    <a class="brand" href="${page.lang === 'zh-CN' ? '/' : '/en/'}"><img class="brand-logo" src="${LOGO_IMAGE}" width="28" height="28" alt="">${BRAND}</a>
     <ul class="nav-actions">
       <li><a class="lang-switch" href="${otherLang.href}" hreflang="${otherLang.hreflang}" lang="${otherLang.lang}">${otherLang.text}</a></li>
       <li class="guest-only"><a class="btn btn-primary" href="/login">${label.signIn}</a></li>
@@ -300,7 +308,9 @@ ${indentBlock(links, 4)}
     })
     .join('\n')
 
-  // 备案号占位:ICP 与公安备案号拿到后替换下方一行,并同步更新 /filing/ 页
+  // 备案状态:申请中,未批复前页脚不挂备案号。ICP 备案号拿到后把下面一行的
+  // 「ICP 备案申请中」换成指向 beian.miit.gov.cn 的真实备案号链接,
+  // 并同步改写 /filing/ 页内容(scripts/landing/pages.zh.mjs)
   return `<footer class="site-footer">
   <div class="container footer-grid">
 ${indentBlock(columns, 4)}
@@ -310,10 +320,7 @@ ${indentBlock(columns, 4)}
       <small>© 2026 ${nav.brandFullZh} · <a href="/en/" hreflang="en" lang="en">English</a></small>
     </p>
     <p>
-      <small>
-        <a href="https://beian.miit.gov.cn/" rel="nofollow noopener" target="_blank">京ICP备XXXXXXXX号</a>
-        · <a href="/filing/">备案信息</a>
-      </small>
+      <small>ICP 备案申请中 · <a href="/filing/">备案信息</a></small>
     </p>
   </div>
 </footer>`
@@ -414,13 +421,22 @@ ${indentBlock(links, 4)}
 export function renderPage(page, nav) {
   const alternates = page.alternates || []
 
-  // 主转化入口。guest-only 让已登录访客看不到它(landing-boot.js 打的 logged-in 类控制)
+  // 主转化入口。guest-only / user-only 由 landing-boot.js 打的 logged-in 类切换:
+  // 访客看到「登录/Sign In」进 /login,已登录访客直接给「进入系统」进 /profile
   const ctaLabel = page.lang === 'zh-CN' ? '进入系统' : 'Sign In'
+  const ctaUserLabel = page.lang === 'zh-CN' ? '进入系统' : 'Enter System'
   const hero = `<section class="hero${page.breadcrumb.length > 1 ? ' hero-compact' : ''}" aria-labelledby="hero-title">
   <h1 id="hero-title">${esc(page.h1)}</h1>
   <p class="hero-lead">${esc(page.lead)}</p>
   <a class="btn btn-primary btn-lg guest-only" href="/login">${ctaLabel}</a>
+  <a class="btn btn-primary btn-lg user-only" href="/profile">${ctaUserLabel}</a>
 </section>`
+
+  // 页尾公示更新时间与 JSON-LD dateModified 同源,均为内容数据里的显式日期
+  const pageUpdated =
+    page.lang === 'zh-CN'
+      ? `本页更新于 <time datetime="${page.lastModified}">${page.lastModified}</time>`
+      : `Last updated: <time datetime="${page.lastModified}">${page.lastModified}</time>`
 
   const main = [
     '<main>',
@@ -430,6 +446,7 @@ export function renderPage(page, nav) {
     renderSections(page),
     renderFaq(page),
     renderRelated(page, nav),
+    `<p class="page-updated">${pageUpdated}</p>`,
     '</div>',
     '</main>',
   ]

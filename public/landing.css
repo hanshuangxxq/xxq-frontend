@@ -76,9 +76,18 @@ a:hover {
 }
 
 .brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 22px;
   font-weight: 700;
   color: var(--landing-text);
+}
+
+.brand-logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
 }
 
 .brand:hover {
@@ -155,10 +164,18 @@ a:hover {
   color: var(--landing-primary);
 }
 
+/* 当前页在功能导航里高亮(aria-current 由生成器按 page.urlPath 打) */
+.subnav-list a[aria-current='page'] {
+  color: var(--landing-primary);
+  font-weight: 600;
+}
+
 /* ===== Hero ===== */
 .hero {
   text-align: center;
   padding: 96px 24px 72px;
+  /* 顶部中央一层极淡的品牌色晕,避免首屏一片平灰 */
+  background: radial-gradient(640px 240px at 50% 0%, rgba(37, 99, 235, 0.08), transparent);
 }
 
 /* 详情页标题层级低于首页,hero 相应收紧,避免正文被推到首屏之外 */
@@ -275,6 +292,20 @@ a:hover {
   border-radius: 8px;
   box-shadow: var(--landing-card-shadow);
   padding: 24px;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.card:hover {
+  border-color: var(--landing-primary);
+}
+
+/* 悬停轻微上浮;偏好减少动态效果的用户跳过 */
+@media (prefers-reduced-motion: no-preference) {
+  .card:hover {
+    transform: translateY(-2px);
+  }
 }
 
 .card h3 {
@@ -425,6 +456,16 @@ a:hover {
   }
 }
 
+/* ===== 页面更新时间(正文末尾,与 JSON-LD dateModified 同源)===== */
+.page-updated {
+  max-width: 860px;
+  margin: 0 auto;
+  padding-bottom: 28px;
+  font-size: 13px;
+  color: var(--landing-text-secondary);
+  text-align: right;
+}
+
 /* ===== 登录态显隐 =====
    head 内联脚本在渲染前给 <html> 加 logged-in 类,此处据此切换访客/已登录元素 */
 .user-only {
@@ -433,6 +474,11 @@ a:hover {
 
 html.logged-in .user-only {
   display: block;
+}
+
+/* hero 里的用户态 CTA 是 <a class="btn">,上面的通用规则会把它撑成 block,收回 inline-block */
+html.logged-in .btn.user-only {
+  display: inline-block;
 }
 
 html.logged-in .guest-only {

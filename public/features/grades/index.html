@@ -12,6 +12,7 @@
     <meta name="description" content="XXQ 成绩管理系统支持教师按教学任务录入成绩,院系与教务可按课程、班级做成绩统计与分布分析,并提供学生成绩复核申请与处理流程,成绩数据全程可追溯。">
     <meta name="robots" content="index, follow">
     <meta name="theme-color" content="#f0f2f5">
+    <meta name="applicable-device" content="pc,mobile">
     <!-- 规范链接与多语言互链 -->
     <link rel="canonical" href="https://hanshauangxxq.cn/features/grades/">
     <!-- 链接分享预览(og:image 为绝对 URL,微信/QQ/Twitter 卡片依赖) -->
@@ -77,6 +78,7 @@
             "@id": "https://hanshauangxxq.cn/#website"
           },
           "inLanguage": "zh-CN",
+          "dateModified": "2026-09-16",
           "breadcrumb": {
             "@id": "https://hanshauangxxq.cn/features/grades/#breadcrumb"
           }
@@ -105,7 +107,7 @@
   <body>
     <header class="site-header">
       <nav class="nav container" aria-label="主导航">
-        <a class="brand" href="/">XXQ</a>
+        <a class="brand" href="/"><img class="brand-logo" src="/logo.png" width="28" height="28" alt="">XXQ</a>
         <ul class="nav-actions">
           <li><a class="lang-switch" href="/en/" hreflang="en" lang="en">English</a></li>
           <li class="guest-only"><a class="btn btn-primary" href="/login">登录</a></li>
@@ -133,7 +135,7 @@
       <ul class="subnav-list container">
         <li><a href="/features/course-selection/">选课管理</a></li>
         <li><a href="/features/scheduling/">排课管理</a></li>
-        <li><a href="/features/grades/">成绩管理</a></li>
+        <li><a href="/features/grades/" aria-current="page">成绩管理</a></li>
         <li><a href="/features/exams/">考试管理</a></li>
         <li><a href="/features/graduation/">毕业设计</a></li>
         <li><a href="/features/practice/">实践教学</a></li>
@@ -151,6 +153,7 @@
       <h1 id="hero-title">成绩管理系统</h1>
       <p class="hero-lead">成绩录入绑定教学任务,统计与分布面向院系和教务,复核申请走完整流程,成绩数据从产生到归档全程可追溯。</p>
       <a class="btn btn-primary btn-lg guest-only" href="/login">进入系统</a>
+      <a class="btn btn-primary btn-lg user-only" href="/profile">进入系统</a>
     </section>
     <div class="container">
     <section class="prose-section">
@@ -183,6 +186,7 @@
         <li><a href="/faq/">常见问题解答</a></li>
       </ul>
     </section>
+    <p class="page-updated">本页更新于 <time datetime="2026-09-16">2026-09-16</time></p>
     </div>
     </main>
     <footer class="site-footer">
@@ -220,10 +224,7 @@
           <small>© 2026 XXQ 高校教务管理系统 · <a href="/en/" hreflang="en" lang="en">English</a></small>
         </p>
         <p>
-          <small>
-            <a href="https://beian.miit.gov.cn/" rel="nofollow noopener" target="_blank">京ICP备XXXXXXXX号</a>
-            · <a href="/filing/">备案信息</a>
-          </small>
+          <small>ICP 备案申请中 · <a href="/filing/">备案信息</a></small>
         </p>
       </div>
     </footer>
