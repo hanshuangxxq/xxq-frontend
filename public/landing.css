@@ -129,10 +129,41 @@ a:hover {
   font-size: 17px;
 }
 
+/* ===== 功能导航条(仅中文页,页头下方一行)===== */
+.subnav {
+  background: var(--landing-bg);
+  border-bottom: 1px solid var(--landing-border);
+  overflow-x: auto;
+}
+
+.subnav-list {
+  display: flex;
+  gap: 24px;
+  list-style: none;
+  margin: 0;
+  padding-top: 11px;
+  padding-bottom: 11px;
+  white-space: nowrap;
+}
+
+.subnav-list a {
+  font-size: 14px;
+  color: var(--landing-text-secondary);
+}
+
+.subnav-list a:hover {
+  color: var(--landing-primary);
+}
+
 /* ===== Hero ===== */
 .hero {
   text-align: center;
   padding: 96px 24px 72px;
+}
+
+/* 详情页标题层级低于首页,hero 相应收紧,避免正文被推到首屏之外 */
+.hero-compact {
+  padding: 56px 24px 40px;
 }
 
 .hero h1 {
@@ -141,29 +172,95 @@ a:hover {
   line-height: 1.25;
 }
 
-.hero-sub {
+.hero-compact h1 {
+  font-size: 32px;
+}
+
+.hero-lead {
   margin: 0 auto 32px;
   max-width: 760px;
   font-size: 18px;
   color: var(--landing-text-secondary);
 }
 
-/* ===== 功能与角色区 ===== */
-.features,
-.roles {
-  padding: 24px 24px 48px;
+.hero-compact .hero-lead {
+  margin-bottom: 24px;
+  font-size: 16px;
 }
 
-.features h2,
-.roles h2 {
-  margin: 0 0 32px;
-  font-size: 28px;
-  text-align: center;
+/* ===== 面包屑 ===== */
+.breadcrumb {
+  padding-top: 20px;
 }
 
-/* 功能/角色卡片均为语义化列表(ul):重置默认列表样式,网格布局负责排列 */
-.feature-grid,
-.role-list {
+.breadcrumb ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding-left: 0;
+  font-size: 13px;
+  color: var(--landing-text-secondary);
+}
+
+/* 分隔符用伪元素而非文本节点,避免被读屏逐条念出「斜杠」 */
+.breadcrumb li + li::before {
+  content: '/';
+  margin-right: 8px;
+  color: var(--landing-border);
+}
+
+.breadcrumb [aria-current='page'] {
+  color: var(--landing-text);
+}
+
+/* ===== 正文区块 ===== */
+/* 限制行宽到约 40 个汉字,长段落才不会横跨整个宽屏 */
+.prose-section {
+  max-width: 860px;
+  margin: 0 auto;
+  padding-bottom: 36px;
+}
+
+.prose-section h2 {
+  margin: 0 0 16px;
+  font-size: 24px;
+  line-height: 1.4;
+}
+
+.prose-section > p {
+  margin: 0 0 14px;
+  color: var(--landing-text-secondary);
+}
+
+.prose-list {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+  color: var(--landing-text-secondary);
+}
+
+/* 列表项前用品牌色短横代替默认圆点,与本项目的浅色主题更协调 */
+.prose-list li {
+  position: relative;
+  margin-bottom: 10px;
+  padding-left: 18px;
+}
+
+.prose-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.72em;
+  width: 6px;
+  height: 2px;
+  background: var(--landing-primary);
+}
+
+/* ===== 卡片网格(功能总览 / 四端角色)===== */
+/* 卡片为语义化列表(ul):重置默认列表样式,网格布局负责排列 */
+.card-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 20px;
@@ -190,10 +287,64 @@ a:hover {
   color: var(--landing-text-secondary);
 }
 
+/* ===== FAQ ===== */
+.faq-list {
+  border-top: 1px solid var(--landing-border);
+}
+
+.faq-item {
+  border-bottom: 1px solid var(--landing-border);
+}
+
+.faq-item summary {
+  padding: 14px 0;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.faq-item summary::marker {
+  color: var(--landing-primary);
+}
+
+.faq-item p {
+  margin: 0 0 16px;
+  color: var(--landing-text-secondary);
+}
+
+/* ===== 相关页面 ===== */
+.related-section {
+  border-top: 1px solid var(--landing-border);
+  padding-top: 28px;
+}
+
+.related-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  list-style: none;
+  margin: 0;
+  padding-left: 0;
+}
+
+.related-list a {
+  display: inline-block;
+  padding: 8px 16px;
+  border: 1px solid var(--landing-border);
+  border-radius: 6px;
+  background: var(--landing-card-bg);
+  font-size: 14px;
+}
+
+.related-list a:hover {
+  border-color: var(--landing-primary);
+  text-decoration: none;
+}
+
 /* ===== 页脚 ===== */
 .site-footer {
   margin-top: 24px;
-  padding: 24px;
+  padding: 40px 24px 24px;
   background: var(--landing-card-bg);
   border-top: 1px solid var(--landing-border);
   text-align: center;
@@ -210,23 +361,67 @@ a:hover {
   font-size: inherit;
 }
 
+/* 全站内链:任意页面到任意收录页面都只需一跳,这是爬虫的主要发现路径 */
+.footer-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  text-align: left;
+  padding-bottom: 28px;
+}
+
+.footer-col-title {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--landing-text);
+}
+
+.footer-col ul {
+  list-style: none;
+  margin: 0;
+  padding-left: 0;
+}
+
+.footer-col li {
+  margin-bottom: 8px;
+}
+
+.footer-meta {
+  padding-top: 20px;
+  border-top: 1px solid var(--landing-border);
+}
+
+.footer-meta p + p {
+  margin-top: 8px;
+}
+
 /* ===== 响应式 ===== */
 @media (max-width: 720px) {
   .hero {
     padding: 64px 20px 48px;
   }
 
-  .hero h1 {
+  .hero-compact {
+    padding: 40px 20px 28px;
+  }
+
+  .hero h1,
+  .hero-compact h1 {
     font-size: 28px;
   }
 
-  .hero-sub {
+  .hero-lead {
     font-size: 16px;
   }
 
-  .feature-grid,
-  .role-list {
+  .card-grid,
+  .footer-grid {
     grid-template-columns: 1fr;
+  }
+
+  .prose-section h2 {
+    font-size: 21px;
   }
 }
 

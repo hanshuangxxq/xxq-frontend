@@ -1,72 +1,120 @@
 <!DOCTYPE html>
+<!--
+  此文件由 scripts/build-landing.mjs 生成,请勿直接编辑。
+  内容数据在 scripts/landing/pages.en.mjs,改完重跑:
+    node scripts/build-landing.mjs
+-->
 <html lang="en">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XXQ — Academic Affairs Management System for Universities</title>
-    <meta
-      name="description"
-      content="XXQ is an all-in-one academic affairs management system for universities, covering course selection, class scheduling, curriculum planning, grade entry and statistics, exams and make-up exams, the full graduation project workflow, internships, competitions and social practice, academic early warnings, teaching evaluations, and foundational data management."
-    >
+    <title>Academic Affairs Management System - Scheduling, Grades &amp; Exams | XXQ</title>
+    <meta name="description" content="XXQ is an all-in-one academic affairs management system for universities, covering course selection, class scheduling, grades and exams, graduation projects and practical education.">
     <meta name="robots" content="index, follow">
     <meta name="theme-color" content="#f0f2f5">
-    <!-- Canonical and multilingual alternates; URLs are plain HTTP for now — upgrade to
-         https once TLS is enabled (see the HTTPS template at the end of docs/nginx.conf) -->
+    <!-- 规范链接与多语言互链 -->
     <link rel="canonical" href="https://hanshauangxxq.cn/en/">
     <link rel="alternate" hreflang="zh-CN" href="https://hanshauangxxq.cn/">
     <link rel="alternate" hreflang="en" href="https://hanshauangxxq.cn/en/">
     <link rel="alternate" hreflang="x-default" href="https://hanshauangxxq.cn/">
-    <!-- Link preview metadata; og:image intentionally omitted — no suitable raster asset yet -->
+    <!-- 链接分享预览(og:image 为绝对 URL,微信/QQ/Twitter 卡片依赖) -->
     <meta property="og:site_name" content="XXQ">
-    <meta property="og:title" content="XXQ — Academic Affairs Management System for Universities">
-    <meta
-      property="og:description"
-      content="An all-in-one academic affairs platform for universities: course selection, scheduling, curricula, grades and exams, the full graduation project workflow, practical education, academic analytics, and master data."
-    >
+    <meta property="og:title" content="Academic Affairs Management System - Scheduling, Grades &amp; Exams | XXQ">
+    <meta property="og:description" content="XXQ is an all-in-one academic affairs management system for universities, covering course selection, class scheduling, grades and exams, graduation projects and practical education.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://hanshauangxxq.cn/en/">
     <meta property="og:locale" content="en_US">
     <meta property="og:locale:alternate" content="zh_CN">
-    <meta name="twitter:card" content="summary">
+    <meta property="og:image" content="https://hanshauangxxq.cn/og-image-en.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="XXQ Academic Affairs Management System — one platform for teaching operations">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://hanshauangxxq.cn/og-image-en.png">
+    <meta name="twitter:image:alt" content="XXQ Academic Affairs Management System — one platform for teaching operations">
     <link rel="icon" href="/favicon.ico">
     <link rel="stylesheet" href="/landing.css">
-    <!-- Signed-in state toggling and user menu. Production CSP (script-src 'self', see
-         docs/nginx.conf) forbids inline scripts, so this must stay external; loaded
-         render-blocking in <head> so the state class is set before <body> parses -->
-    <script src="/landing.js"></script>
+    <!-- 登录态打类:必须同步阻塞在 <head>,早于 body 解析给 <html> 加 logged-in 类,
+        否则已登录访客会先看到「登录」按钮再被替换。生产 CSP(script-src 'self',
+        见 docs/nginx.conf)禁内联脚本,故外置 -->
+    <script src="/landing-boot.js"></script>
+    <!-- 头像菜单等 DOM 交互:defer 在 DOMContentLoaded 前执行,不阻塞首屏;
+        不能用 async——若晚于 DOMContentLoaded 加载,监听器永不注册 -->
+    <script src="/landing.js" defer></script>
     <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@graph": [
-          {
-            "@type": "WebSite",
-            "name": "XXQ",
-            "url": "https://hanshauangxxq.cn/",
-            "inLanguage": ["zh-CN", "en"]
-          },
-          {
-            "@type": "SoftwareApplication",
-            "name": "XXQ Academic Affairs Management System",
-            "alternateName": "XXQ 高校教务管理系统",
-            "applicationCategory": "EducationalApplication",
-            "operatingSystem": "Web",
-            "url": "https://hanshauangxxq.cn/en/",
-            "inLanguage": ["zh-CN", "en"],
-            "description": "XXQ is an all-in-one academic affairs management system for universities, covering course selection, scheduling, curricula, grades and exams, the full graduation project workflow, internships, competitions and social practice, academic early warnings, teaching evaluations, and foundational data management.",
-            "featureList": [
-              "Course selection and enrollment campaigns",
-              "Class scheduling and teaching assignments",
-              "Curriculum (cultivation plan) management",
-              "Grade entry, statistics and review appeals",
-              "Exam and make-up exam management",
-              "Full graduation project workflow (topic selection, proposal, midterm, thesis, defense, grading)",
-              "Internship, competition and social practice management",
-              "Academic early warnings and teaching evaluations",
-              "Master data for students, majors, colleges, grade levels and classes, with batch import"
-            ]
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://hanshauangxxq.cn/#organization",
+          "name": "XXQ",
+          "url": "https://hanshauangxxq.cn/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://hanshauangxxq.cn/logo.png",
+            "width": 512,
+            "height": 512
           }
-        ]
-      }
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://hanshauangxxq.cn/#website",
+          "name": "XXQ",
+          "url": "https://hanshauangxxq.cn/",
+          "inLanguage": [
+            "zh-CN",
+            "en"
+          ],
+          "publisher": {
+            "@id": "https://hanshauangxxq.cn/#organization"
+          }
+        },
+        {
+          "@type": "WebPage",
+          "@id": "https://hanshauangxxq.cn/en/#webpage",
+          "url": "https://hanshauangxxq.cn/en/",
+          "name": "Academic Affairs Management System - Scheduling, Grades & Exams | XXQ",
+          "description": "XXQ is an all-in-one academic affairs management system for universities, covering course selection, class scheduling, grades and exams, graduation projects and practical education.",
+          "isPartOf": {
+            "@id": "https://hanshauangxxq.cn/#website"
+          },
+          "inLanguage": "en",
+          "about": {
+            "@id": "https://hanshauangxxq.cn/#software"
+          }
+        },
+        {
+          "@type": "SoftwareApplication",
+          "@id": "https://hanshauangxxq.cn/#software",
+          "name": "XXQ Academic Affairs Management System",
+          "alternateName": "XXQ 高校教务管理系统",
+          "applicationCategory": "EducationalApplication",
+          "operatingSystem": "Web",
+          "url": "https://hanshauangxxq.cn/en/",
+          "inLanguage": [
+            "zh-CN",
+            "en"
+          ],
+          "description": "XXQ is an all-in-one academic affairs management system for universities, covering course selection, class scheduling, grades and exams, graduation projects and practical education.",
+          "image": "https://hanshauangxxq.cn/og-image-en.png",
+          "publisher": {
+            "@id": "https://hanshauangxxq.cn/#organization"
+          },
+          "featureList": [
+            "Course selection campaigns with time-conflict and capacity checks",
+            "Class scheduling and teaching assignment management",
+            "Curriculum planning and course administration",
+            "Grade entry, statistical analysis and grade review requests",
+            "Exam scheduling and make-up exam management",
+            "Full graduation project workflow (topic selection, proposal, midterm, thesis, defense, grading)",
+            "Internship, competition and social practice management",
+            "Academic early warnings, teaching evaluations and teaching-quality analytics",
+            "Master data for students, majors, colleges, grade levels and classes, with batch import"
+          ]
+        }
+      ]
+    }
     </script>
   </head>
   <body>
@@ -97,93 +145,40 @@
         </ul>
       </nav>
     </header>
-
     <main>
-      <section class="hero" aria-labelledby="hero-title">
-        <h1 id="hero-title">XXQ Academic Affairs Management System</h1>
-        <p class="hero-sub">
-          An all-in-one teaching management platform for universities — from course selection,
-          scheduling and curricula to grades, exams, graduation projects and practical education,
-          with students, faculty, departments and academic affairs working together in one place.
-        </p>
-        <a class="btn btn-primary btn-lg guest-only" href="/login">Sign In</a>
-      </section>
-
-      <section class="features container" aria-labelledby="features-title">
-        <h2 id="features-title">Feature Overview</h2>
-        <ul class="feature-grid">
-          <li class="card">
-            <h3>Teaching Operations</h3>
-            <p>
-              Enrollment campaigns with course selection and withdrawal, smart class scheduling and
-              teaching assignments, curriculum planning, and course administration — the entire
-              teaching operation online.
-            </p>
-          </li>
-          <li class="card">
-            <h3>Grades &amp; Exams</h3>
-            <p>
-              Grade entry and statistical analysis, exam and make-up exam scheduling, and student
-              grade review requests — fully traceable grade data.
-            </p>
-          </li>
-          <li class="card">
-            <h3>Practical Education</h3>
-            <p>
-              Unified management of internships, competitions and social practice; graduation
-              projects cover the full workflow from topic selection, proposal and midterm review to
-              thesis evaluation, defense arrangement and grade publication.
-            </p>
-          </li>
-          <li class="card">
-            <h3>Analytics &amp; Master Data</h3>
-            <p>
-              Academic early warnings, teaching evaluations and teaching-quality analytics;
-              centralized management of students, majors, colleges, grade levels and classes, with
-              batch import.
-            </p>
-          </li>
-        </ul>
-      </section>
-
-      <section class="roles container" aria-labelledby="roles-title">
-        <h2 id="roles-title">Four Roles, One Platform</h2>
-        <ul class="role-list">
-          <li class="card">
-            <h3>Students</h3>
-            <p>
-              Enroll in and drop courses, view timetables and exam schedules, check grades and
-              request reviews, select graduation project topics and submit theses, and register for
-              internships, competitions and social practice.
-            </p>
-          </li>
-          <li class="card">
-            <h3>Faculty</h3>
-            <p>
-              View teaching assignments, enter grades, advise graduation projects and review
-              proposals, midterms and theses, keep guidance logs, and see teaching evaluation
-              results.
-            </p>
-          </li>
-          <li class="card">
-            <h3>Departments</h3>
-            <p>
-              Review graduation project topics, allocate students, arrange defenses and publish
-              results, manage internships, and monitor progress with department dashboards.
-            </p>
-          </li>
-          <li class="card">
-            <h3>Academic Affairs</h3>
-            <p>
-              Manage curricula and scheduling, run enrollment campaigns and exam arrangements,
-              monitor academic warnings and teaching evaluations, maintain master data with batch
-              import, and oversee graduation projects on global dashboards.
-            </p>
-          </li>
-        </ul>
-      </section>
+    <section class="hero" aria-labelledby="hero-title">
+      <h1 id="hero-title">XXQ Academic Affairs Management System</h1>
+      <p class="hero-lead">An all-in-one teaching management platform for universities — from course selection, scheduling and curricula to grades, exams, graduation projects and practical education, with students, faculty, departments and academic affairs working together in one place.</p>
+      <a class="btn btn-primary btn-lg guest-only" href="/login">Sign In</a>
+    </section>
+    <div class="container">
+    <section class="prose-section">
+      <h2>One platform for the whole teaching cycle</h2>
+      <p>Academic affairs work is spread across course selection, scheduling, grades, exams and graduation projects. When each runs on its own system, staff reconcile spreadsheets by hand, departments re-enter the same data, and students juggle multiple entry points. XXQ brings these steps into one system, so data is entered once and used everywhere downstream.</p>
+      <ul class="prose-list">
+        <li>Teaching operations: enrolment campaigns, smart class scheduling, teaching assignments, curricula and course administration</li>
+        <li>Grades and exams: grade entry and analysis, exam and make-up exam scheduling, grade review requests</li>
+        <li>Practical education: internships, competitions and social practice, plus the full graduation project workflow</li>
+        <li>Analytics and master data: academic early warnings, teaching evaluations, and student, major, college, grade level and class records</li>
+      </ul>
+    </section>
+    <section class="prose-section">
+      <h2>Four roles, separate permissions</h2>
+      <p>The system organises functions and data scope by role — student, faculty, department and academic affairs. A role never sees menu entries outside its scope, and reaching a page by URL directly is blocked before the page component loads or any business request is sent.</p>
+      <ul class="prose-list">
+        <li>Students: enrol in and drop courses, view timetables and exams, check grades and request reviews, select graduation project topics and submit theses</li>
+        <li>Faculty: view teaching assignments, enter grades, advise graduation projects and review proposals, midterms and theses, keep guidance logs</li>
+        <li>Departments: review project topics, allocate students, arrange defenses and publish results, manage internships, monitor progress</li>
+        <li>Academic affairs: curricula and scheduling, enrolment campaigns and exams, early warnings and evaluations, master data with batch import</li>
+      </ul>
+    </section>
+    <section class="prose-section">
+      <h2>Consistency enforced by the workflow</h2>
+      <p>Course selection is bound by time-conflict and capacity rules, grade entry is bound to a teaching assignment, and each graduation project stage requires review by the responsible role before the next one opens. These constraints live in the system rather than in a checklist applied afterwards.</p>
+      <p>Master data supports batch import, so students, majors, colleges, grade levels and classes can be set up in one pass before the term starts.</p>
+    </section>
+    </div>
     </main>
-
     <footer class="site-footer">
       <p>
         <small>© 2026 XXQ Academic Affairs Management System · <a href="/" hreflang="zh-CN" lang="zh-CN">中文</a></small>

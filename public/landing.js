@@ -1,21 +1,14 @@
 // XXQ SEO 落地页交互脚本(中英落地页共用)
+//
+// 加载方式:<script src="/landing.js" defer>,在 DOMContentLoaded 之前执行完毕,
+// 因此下面注册的 DOMContentLoaded 监听必然能触发。
+// 不要改用 async:若脚本晚于 DOMContentLoaded 才加载,监听器永不触发,
+// 已登录用户的头像菜单与退出登录会静默失效。
+// 登录态打类在 landing-boot.js(必须阻塞),本文件不参与首屏渲染。
+//
 // 注意:生产环境 CSP(script-src 'self',见 docs/nginx.conf)禁止内联脚本,
-// 落地页脚本必须保持外置;新增落地页交互一律写入本文件,不要内联到 HTML。
+// 落地页交互一律写入本文件,不要内联到 HTML。
 
-// ---- 登录态标记(渲染前执行)----
-// 本文件在 <head> 以阻塞方式加载:此时 body 尚未解析,先给 <html> 打类,
-// CSS(.user-only/.guest-only)据此显隐访客/已登录元素,无闪烁。
-// 登录态依据 xxq-user(与 SPA useAuthStore 一致);localStorage 不可用或数据损坏时按访客态渲染
-try {
-  var landingUser = localStorage.getItem('xxq-user')
-  if (landingUser && JSON.parse(landingUser).userId) {
-    document.documentElement.classList.add('logged-in')
-  }
-} catch (e) {
-  /* 忽略,按访客态渲染 */
-}
-
-// ---- 已登录头像菜单(DOM 解析完成后初始化)----
 document.addEventListener('DOMContentLoaded', function () {
   // 访客态下无事可做
   if (!document.documentElement.classList.contains('logged-in')) return
