@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<!--
+  此文件由 scripts/build-landing.mjs 生成,请勿直接编辑。
+  内容数据在 scripts/landing/pages.zh.mjs,改完重跑:
+    node scripts/build-landing.mjs
+-->
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>隐私政策 - 数据收集与使用说明 | XXQ 高校教务管理系统</title>
+    <meta name="description" content="XXQ 高校教务管理系统隐私政策,说明系统收集哪些数据、用于什么目的、数据保存在何处,以及浏览器本地存储的使用情况、用户享有的权利与联系反馈方式。">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#f0f2f5">
+    <!-- 规范链接与多语言互链 -->
+    <link rel="canonical" href="https://hanshauangxxq.cn/privacy/">
+    <!-- 链接分享预览(og:image 为绝对 URL,微信/QQ/Twitter 卡片依赖) -->
+    <meta property="og:site_name" content="XXQ">
+    <meta property="og:title" content="隐私政策 - 数据收集与使用说明 | XXQ 高校教务管理系统">
+    <meta property="og:description" content="XXQ 高校教务管理系统隐私政策,说明系统收集哪些数据、用于什么目的、数据保存在何处,以及浏览器本地存储的使用情况、用户享有的权利与联系反馈方式。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://hanshauangxxq.cn/privacy/">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta property="og:image" content="https://hanshauangxxq.cn/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="XXQ 高校教务管理系统隐私政策">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://hanshauangxxq.cn/og-image.png">
+    <meta name="twitter:image:alt" content="XXQ 高校教务管理系统隐私政策">
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/landing.css">
+    <!-- 登录态打类:必须同步阻塞在 <head>,早于 body 解析给 <html> 加 logged-in 类,
+        否则已登录访客会先看到「登录」按钮再被替换。生产 CSP(script-src 'self',
+        见 docs/nginx.conf)禁内联脚本,故外置 -->
+    <script src="/landing-boot.js"></script>
+    <!-- 头像菜单等 DOM 交互:defer 在 DOMContentLoaded 前执行,不阻塞首屏;
+        不能用 async——若晚于 DOMContentLoaded 加载,监听器永不注册 -->
+    <script src="/landing.js" defer></script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://hanshauangxxq.cn/#organization",
+          "name": "XXQ",
+          "url": "https://hanshauangxxq.cn/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://hanshauangxxq.cn/logo.png",
+            "width": 512,
+            "height": 512
+          }
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://hanshauangxxq.cn/#website",
+          "name": "XXQ",
+          "url": "https://hanshauangxxq.cn/",
+          "inLanguage": [
+            "zh-CN",
+            "en"
+          ],
+          "publisher": {
+            "@id": "https://hanshauangxxq.cn/#organization"
+          }
+        },
+        {
+          "@type": "WebPage",
+          "@id": "https://hanshauangxxq.cn/privacy/#webpage",
+          "url": "https://hanshauangxxq.cn/privacy/",
+          "name": "隐私政策 - 数据收集与使用说明 | XXQ 高校教务管理系统",
+          "description": "XXQ 高校教务管理系统隐私政策,说明系统收集哪些数据、用于什么目的、数据保存在何处,以及浏览器本地存储的使用情况、用户享有的权利与联系反馈方式。",
+          "isPartOf": {
+            "@id": "https://hanshauangxxq.cn/#website"
+          },
+          "inLanguage": "zh-CN",
+          "breadcrumb": {
+            "@id": "https://hanshauangxxq.cn/privacy/#breadcrumb"
+          }
+        },
+        {
+          "@type": "BreadcrumbList",
+          "@id": "https://hanshauangxxq.cn/privacy/#breadcrumb",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "首页",
+              "item": "https://hanshauangxxq.cn/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "隐私政策"
+            }
+          ]
+        }
+      ]
+    }
+    </script>
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav container" aria-label="主导航">
+        <a class="brand" href="/">XXQ</a>
+        <ul class="nav-actions">
+          <li><a class="lang-switch" href="/en/" hreflang="en" lang="en">English</a></li>
+          <li class="guest-only"><a class="btn btn-primary" href="/login">登录</a></li>
+          <li class="user-menu user-only">
+            <button
+              type="button"
+              class="avatar-btn"
+              aria-haspopup="menu"
+              aria-expanded="false"
+              aria-controls="user-dropdown"
+              aria-label="用户菜单"
+            >
+              <img class="avatar-img" alt="" hidden>
+              <span class="avatar-fallback" hidden></span>
+            </button>
+            <div class="user-dropdown" id="user-dropdown" hidden>
+              <p class="user-name"></p>
+              <a class="btn btn-primary btn-block" href="/profile">进入系统</a>
+              <button type="button" class="btn btn-ghost btn-block" data-logout>退出登录</button>
+            </div>
+          </li>
+        </ul>
+      </nav>
+    <nav class="subnav" aria-label="功能导航">
+      <ul class="subnav-list container">
+        <li><a href="/features/course-selection/">选课管理</a></li>
+        <li><a href="/features/scheduling/">排课管理</a></li>
+        <li><a href="/features/grades/">成绩管理</a></li>
+        <li><a href="/features/exams/">考试管理</a></li>
+        <li><a href="/features/graduation/">毕业设计</a></li>
+        <li><a href="/features/practice/">实践教学</a></li>
+      </ul>
+    </nav>
+    </header>
+    <main>
+    <nav class="breadcrumb container" aria-label="面包屑">
+      <ol>
+        <li><a href="/">首页</a></li>
+        <li><span aria-current="page">隐私政策</span></li>
+      </ol>
+    </nav>
+    <section class="hero hero-compact" aria-labelledby="hero-title">
+      <h1 id="hero-title">隐私政策</h1>
+      <p class="hero-lead">本页说明 XXQ 高校教务管理系统在处理数据时的实际做法:收集什么、为什么收集、保存在哪里。内容依据系统的真实实现撰写,如有调整会同步更新本页。</p>
+      <a class="btn btn-primary btn-lg guest-only" href="/login">进入系统</a>
+    </section>
+    <div class="container">
+    <section class="prose-section">
+      <h2>我们收集哪些数据</h2>
+      <p>系统服务于院校的教学管理,收集的数据限于完成教务业务所必需的范围,不收集与教学管理无关的个人信息。</p>
+      <ul class="prose-list">
+        <li>账号与身份信息:用户名、姓名、所属院校与院系、角色类型,由所在院校的管理员创建</li>
+        <li>教学业务数据:选课记录、课表、成绩、考试安排、毕业设计各阶段材料、实习与竞赛报名记录</li>
+        <li>登录相关记录:登录时间与登录失败次数,用于账号安全与频率限制</li>
+      </ul>
+    </section>
+    <section class="prose-section">
+      <h2>登录时的客户端内网 IP</h2>
+      <p>登录请求可能携带一个由浏览器探测得到的客户端内网 IP 地址,用途仅限于登录频率限制——校园网常有多人共用一个公网出口,按内网 IP 分桶可以避免同一栋宿舍楼的学生互相影响。该信息由浏览器提供,可能缺失,也可以被伪造,因此不作为任何安全判断的依据。登录之后的频率控制与风控按账号维度进行,不依赖 IP。</p>
+    </section>
+    <section class="prose-section">
+      <h2>浏览器本地存储</h2>
+      <p>系统不在浏览器中写入第三方跟踪 Cookie,也不使用第三方统计或广告脚本。为维持登录状态与界面偏好,会在浏览器的本地存储(localStorage)中保存以下内容:</p>
+      <ul class="prose-list">
+        <li>登录凭据:访问令牌与刷新令牌,用于维持登录状态,退出登录时清除</li>
+        <li>账号基本信息:用户名、姓名、角色与头像文件名,用于界面展示,退出登录时清除</li>
+        <li>界面偏好:主题(浅色/深色)与语言,用于避免页面加载时的闪烁</li>
+        <li>访问记录:最近访问的页面路径,用于在错误页提供「返回上一页」,随标签页关闭自动清除</li>
+      </ul>
+    </section>
+    <section class="prose-section">
+      <h2>数据保存在哪里</h2>
+      <p>系统由使用院校自行部署。上述业务数据保存在院校自己的服务器与数据库中,不上传至任何第三方,也不用于教学管理之外的用途。数据的保存期限与销毁方式由使用院校根据其管理规定确定。</p>
+    </section>
+    <section class="prose-section">
+      <h2>你的权利</h2>
+      <p>如需查询、更正或删除系统中的个人信息,或对数据处理方式有疑问,请联系所在院校的教务管理部门——数据由院校管理员维护。也可以通过联系我们页面与我们沟通。</p>
+    </section>
+    <section class="prose-section">
+      <h2>政策更新</h2>
+      <p>本政策随系统功能的调整而更新,更新后的内容直接反映在本页。涉及数据处理范围的重大变更会在系统内提示。</p>
+    </section>
+    <section class="prose-section related-section">
+      <h2>相关功能</h2>
+      <ul class="related-list">
+        <li><a href="/terms/">服务条款:使用规范与责任说明</a></li>
+        <li><a href="/contact/">联系我们:咨询与支持</a></li>
+        <li><a href="/about/">关于 XXQ:覆盖范围与角色</a></li>
+      </ul>
+    </section>
+    </div>
+    </main>
+    <footer class="site-footer">
+      <div class="container footer-grid">
+        <div class="footer-col">
+          <h2 class="footer-col-title">功能</h2>
+          <ul>
+            <li><a href="/features/course-selection/">选课管理</a></li>
+            <li><a href="/features/scheduling/">排课管理</a></li>
+            <li><a href="/features/grades/">成绩管理</a></li>
+            <li><a href="/features/exams/">考试管理</a></li>
+            <li><a href="/features/graduation/">毕业设计</a></li>
+            <li><a href="/features/practice/">实践教学</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h2 class="footer-col-title">了解 XXQ</h2>
+          <ul>
+            <li><a href="/about/">关于我们</a></li>
+            <li><a href="/faq/">常见问题</a></li>
+            <li><a href="/contact/">联系我们</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h2 class="footer-col-title">条款与信息</h2>
+          <ul>
+            <li><a href="/privacy/">隐私政策</a></li>
+            <li><a href="/terms/">服务条款</a></li>
+            <li><a href="/filing/">备案信息</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="container footer-meta">
+        <p>
+          <small>© 2026 XXQ 高校教务管理系统 · <a href="/en/" hreflang="en" lang="en">English</a></small>
+        </p>
+        <p>
+          <small>
+            <a href="https://beian.miit.gov.cn/" rel="nofollow noopener" target="_blank">京ICP备XXXXXXXX号</a>
+            · <a href="/filing/">备案信息</a>
+          </small>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,19 +1,66 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- 站点地图:仅收录公开落地页(中文 / 与英文 /en/),登录后的应用路由均为 noindex 不入图。
-     域名与线上 nginx server_name 一致(当前为 http,启用 HTTPS 后需批量改为 https 并重新构建);
-     页面内容变更时更新 lastmod -->
+<!-- 站点地图:由 scripts/build-landing.mjs 生成,请勿直接编辑。
+     只收录公开落地页;登录后的应用路由(index.html 外壳)声明 noindex,不入图。 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://hanshauangxxq.cn/</loc>
-    <lastmod>2026-09-15</lastmod>
+    <lastmod>2026-09-16</lastmod>
     <xhtml:link rel="alternate" hreflang="zh-CN" href="https://hanshauangxxq.cn/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://hanshauangxxq.cn/en/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://hanshauangxxq.cn/"/>
   </url>
   <url>
+    <loc>https://hanshauangxxq.cn/features/course-selection/</loc>
+    <lastmod>2026-09-16</lastmod>
+  </url>
+  <url>
+    <loc>https://hanshauangxxq.cn/features/scheduling/</loc>
+    <lastmod>2026-09-16</lastmod>
+  </url>
+  <url>
+    <loc>https://hanshauangxxq.cn/features/grades/</loc>
+    <lastmod>2026-09-16</lastmod>
+  </url>
+  <url>
+    <loc>https://hanshauangxxq.cn/features/exams/</loc>
+    <lastmod>2026-09-16</lastmod>
+  </url>
+  <url>
+    <loc>https://hanshauangxxq.cn/features/graduation/</loc>
+    <lastmod>2026-09-16</lastmod>
+  </url>
+  <url>
+    <loc>https://hanshauangxxq.cn/features/practice/</loc>
+    <lastmod>2026-09-16</lastmod>
+  </url>
+  <url>
+    <loc>https://hanshauangxxq.cn/about/</loc>
+    <lastmod>2026-09-16</lastmod>
+  </url>
+  <url>
+    <loc>https://hanshauangxxq.cn/contact/</loc>
+    <lastmod>2026-09-16</lastmod>
+  </url>
+  <url>
+    <loc>https://hanshauangxxq.cn/faq/</loc>
+    <lastmod>2026-09-16</lastmod>
+  </url>
+  <url>
+    <loc>https://hanshauangxxq.cn/privacy/</loc>
+    <lastmod>2026-09-16</lastmod>
+  </url>
+  <url>
+    <loc>https://hanshauangxxq.cn/terms/</loc>
+    <lastmod>2026-09-16</lastmod>
+  </url>
+  <url>
+    <loc>https://hanshauangxxq.cn/filing/</loc>
+    <lastmod>2026-09-16</lastmod>
+  </url>
+  <url>
     <loc>https://hanshauangxxq.cn/en/</loc>
-    <lastmod>2026-09-15</lastmod>
+    <lastmod>2026-09-16</lastmod>
     <xhtml:link rel="alternate" hreflang="zh-CN" href="https://hanshauangxxq.cn/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://hanshauangxxq.cn/en/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://hanshauangxxq.cn/"/>

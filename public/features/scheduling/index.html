@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<!--
+  此文件由 scripts/build-landing.mjs 生成,请勿直接编辑。
+  内容数据在 scripts/landing/pages.zh.mjs,改完重跑:
+    node scripts/build-landing.mjs
+-->
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>排课管理系统 - 教学任务/时间教室约束/课表编排 | XXQ 高校教务管理系统</title>
+    <meta name="description" content="XXQ 排课管理系统按教学任务编排课表,统一处理教师、教室与时间约束,支持教务集中排课与院系教学任务维护,排课结果直接供选课与课表查询使用。">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#f0f2f5">
+    <!-- 规范链接与多语言互链 -->
+    <link rel="canonical" href="https://hanshauangxxq.cn/features/scheduling/">
+    <!-- 链接分享预览(og:image 为绝对 URL,微信/QQ/Twitter 卡片依赖) -->
+    <meta property="og:site_name" content="XXQ">
+    <meta property="og:title" content="排课管理系统 - 教学任务/时间教室约束/课表编排 | XXQ 高校教务管理系统">
+    <meta property="og:description" content="XXQ 排课管理系统按教学任务编排课表,统一处理教师、教室与时间约束,支持教务集中排课与院系教学任务维护,排课结果直接供选课与课表查询使用。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://hanshauangxxq.cn/features/scheduling/">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta property="og:image" content="https://hanshauangxxq.cn/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="XXQ 排课管理系统 — 教学任务与课表编排">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://hanshauangxxq.cn/og-image.png">
+    <meta name="twitter:image:alt" content="XXQ 排课管理系统 — 教学任务与课表编排">
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/landing.css">
+    <!-- 登录态打类:必须同步阻塞在 <head>,早于 body 解析给 <html> 加 logged-in 类,
+        否则已登录访客会先看到「登录」按钮再被替换。生产 CSP(script-src 'self',
+        见 docs/nginx.conf)禁内联脚本,故外置 -->
+    <script src="/landing-boot.js"></script>
+    <!-- 头像菜单等 DOM 交互:defer 在 DOMContentLoaded 前执行,不阻塞首屏;
+        不能用 async——若晚于 DOMContentLoaded 加载,监听器永不注册 -->
+    <script src="/landing.js" defer></script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://hanshauangxxq.cn/#organization",
+          "name": "XXQ",
+          "url": "https://hanshauangxxq.cn/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://hanshauangxxq.cn/logo.png",
+            "width": 512,
+            "height": 512
+          }
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://hanshauangxxq.cn/#website",
+          "name": "XXQ",
+          "url": "https://hanshauangxxq.cn/",
+          "inLanguage": [
+            "zh-CN",
+            "en"
+          ],
+          "publisher": {
+            "@id": "https://hanshauangxxq.cn/#organization"
+          }
+        },
+        {
+          "@type": "WebPage",
+          "@id": "https://hanshauangxxq.cn/features/scheduling/#webpage",
+          "url": "https://hanshauangxxq.cn/features/scheduling/",
+          "name": "排课管理系统 - 教学任务/时间教室约束/课表编排 | XXQ 高校教务管理系统",
+          "description": "XXQ 排课管理系统按教学任务编排课表,统一处理教师、教室与时间约束,支持教务集中排课与院系教学任务维护,排课结果直接供选课与课表查询使用。",
+          "isPartOf": {
+            "@id": "https://hanshauangxxq.cn/#website"
+          },
+          "inLanguage": "zh-CN",
+          "breadcrumb": {
+            "@id": "https://hanshauangxxq.cn/features/scheduling/#breadcrumb"
+          }
+        },
+        {
+          "@type": "BreadcrumbList",
+          "@id": "https://hanshauangxxq.cn/features/scheduling/#breadcrumb",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "首页",
+              "item": "https://hanshauangxxq.cn/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "排课管理系统"
+            }
+          ]
+        }
+      ]
+    }
+    </script>
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav container" aria-label="主导航">
+        <a class="brand" href="/">XXQ</a>
+        <ul class="nav-actions">
+          <li><a class="lang-switch" href="/en/" hreflang="en" lang="en">English</a></li>
+          <li class="guest-only"><a class="btn btn-primary" href="/login">登录</a></li>
+          <li class="user-menu user-only">
+            <button
+              type="button"
+              class="avatar-btn"
+              aria-haspopup="menu"
+              aria-expanded="false"
+              aria-controls="user-dropdown"
+              aria-label="用户菜单"
+            >
+              <img class="avatar-img" alt="" hidden>
+              <span class="avatar-fallback" hidden></span>
+            </button>
+            <div class="user-dropdown" id="user-dropdown" hidden>
+              <p class="user-name"></p>
+              <a class="btn btn-primary btn-block" href="/profile">进入系统</a>
+              <button type="button" class="btn btn-ghost btn-block" data-logout>退出登录</button>
+            </div>
+          </li>
+        </ul>
+      </nav>
+    <nav class="subnav" aria-label="功能导航">
+      <ul class="subnav-list container">
+        <li><a href="/features/course-selection/">选课管理</a></li>
+        <li><a href="/features/scheduling/">排课管理</a></li>
+        <li><a href="/features/grades/">成绩管理</a></li>
+        <li><a href="/features/exams/">考试管理</a></li>
+        <li><a href="/features/graduation/">毕业设计</a></li>
+        <li><a href="/features/practice/">实践教学</a></li>
+      </ul>
+    </nav>
+    </header>
+    <main>
+    <nav class="breadcrumb container" aria-label="面包屑">
+      <ol>
+        <li><a href="/">首页</a></li>
+        <li><span aria-current="page">排课管理系统</span></li>
+      </ol>
+    </nav>
+    <section class="hero hero-compact" aria-labelledby="hero-title">
+      <h1 id="hero-title">排课管理系统</h1>
+      <p class="hero-lead">把教学任务、教师、教室与时间四类约束交给系统,排课结果直接供选课与课表查询使用,不再靠几份表格来回核对。</p>
+      <a class="btn btn-primary btn-lg guest-only" href="/login">进入系统</a>
+    </section>
+    <div class="container">
+    <section class="prose-section">
+      <h2>教学任务:排课的输入</h2>
+      <p>排课以教学任务为输入。院系先维护本学期开设的课程与任课教师,再由教务在此基础上编排时间与教室。教学任务与培养方案、课程库对应,避免出现课程信息前后不一致。</p>
+    </section>
+    <section class="prose-section">
+      <h2>时间与场所约束</h2>
+      <p>每门课程有周次、节次与教室需求,同一位教师、同一个班级在同一时间段不能被排到两处。系统在编排时校验这些约束,把冲突挡在保存之前,而不是留到课表发布后由学生发现。</p>
+      <ul class="prose-list">
+        <li>教师冲突:同一教师同一时段不可承担两门课</li>
+        <li>班级冲突:同一班级同一时段不可安排两门课</li>
+        <li>教室冲突:同一教室同一时段不可被占用两次</li>
+        <li>时间限制:可配置不可排课的时间段(如全校活动时间)</li>
+      </ul>
+    </section>
+    <section class="prose-section">
+      <h2>教室与场地管理</h2>
+      <p>教室、机房、实验室等教学场地集中维护,包含容量与类型信息。排课时按课程的场地需求匹配可用教室,座位数不足的教室不会出现在可选列表中。</p>
+    </section>
+    <section class="prose-section">
+      <h2>课表输出与下游使用</h2>
+      <p>排课结果发布后,学生与教师可以按周查看课表,选课环节也会据此判定时间冲突。排课数据的变更会同步影响这两处,不需要分别维护。</p>
+    </section>
+    <section class="prose-section related-section">
+      <h2>相关功能</h2>
+      <ul class="related-list">
+        <li><a href="/features/course-selection/">选课管理系统:选课活动、志愿轮次与冲突校验</a></li>
+        <li><a href="/features/grades/">成绩管理系统:录入、统计分析与复核申诉</a></li>
+        <li><a href="/features/exams/">考试管理系统:考试安排与补考管理</a></li>
+        <li><a href="/faq/">常见问题解答</a></li>
+      </ul>
+    </section>
+    </div>
+    </main>
+    <footer class="site-footer">
+      <div class="container footer-grid">
+        <div class="footer-col">
+          <h2 class="footer-col-title">功能</h2>
+          <ul>
+            <li><a href="/features/course-selection/">选课管理</a></li>
+            <li><a href="/features/scheduling/">排课管理</a></li>
+            <li><a href="/features/grades/">成绩管理</a></li>
+            <li><a href="/features/exams/">考试管理</a></li>
+            <li><a href="/features/graduation/">毕业设计</a></li>
+            <li><a href="/features/practice/">实践教学</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h2 class="footer-col-title">了解 XXQ</h2>
+          <ul>
+            <li><a href="/about/">关于我们</a></li>
+            <li><a href="/faq/">常见问题</a></li>
+            <li><a href="/contact/">联系我们</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h2 class="footer-col-title">条款与信息</h2>
+          <ul>
+            <li><a href="/privacy/">隐私政策</a></li>
+            <li><a href="/terms/">服务条款</a></li>
+            <li><a href="/filing/">备案信息</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="container footer-meta">
+        <p>
+          <small>© 2026 XXQ 高校教务管理系统 · <a href="/en/" hreflang="en" lang="en">English</a></small>
+        </p>
+        <p>
+          <small>
+            <a href="https://beian.miit.gov.cn/" rel="nofollow noopener" target="_blank">京ICP备XXXXXXXX号</a>
+            · <a href="/filing/">备案信息</a>
+          </small>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

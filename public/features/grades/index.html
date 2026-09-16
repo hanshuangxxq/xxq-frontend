@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<!--
+  此文件由 scripts/build-landing.mjs 生成,请勿直接编辑。
+  内容数据在 scripts/landing/pages.zh.mjs,改完重跑:
+    node scripts/build-landing.mjs
+-->
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>成绩管理系统 - 成绩录入/统计分析/复核申诉 | XXQ 高校教务管理系统</title>
+    <meta name="description" content="XXQ 成绩管理系统支持教师按教学任务录入成绩,院系与教务可按课程、班级做成绩统计与分布分析,并提供学生成绩复核申请与处理流程,成绩数据全程可追溯。">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#f0f2f5">
+    <!-- 规范链接与多语言互链 -->
+    <link rel="canonical" href="https://hanshauangxxq.cn/features/grades/">
+    <!-- 链接分享预览(og:image 为绝对 URL,微信/QQ/Twitter 卡片依赖) -->
+    <meta property="og:site_name" content="XXQ">
+    <meta property="og:title" content="成绩管理系统 - 成绩录入/统计分析/复核申诉 | XXQ 高校教务管理系统">
+    <meta property="og:description" content="XXQ 成绩管理系统支持教师按教学任务录入成绩,院系与教务可按课程、班级做成绩统计与分布分析,并提供学生成绩复核申请与处理流程,成绩数据全程可追溯。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://hanshauangxxq.cn/features/grades/">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta property="og:image" content="https://hanshauangxxq.cn/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="XXQ 成绩管理系统 — 录入、统计与复核">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://hanshauangxxq.cn/og-image.png">
+    <meta name="twitter:image:alt" content="XXQ 成绩管理系统 — 录入、统计与复核">
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/landing.css">
+    <!-- 登录态打类:必须同步阻塞在 <head>,早于 body 解析给 <html> 加 logged-in 类,
+        否则已登录访客会先看到「登录」按钮再被替换。生产 CSP(script-src 'self',
+        见 docs/nginx.conf)禁内联脚本,故外置 -->
+    <script src="/landing-boot.js"></script>
+    <!-- 头像菜单等 DOM 交互:defer 在 DOMContentLoaded 前执行,不阻塞首屏;
+        不能用 async——若晚于 DOMContentLoaded 加载,监听器永不注册 -->
+    <script src="/landing.js" defer></script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://hanshauangxxq.cn/#organization",
+          "name": "XXQ",
+          "url": "https://hanshauangxxq.cn/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://hanshauangxxq.cn/logo.png",
+            "width": 512,
+            "height": 512
+          }
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://hanshauangxxq.cn/#website",
+          "name": "XXQ",
+          "url": "https://hanshauangxxq.cn/",
+          "inLanguage": [
+            "zh-CN",
+            "en"
+          ],
+          "publisher": {
+            "@id": "https://hanshauangxxq.cn/#organization"
+          }
+        },
+        {
+          "@type": "WebPage",
+          "@id": "https://hanshauangxxq.cn/features/grades/#webpage",
+          "url": "https://hanshauangxxq.cn/features/grades/",
+          "name": "成绩管理系统 - 成绩录入/统计分析/复核申诉 | XXQ 高校教务管理系统",
+          "description": "XXQ 成绩管理系统支持教师按教学任务录入成绩,院系与教务可按课程、班级做成绩统计与分布分析,并提供学生成绩复核申请与处理流程,成绩数据全程可追溯。",
+          "isPartOf": {
+            "@id": "https://hanshauangxxq.cn/#website"
+          },
+          "inLanguage": "zh-CN",
+          "breadcrumb": {
+            "@id": "https://hanshauangxxq.cn/features/grades/#breadcrumb"
+          }
+        },
+        {
+          "@type": "BreadcrumbList",
+          "@id": "https://hanshauangxxq.cn/features/grades/#breadcrumb",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "首页",
+              "item": "https://hanshauangxxq.cn/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "成绩管理系统"
+            }
+          ]
+        }
+      ]
+    }
+    </script>
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav container" aria-label="主导航">
+        <a class="brand" href="/">XXQ</a>
+        <ul class="nav-actions">
+          <li><a class="lang-switch" href="/en/" hreflang="en" lang="en">English</a></li>
+          <li class="guest-only"><a class="btn btn-primary" href="/login">登录</a></li>
+          <li class="user-menu user-only">
+            <button
+              type="button"
+              class="avatar-btn"
+              aria-haspopup="menu"
+              aria-expanded="false"
+              aria-controls="user-dropdown"
+              aria-label="用户菜单"
+            >
+              <img class="avatar-img" alt="" hidden>
+              <span class="avatar-fallback" hidden></span>
+            </button>
+            <div class="user-dropdown" id="user-dropdown" hidden>
+              <p class="user-name"></p>
+              <a class="btn btn-primary btn-block" href="/profile">进入系统</a>
+              <button type="button" class="btn btn-ghost btn-block" data-logout>退出登录</button>
+            </div>
+          </li>
+        </ul>
+      </nav>
+    <nav class="subnav" aria-label="功能导航">
+      <ul class="subnav-list container">
+        <li><a href="/features/course-selection/">选课管理</a></li>
+        <li><a href="/features/scheduling/">排课管理</a></li>
+        <li><a href="/features/grades/">成绩管理</a></li>
+        <li><a href="/features/exams/">考试管理</a></li>
+        <li><a href="/features/graduation/">毕业设计</a></li>
+        <li><a href="/features/practice/">实践教学</a></li>
+      </ul>
+    </nav>
+    </header>
+    <main>
+    <nav class="breadcrumb container" aria-label="面包屑">
+      <ol>
+        <li><a href="/">首页</a></li>
+        <li><span aria-current="page">成绩管理系统</span></li>
+      </ol>
+    </nav>
+    <section class="hero hero-compact" aria-labelledby="hero-title">
+      <h1 id="hero-title">成绩管理系统</h1>
+      <p class="hero-lead">成绩录入绑定教学任务,统计与分布面向院系和教务,复核申请走完整流程,成绩数据从产生到归档全程可追溯。</p>
+      <a class="btn btn-primary btn-lg guest-only" href="/login">进入系统</a>
+    </section>
+    <div class="container">
+    <section class="prose-section">
+      <h2>成绩录入:名单来自选课结果</h2>
+      <p>教师按教学任务录入成绩,录入名单直接来自该教学任务的选课名单,不需要再导入一次。这消除了「选课名单和录入名单对不上」这类最常见的不一致来源。</p>
+      <p>录入支持平时成绩与期末成绩分项登记,按既定规则计算总评,减少手工计算与录入错误。</p>
+    </section>
+    <section class="prose-section">
+      <h2>成绩统计与分布分析</h2>
+      <p>院系与教务可以按课程、班级、专业、教师等维度查看成绩统计,包括平均分、及格率与分数段分布。统计直接基于已录入的成绩数据,不依赖另行汇总的报表。</p>
+      <ul class="prose-list">
+        <li>课程维度:单门课程的成绩分布与及格率</li>
+        <li>班级与专业维度:横向对比不同教学班的成绩表现</li>
+        <li>教师维度:教学任务对应的成绩录入情况,便于核查是否遗漏</li>
+      </ul>
+    </section>
+    <section class="prose-section">
+      <h2>成绩复核:学生申请,教师与教务处理</h2>
+      <p>学生对成绩有疑问时可以在系统内提交复核申请,申请流转到对应教师与教务处理。处理过程与结论留存在系统里,学生可以查看进度和结果,不需要通过线下沟通确认。</p>
+    </section>
+    <section class="prose-section">
+      <h2>学生查成绩</h2>
+      <p>学生在「我的成绩」中查看历学期成绩与已获学分,成绩发布后即时可见,不需要等教务统一发布成绩单。</p>
+    </section>
+    <section class="prose-section related-section">
+      <h2>相关功能</h2>
+      <ul class="related-list">
+        <li><a href="/features/exams/">考试管理系统:考试安排与补考管理</a></li>
+        <li><a href="/features/course-selection/">选课管理系统:选课活动、志愿轮次与冲突校验</a></li>
+        <li><a href="/faq/">常见问题解答</a></li>
+      </ul>
+    </section>
+    </div>
+    </main>
+    <footer class="site-footer">
+      <div class="container footer-grid">
+        <div class="footer-col">
+          <h2 class="footer-col-title">功能</h2>
+          <ul>
+            <li><a href="/features/course-selection/">选课管理</a></li>
+            <li><a href="/features/scheduling/">排课管理</a></li>
+            <li><a href="/features/grades/">成绩管理</a></li>
+            <li><a href="/features/exams/">考试管理</a></li>
+            <li><a href="/features/graduation/">毕业设计</a></li>
+            <li><a href="/features/practice/">实践教学</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h2 class="footer-col-title">了解 XXQ</h2>
+          <ul>
+            <li><a href="/about/">关于我们</a></li>
+            <li><a href="/faq/">常见问题</a></li>
+            <li><a href="/contact/">联系我们</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h2 class="footer-col-title">条款与信息</h2>
+          <ul>
+            <li><a href="/privacy/">隐私政策</a></li>
+            <li><a href="/terms/">服务条款</a></li>
+            <li><a href="/filing/">备案信息</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="container footer-meta">
+        <p>
+          <small>© 2026 XXQ 高校教务管理系统 · <a href="/en/" hreflang="en" lang="en">English</a></small>
+        </p>
+        <p>
+          <small>
+            <a href="https://beian.miit.gov.cn/" rel="nofollow noopener" target="_blank">京ICP备XXXXXXXX号</a>
+            · <a href="/filing/">备案信息</a>
+          </small>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

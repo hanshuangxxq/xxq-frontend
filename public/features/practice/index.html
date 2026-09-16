@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<!--
+  此文件由 scripts/build-landing.mjs 生成,请勿直接编辑。
+  内容数据在 scripts/landing/pages.zh.mjs,改完重跑:
+    node scripts/build-landing.mjs
+-->
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>实践教学管理系统 - 实习/竞赛/社会实践统一管理 | XXQ 高校教务管理系统</title>
+    <meta name="description" content="XXQ 实践教学管理系统把实习、学科竞赛与社会实践纳入统一管理,支持岗位与项目发布、学生报名、材料提交与结果登记,教务可集中掌握实践教学开展情况。">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#f0f2f5">
+    <!-- 规范链接与多语言互链 -->
+    <link rel="canonical" href="https://hanshauangxxq.cn/features/practice/">
+    <!-- 链接分享预览(og:image 为绝对 URL,微信/QQ/Twitter 卡片依赖) -->
+    <meta property="og:site_name" content="XXQ">
+    <meta property="og:title" content="实践教学管理系统 - 实习/竞赛/社会实践统一管理 | XXQ 高校教务管理系统">
+    <meta property="og:description" content="XXQ 实践教学管理系统把实习、学科竞赛与社会实践纳入统一管理,支持岗位与项目发布、学生报名、材料提交与结果登记,教务可集中掌握实践教学开展情况。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://hanshauangxxq.cn/features/practice/">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta property="og:image" content="https://hanshauangxxq.cn/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="XXQ 实践教学管理系统 — 实习、竞赛与社会实践">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://hanshauangxxq.cn/og-image.png">
+    <meta name="twitter:image:alt" content="XXQ 实践教学管理系统 — 实习、竞赛与社会实践">
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/landing.css">
+    <!-- 登录态打类:必须同步阻塞在 <head>,早于 body 解析给 <html> 加 logged-in 类,
+        否则已登录访客会先看到「登录」按钮再被替换。生产 CSP(script-src 'self',
+        见 docs/nginx.conf)禁内联脚本,故外置 -->
+    <script src="/landing-boot.js"></script>
+    <!-- 头像菜单等 DOM 交互:defer 在 DOMContentLoaded 前执行,不阻塞首屏;
+        不能用 async——若晚于 DOMContentLoaded 加载,监听器永不注册 -->
+    <script src="/landing.js" defer></script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://hanshauangxxq.cn/#organization",
+          "name": "XXQ",
+          "url": "https://hanshauangxxq.cn/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://hanshauangxxq.cn/logo.png",
+            "width": 512,
+            "height": 512
+          }
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://hanshauangxxq.cn/#website",
+          "name": "XXQ",
+          "url": "https://hanshauangxxq.cn/",
+          "inLanguage": [
+            "zh-CN",
+            "en"
+          ],
+          "publisher": {
+            "@id": "https://hanshauangxxq.cn/#organization"
+          }
+        },
+        {
+          "@type": "WebPage",
+          "@id": "https://hanshauangxxq.cn/features/practice/#webpage",
+          "url": "https://hanshauangxxq.cn/features/practice/",
+          "name": "实践教学管理系统 - 实习/竞赛/社会实践统一管理 | XXQ 高校教务管理系统",
+          "description": "XXQ 实践教学管理系统把实习、学科竞赛与社会实践纳入统一管理,支持岗位与项目发布、学生报名、材料提交与结果登记,教务可集中掌握实践教学开展情况。",
+          "isPartOf": {
+            "@id": "https://hanshauangxxq.cn/#website"
+          },
+          "inLanguage": "zh-CN",
+          "breadcrumb": {
+            "@id": "https://hanshauangxxq.cn/features/practice/#breadcrumb"
+          }
+        },
+        {
+          "@type": "BreadcrumbList",
+          "@id": "https://hanshauangxxq.cn/features/practice/#breadcrumb",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "首页",
+              "item": "https://hanshauangxxq.cn/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "实践教学管理系统"
+            }
+          ]
+        }
+      ]
+    }
+    </script>
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav container" aria-label="主导航">
+        <a class="brand" href="/">XXQ</a>
+        <ul class="nav-actions">
+          <li><a class="lang-switch" href="/en/" hreflang="en" lang="en">English</a></li>
+          <li class="guest-only"><a class="btn btn-primary" href="/login">登录</a></li>
+          <li class="user-menu user-only">
+            <button
+              type="button"
+              class="avatar-btn"
+              aria-haspopup="menu"
+              aria-expanded="false"
+              aria-controls="user-dropdown"
+              aria-label="用户菜单"
+            >
+              <img class="avatar-img" alt="" hidden>
+              <span class="avatar-fallback" hidden></span>
+            </button>
+            <div class="user-dropdown" id="user-dropdown" hidden>
+              <p class="user-name"></p>
+              <a class="btn btn-primary btn-block" href="/profile">进入系统</a>
+              <button type="button" class="btn btn-ghost btn-block" data-logout>退出登录</button>
+            </div>
+          </li>
+        </ul>
+      </nav>
+    <nav class="subnav" aria-label="功能导航">
+      <ul class="subnav-list container">
+        <li><a href="/features/course-selection/">选课管理</a></li>
+        <li><a href="/features/scheduling/">排课管理</a></li>
+        <li><a href="/features/grades/">成绩管理</a></li>
+        <li><a href="/features/exams/">考试管理</a></li>
+        <li><a href="/features/graduation/">毕业设计</a></li>
+        <li><a href="/features/practice/">实践教学</a></li>
+      </ul>
+    </nav>
+    </header>
+    <main>
+    <nav class="breadcrumb container" aria-label="面包屑">
+      <ol>
+        <li><a href="/">首页</a></li>
+        <li><span aria-current="page">实践教学管理系统</span></li>
+      </ol>
+    </nav>
+    <section class="hero hero-compact" aria-labelledby="hero-title">
+      <h1 id="hero-title">实践教学管理系统</h1>
+      <p class="hero-lead">实习、竞赛、社会实践三类实践教学环节各有各的材料和流程,统一收进系统后,学生知道自己要交什么,教务知道整体开展到什么程度。</p>
+      <a class="btn btn-primary btn-lg guest-only" href="/login">进入系统</a>
+    </section>
+    <div class="container">
+    <section class="prose-section">
+      <h2>实习管理</h2>
+      <p>院系与教务发布实习安排,学生按安排提交实习材料。管理端可以按院系、专业查看学生的实习完成情况,避免临近学期末才发现材料缺失。</p>
+    </section>
+    <section class="prose-section">
+      <h2>学科竞赛</h2>
+      <p>竞赛由教务统一发布与管理,学生报名参加。竞赛信息、报名情况与结果登记集中在系统内,便于统计各专业学生的参赛情况。</p>
+    </section>
+    <section class="prose-section">
+      <h2>社会实践</h2>
+      <p>社会实践项目同样由教务发布并组织报名,学生端可以查看可报名的项目并提交材料。三类实践教学共用一套角色与权限体系,学生只需登录一次。</p>
+    </section>
+    <section class="prose-section">
+      <h2>与毕业设计的衔接</h2>
+      <p>毕业设计是实践教学中最长的一环,系统单独提供完整的流程管理。两类入口在导航中相邻,学生按培养阶段自然过渡。</p>
+    </section>
+    <section class="prose-section related-section">
+      <h2>相关功能</h2>
+      <ul class="related-list">
+        <li><a href="/features/graduation/">毕业设计管理系统:选题、开题、中期、答辩全流程</a></li>
+        <li><a href="/features/course-selection/">选课管理系统:选课活动、志愿轮次与冲突校验</a></li>
+        <li><a href="/faq/">常见问题解答</a></li>
+      </ul>
+    </section>
+    </div>
+    </main>
+    <footer class="site-footer">
+      <div class="container footer-grid">
+        <div class="footer-col">
+          <h2 class="footer-col-title">功能</h2>
+          <ul>
+            <li><a href="/features/course-selection/">选课管理</a></li>
+            <li><a href="/features/scheduling/">排课管理</a></li>
+            <li><a href="/features/grades/">成绩管理</a></li>
+            <li><a href="/features/exams/">考试管理</a></li>
+            <li><a href="/features/graduation/">毕业设计</a></li>
+            <li><a href="/features/practice/">实践教学</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h2 class="footer-col-title">了解 XXQ</h2>
+          <ul>
+            <li><a href="/about/">关于我们</a></li>
+            <li><a href="/faq/">常见问题</a></li>
+            <li><a href="/contact/">联系我们</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h2 class="footer-col-title">条款与信息</h2>
+          <ul>
+            <li><a href="/privacy/">隐私政策</a></li>
+            <li><a href="/terms/">服务条款</a></li>
+            <li><a href="/filing/">备案信息</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="container footer-meta">
+        <p>
+          <small>© 2026 XXQ 高校教务管理系统 · <a href="/en/" hreflang="en" lang="en">English</a></small>
+        </p>
+        <p>
+          <small>
+            <a href="https://beian.miit.gov.cn/" rel="nofollow noopener" target="_blank">京ICP备XXXXXXXX号</a>
+            · <a href="/filing/">备案信息</a>
+          </small>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

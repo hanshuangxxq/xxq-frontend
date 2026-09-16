@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<!--
+  此文件由 scripts/build-landing.mjs 生成,请勿直接编辑。
+  内容数据在 scripts/landing/pages.zh.mjs,改完重跑:
+    node scripts/build-landing.mjs
+-->
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>常见问题 - 选课/成绩/毕业设计使用答疑 | XXQ 高校教务管理系统</title>
+    <meta name="description" content="XXQ 高校教务管理系统常见问题解答,涵盖账号登录与权限、选课时间冲突、成绩录入与复核、考试与补考安排、毕业设计流程以及基础数据批量导入等高频问题。">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#f0f2f5">
+    <!-- 规范链接与多语言互链 -->
+    <link rel="canonical" href="https://hanshauangxxq.cn/faq/">
+    <!-- 链接分享预览(og:image 为绝对 URL,微信/QQ/Twitter 卡片依赖) -->
+    <meta property="og:site_name" content="XXQ">
+    <meta property="og:title" content="常见问题 - 选课/成绩/毕业设计使用答疑 | XXQ 高校教务管理系统">
+    <meta property="og:description" content="XXQ 高校教务管理系统常见问题解答,涵盖账号登录与权限、选课时间冲突、成绩录入与复核、考试与补考安排、毕业设计流程以及基础数据批量导入等高频问题。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://hanshauangxxq.cn/faq/">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta property="og:image" content="https://hanshauangxxq.cn/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="XXQ 高校教务管理系统常见问题">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://hanshauangxxq.cn/og-image.png">
+    <meta name="twitter:image:alt" content="XXQ 高校教务管理系统常见问题">
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/landing.css">
+    <!-- 登录态打类:必须同步阻塞在 <head>,早于 body 解析给 <html> 加 logged-in 类,
+        否则已登录访客会先看到「登录」按钮再被替换。生产 CSP(script-src 'self',
+        见 docs/nginx.conf)禁内联脚本,故外置 -->
+    <script src="/landing-boot.js"></script>
+    <!-- 头像菜单等 DOM 交互:defer 在 DOMContentLoaded 前执行,不阻塞首屏;
+        不能用 async——若晚于 DOMContentLoaded 加载,监听器永不注册 -->
+    <script src="/landing.js" defer></script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://hanshauangxxq.cn/#organization",
+          "name": "XXQ",
+          "url": "https://hanshauangxxq.cn/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://hanshauangxxq.cn/logo.png",
+            "width": 512,
+            "height": 512
+          }
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://hanshauangxxq.cn/#website",
+          "name": "XXQ",
+          "url": "https://hanshauangxxq.cn/",
+          "inLanguage": [
+            "zh-CN",
+            "en"
+          ],
+          "publisher": {
+            "@id": "https://hanshauangxxq.cn/#organization"
+          }
+        },
+        {
+          "@type": "WebPage",
+          "@id": "https://hanshauangxxq.cn/faq/#webpage",
+          "url": "https://hanshauangxxq.cn/faq/",
+          "name": "常见问题 - 选课/成绩/毕业设计使用答疑 | XXQ 高校教务管理系统",
+          "description": "XXQ 高校教务管理系统常见问题解答,涵盖账号登录与权限、选课时间冲突、成绩录入与复核、考试与补考安排、毕业设计流程以及基础数据批量导入等高频问题。",
+          "isPartOf": {
+            "@id": "https://hanshauangxxq.cn/#website"
+          },
+          "inLanguage": "zh-CN",
+          "breadcrumb": {
+            "@id": "https://hanshauangxxq.cn/faq/#breadcrumb"
+          }
+        },
+        {
+          "@type": "BreadcrumbList",
+          "@id": "https://hanshauangxxq.cn/faq/#breadcrumb",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "首页",
+              "item": "https://hanshauangxxq.cn/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "常见问题"
+            }
+          ]
+        },
+        {
+          "@type": "FAQPage",
+          "@id": "https://hanshauangxxq.cn/faq/#faq",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "为什么登录后看不到某个功能菜单?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "系统按角色控制菜单可见性。学生、教师、院系、教务四类角色各自能看到的功能不同,例如成绩录入仅教师可见,基础数据管理仅教务可见。如果确认自己的角色应当有该权限但仍然看不到,请联系所在院校的教务管理部门核对账号角色。"
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "忘记密码怎么办?系统开放注册吗?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "系统不开放自助注册,账号由所在院校的教务管理部门统一创建并分配角色。忘记密码请联系所在院校的教务管理部门重置。"
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "为什么登录页有时会提示验证失败?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "登录接口有频率限制,短时间内多次尝试可能被暂时限制,稍后重试即可。如果持续失败,请联系所在院校的教务管理部门确认账号状态。"
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "界面语言可以切换吗?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "可以。系统支持中文与英文,默认跟随浏览器语言设置。未登录访客的切换结果保存在本机浏览器中,已登录用户的偏好会保存在账号上,换设备登录后仍然生效。"
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "选课时提示时间冲突或容量已满,怎么处理?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "时间冲突说明该课程与已选课程的上课时间重叠,需要先退掉其中一门再选。容量已满说明课程余量为零,可以关注是否有其他学生退课后释放名额,或选择培养方案内的其他课程。"
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "选课活动结束后还能改选吗?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "不能。选课活动设有开放与截止时间,活动结束后名单冻结,学生端不再接受选课与退课操作。如有特殊情况需要调整,请联系所在院校的教务管理部门。"
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "课表什么时候能看到?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "排课结果发布后,学生与教师即可按周查看课表。课表的调整会同步反映到选课环节的时间冲突判定上,两处数据一致。"
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "教师在哪里录入成绩?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "教师登录后进入成绩管理,按教学任务录入。录入名单直接来自该教学任务的选课结果,不需要另外导入名单。成绩提交后学生端即可查询。"
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "对成绩有疑问怎么办?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "学生可以在系统内提交成绩复核申请,申请会流转到对应教师与教务处理。处理进度和结论可以在系统内查看,不需要通过线下方式反复确认。"
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "补考名单是怎么产生的?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "补考针对未通过考核的课程组织,名单依据成绩结果产生,不需要人工筛选。补考的时间与考场由教务在考试管理中统一安排,安排完成后学生在「我的考试」中可以看到。"
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "毕业设计的流程是怎样的?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "依次经过选题、开题报告、中期检查、论文提交与评阅、答辩安排、成绩发布。教师申报题目后由院系审核,学生再在通过审核的题目范围内选题;各阶段的提交与审核状态都可以在系统内查看。"
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "学生可以自己改毕业设计题目吗?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "选题在可选范围内进行,范围由院系审核通过的题目决定。选题结束后如需调整,需要联系指导教师与所在院系处理。"
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "实习和竞赛在哪里报名?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "实习安排、学科竞赛与社会实践项目由教务或院系在系统中发布,学生在对应入口查看可报名的项目并提交材料。三类实践教学共用一套账号与权限,登录一次即可。"
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "基础数据可以批量导入吗?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "可以。学生、专业、学院、年级、班级等基础数据支持批量导入,适合在开学前一次性建好,避免逐条录入。导入模板由教务在批量导入功能中获取。"
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "系统支持哪些浏览器?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "系统是浏览器访问的 Web 应用,无需安装客户端。建议使用较新版本的 Chrome、Edge、Firefox 或 Safari。"
+              }
+            }
+          ]
+        }
+      ]
+    }
+    </script>
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav container" aria-label="主导航">
+        <a class="brand" href="/">XXQ</a>
+        <ul class="nav-actions">
+          <li><a class="lang-switch" href="/en/" hreflang="en" lang="en">English</a></li>
+          <li class="guest-only"><a class="btn btn-primary" href="/login">登录</a></li>
+          <li class="user-menu user-only">
+            <button
+              type="button"
+              class="avatar-btn"
+              aria-haspopup="menu"
+              aria-expanded="false"
+              aria-controls="user-dropdown"
+              aria-label="用户菜单"
+            >
+              <img class="avatar-img" alt="" hidden>
+              <span class="avatar-fallback" hidden></span>
+            </button>
+            <div class="user-dropdown" id="user-dropdown" hidden>
+              <p class="user-name"></p>
+              <a class="btn btn-primary btn-block" href="/profile">进入系统</a>
+              <button type="button" class="btn btn-ghost btn-block" data-logout>退出登录</button>
+            </div>
+          </li>
+        </ul>
+      </nav>
+    <nav class="subnav" aria-label="功能导航">
+      <ul class="subnav-list container">
+        <li><a href="/features/course-selection/">选课管理</a></li>
+        <li><a href="/features/scheduling/">排课管理</a></li>
+        <li><a href="/features/grades/">成绩管理</a></li>
+        <li><a href="/features/exams/">考试管理</a></li>
+        <li><a href="/features/graduation/">毕业设计</a></li>
+        <li><a href="/features/practice/">实践教学</a></li>
+      </ul>
+    </nav>
+    </header>
+    <main>
+    <nav class="breadcrumb container" aria-label="面包屑">
+      <ol>
+        <li><a href="/">首页</a></li>
+        <li><span aria-current="page">常见问题</span></li>
+      </ol>
+    </nav>
+    <section class="hero hero-compact" aria-labelledby="hero-title">
+      <h1 id="hero-title">常见问题</h1>
+      <p class="hero-lead">这里汇总了使用过程中最常被问到的问题。如果你的问题不在其中,可以通过联系我们页面反馈。</p>
+      <a class="btn btn-primary btn-lg guest-only" href="/login">进入系统</a>
+    </section>
+    <div class="container">
+    <section class="prose-section">
+      <h2>账号与登录</h2>
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary>为什么登录后看不到某个功能菜单?</summary>
+          <p>系统按角色控制菜单可见性。学生、教师、院系、教务四类角色各自能看到的功能不同,例如成绩录入仅教师可见,基础数据管理仅教务可见。如果确认自己的角色应当有该权限但仍然看不到,请联系所在院校的教务管理部门核对账号角色。</p>
+        </details>
+        <details class="faq-item">
+          <summary>忘记密码怎么办?系统开放注册吗?</summary>
+          <p>系统不开放自助注册,账号由所在院校的教务管理部门统一创建并分配角色。忘记密码请联系所在院校的教务管理部门重置。</p>
+        </details>
+        <details class="faq-item">
+          <summary>为什么登录页有时会提示验证失败?</summary>
+          <p>登录接口有频率限制,短时间内多次尝试可能被暂时限制,稍后重试即可。如果持续失败,请联系所在院校的教务管理部门确认账号状态。</p>
+        </details>
+        <details class="faq-item">
+          <summary>界面语言可以切换吗?</summary>
+          <p>可以。系统支持中文与英文,默认跟随浏览器语言设置。未登录访客的切换结果保存在本机浏览器中,已登录用户的偏好会保存在账号上,换设备登录后仍然生效。</p>
+        </details>
+      </div>
+    </section>
+    <section class="prose-section">
+      <h2>选课与排课</h2>
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary>选课时提示时间冲突或容量已满,怎么处理?</summary>
+          <p>时间冲突说明该课程与已选课程的上课时间重叠,需要先退掉其中一门再选。容量已满说明课程余量为零,可以关注是否有其他学生退课后释放名额,或选择培养方案内的其他课程。</p>
+        </details>
+        <details class="faq-item">
+          <summary>选课活动结束后还能改选吗?</summary>
+          <p>不能。选课活动设有开放与截止时间,活动结束后名单冻结,学生端不再接受选课与退课操作。如有特殊情况需要调整,请联系所在院校的教务管理部门。</p>
+        </details>
+        <details class="faq-item">
+          <summary>课表什么时候能看到?</summary>
+          <p>排课结果发布后,学生与教师即可按周查看课表。课表的调整会同步反映到选课环节的时间冲突判定上,两处数据一致。</p>
+        </details>
+      </div>
+    </section>
+    <section class="prose-section">
+      <h2>成绩与考试</h2>
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary>教师在哪里录入成绩?</summary>
+          <p>教师登录后进入成绩管理,按教学任务录入。录入名单直接来自该教学任务的选课结果,不需要另外导入名单。成绩提交后学生端即可查询。</p>
+        </details>
+        <details class="faq-item">
+          <summary>对成绩有疑问怎么办?</summary>
+          <p>学生可以在系统内提交成绩复核申请,申请会流转到对应教师与教务处理。处理进度和结论可以在系统内查看,不需要通过线下方式反复确认。</p>
+        </details>
+        <details class="faq-item">
+          <summary>补考名单是怎么产生的?</summary>
+          <p>补考针对未通过考核的课程组织,名单依据成绩结果产生,不需要人工筛选。补考的时间与考场由教务在考试管理中统一安排,安排完成后学生在「我的考试」中可以看到。</p>
+        </details>
+      </div>
+    </section>
+    <section class="prose-section">
+      <h2>毕业设计与实践教学</h2>
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary>毕业设计的流程是怎样的?</summary>
+          <p>依次经过选题、开题报告、中期检查、论文提交与评阅、答辩安排、成绩发布。教师申报题目后由院系审核,学生再在通过审核的题目范围内选题;各阶段的提交与审核状态都可以在系统内查看。</p>
+        </details>
+        <details class="faq-item">
+          <summary>学生可以自己改毕业设计题目吗?</summary>
+          <p>选题在可选范围内进行,范围由院系审核通过的题目决定。选题结束后如需调整,需要联系指导教师与所在院系处理。</p>
+        </details>
+        <details class="faq-item">
+          <summary>实习和竞赛在哪里报名?</summary>
+          <p>实习安排、学科竞赛与社会实践项目由教务或院系在系统中发布,学生在对应入口查看可报名的项目并提交材料。三类实践教学共用一套账号与权限,登录一次即可。</p>
+        </details>
+      </div>
+    </section>
+    <section class="prose-section">
+      <h2>数据与系统</h2>
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary>基础数据可以批量导入吗?</summary>
+          <p>可以。学生、专业、学院、年级、班级等基础数据支持批量导入,适合在开学前一次性建好,避免逐条录入。导入模板由教务在批量导入功能中获取。</p>
+        </details>
+        <details class="faq-item">
+          <summary>系统支持哪些浏览器?</summary>
+          <p>系统是浏览器访问的 Web 应用,无需安装客户端。建议使用较新版本的 Chrome、Edge、Firefox 或 Safari。</p>
+        </details>
+      </div>
+    </section>
+    <section class="prose-section related-section">
+      <h2>相关功能</h2>
+      <ul class="related-list">
+        <li><a href="/about/">关于 XXQ:覆盖范围与角色</a></li>
+        <li><a href="/contact/">联系我们:咨询与支持</a></li>
+        <li><a href="/features/course-selection/">选课管理系统:选课活动、志愿轮次与冲突校验</a></li>
+        <li><a href="/features/grades/">成绩管理系统:录入、统计分析与复核申诉</a></li>
+      </ul>
+    </section>
+    </div>
+    </main>
+    <footer class="site-footer">
+      <div class="container footer-grid">
+        <div class="footer-col">
+          <h2 class="footer-col-title">功能</h2>
+          <ul>
+            <li><a href="/features/course-selection/">选课管理</a></li>
+            <li><a href="/features/scheduling/">排课管理</a></li>
+            <li><a href="/features/grades/">成绩管理</a></li>
+            <li><a href="/features/exams/">考试管理</a></li>
+            <li><a href="/features/graduation/">毕业设计</a></li>
+            <li><a href="/features/practice/">实践教学</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h2 class="footer-col-title">了解 XXQ</h2>
+          <ul>
+            <li><a href="/about/">关于我们</a></li>
+            <li><a href="/faq/">常见问题</a></li>
+            <li><a href="/contact/">联系我们</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h2 class="footer-col-title">条款与信息</h2>
+          <ul>
+            <li><a href="/privacy/">隐私政策</a></li>
+            <li><a href="/terms/">服务条款</a></li>
+            <li><a href="/filing/">备案信息</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="container footer-meta">
+        <p>
+          <small>© 2026 XXQ 高校教务管理系统 · <a href="/en/" hreflang="en" lang="en">English</a></small>
+        </p>
+        <p>
+          <small>
+            <a href="https://beian.miit.gov.cn/" rel="nofollow noopener" target="_blank">京ICP备XXXXXXXX号</a>
+            · <a href="/filing/">备案信息</a>
+          </small>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<!--
+  此文件由 scripts/build-landing.mjs 生成,请勿直接编辑。
+  内容数据在 scripts/landing/pages.zh.mjs,改完重跑:
+    node scripts/build-landing.mjs
+-->
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>选课管理系统 - 选课活动/志愿轮次/冲突校验全流程 | XXQ 高校教务管理系统</title>
+    <meta name="description" content="XXQ 选课管理系统支持选课活动配置、志愿与轮次设置、容量与时间冲突校验、选课退课与名单导出,帮助学生高效完成选课,并让教务与院系实时掌握选课进度。">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#f0f2f5">
+    <!-- 规范链接与多语言互链 -->
+    <link rel="canonical" href="https://hanshauangxxq.cn/features/course-selection/">
+    <!-- 链接分享预览(og:image 为绝对 URL,微信/QQ/Twitter 卡片依赖) -->
+    <meta property="og:site_name" content="XXQ">
+    <meta property="og:title" content="选课管理系统 - 选课活动/志愿轮次/冲突校验全流程 | XXQ 高校教务管理系统">
+    <meta property="og:description" content="XXQ 选课管理系统支持选课活动配置、志愿与轮次设置、容量与时间冲突校验、选课退课与名单导出,帮助学生高效完成选课,并让教务与院系实时掌握选课进度。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://hanshauangxxq.cn/features/course-selection/">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta property="og:image" content="https://hanshauangxxq.cn/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="XXQ 选课管理系统 — 选课活动与冲突校验">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://hanshauangxxq.cn/og-image.png">
+    <meta name="twitter:image:alt" content="XXQ 选课管理系统 — 选课活动与冲突校验">
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/landing.css">
+    <!-- 登录态打类:必须同步阻塞在 <head>,早于 body 解析给 <html> 加 logged-in 类,
+        否则已登录访客会先看到「登录」按钮再被替换。生产 CSP(script-src 'self',
+        见 docs/nginx.conf)禁内联脚本,故外置 -->
+    <script src="/landing-boot.js"></script>
+    <!-- 头像菜单等 DOM 交互:defer 在 DOMContentLoaded 前执行,不阻塞首屏;
+        不能用 async——若晚于 DOMContentLoaded 加载,监听器永不注册 -->
+    <script src="/landing.js" defer></script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://hanshauangxxq.cn/#organization",
+          "name": "XXQ",
+          "url": "https://hanshauangxxq.cn/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://hanshauangxxq.cn/logo.png",
+            "width": 512,
+            "height": 512
+          }
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://hanshauangxxq.cn/#website",
+          "name": "XXQ",
+          "url": "https://hanshauangxxq.cn/",
+          "inLanguage": [
+            "zh-CN",
+            "en"
+          ],
+          "publisher": {
+            "@id": "https://hanshauangxxq.cn/#organization"
+          }
+        },
+        {
+          "@type": "WebPage",
+          "@id": "https://hanshauangxxq.cn/features/course-selection/#webpage",
+          "url": "https://hanshauangxxq.cn/features/course-selection/",
+          "name": "选课管理系统 - 选课活动/志愿轮次/冲突校验全流程 | XXQ 高校教务管理系统",
+          "description": "XXQ 选课管理系统支持选课活动配置、志愿与轮次设置、容量与时间冲突校验、选课退课与名单导出,帮助学生高效完成选课,并让教务与院系实时掌握选课进度。",
+          "isPartOf": {
+            "@id": "https://hanshauangxxq.cn/#website"
+          },
+          "inLanguage": "zh-CN",
+          "breadcrumb": {
+            "@id": "https://hanshauangxxq.cn/features/course-selection/#breadcrumb"
+          }
+        },
+        {
+          "@type": "BreadcrumbList",
+          "@id": "https://hanshauangxxq.cn/features/course-selection/#breadcrumb",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "首页",
+              "item": "https://hanshauangxxq.cn/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "选课管理系统"
+            }
+          ]
+        }
+      ]
+    }
+    </script>
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav container" aria-label="主导航">
+        <a class="brand" href="/">XXQ</a>
+        <ul class="nav-actions">
+          <li><a class="lang-switch" href="/en/" hreflang="en" lang="en">English</a></li>
+          <li class="guest-only"><a class="btn btn-primary" href="/login">登录</a></li>
+          <li class="user-menu user-only">
+            <button
+              type="button"
+              class="avatar-btn"
+              aria-haspopup="menu"
+              aria-expanded="false"
+              aria-controls="user-dropdown"
+              aria-label="用户菜单"
+            >
+              <img class="avatar-img" alt="" hidden>
+              <span class="avatar-fallback" hidden></span>
+            </button>
+            <div class="user-dropdown" id="user-dropdown" hidden>
+              <p class="user-name"></p>
+              <a class="btn btn-primary btn-block" href="/profile">进入系统</a>
+              <button type="button" class="btn btn-ghost btn-block" data-logout>退出登录</button>
+            </div>
+          </li>
+        </ul>
+      </nav>
+    <nav class="subnav" aria-label="功能导航">
+      <ul class="subnav-list container">
+        <li><a href="/features/course-selection/">选课管理</a></li>
+        <li><a href="/features/scheduling/">排课管理</a></li>
+        <li><a href="/features/grades/">成绩管理</a></li>
+        <li><a href="/features/exams/">考试管理</a></li>
+        <li><a href="/features/graduation/">毕业设计</a></li>
+        <li><a href="/features/practice/">实践教学</a></li>
+      </ul>
+    </nav>
+    </header>
+    <main>
+    <nav class="breadcrumb container" aria-label="面包屑">
+      <ol>
+        <li><a href="/">首页</a></li>
+        <li><span aria-current="page">选课管理系统</span></li>
+      </ol>
+    </nav>
+    <section class="hero hero-compact" aria-labelledby="hero-title">
+      <h1 id="hero-title">选课管理系统</h1>
+      <p class="hero-lead">从选课活动配置、志愿与轮次,到冲突校验、选课退课与名单导出,把每学期最集中的那几天放进一套可控的流程里。</p>
+      <a class="btn btn-primary btn-lg guest-only" href="/login">进入系统</a>
+    </section>
+    <div class="container">
+    <section class="prose-section">
+      <h2>选课活动:把开放时间与规则配置清楚</h2>
+      <p>每个学期的选课按活动组织。教务在活动里设定开放与截止时间、面向的年级与专业范围、可选课程范围,学生只在活动开放期间能提交选课。活动结束后名单自动冻结,不需要人工关闭入口。</p>
+      <p>活动可以按轮次推进,不同轮次面向不同范围的课程或学生,便于把专业课、公共课、重修分开安排。</p>
+    </section>
+    <section class="prose-section">
+      <h2>冲突校验与容量控制</h2>
+      <p>学生提交选课时,系统按已选课程的上课时间与容量做校验:时间冲突的课程无法同时选中,余量为零的课程不再接受新的选课。这类约束在提交那一刻判定,而不是等选课结束后人工排查冲突名单。</p>
+      <ul class="prose-list">
+        <li>时间冲突:与已选课程上课时间重叠时拒绝提交</li>
+        <li>容量上限:达到课程容量后不再放号,避免超额</li>
+        <li>名单可查:教务与院系可查看每门课程的实时选课名单</li>
+      </ul>
+    </section>
+    <section class="prose-section">
+      <h2>选课、退课与名单输出</h2>
+      <p>学生在活动期内可以自行退课,释放的名额回到可选池中。教务与院系可以按课程、班级、专业导出选课名单,用于点名册、成绩录入准备与教学任务核对。</p>
+    </section>
+    <section class="prose-section">
+      <h2>和排课、成绩的衔接</h2>
+      <p>选课依赖排课产出的时间与教室安排,选课名单又是成绩录入的基础:教师端看到的成绩录入名单直接来自选课结果,不需要再导一次表。这两处的衔接关系详见排课管理与成绩管理页面。</p>
+    </section>
+    <section class="prose-section related-section">
+      <h2>相关功能</h2>
+      <ul class="related-list">
+        <li><a href="/features/scheduling/">排课管理系统:教学任务与时间教室约束</a></li>
+        <li><a href="/features/grades/">成绩管理系统:录入、统计分析与复核申诉</a></li>
+        <li><a href="/faq/">常见问题解答</a></li>
+      </ul>
+    </section>
+    </div>
+    </main>
+    <footer class="site-footer">
+      <div class="container footer-grid">
+        <div class="footer-col">
+          <h2 class="footer-col-title">功能</h2>
+          <ul>
+            <li><a href="/features/course-selection/">选课管理</a></li>
+            <li><a href="/features/scheduling/">排课管理</a></li>
+            <li><a href="/features/grades/">成绩管理</a></li>
+            <li><a href="/features/exams/">考试管理</a></li>
+            <li><a href="/features/graduation/">毕业设计</a></li>
+            <li><a href="/features/practice/">实践教学</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h2 class="footer-col-title">了解 XXQ</h2>
+          <ul>
+            <li><a href="/about/">关于我们</a></li>
+            <li><a href="/faq/">常见问题</a></li>
+            <li><a href="/contact/">联系我们</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h2 class="footer-col-title">条款与信息</h2>
+          <ul>
+            <li><a href="/privacy/">隐私政策</a></li>
+            <li><a href="/terms/">服务条款</a></li>
+            <li><a href="/filing/">备案信息</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="container footer-meta">
+        <p>
+          <small>© 2026 XXQ 高校教务管理系统 · <a href="/en/" hreflang="en" lang="en">English</a></small>
+        </p>
+        <p>
+          <small>
+            <a href="https://beian.miit.gov.cn/" rel="nofollow noopener" target="_blank">京ICP备XXXXXXXX号</a>
+            · <a href="/filing/">备案信息</a>
+          </small>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>
