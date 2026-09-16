@@ -35,7 +35,11 @@ document.addEventListener('DOMContentLoaded', function () {
  * - 点击打开的:「钉住」——鼠标移出不收起,必须焦点离开登录区(focusin 落在
  *   区外)、指针按在区外,或按 Esc 才收起;Esc 收起后焦点还给「登录」按钮。
  *   键盘/触屏用户没有悬停路径,若鼠标划过去浮窗就被关掉会令人困惑。
- * 统一的兜底:交互过面板(聚焦过任意输入)之后,进入钉住模式。 */
+ * 统一的兜底:交互过面板(聚焦过任意输入)之后,进入钉住模式。
+ *
+ * 例外:输入法组合输入期间(compositionstart → compositionend)以上收起路径全部让路。
+ * 候选窗是独立顶层窗口,打字时浏览器会据此误派发 pointerleave / focusin,用户并没有
+ * 「离开」登录区;此时收起会把输入框随 form 的 hidden 一起失焦,中文等输入法直接不可用。 */
 function initLoginPopover() {
   var pop = document.querySelector('.login-pop')
   var toggle = document.querySelector('[data-login-toggle]')
@@ -81,6 +85,8 @@ function initLoginPopover() {
   // 钉住模式:false = 悬停打开,鼠标移出即收;true = 点击打开或已交互过,
   // 焦点驱动收起(见函数头注释)
   var pinned = false
+  // 输入法组合输入中(拼音候选未上屏),期间一切收起路径让路,见下方 composition 监听
+  var composing = false
 
   function open(focusAccount) {
     pinned = !!focusAccount
@@ -101,9 +107,14 @@ function initLoginPopover() {
     if (restoreFocus) toggle.focus()
   }
 
-  // 悬停打开(触屏点按也会先触发 pointerenter,随后的 click 再负责聚焦,无冲突)
+  // 悬停打开(触屏点按也会先触发 pointerenter,随后的 click 再负责聚焦,无冲突)。
+  // 已打开时指针再进来不要重复调用 open:open(false) 会把 pinned 降级回悬停态,
+  // 此后任意一次 pointerleave 都会在用户正打字时把浮窗收掉。输入法(中文等)组合
+  // 输入期间指针会因候选窗反复进出登录区(候选窗是独立顶层窗口,浏览器据此派发
+  // pointerleave,指针移回页面时再派发 pointerenter),这条降级路径会让浮窗在
+  // 打字中途收起——form 被 hidden 后输入框连带失焦,中文根本输不进去。
   pop.addEventListener('pointerenter', function () {
-    open(false)
+    if (!opened) open(false)
   })
 
   toggle.addEventListener('click', function (e) {
@@ -122,18 +133,34 @@ function initLoginPopover() {
 
   // 鼠标移出登录区:只有未钉住的(悬停打开的)才收起
   pop.addEventListener('pointerleave', function () {
+    if (composing) return
     if (opened && !pinned) close(false)
+  })
+
+  // 输入法组合输入(中文/日文等)期间的误报:候选窗是独立顶层窗口,浏览器会按
+  // 指针与它的相对位置派发 pointerleave / focusin,Esc 也交给输入法去取消候选。
+  // 这些都发生在用户正打字时,一律不收起(否则 form 被 hidden,输入框连带失焦)。
+  form.addEventListener('compositionstart', function () {
+    composing = true
+  })
+  form.addEventListener('compositionend', function () {
+    composing = false
   })
 
   // 钉住模式的收起三条件:焦点落到区外 / 指针按在区外 / Esc;鼠标移出不收
   document.addEventListener('focusin', function (e) {
+    if (composing) return
     if (opened && pinned && !pop.contains(e.target)) close(false)
   })
   document.addEventListener('pointerdown', function (e) {
+    if (composing) return
     if (opened && !pop.contains(e.target)) close(false)
   })
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && opened) close(true)
+    if (e.key !== 'Escape' || !opened) return
+    // 组合中按 Esc 是「取消候选/撤销拼音」,不能顺带关掉浮窗
+    if (composing || e.isComposing) return
+    close(true)
   })
 
   // 键盘 Tab 聚焦进表单:与点击打开一致进入钉住模式,之后按焦点驱动收起
