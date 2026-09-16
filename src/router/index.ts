@@ -4,11 +4,10 @@ import { useAuthStore } from '@/stores/useAuthStore'
 import { rememberVisitedPath } from '@/shared/utils/lastVisitedPage'
 import MainLayout from '@/modules/layout/MainLayout.vue'
 
-/** 免登录白名单:未登录用户仅可访问这些路径,其余一律重定向到 /login */
-const WHITELIST = ['/login']
-
 /**
- * 路由表:主布局(MainLayout)下的子路由 + 认证模块路由(登录页等)。
+ * 路由表:主布局(MainLayout)下的业务子路由 + 独立公共页(登录、403、404)。
+ * 公共页声明 meta.public:免登录可访问,且不渲染主布局——已登录用户访问时
+ * 也不会加载侧边栏/面包屑/通知面板,不连接通知通道、不拉取个性化偏好。
  * 所有页面组件均按需动态导入;meta.titleKey 为标题 i18n 键,meta.roles 声明可访问角色。
  */
 const routes: RouteRecordRaw[] = [
@@ -392,23 +391,24 @@ const routes: RouteRecordRaw[] = [
           import('@/modules/practice/graduation/pages/academic/ScoreOverviewPage.vue'),
         meta: { titleKey: 'graduation.academic.scoreTableTitle', roles: ['academic_admin'] },
       },
-      // 403 角色越权:守卫拦截 meta.roles 不匹配的访问后统一跳转到此页(须位于 404 兜底之前)
-      {
-        path: '403',
-        name: 'Forbidden',
-        component: () => import('@/shared/pages/ForbiddenPage.vue'),
-        meta: { titleKey: 'common.forbidden.title' },
-      },
-      // 404 兜底:放在子路由最后,未匹配的路径在主布局内展示 NotFound 页
-      {
-        path: ':pathMatch(.*)*',
-        name: 'NotFound',
-        component: () => import('@/shared/pages/NotFoundPage.vue'),
-        meta: { titleKey: 'not-found.title' },
-      },
     ],
   },
   ...authRoutes,
+  // ===== 独立公共页(免登录,不渲染主布局) =====
+  // 403 角色越权:守卫拦截 meta.roles 不匹配的访问后统一跳转到此页
+  {
+    path: '/403',
+    name: 'Forbidden',
+    component: () => import('@/shared/pages/ForbiddenPage.vue'),
+    meta: { titleKey: 'common.forbidden.title', public: true },
+  },
+  // 404 兜底:必须位于路由表最后;未匹配的路径全屏独立展示,未登录访客同样可见
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: () => import('@/shared/pages/NotFoundPage.vue'),
+    meta: { titleKey: 'not-found.title', public: true },
+  },
 ]
 
 const router = createRouter({
@@ -417,20 +417,20 @@ const router = createRouter({
 })
 
 /**
- * 全局前置守卫:未登录跳 /login;已登录访问 /login 时整页回落地页;
- * meta.roles 角色不匹配时跳 403。
+ * 全局前置守卫:未登录且目标路由未声明 meta.public 时跳 /login;
+ * 已登录访问 /login 时整页回落地页;meta.roles 角色不匹配时跳 403。
  */
 router.beforeEach((to) => {
   const authStore = useAuthStore()
 
-  if (!authStore.isLoggedIn && !WHITELIST.includes(to.path)) {
+  if (!authStore.isLoggedIn && !to.meta.public) {
     return '/login'
   }
 
   // 登出流程中允许已登录用户进入 /login(先跳转再清空会话,避免旧页面闪现无权限)
   // 已登录用户访问 /login 时整页回 /:线上 / 由 Nginx 返回 SEO 落地页(展示已登录头像菜单);
   // 不能用 router 内部跳转 '/':SPA 的 / 路由只会 redirect 到 /profile
-  if (authStore.isLoggedIn && WHITELIST.includes(to.path) && !authStore.isLoggingOut) {
+  if (authStore.isLoggedIn && to.name === 'Login' && !authStore.isLoggingOut) {
     window.location.replace('/')
     return false
   }
