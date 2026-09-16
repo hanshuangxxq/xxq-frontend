@@ -234,17 +234,36 @@ ${indentBlock(items, 4)}
 
 /** 渲染站点头部(访客态 + 已登录态两套,由 <html> 的 logged-in 类切换)。
  *  两套都必须完整输出:landing.js 依赖 .avatar-btn / .user-dropdown /
- *  .user-name / [data-logout] 存在,缺一个已登录用户就会报错。 */
+ *  .user-name / [data-logout] 存在,缺一个已登录用户就会报错;
+ *  访客态依赖 .login-pop / [data-login-toggle] / #login-popover 存在,
+ *  缺一个登录浮窗就会静默失效。
+ *  访客态的「登录」与 hero 的「进入系统」都是指向 /login 的真链接,
+ *  JS 可用时被 landing.js 增强为打开登录浮窗(preventDefault),
+ *  JS 不可用时仍可跳到 /login 完成登录。 */
 function renderHeader(page, nav) {
   const label =
     page.lang === 'zh-CN'
-      ? { nav: '主导航', menu: '用户菜单', signIn: '登录', enter: '进入系统', signOut: '退出登录' }
+      ? {
+          nav: '主导航',
+          menu: '用户菜单',
+          signIn: '登录',
+          enter: '进入系统',
+          signOut: '退出登录',
+          account: '账号',
+          password: '密码',
+          accountPlaceholder: '请输入账号',
+          passwordPlaceholder: '请输入密码',
+        }
       : {
           nav: 'Main navigation',
           menu: 'User menu',
           signIn: 'Sign In',
           enter: 'Enter System',
           signOut: 'Sign Out',
+          account: 'Account',
+          password: 'Password',
+          accountPlaceholder: 'Enter account',
+          passwordPlaceholder: 'Enter password',
         }
 
   const otherLang =
@@ -260,7 +279,39 @@ function renderHeader(page, nav) {
     <a class="brand" href="${page.lang === 'zh-CN' ? '/' : '/en/'}"><img class="brand-logo" src="${LOGO_IMAGE}" width="28" height="28" alt="">${BRAND}</a>
     <ul class="nav-actions">
       <li><a class="lang-switch" href="${otherLang.href}" hreflang="${otherLang.hreflang}" lang="${otherLang.lang}">${otherLang.text}</a></li>
-      <li class="guest-only"><a class="btn btn-primary" href="/login">${label.signIn}</a></li>
+      <li class="guest-only">
+        <div class="login-pop">
+          <a class="btn btn-primary" href="/login" data-login-toggle>${label.signIn}</a>
+          <form class="login-popover" id="login-popover" aria-label="${label.signIn}" hidden>
+            <p class="login-error" data-login-error hidden></p>
+            <p class="login-field">
+              <label for="login-account">${label.account}</label>
+              <input
+                class="login-input"
+                id="login-account"
+                name="account"
+                type="text"
+                autocomplete="username"
+                placeholder="${label.accountPlaceholder}"
+                required
+              >
+            </p>
+            <p class="login-field">
+              <label for="login-password">${label.password}</label>
+              <input
+                class="login-input"
+                id="login-password"
+                name="password"
+                type="password"
+                autocomplete="current-password"
+                placeholder="${label.passwordPlaceholder}"
+                required
+              >
+            </p>
+            <button class="btn btn-primary btn-block login-submit" type="submit">${label.signIn}</button>
+          </form>
+        </div>
+      </li>
       <li class="user-menu user-only">
         <button
           type="button"
@@ -422,13 +473,14 @@ export function renderPage(page, nav) {
   const alternates = page.alternates || []
 
   // 主转化入口。guest-only / user-only 由 landing-boot.js 打的 logged-in 类切换:
-  // 访客看到「登录/Sign In」进 /login,已登录访客直接给「进入系统」进 /profile
+  // 访客的「进入系统」被 landing.js 增强为打开页头登录浮窗(href="/login" 为
+  // 无 JS 兜底);已登录访客直接给「进入系统」进 /profile
   const ctaLabel = page.lang === 'zh-CN' ? '进入系统' : 'Sign In'
   const ctaUserLabel = page.lang === 'zh-CN' ? '进入系统' : 'Enter System'
   const hero = `<section class="hero${page.breadcrumb.length > 1 ? ' hero-compact' : ''}" aria-labelledby="hero-title">
   <h1 id="hero-title">${esc(page.h1)}</h1>
   <p class="hero-lead">${esc(page.lead)}</p>
-  <a class="btn btn-primary btn-lg guest-only" href="/login">${ctaLabel}</a>
+  <a class="btn btn-primary btn-lg guest-only" href="/login" data-login-open>${ctaLabel}</a>
   <a class="btn btn-primary btn-lg user-only" href="/profile">${ctaUserLabel}</a>
 </section>`
 

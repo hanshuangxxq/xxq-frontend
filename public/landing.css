@@ -12,6 +12,9 @@
   --landing-primary-hover: #4472ee;
   --landing-primary-active: #1d4fd7;
   --landing-on-primary: #ffffff;
+  /* 登录浮窗:输入框占位符与错误提示 */
+  --landing-text-placeholder: #b6bcc7;
+  --landing-error: #d03050;
 }
 
 * {
@@ -63,9 +66,15 @@ a:hover {
 }
 
 /* ===== 顶部导航 ===== */
+/* 页头常驻视窗顶部:登录浮窗锚定在页头按钮上,任何滚动位置都能直接触达,
+   访客不必回到页首才能登录 */
 .site-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
   background: var(--landing-card-bg);
   border-bottom: 1px solid var(--landing-border);
+  box-shadow: var(--landing-card-shadow);
 }
 
 .nav {
@@ -483,6 +492,108 @@ html.logged-in .btn.user-only {
 
 html.logged-in .guest-only {
   display: none;
+}
+
+/* ===== 登录浮窗(访客态)=====
+   打开由 landing.js 控制(悬停/点击,hidden 属性切换);收起是焦点驱动——
+   鼠标移出不收起,焦点离开登录区(点外部/Tab 移走/Esc)才收起。
+   与 .user-dropdown 同一视觉语言,加宽以容纳表单。 */
+.login-pop {
+  position: relative;
+}
+
+/* 显隐由 hidden 属性控制,本类不设 display,避免与 hidden 冲突 */
+.login-popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 248px;
+  padding: 16px;
+  background: var(--landing-card-bg);
+  border: 1px solid var(--landing-border);
+  border-radius: 8px;
+  /* 比卡片阴影略深,读出「浮在页面上方」的层级 */
+  box-shadow: 0 6px 24px rgba(15, 35, 80, 0.14);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .login-popover {
+    animation: login-pop-in 0.15s ease;
+  }
+}
+
+@keyframes login-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-field {
+  margin: 0 0 10px;
+}
+
+.login-field label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12px;
+  color: var(--landing-text-secondary);
+}
+
+.login-input {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--landing-border);
+  border-radius: 6px;
+  outline: none;
+  background: var(--landing-card-bg);
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--landing-text);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.login-input::placeholder {
+  color: var(--landing-text-placeholder);
+}
+
+.login-input:focus {
+  border-color: var(--landing-primary);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+/* 登录失败时输入框描红,由 landing.js 加/删此类 */
+.login-input-error,
+.login-input-error:focus {
+  border-color: var(--landing-error);
+  box-shadow: none;
+}
+
+.login-error {
+  margin: 0 0 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--landing-error);
+}
+
+/* .btn 是按 <a> 设计的,作 <button> 用需要补上表单元素重置 */
+.login-submit {
+  width: 100%;
+  border: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.login-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* ===== 用户头像菜单 ===== */

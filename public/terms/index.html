@@ -110,7 +110,39 @@
         <a class="brand" href="/"><img class="brand-logo" src="/logo.png" width="28" height="28" alt="">XXQ</a>
         <ul class="nav-actions">
           <li><a class="lang-switch" href="/en/" hreflang="en" lang="en">English</a></li>
-          <li class="guest-only"><a class="btn btn-primary" href="/login">登录</a></li>
+          <li class="guest-only">
+            <div class="login-pop">
+              <a class="btn btn-primary" href="/login" data-login-toggle>登录</a>
+              <form class="login-popover" id="login-popover" aria-label="登录" hidden>
+                <p class="login-error" data-login-error hidden></p>
+                <p class="login-field">
+                  <label for="login-account">账号</label>
+                  <input
+                    class="login-input"
+                    id="login-account"
+                    name="account"
+                    type="text"
+                    autocomplete="username"
+                    placeholder="请输入账号"
+                    required
+                  >
+                </p>
+                <p class="login-field">
+                  <label for="login-password">密码</label>
+                  <input
+                    class="login-input"
+                    id="login-password"
+                    name="password"
+                    type="password"
+                    autocomplete="current-password"
+                    placeholder="请输入密码"
+                    required
+                  >
+                </p>
+                <button class="btn btn-primary btn-block login-submit" type="submit">登录</button>
+              </form>
+            </div>
+          </li>
           <li class="user-menu user-only">
             <button
               type="button"
@@ -152,7 +184,7 @@
     <section class="hero hero-compact" aria-labelledby="hero-title">
       <h1 id="hero-title">服务条款</h1>
       <p class="hero-lead">本页说明使用 XXQ 高校教务管理系统时需要遵守的规范。系统由使用院校部署并管理,账号由院校发放。</p>
-      <a class="btn btn-primary btn-lg guest-only" href="/login">进入系统</a>
+      <a class="btn btn-primary btn-lg guest-only" href="/login" data-login-open>进入系统</a>
       <a class="btn btn-primary btn-lg user-only" href="/profile">进入系统</a>
     </section>
     <div class="container">

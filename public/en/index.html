@@ -125,7 +125,39 @@
         <a class="brand" href="/en/"><img class="brand-logo" src="/logo.png" width="28" height="28" alt="">XXQ</a>
         <ul class="nav-actions">
           <li><a class="lang-switch" href="/" hreflang="zh-CN" lang="zh-CN">中文</a></li>
-          <li class="guest-only"><a class="btn btn-primary" href="/login">Sign In</a></li>
+          <li class="guest-only">
+            <div class="login-pop">
+              <a class="btn btn-primary" href="/login" data-login-toggle>Sign In</a>
+              <form class="login-popover" id="login-popover" aria-label="Sign In" hidden>
+                <p class="login-error" data-login-error hidden></p>
+                <p class="login-field">
+                  <label for="login-account">Account</label>
+                  <input
+                    class="login-input"
+                    id="login-account"
+                    name="account"
+                    type="text"
+                    autocomplete="username"
+                    placeholder="Enter account"
+                    required
+                  >
+                </p>
+                <p class="login-field">
+                  <label for="login-password">Password</label>
+                  <input
+                    class="login-input"
+                    id="login-password"
+                    name="password"
+                    type="password"
+                    autocomplete="current-password"
+                    placeholder="Enter password"
+                    required
+                  >
+                </p>
+                <button class="btn btn-primary btn-block login-submit" type="submit">Sign In</button>
+              </form>
+            </div>
+          </li>
           <li class="user-menu user-only">
             <button
               type="button"
@@ -151,7 +183,7 @@
     <section class="hero" aria-labelledby="hero-title">
       <h1 id="hero-title">XXQ Academic Affairs Management System</h1>
       <p class="hero-lead">An all-in-one teaching management platform for universities — from course selection, scheduling and curricula to grades, exams, graduation projects and practical education, with students, faculty, departments and academic affairs working together in one place.</p>
-      <a class="btn btn-primary btn-lg guest-only" href="/login">Sign In</a>
+      <a class="btn btn-primary btn-lg guest-only" href="/login" data-login-open>Sign In</a>
       <a class="btn btn-primary btn-lg user-only" href="/profile">Enter System</a>
     </section>
     <div class="container">
