@@ -10,6 +10,8 @@
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
     "csp-hashes": "node scripts/print-csp-hashes.mjs",
+    "build-landing": "node scripts/build-landing.mjs",
+    "check-landing": "node scripts/build-landing.mjs --check",
     "lint": "run-s \"lint:*\"",
     "lint:oxlint": "oxlint . --fix",
     "lint:eslint": "eslint . --fix --cache",
