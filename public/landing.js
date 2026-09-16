@@ -30,10 +30,12 @@ document.addEventListener('DOMContentLoaded', function () {
  * 不应把焦点拽进输入框)或点击(页头「登录」/ hero「进入系统」,点击才自动聚焦
  * 账号框)。两者最终都是同一个浮窗,页头常驻视窗顶部,任何滚动位置都可触达。
  *
- * 收起:焦点驱动,而不是鼠标驱动——鼠标移出登录区不收起;只有焦点离开登录区
- * (focusin 落在区外)、指针按在区外,或按 Esc 时才收起。Esc 收起后焦点还给
- * 「登录」按钮。
- */
+ * 收起按打开方式区分:
+ * - 悬停打开的:鼠标移出登录区即收起(指针驱动的浮窗,体验上以指针为准)
+ * - 点击打开的:「钉住」——鼠标移出不收起,必须焦点离开登录区(focusin 落在
+ *   区外)、指针按在区外,或按 Esc 才收起;Esc 收起后焦点还给「登录」按钮。
+ *   键盘/触屏用户没有悬停路径,若鼠标划过去浮窗就被关掉会令人困惑。
+ * 统一的兜底:交互过面板(聚焦过任意输入)之后,进入钉住模式。 */
 function initLoginPopover() {
   var pop = document.querySelector('.login-pop')
   var toggle = document.querySelector('[data-login-toggle]')
@@ -76,8 +78,12 @@ function initLoginPopover() {
   // ---- 打开与收起 ----
   var opened = false
   var submitting = false
+  // 钉住模式:false = 悬停打开,鼠标移出即收;true = 点击打开或已交互过,
+  // 焦点驱动收起(见函数头注释)
+  var pinned = false
 
   function open(focusAccount) {
+    pinned = !!focusAccount
     if (!opened) {
       opened = true
       form.hidden = false
@@ -89,6 +95,7 @@ function initLoginPopover() {
   function close(restoreFocus) {
     if (!opened) return
     opened = false
+    pinned = false
     form.hidden = true
     toggle.setAttribute('aria-expanded', 'false')
     if (restoreFocus) toggle.focus()
@@ -113,15 +120,28 @@ function initLoginPopover() {
     })
   }
 
-  // 收起三条件:焦点落到区外 / 指针按在区外 / Esc;鼠标移出登录区不收起
+  // 鼠标移出登录区:只有未钉住的(悬停打开的)才收起
+  pop.addEventListener('pointerleave', function () {
+    if (opened && !pinned) close(false)
+  })
+
+  // 钉住模式的收起三条件:焦点落到区外 / 指针按在区外 / Esc;鼠标移出不收
   document.addEventListener('focusin', function (e) {
-    if (opened && !pop.contains(e.target)) close(false)
+    if (opened && pinned && !pop.contains(e.target)) close(false)
   })
   document.addEventListener('pointerdown', function (e) {
     if (opened && !pop.contains(e.target)) close(false)
   })
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && opened) close(true)
+  })
+
+  // 键盘 Tab 聚焦进表单:与点击打开一致进入钉住模式,之后按焦点驱动收起
+  accountInput.addEventListener('focus', function () {
+    if (opened) pinned = true
+  })
+  passwordInput.addEventListener('focus', function () {
+    if (opened) pinned = true
   })
 
   // ---- 客户端私网 IP 探测(与 SPA 的 clientIp.ts 同策略,仅供后端登录限流分桶)----
