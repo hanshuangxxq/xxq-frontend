@@ -28,20 +28,45 @@ document.addEventListener('DOMContentLoaded', function () {
   }
   if (!user) return
 
-  // 头像:文件名拼 /api/avatar/ 前缀(与 SPA avatarUrl() 同规则),无头像用姓名首字符占位
+  // 头像:无头像用姓名首字符占位。
+  // 后端 /api/avatar/** 需登录(AuthInterceptor 拦截),<img> 直链不携带 Authorization 头,
+  // 站内头像必须 fetch 带 Bearer 取 blob 转 ObjectURL(与 SPA useAvatar 同策略);
+  // 外部 http(s) 头像可直链。拉取失败(含 token 过期 401)一律回退占位符。
   var avatarImg = document.querySelector('.avatar-img')
   var avatarFallback = document.querySelector('.avatar-fallback')
-  var avatar = user.avatar
-  if (avatar) {
-    var src = avatar
-    if (!/^(https?:)?\/\//.test(avatar)) {
-      src = '/api/avatar/' + avatar.replace(/^\/api\/avatar\//, '')
-    }
-    avatarImg.src = src
-    avatarImg.hidden = false
-  } else {
+  function showAvatarFallback() {
     avatarFallback.textContent = (user.name || '?').charAt(0)
     avatarFallback.hidden = false
+  }
+  var avatar = user.avatar
+  if (!avatar) {
+    showAvatarFallback()
+  } else if (/^(https?:)?\/\//.test(avatar)) {
+    avatarImg.src = avatar
+    avatarImg.hidden = false
+  } else {
+    var avatarToken = null
+    try {
+      avatarToken = localStorage.getItem('xxq-access-token')
+    } catch (e) {
+      avatarToken = null
+    }
+    if (!avatarToken) {
+      showAvatarFallback()
+    } else {
+      fetch('/api/avatar/' + avatar.replace(/^\/api\/avatar\//, ''), {
+        headers: { Authorization: 'Bearer ' + avatarToken },
+      })
+        .then(function (res) {
+          if (!res.ok) throw new Error('avatar ' + res.status)
+          return res.blob()
+        })
+        .then(function (blob) {
+          avatarImg.src = URL.createObjectURL(blob)
+          avatarImg.hidden = false
+        })
+        .catch(showAvatarFallback)
+    }
   }
   document.querySelector('.user-name').textContent = user.name || ''
 
