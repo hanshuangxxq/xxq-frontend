@@ -1,8 +1,18 @@
 # XXQ 爬虫协议
 # 整站允许抓取;仅屏蔽后端接口与 WebSocket(返回 JSON/长连接,无可索引内容)。
-# 注意:切勿在此屏蔽应用路由(/login、/profile 等)。SPA 外壳 index.html 通过
-# <meta name="robots" content="noindex"> 声明不收录,若被 robots.txt 屏蔽,
-# 爬虫将无法读到该声明,反而可能把这些 URL 以无摘要裸链接形式收录。
+#
+# ★ 切勿在此屏蔽应用路由(/login、/profile、/course 等)。SPA 外壳 index.html 通过
+#   <meta name="robots" content="noindex"> 与 nginx 的 X-Robots-Tag 声明不收录,
+#   若被 robots.txt 屏蔽,爬虫将无法读到这些声明,反而可能把这些 URL 以无摘要
+#   裸链接的形式收录。
+#
+# 可收录的落地页(见下方 sitemap):
+#   /                                   中文首页
+#   /en/                                英文首页
+#   /features/*/                        6 个功能详情页
+#   /about/ /contact/ /faq/             关于、联系、常见问题
+#   /privacy/ /terms/ /filing/          隐私政策、服务条款、备案信息
+# 这些页面由 scripts/build-landing.mjs 从 scripts/landing/ 的内容数据生成。
 User-agent: *
 Allow: /
 Disallow: /api/

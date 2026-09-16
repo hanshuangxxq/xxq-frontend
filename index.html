@@ -20,7 +20,9 @@
     <!-- 与下方内联样式/splash 的明暗背景一致,供浏览器 UI(标签栏等)取色 -->
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f5f6f8">
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#101014">
-    <!-- 链接分享预览:应用页统一展示站点级信息,不逐页生成;暂无合适位图资源,不声明 og:image -->
+    <!-- 链接分享预览:应用页统一展示站点级信息,不逐页生成。
+         og:image 用与落地页同一张品牌分享卡(由 scripts/build-og-image.py 生成),
+         必须是绝对 URL -->
     <meta property="og:site_name" content="XXQ">
     <meta property="og:type" content="website">
     <meta property="og:title" content="XXQ — 高校教务管理系统">
@@ -28,7 +30,12 @@
       property="og:description"
       content="面向高校的一体化教务管理系统:选课、排课、培养方案、成绩与考试、毕业设计与实践教学,学生、教师、院系、教务四端协同。"
     >
-    <meta name="twitter:card" content="summary">
+    <meta property="og:image" content="https://hanshauangxxq.cn/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="XXQ 高校教务管理系统 — 一体化教学管理平台">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://hanshauangxxq.cn/og-image.png">
     <link rel="icon" href="/favicon.ico">
     <style>
       /* 应用挂载前的兜底背景,与 global.css 的 --app-bg 一致,避免加载期白闪;
