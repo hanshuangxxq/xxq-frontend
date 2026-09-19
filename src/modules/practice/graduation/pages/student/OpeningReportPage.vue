@@ -26,7 +26,10 @@ import {
   fetchMyProposals,
   fetchMyAssignments,
 } from '../../api'
-import { openingStatusTagType, validateUploadFile, formatDateTime } from '@/modules/practice/utils'
+import { openingStatusTagType, formatDateTime } from '@/modules/practice/utils'
+import { prepareSubmitFile } from '@/modules/file/submit'
+import { bizAccept, validateFileForBiz } from '@/modules/file/validate'
+import { useUploadHint } from '@/modules/file/hint'
 import { useLoading } from '@/shared/composables/useLoading'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import type { OpeningReportResponse, CampaignResponse } from '../../types'
@@ -100,6 +103,7 @@ function onCampaignChange(id: number | null): void {
 const showForm = ref(false)
 const form = ref({ title: '', content: '' })
 const fileList = ref<UploadFileInfo[]>([])
+const uploadHint = useUploadHint(fileList, 'graduation-opening-report')
 const { loading: saving, withLoading: withSaving } = useLoading()
 
 function startSubmit(): void {
@@ -126,21 +130,19 @@ function handleSubmit() {
   }
   const raw = fileList.value[0]?.file ?? null
   if (raw) {
-    const err = validateUploadFile(raw)
-    if (err === 'type') {
-      message.warning(t('graduation.common.fileTypeError'))
-      return
-    }
-    if (err === 'size') {
-      message.warning(t('graduation.common.fileTooLarge'))
+    const err = validateFileForBiz(raw, 'graduation-opening-report')
+    if (err) {
+      message.warning(t(`file.error.${err}`))
       return
     }
   }
   return withSaving(async () => {
     try {
+      // ≤20MB 走 multipart 整传;>20MB 自动分片上传,进度见右下角面板
+      const prepared = await prepareSubmitFile(raw, 'graduation-opening-report')
       await submitOpeningReport(
         { campaignId: id, title: f.title.trim(), content: f.content.trim() },
-        raw,
+        prepared,
       )
       message.success(t('graduation.common.operationSuccess'))
       showForm.value = false
@@ -270,13 +272,13 @@ async function handleDownload(): Promise<void> {
           <NFormItem :label="$t('graduation.common.attachment')">
             <NUpload
               v-model:file-list="fileList"
-              accept=".doc,.docx,.pdf,.zip,.rar"
+              :accept="bizAccept('graduation-opening-report')"
               :max="1"
               :default-upload="false"
             >
               <NButton>{{ $t('graduation.common.selectFile') }}</NButton>
             </NUpload>
-            <span class="file-hint">{{ $t('graduation.common.fileHint') }}</span>
+            <span class="file-hint">{{ uploadHint }}</span>
           </NFormItem>
         </NForm>
         <template #footer>

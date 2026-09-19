@@ -25,9 +25,11 @@ import { fetchMyTheses, submitThesis, downloadThesis, fetchMyOpeningReport } fro
 import {
   thesisStatusTagType,
   duplicateResultTagType,
-  validateUploadFile,
   formatDateTime,
 } from '@/modules/practice/utils'
+import { prepareSubmitFile } from '@/modules/file/submit'
+import { bizAccept, validateFileForBiz } from '@/modules/file/validate'
+import { useUploadHint } from '@/modules/file/hint'
 import { useLoading } from '@/shared/composables/useLoading'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import type { ThesisResponse, DuplicateCheckResponse, CampaignResponse } from '../../types'
@@ -105,6 +107,7 @@ function onCampaignChange(id: number | null): void {
 const showForm = ref(false)
 const form = ref({ title: '' })
 const fileList = ref<UploadFileInfo[]>([])
+const uploadHint = useUploadHint(fileList, 'graduation-thesis')
 const { loading: saving, withLoading: withSaving } = useLoading()
 
 function startSubmit(): void {
@@ -126,18 +129,16 @@ function handleSubmit() {
     message.warning(t('graduation.common.fileRequired'))
     return
   }
-  const err = validateUploadFile(raw)
-  if (err === 'type') {
-    message.warning(t('graduation.common.fileTypeError'))
-    return
-  }
-  if (err === 'size') {
-    message.warning(t('graduation.common.fileTooLarge'))
+  const err = validateFileForBiz(raw, 'graduation-thesis')
+  if (err) {
+    message.warning(t(`file.error.${err}`))
     return
   }
   return withSaving(async () => {
     try {
-      await submitThesis({ campaignId: id, title: form.value.title.trim() }, raw)
+      // ≤20MB 走 multipart 整传;>20MB 自动分片上传,进度见右下角面板
+      const prepared = await prepareSubmitFile(raw, 'graduation-thesis')
+      await submitThesis({ campaignId: id, title: form.value.title.trim() }, prepared)
       message.success(t('graduation.common.operationSuccess'))
       showForm.value = false
       await loadTheses()
@@ -326,13 +327,13 @@ const thesisColumns = computed<DataTableColumns<ThesisResponse>>(() => [
           <NFormItem :label="$t('graduation.common.attachment')" required>
             <NUpload
               v-model:file-list="fileList"
-              accept=".doc,.docx,.pdf,.zip,.rar"
+              :accept="bizAccept('graduation-thesis')"
               :max="1"
               :default-upload="false"
             >
               <NButton>{{ $t('graduation.common.selectFile') }}</NButton>
             </NUpload>
-            <span class="file-hint">{{ $t('graduation.common.fileHint') }}</span>
+            <span class="file-hint">{{ uploadHint }}</span>
           </NFormItem>
         </NForm>
         <template #footer>

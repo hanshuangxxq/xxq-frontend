@@ -289,6 +289,10 @@ export interface OpeningReportSubmitRequest {
   campaignId: number
   title: string
   content: string
+  /** 分片上传产物路径(objects/...),与 multipart 的 file 部分二选一;>20MB 时走这里 */
+  filePath?: string
+  /** 展示文件名,配合 filePath 使用 */
+  fileOriginal?: string
 }
 
 /** 教师审核开题报告;approve=false 表示需修改 */
@@ -319,6 +323,10 @@ export interface OpeningReportResponse {
 export interface MidtermSubmitRequest {
   campaignId: number
   content: string
+  /** 分片上传产物路径(objects/...),与 multipart 的 file 部分二选一;>20MB 时走这里 */
+  filePath?: string
+  /** 展示文件名,配合 filePath 使用 */
+  fileOriginal?: string
 }
 
 /** 教师评审中期检查;conclusion 用 code,对应中文见 MidtermConclusion */
@@ -374,6 +382,10 @@ export interface GuidanceLogResponse {
 export interface ThesisSubmitRequest {
   campaignId: number
   title: string
+  /** 分片上传产物路径(objects/...),与 multipart 的 file 部分二选一;>20MB 时走这里 */
+  filePath?: string
+  /** 展示文件名,配合 filePath 使用 */
+  fileOriginal?: string
 }
 
 /** 教师形式审查;approve=false 表示退回修改 */

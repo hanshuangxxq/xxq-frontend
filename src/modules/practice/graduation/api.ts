@@ -1,5 +1,6 @@
 import { api } from '@/shared/api'
 import { downloadPracticeFile } from '@/modules/practice/utils'
+import type { PreparedSubmitFile } from '@/modules/file/types'
 import type { PageResult, Result } from '@/shared/types'
 import type {
   CampaignCreateRequest,
@@ -238,14 +239,22 @@ export function fetchOperationLogs(
 
 // ===== 过程管理（开题/中期/指导日志）=====
 
-/** 学生提交开题报告(data JSON + 可选附件 file 的 multipart 表单) POST /practice/graduation/process/opening-reports */
+/**
+ * 学生提交开题报告(data JSON + 可选附件的 multipart 表单)。
+ * 附件二选一:≤20MB 走 file 部分整传,>20MB 走 data.filePath 分片产物;
+ * 都不给即不附文件(本端点附件选填)。
+ */
 export function submitOpeningReport(
   data: OpeningReportSubmitRequest,
-  file: File | null,
+  file: PreparedSubmitFile,
 ): Promise<Result<OpeningReportResponse>> {
+  const payload: OpeningReportSubmitRequest = file.filePath
+    ? { ...data, filePath: file.filePath, fileOriginal: file.fileOriginal ?? undefined }
+    : data
   const fd = new FormData()
-  fd.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }))
-  if (file) fd.append('file', file)
+  // 不要手动设置 Content-Type:必须让浏览器补上 multipart 的 boundary
+  fd.append('data', new Blob([JSON.stringify(payload)], { type: 'application/json' }))
+  if (file.file) fd.append('file', file.file)
   return api.postForm(`${BASE}/process/opening-reports`, fd)
 }
 
@@ -276,14 +285,21 @@ export function downloadOpeningReport(id: number): Promise<void> {
   return downloadPracticeFile(`${BASE}/process/opening-reports/${id}/download`)
 }
 
-/** 学生提交中期检查(data JSON + 可选附件 file 的 multipart 表单) POST /practice/graduation/process/midterms */
+/**
+ * 学生提交中期检查(data JSON + 可选附件的 multipart 表单)。
+ * 附件二选一:≤20MB 走 file 部分整传,>20MB 走 data.filePath 分片产物。
+ */
 export function submitMidterm(
   data: MidtermSubmitRequest,
-  file: File | null,
+  file: PreparedSubmitFile,
 ): Promise<Result<MidtermResponse>> {
+  const payload: MidtermSubmitRequest = file.filePath
+    ? { ...data, filePath: file.filePath, fileOriginal: file.fileOriginal ?? undefined }
+    : data
   const fd = new FormData()
-  fd.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }))
-  if (file) fd.append('file', file)
+  // 不要手动设置 Content-Type:必须让浏览器补上 multipart 的 boundary
+  fd.append('data', new Blob([JSON.stringify(payload)], { type: 'application/json' }))
+  if (file.file) fd.append('file', file.file)
   return api.postForm(`${BASE}/process/midterms`, fd)
 }
 
@@ -331,14 +347,22 @@ export function fetchGuidanceLogs(
 
 // ===== 论文与查重 =====
 
-/** 学生提交论文(data JSON + 必传论文文件 的 multipart 表单,每次提交生成新版本) POST /practice/graduation/theses */
+/**
+ * 学生提交论文(data JSON + 论文文件 的 multipart 表单,每次提交生成新版本)。
+ * 文件二选一:≤20MB 走 file 部分整传,>20MB 走 data.filePath 分片产物 ——
+ * 同时给会被后端 400 拒绝。
+ */
 export function submitThesis(
   data: ThesisSubmitRequest,
-  file: File,
+  file: PreparedSubmitFile,
 ): Promise<Result<ThesisResponse>> {
+  const payload: ThesisSubmitRequest = file.filePath
+    ? { ...data, filePath: file.filePath, fileOriginal: file.fileOriginal ?? undefined }
+    : data
   const fd = new FormData()
-  fd.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }))
-  fd.append('file', file)
+  // 不要手动设置 Content-Type:必须让浏览器补上 multipart 的 boundary
+  fd.append('data', new Blob([JSON.stringify(payload)], { type: 'application/json' }))
+  if (file.file) fd.append('file', file.file)
   return api.postForm(`${BASE}/theses`, fd)
 }
 

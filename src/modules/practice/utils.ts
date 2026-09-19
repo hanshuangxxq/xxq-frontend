@@ -182,7 +182,13 @@ export function formatDateTime(iso?: string | null): string {
   return iso.slice(0, 16).replace('T', ' ')
 }
 
-/** 附件类型校验（论文/开题/中期，F-R-10）：类型仅 doc/docx/pdf/zip/rar 且 ≤20MB；返回 'type'|'size'|null */
+/**
+ * 附件类型校验（论文/开题/中期，F-R-10）：类型仅 doc/docx/pdf/zip/rar 且 ≤20MB；返回 'type'|'size'|null。
+ *
+ * 已被 `@/modules/file/validate` 的 `validateFileForBiz(file, biz)` 取代（它按业务目录取
+ * 扩展名白名单，且不再把 >20MB 当错误——那会自动改走分片上传）。保留此函数仅作 F-R-10
+ * 规则的历史留档，新代码请勿再引用。
+ */
 export function validateUploadFile(file: File): 'type' | 'size' | null {
   const allowed = ['doc', 'docx', 'pdf', 'zip', 'rar']
   const ext = file.name.split('.').pop()?.toLowerCase() ?? ''

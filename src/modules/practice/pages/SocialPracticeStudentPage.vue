@@ -43,6 +43,9 @@ import {
 } from '../api'
 import { fetchStudents } from '@/modules/student-management/api'
 import PagedSelect from '@/shared/components/PagedSelect.vue'
+import { prepareSubmitFile } from '@/modules/file/submit'
+import { bizAccept, validateFileForBiz } from '@/modules/file/validate'
+import { useUploadHint } from '@/modules/file/hint'
 import {
   auditStatusTagType,
   reportStatusTagType,
@@ -63,8 +66,6 @@ const message = useMessage()
 const { isStudent } = useRoleCheck()
 
 const activeTab = ref('available')
-// 报告附件大小上限 20MB,与 utils.validateUploadFile 的校验口径一致
-const MAX_SIZE = 20 * 1024 * 1024
 
 // ---- 可申报项目 ----
 const available = ref<SocialPracticeResponse[]>([])
@@ -301,6 +302,7 @@ const reportForm = ref<{ practiceId: number | null; title: string; summary: stri
   summary: '',
 })
 const fileList = ref<UploadFileInfo[]>([])
+const reportUploadHint = useUploadHint(fileList, 'social-practice-report')
 const { loading: savingReport, withLoading: withSavingReport } = useLoading()
 
 function startSubmitReport() {
@@ -324,13 +326,16 @@ function handleSubmitReport() {
   if (!f.title.trim()) return message.warning(t('practice.socialPractice.titleRequired'))
   const file = fileList.value[0]?.file
   if (!file) return message.warning(t('practice.common.fileRequired'))
-  if (file.size > MAX_SIZE) return message.warning(t('practice.common.fileTooLarge'))
+  const fileErr = validateFileForBiz(file, 'social-practice-report')
+  if (fileErr) return message.warning(t(`file.error.${fileErr}`))
   const practiceId = f.practiceId
   return withSavingReport(async () => {
     try {
+      // ≤20MB 走 multipart 整传;>20MB 自动分片上传,进度见右下角面板
+      const prepared = await prepareSubmitFile(file, 'social-practice-report')
       await submitSocialPracticeReport(
         { practiceId, title: f.title.trim(), summary: f.summary || undefined },
-        file,
+        prepared,
       )
       message.success(t('practice.socialPractice.submitSuccess'))
       showReportForm.value = false
@@ -604,11 +609,11 @@ onMounted(() => {
               v-model:file-list="fileList"
               :max="1"
               :default-upload="false"
-              accept=".doc,.docx,.pdf,.zip,.rar"
+              :accept="bizAccept('social-practice-report')"
             >
               <NButton>{{ $t('practice.common.selectFile') }}</NButton>
             </NUpload>
-            <span class="file-hint">{{ $t('practice.common.fileHint') }}</span>
+            <span class="file-hint">{{ reportUploadHint }}</span>
           </NFormItem>
         </NForm>
         <template #footer>

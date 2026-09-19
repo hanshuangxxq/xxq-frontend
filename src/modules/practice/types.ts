@@ -90,6 +90,10 @@ export interface InternshipReportSubmitRequest {
   internshipId: number
   title: string
   summary?: string
+  /** 分片上传产物路径(objects/...),与 multipart 的 file 部分二选一;>20MB 时走这里 */
+  filePath?: string
+  /** 展示文件名,配合 filePath 使用 */
+  fileOriginal?: string
 }
 
 /** 实习报告评审请求(分数+评语,均可选) */
@@ -373,6 +377,10 @@ export interface SocialPracticeReportSubmitRequest {
   practiceId: number
   title: string
   summary?: string
+  /** 分片上传产物路径(objects/...),与 multipart 的 file 部分二选一;>20MB 时走这里 */
+  filePath?: string
+  /** 展示文件名,配合 filePath 使用 */
+  fileOriginal?: string
 }
 
 /** 社会实践报告评审请求(分数+评语,均可选) */

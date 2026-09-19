@@ -1,4 +1,5 @@
 import { api } from '@/shared/api'
+import type { PreparedSubmitFile } from '@/modules/file/types'
 import type { PageResult, Result } from '@/shared/types'
 import type {
   InternshipCreateRequest,
@@ -134,14 +135,22 @@ export function fetchInternshipApplications(
 
 // ---- 实习报告 ----
 
-/** 提交实习报告:multipart 表单,data 为 JSON Blob、file 为附件 POST /practice/internship-reports */
+/**
+ * 提交实习报告:multipart 表单,data 为 JSON Blob、file 为附件。
+ * 附件二选一:≤20MB 走 file 部分整传,>20MB 走 data.filePath 分片产物 ——
+ * 同时给会被后端 400 拒绝。
+ */
 export function submitInternshipReport(
   data: InternshipReportSubmitRequest,
-  file: File,
+  file: PreparedSubmitFile,
 ): Promise<Result<InternshipReportResponse>> {
+  const payload: InternshipReportSubmitRequest = file.filePath
+    ? { ...data, filePath: file.filePath, fileOriginal: file.fileOriginal ?? undefined }
+    : data
   const fd = new FormData()
-  fd.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }))
-  fd.append('file', file)
+  // 不要手动设置 Content-Type:必须让浏览器补上 multipart 的 boundary
+  fd.append('data', new Blob([JSON.stringify(payload)], { type: 'application/json' }))
+  if (file.file) fd.append('file', file.file)
   return api.postForm(`${BASE}/internship-reports`, fd)
 }
 
@@ -465,14 +474,21 @@ export function fetchSocialPracticeApplications(
 
 // ---- 社会实践报告 ----
 
-/** 提交社会实践报告:multipart 表单,data 为 JSON Blob、file 为附件 POST /practice/social-practice-reports */
+/**
+ * 提交社会实践报告:multipart 表单,data 为 JSON Blob、file 为附件。
+ * 附件二选一:≤20MB 走 file 部分整传,>20MB 走 data.filePath 分片产物。
+ */
 export function submitSocialPracticeReport(
   data: SocialPracticeReportSubmitRequest,
-  file: File,
+  file: PreparedSubmitFile,
 ): Promise<Result<SocialPracticeReportResponse>> {
+  const payload: SocialPracticeReportSubmitRequest = file.filePath
+    ? { ...data, filePath: file.filePath, fileOriginal: file.fileOriginal ?? undefined }
+    : data
   const fd = new FormData()
-  fd.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }))
-  fd.append('file', file)
+  // 不要手动设置 Content-Type:必须让浏览器补上 multipart 的 boundary
+  fd.append('data', new Blob([JSON.stringify(payload)], { type: 'application/json' }))
+  if (file.file) fd.append('file', file.file)
   return api.postForm(`${BASE}/social-practice-reports`, fd)
 }
 
