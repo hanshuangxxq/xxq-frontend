@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /**
  * 应用根组件:向 Naive UI 注入语言/主题配置,并挂载全局单例组件
- * (路由出口、主题冲突弹窗、全局加载指示)。
+ * (路由出口、主题冲突弹窗、全局加载指示、文件上传进度面板)。
  */
 import { computed } from 'vue'
 import { NConfigProvider, NMessageProvider, darkTheme } from 'naive-ui'
@@ -10,6 +10,7 @@ import { useThemeStore } from '@/stores/useThemeStore'
 import { darkThemeOverrides, lightThemeOverrides } from '@/theme'
 import ThemeConflictDialog from '@/modules/layout/components/ThemeConflictDialog.vue'
 import GlobalLoading from '@/shared/components/GlobalLoading.vue'
+import UploadProgressPanel from '@/modules/file/components/UploadProgressPanel.vue'
 import { useDocumentHead } from '@/shared/composables/useDocumentHead'
 
 const localeStore = useLocaleStore()
@@ -36,6 +37,7 @@ const themeOverrides = computed(() =>
       <RouterView />
       <ThemeConflictDialog />
       <GlobalLoading />
+      <UploadProgressPanel />
     </NMessageProvider>
   </NConfigProvider>
 </template>
