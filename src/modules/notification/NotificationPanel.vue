@@ -63,11 +63,11 @@ async function handleDelete(id: number) {
       </NTabs>
 
       <NEmpty
-        v-if="store.notifications.length === 0"
+        v-if="!store.loading && store.notifications.length === 0"
         :description="t('notification.empty')"
         class="empty-state"
       />
-      <div v-else class="notification-list">
+      <div v-else-if="store.notifications.length > 0" class="notification-list">
         <div
           v-for="n in store.notifications"
           :key="n.id"

@@ -415,7 +415,7 @@ if (isStudent.value) {
           v-if="!resultLoading && !myResult"
           :description="$t('practice.competition.myResultEmpty')"
         />
-        <NDescriptions v-else label-placement="left" bordered :column="1">
+        <NDescriptions v-else-if="myResult" label-placement="left" bordered :column="1">
           <NDescriptionsItem :label="$t('practice.competition.competitionName')">
             {{ myResult?.competitionName }}
           </NDescriptionsItem>

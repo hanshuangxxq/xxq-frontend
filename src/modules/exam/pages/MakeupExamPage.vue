@@ -456,7 +456,7 @@ void loadMakeupExams()
           class="candidates-empty"
           :description="$t('exam.mkNoCandidates')"
         />
-        <template v-else>
+        <template v-else-if="candidates.length > 0">
           <NDataTable
             :columns="candidateColumns"
             :data="candidates"
@@ -488,7 +488,7 @@ void loadMakeupExams()
           :description="$t('exam.mkEmpty')"
         />
         <NDataTable
-          v-else
+          v-else-if="makeupExams.length > 0"
           :columns="makeupListColumns"
           :data="makeupExams"
           :row-key="examRowKey"
@@ -601,7 +601,7 @@ void loadMakeupExams()
         :description="$t('exam.mkNoCandidates')"
       />
       <NDataTable
-        v-else
+        v-else-if="gradeRows.length > 0"
         :columns="gradeColumns"
         :data="gradeRows"
         :row-key="gradeRowKey"

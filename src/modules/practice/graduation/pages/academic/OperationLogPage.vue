@@ -92,11 +92,11 @@ const columns = computed<DataTableColumns<OperationLogResponse>>(() => [
 
       <NCard :title="$t('graduation.academic.operationLogTitle')" class="content-card">
         <NEmpty
-          v-if="!loading && !logs.length"
+          v-if="campaignId != null && !loading && !logs.length"
           :description="$t('graduation.academic.logEmpty')"
         />
         <NDataTable
-          v-else
+          v-else-if="logs.length > 0"
           :columns="columns"
           :data="logs"
           :row-key="operationLogRowKey"

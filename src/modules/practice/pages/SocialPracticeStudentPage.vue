@@ -510,7 +510,7 @@ if (isStudent.value) {
               :description="$t('practice.common.empty')"
             />
             <NDataTable
-              v-else
+              v-else-if="myReports.length > 0"
               :columns="reportColumns"
               :data="myReports"
               :row-key="socialPracticeReportRowKey"

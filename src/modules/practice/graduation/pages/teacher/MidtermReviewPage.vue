@@ -178,11 +178,11 @@ const columns = computed<DataTableColumns<MidtermResponse>>(() => [
 
       <NCard :title="$t('graduation.teacher.midtermReviewTitle')" class="content-card">
         <NEmpty
-          v-if="!loading && !list.length"
+          v-if="campaignId != null && !loading && !list.length"
           :description="$t('graduation.teacher.noPendingReview')"
         />
         <NDataTable
-          v-else
+          v-else-if="list.length > 0"
           :columns="columns"
           :data="list"
           :row-key="midtermRowKey"

@@ -272,10 +272,10 @@ function handleReassign(): Promise<void> {
 
       <NCard :title="$t('graduation.dept.unassignedList')" class="content-card">
         <NEmpty
-          v-if="!loading && !unassignedStudents.length"
+          v-if="campaignId != null && !loading && !unassignedStudents.length"
           :description="$t('graduation.common.empty')"
         />
-        <div v-else class="student-row-list">
+        <div v-else-if="unassignedStudents.length > 0" class="student-row-list">
           <div v-for="r in unassignedStudents" :key="r.studentId" class="student-row">
             <NSpace align="center" :size="12" style="flex: 1; min-width: 0">
               <span class="row-main">{{ r.studentNo }} {{ r.studentName }}</span>
@@ -308,10 +308,14 @@ function handleReassign(): Promise<void> {
           <span v-else class="row-sub">{{ $t('graduation.common.noData') }}</span>
         </div>
         <NEmpty
-          v-if="!loading && !assignedStudents.length"
+          v-if="campaignId != null && !loading && !assignedStudents.length"
           :description="$t('graduation.common.empty')"
         />
-        <div v-else class="student-row-list" style="margin-top: 12px">
+        <div
+          v-else-if="assignedStudents.length > 0"
+          class="student-row-list"
+          style="margin-top: 12px"
+        >
           <div v-for="r in assignedStudents" :key="r.studentId" class="student-row">
             <NSpace align="center" :size="12" style="flex: 1; min-width: 0">
               <span class="row-main">{{ r.studentNo }} {{ r.studentName }}</span>

@@ -325,7 +325,7 @@ if (isStudent.value) {
           v-if="!myLoading && myWarnings.length === 0"
           :description="$t('analysis.wrnEmpty')"
         />
-        <div v-else class="warning-card-list">
+        <div v-else-if="myWarnings.length > 0" class="warning-card-list">
           <div
             v-for="w in myWarnings"
             :key="w.id"
@@ -397,7 +397,7 @@ if (isStudent.value) {
                 :description="$t('analysis.wrnEmpty')"
               />
               <NDataTable
-                v-else
+                v-else-if="dashWarnings.length > 0"
                 :columns="dashColumns"
                 :data="dashWarnings"
                 :row-key="warningRowKey"

@@ -103,11 +103,11 @@ const columns = computed<DataTableColumns<DefenseResponse>>(() => [
 
       <NCard :title="$t('graduation.student.defenseTitle')" class="content-card">
         <NEmpty
-          v-if="!loading && !list.length"
+          v-if="campaignId != null && !loading && !list.length"
           :description="$t('graduation.student.defenseEmpty')"
         />
         <NDataTable
-          v-else
+          v-else-if="list.length > 0"
           :columns="columns"
           :data="list"
           :row-key="defenseRowKey"

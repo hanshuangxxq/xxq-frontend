@@ -451,7 +451,7 @@ void loadProfile()
           <NTabPane name="detail" :tab="$t('score.myTabDetail')">
             <NEmpty v-if="!loading && !hasData" :description="$t('score.myEmpty')" />
             <NDataTable
-              v-else
+              v-else-if="hasData"
               :columns="columns"
               :data="scores"
               :row-key="scoreRowKey"
@@ -463,7 +463,7 @@ void loadProfile()
 
           <NTabPane name="analysis" :tab="$t('score.myTabAnalysis')">
             <NEmpty v-if="!loading && !hasData" :description="$t('score.myEmpty')" />
-            <template v-else>
+            <template v-else-if="hasData">
               <div class="chart-row">
                 <div class="chart-card">
                   <div class="chart-title">{{ $t('score.myScoreBar') }}</div>

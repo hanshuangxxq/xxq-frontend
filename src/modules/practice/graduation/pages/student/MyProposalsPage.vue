@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** 学生-我的选题:跨活动展示本人全部选题及两级审核流水(不按活动过滤),被驳回后可修改重提(内容不少于 100 字) */
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
@@ -30,16 +30,19 @@ const message = useMessage()
 const { isStudent } = useRoleCheck()
 
 const proposals = ref<ProposalResponse[]>([])
+const { loading: listLoading, withLoading: withListLoading } = useLoading()
 
-async function loadProposals() {
-  try {
-    const res = await fetchMyProposals()
-    proposals.value = res.data ?? []
-  } catch (e) {
-    if (!isReportedError(e)) {
-      message.error((e as Error).message || t('graduation.common.loadFail'))
+function loadProposals() {
+  return withListLoading(async () => {
+    try {
+      const res = await fetchMyProposals()
+      proposals.value = res.data ?? []
+    } catch (e) {
+      if (!isReportedError(e)) {
+        message.error((e as Error).message || t('graduation.common.loadFail'))
+      }
     }
-  }
+  })
 }
 
 // ===== 修改重提弹窗（F-R-15）=====
@@ -84,17 +87,20 @@ function handleResubmit() {
   })
 }
 
-onMounted(() => {
-  if (isStudent.value) void loadProposals()
-})
+// 首屏加载在 setup 内同步发起(而非等 onMounted):保证首帧渲染时 loading 已为 true,
+// 空状态不会在「首帧闪现 → 加载开始消失 → 加载结束复现」之间抖动造成闪屏
+if (isStudent.value) void loadProposals()
 </script>
 
 <template>
   <div class="graduation-page">
     <ForbiddenState v-if="!isStudent" />
     <template v-else>
-      <NEmpty v-if="!proposals.length" :description="$t('graduation.student.myProposalEmpty')" />
-      <NSpace v-else vertical :size="16">
+      <NEmpty
+        v-if="!listLoading && !proposals.length"
+        :description="$t('graduation.student.myProposalEmpty')"
+      />
+      <NSpace v-else-if="proposals.length > 0" vertical :size="16">
         <NCard v-for="p in proposals" :key="p.id" class="proposal-card">
           <template #header>
             <NSpace align="center" :size="12">

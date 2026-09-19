@@ -322,7 +322,7 @@ void loadAll()
         v-if="!loading && groupedSelections.length === 0"
         :description="$t('selection.noOpenCampaigns')"
       />
-      <NSpace v-else vertical :size="16">
+      <NSpace v-else-if="groupedSelections.length > 0" vertical :size="16">
         <NCard
           v-for="group in groupedSelections"
           :key="group.groupId"
@@ -512,7 +512,7 @@ void loadAll()
           {{ $t('selection.noRecords') }}
         </NAlert>
         <NDataTable
-          v-else
+          v-else-if="records.length > 0"
           :columns="recordColumns"
           :data="records"
           :row-key="recordRowKey"

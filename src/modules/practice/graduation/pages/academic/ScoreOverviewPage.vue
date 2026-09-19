@@ -181,11 +181,11 @@ const columns = computed<DataTableColumns<ScoreResponse>>(() => [
           </NSpace>
         </template>
         <NEmpty
-          v-if="!loading && !list.length"
+          v-if="campaignId != null && !loading && !list.length"
           :description="$t('graduation.academic.scoresEmpty')"
         />
         <NDataTable
-          v-else
+          v-else-if="list.length > 0"
           :columns="columns"
           :data="filteredRows"
           :row-key="scoreRowKey"

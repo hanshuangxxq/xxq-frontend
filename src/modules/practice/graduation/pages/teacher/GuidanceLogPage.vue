@@ -233,9 +233,12 @@ const logColumns = computed<DataTableColumns<GuidanceLogResponse>>(() => [
         class="content-card"
         style="margin-top: 16px"
       >
-        <NEmpty v-if="!loading && !logs.length" :description="$t('graduation.common.empty')" />
+        <NEmpty
+          v-if="campaignId != null && !loading && !logs.length"
+          :description="$t('graduation.common.empty')"
+        />
         <NDataTable
-          v-else
+          v-else-if="logs.length > 0"
           :columns="logColumns"
           :data="logs"
           :row-key="guidanceLogRowKey"

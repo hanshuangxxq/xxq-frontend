@@ -128,11 +128,11 @@ const columns = computed<DataTableColumns<ProposalResponse>>(() => [
 
       <NCard :title="$t('graduation.dept.proposalReviewTitle')" class="content-card">
         <NEmpty
-          v-if="!loading && !list.length"
+          v-if="campaignId != null && !loading && !list.length"
           :description="$t('graduation.dept.pendingEmpty')"
         />
         <NDataTable
-          v-else
+          v-else-if="list.length > 0"
           :columns="columns"
           :data="list"
           :row-key="proposalRowKey"

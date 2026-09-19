@@ -242,7 +242,7 @@ void loadData()
           :description="$t('time-restrictions.empty')"
         />
         <NDataTable
-          v-else
+          v-else-if="restrictions.length > 0"
           :columns="isAcademicAdmin ? adminColumns : columns"
           :data="restrictions"
           :row-key="timeRestrictionRowKey"

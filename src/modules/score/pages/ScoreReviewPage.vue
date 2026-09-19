@@ -472,7 +472,7 @@ void loadData()
           :description="$t('score.rvEmpty')"
         />
         <NDataTable
-          v-else
+          v-else-if="filteredReviews.length > 0"
           :columns="columns"
           :data="filteredReviews"
           :row-key="reviewRowKey"

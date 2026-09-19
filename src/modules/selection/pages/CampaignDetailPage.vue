@@ -294,7 +294,7 @@ void loadAll()
           v-else-if="!loading && classes.length === 0"
           :description="$t('selection.noStudentsSelected')"
         />
-        <NCollapse v-else arrow-placement="left">
+        <NCollapse v-else-if="classes.length > 0" arrow-placement="left">
           <NCollapseItem
             v-for="cls in classes"
             :key="cls.classId"

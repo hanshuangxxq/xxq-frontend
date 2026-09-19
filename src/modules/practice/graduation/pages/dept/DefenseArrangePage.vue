@@ -238,11 +238,11 @@ const columns = computed<DataTableColumns<DefenseResponse>>(() => [
           </NButton>
         </template>
         <NEmpty
-          v-if="!loading && !list.length"
+          v-if="campaignId != null && !loading && !list.length"
           :description="$t('graduation.dept.defenseEmpty')"
         />
         <NDataTable
-          v-else
+          v-else-if="list.length > 0"
           :columns="columns"
           :data="list"
           :row-key="defenseRowKey"

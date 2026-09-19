@@ -92,25 +92,28 @@ function handleClosePeriod() {
 const periodOpen = computed(() => period.value?.open === true)
 
 // ---- 学生：课程选项 ----
+const { loading: courseLoading, withLoading: withCourseLoading } = useLoading()
 const courseOptions = ref<Array<{ label: string; value: number }>>([])
 const selectedTeachInfoId = ref<number | null>(null)
 
-async function loadCourses() {
-  try {
-    const res = await fetchTeachInfoList()
-    courseOptions.value = res.data.courses
-      .filter((c: TeachInfo) => c.id != null)
-      .map((c: TeachInfo) => {
-        // 解耦后各类课程 courseName 均由 course 表填充（公选课亦然）
-        const name = c.courseName
-        return {
-          label: c.teacherName ? `${name} - ${c.teacherName}` : name,
-          value: c.id as number,
-        }
-      })
-  } catch {
-    // 非阻塞
-  }
+function loadCourses() {
+  return withCourseLoading(async () => {
+    try {
+      const res = await fetchTeachInfoList()
+      courseOptions.value = res.data.courses
+        .filter((c: TeachInfo) => c.id != null)
+        .map((c: TeachInfo) => {
+          // 解耦后各类课程 courseName 均由 course 表填充（公选课亦然）
+          const name = c.courseName
+          return {
+            label: c.teacherName ? `${name} - ${c.teacherName}` : name,
+            value: c.id as number,
+          }
+        })
+    } catch {
+      // 非阻塞
+    }
+  })
 }
 
 // ---- 学生：动态评教表单 ----
@@ -344,10 +347,10 @@ if (isStudent.value) {
             />
             <template v-else>
               <NEmpty
-                v-if="courseOptions.length === 0"
+                v-if="!courseLoading && courseOptions.length === 0"
                 :description="$t('analysis.evNoCourses')"
               />
-              <NForm v-else label-placement="top" class="eval-form">
+              <NForm v-else-if="courseOptions.length > 0" label-placement="top" class="eval-form">
                 <NFormItem :label="$t('analysis.evSelectCourse')" required>
                   <NSelect
                     :value="selectedTeachInfoId"
@@ -437,7 +440,7 @@ if (isStudent.value) {
             :description="$t('analysis.evEmpty')"
           />
           <NDataTable
-            v-else
+            v-else-if="myEvaluations.length > 0"
             :columns="myColumns"
             :data="myEvaluations"
             :row-key="myEvaluationRowKey"

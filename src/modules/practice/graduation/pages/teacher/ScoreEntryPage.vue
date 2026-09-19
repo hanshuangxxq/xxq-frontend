@@ -254,11 +254,11 @@ const reviewerColumns = computed<DataTableColumns<ScoreResponse>>(() => [
         <NTabs v-model:value="activeTab" type="line" animated>
           <NTabPane name="advisor" :tab="$t('graduation.teacher.advisorTab')">
             <NEmpty
-              v-if="!loading && !advisorRows.length"
+              v-if="campaignId != null && !loading && !advisorRows.length"
               :description="$t('graduation.common.empty')"
             />
             <NDataTable
-              v-else
+              v-else-if="advisorRows.length > 0"
               :columns="advisorColumns"
               :data="advisorRows"
               :row-key="scoreRowKey"
@@ -271,11 +271,11 @@ const reviewerColumns = computed<DataTableColumns<ScoreResponse>>(() => [
           </NTabPane>
           <NTabPane name="reviewer" :tab="$t('graduation.teacher.reviewerTab')">
             <NEmpty
-              v-if="!loading && !reviewerRows.length"
+              v-if="campaignId != null && !loading && !reviewerRows.length"
               :description="$t('graduation.common.empty')"
             />
             <NDataTable
-              v-else
+              v-else-if="reviewerRows.length > 0"
               :columns="reviewerColumns"
               :data="reviewerRows"
               :row-key="scoreRowKey"

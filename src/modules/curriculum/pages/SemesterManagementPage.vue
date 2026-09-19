@@ -253,7 +253,7 @@ void loadData()
           :description="$t('semester.empty')"
         />
         <NDataTable
-          v-else
+          v-else-if="data.length > 0"
           :columns="allColumns"
           :data="data"
           :row-key="semesterRowKey"

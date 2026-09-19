@@ -518,7 +518,7 @@ void init()
             v-if="!classCoursesLoading && classCourses.length === 0"
             :description="$t('curriculum.empty')"
           />
-          <div v-else class="course-card-grid">
+          <div v-else-if="classCourses.length > 0" class="course-card-grid">
             <NCard
               v-for="(course, index) in classCourses"
               :key="`${course.courseName}-${index}`"
@@ -547,7 +547,7 @@ void init()
             </NScrollbar>
           </div>
           <NEmpty v-if="!loading && data.length === 0" :description="$t('curriculum.empty')" />
-          <div v-else class="timetable-wrapper">
+          <div v-else-if="data.length > 0" class="timetable-wrapper">
             <table class="timetable">
               <thead>
                 <tr>
@@ -623,7 +623,7 @@ void init()
             :description="$t('curriculum.empty')"
           />
           <NDataTable
-            v-else
+            v-else-if="teacherCourses.length > 0"
             :columns="teacherColumns"
             :data="teacherCourses"
             :row-key="teacherRowKey"
@@ -636,7 +636,7 @@ void init()
         <NTabPane name="myExams" :tab="$t('exam.tcTitle')">
           <NEmpty v-if="!examLoading && exams.length === 0" :description="$t('exam.tcEmpty')" />
           <NDataTable
-            v-else
+            v-else-if="exams.length > 0"
             :columns="examColumns"
             :data="exams"
             :row-key="examRowKey"

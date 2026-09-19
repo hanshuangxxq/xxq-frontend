@@ -393,7 +393,7 @@ void loadColleges()
       <NCard :title="$t('teach-drafts.title')">
         <NEmpty v-if="!loading && drafts.length === 0" :description="$t('teach-drafts.empty')" />
         <NDataTable
-          v-else
+          v-else-if="drafts.length > 0"
           :columns="draftColumns"
           :data="drafts"
           :row-key="draftRowKey"

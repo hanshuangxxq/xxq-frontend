@@ -746,7 +746,7 @@ onUnmounted(() => {
             :description="$t('teach-drafts.empty')"
           />
           <NDataTable
-            v-else
+            v-else-if="drafts.length > 0"
             :columns="draftColumns"
             :data="drafts"
             :row-key="draftRowKey"

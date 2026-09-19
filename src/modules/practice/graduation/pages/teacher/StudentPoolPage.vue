@@ -195,11 +195,11 @@ const poolColumns = computed<DataTableColumns<TeacherPickPoolRow>>(() => [
           <span class="pool-hint">{{ $t('graduation.teacher.poolHint') }}</span>
         </template>
         <NEmpty
-          v-if="!loading && !pool.length"
+          v-if="campaignId != null && !loading && !pool.length"
           :description="$t('graduation.teacher.poolEmpty')"
         />
         <NDataTable
-          v-else
+          v-else-if="pool.length > 0"
           :columns="poolColumns"
           :data="pool"
           :row-key="poolRowKey"

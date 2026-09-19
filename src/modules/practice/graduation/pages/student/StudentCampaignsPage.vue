@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** 学生-活动报名:展示本人可见的进行中活动,在选题窗口内申报/重提选题,并展示当前指导教师与改派留痕 */
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
@@ -62,15 +62,19 @@ function hasActiveProposal(campaignId: number): boolean {
   return !!p && p.status !== '已驳回'
 }
 
-async function loadCampaigns() {
-  try {
-    const res = await fetchAvailableCampaigns()
-    campaigns.value = res.data ?? []
-    const pRes = await fetchMyProposals()
-    myProposals.value = pRes.data ?? []
-  } catch {
-    /* 已展示错误 */
-  }
+const { loading: listLoading, withLoading: withListLoading } = useLoading()
+
+function loadCampaigns() {
+  return withListLoading(async () => {
+    try {
+      const res = await fetchAvailableCampaigns()
+      campaigns.value = res.data ?? []
+      const pRes = await fetchMyProposals()
+      myProposals.value = pRes.data ?? []
+    } catch {
+      /* 已展示错误 */
+    }
+  })
 }
 
 // 我的指导关系（对全部可见活动展示，无活动时为空）
@@ -133,11 +137,12 @@ function handleSubmitProposal() {
   })
 }
 
-onMounted(() => {
-  if (!isStudent.value) return
+// 首屏加载在 setup 内同步发起(而非等 onMounted):保证首帧渲染时 loading 已为 true,
+// 空状态不会在「首帧闪现 → 加载开始消失 → 加载结束复现」之间抖动造成闪屏
+if (isStudent.value) {
   void loadCampaigns()
   void loadAssignments()
-})
+}
 </script>
 
 <template>
@@ -145,10 +150,10 @@ onMounted(() => {
     <ForbiddenState v-if="!isStudent" />
     <template v-else>
       <NEmpty
-        v-if="!campaigns.length"
+        v-if="!listLoading && !campaigns.length"
         :description="$t('graduation.student.noAvailableCampaign')"
       />
-      <NSpace v-else vertical :size="16">
+      <NSpace v-else-if="campaigns.length > 0" vertical :size="16">
         <NCard v-for="c in campaigns" :key="c.id" :title="c.name" class="campaign-card">
           <template #header-extra>
             <NTag :type="campaignStatusTagType(c.status)" size="small" :bordered="false">

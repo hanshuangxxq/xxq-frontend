@@ -306,19 +306,16 @@ else void loadList()
 
       <!-- 管理员/院系列表 -->
       <template v-else>
-        <NCard v-if="listLoading || list.length > 0">
+        <NCard v-if="list.length > 0">
           <div class="chart-title">{{ $t('analysis.tqComparison') }}</div>
           <div class="chart-box">
             <BaseChart :option="comparisonOption" />
           </div>
         </NCard>
-        <NCard>
-          <NEmpty
-            v-if="!listLoading && list.length === 0"
-            :description="$t('analysis.tqEmpty')"
-          />
+        <NCard v-if="!listLoading || list.length > 0">
+          <NEmpty v-if="list.length === 0" :description="$t('analysis.tqEmpty')" />
           <NDataTable
-            v-else
+            v-else-if="list.length > 0"
             :columns="listColumns"
             :data="list"
             :row-key="teacherQualityRowKey"

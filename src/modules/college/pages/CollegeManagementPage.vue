@@ -184,7 +184,7 @@ void loadData()
         </template>
         <NEmpty v-if="!loading && data.length === 0" :description="$t('college.empty')" />
         <NDataTable
-          v-else
+          v-else-if="data.length > 0"
           :columns="columns"
           :data="data"
           :row-key="collegeRowKey"

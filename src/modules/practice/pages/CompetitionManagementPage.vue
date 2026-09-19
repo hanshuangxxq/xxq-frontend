@@ -740,7 +740,7 @@ if (isAcademicAdmin.value) void loadData()
           :description="$t('practice.common.empty')"
         />
         <NDataTable
-          v-else
+          v-else-if="results.length > 0"
           :columns="resultColumns"
           :data="results"
           :row-key="competitionResultRowKey"

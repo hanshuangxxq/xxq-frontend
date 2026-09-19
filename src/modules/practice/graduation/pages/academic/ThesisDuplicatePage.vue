@@ -295,9 +295,12 @@ const columns = computed<DataTableColumns<ThesisResponse>>(() => [
           </NSpace>
         </template>
         <div class="flow-hint">{{ $t('graduation.academic.exportPackageFlow') }}</div>
-        <NEmpty v-if="!loading && !list.length" :description="$t('graduation.common.empty')" />
+        <NEmpty
+          v-if="campaignId != null && !loading && !list.length"
+          :description="$t('graduation.common.empty')"
+        />
         <NDataTable
-          v-else
+          v-else-if="list.length > 0"
           :columns="columns"
           :data="list"
           :row-key="thesisRowKey"

@@ -390,7 +390,7 @@ onMounted(loadExamOptions)
           </template>
           <NEmpty v-if="!loadingRoster && rosterRows.length === 0" :description="$t('score.mgEmpty')" />
           <NDataTable
-            v-else
+            v-else-if="rosterRows.length > 0"
             :columns="rosterColumns"
             :data="rosterRows"
             :row-key="rosterRowKey"

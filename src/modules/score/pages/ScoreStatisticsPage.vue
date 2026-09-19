@@ -332,7 +332,7 @@ void loadData()
       <!-- 图表 + 明细 -->
       <NCard>
         <NEmpty v-if="!loading && !hasData" :description="$t('score.statEmpty')" />
-        <template v-else>
+        <template v-else-if="hasData">
           <div class="chart-full">
             <div class="chart-title">{{ $t('score.statLevelDist') }}</div>
             <div class="chart-box chart-box-tall">

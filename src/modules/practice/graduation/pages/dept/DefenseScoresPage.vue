@@ -218,11 +218,11 @@ const columns = computed<DataTableColumns<ScoreResponse>>(() => [
 
       <NCard :title="$t('graduation.dept.scoresPublishTitle')" class="content-card">
         <NEmpty
-          v-if="!loading && !list.length"
+          v-if="campaignId != null && !loading && !list.length"
           :description="$t('graduation.dept.scoresEmpty')"
         />
         <NDataTable
-          v-else
+          v-else-if="list.length > 0"
           :columns="columns"
           :data="list"
           :row-key="scoreRowKey"

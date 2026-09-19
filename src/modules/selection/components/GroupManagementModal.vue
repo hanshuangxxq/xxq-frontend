@@ -427,7 +427,7 @@ async function handleUnbind(campaignId: number) {
         :description="$t('selection.empty')"
       />
       <NDataTable
-        v-else
+        v-else-if="bindableCampaigns.length > 0"
         :columns="bindingColumns"
         :data="bindableCampaigns"
         :row-key="campaignRowKey"

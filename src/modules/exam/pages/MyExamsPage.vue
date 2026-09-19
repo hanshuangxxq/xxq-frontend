@@ -112,7 +112,13 @@ void loadData()
   <div class="my-exams-page">
     <NCard :title="$t('exam.myTitle')">
       <NEmpty v-if="!loading && data.length === 0" :description="$t('exam.myEmpty')" />
-      <NTabs v-else v-model:value="activeTab" type="line" placement="left" animated>
+      <NTabs
+        v-else-if="data.length > 0"
+        v-model:value="activeTab"
+        type="line"
+        placement="left"
+        animated
+      >
         <NTabPane name="normal" :tab="$t('exam.myTabNormal')">
           <NEmpty
             v-if="normalExams.length === 0"

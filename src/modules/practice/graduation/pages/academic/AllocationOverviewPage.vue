@@ -212,11 +212,11 @@ const columns = computed<DataTableColumns<AssignmentOverviewRow>>(() => [
         class="graduation-unassigned-modal"
       >
         <NEmpty
-          v-if="!loading && !unassignedDetail.length"
+          v-if="campaignId != null && !loading && !unassignedDetail.length"
           :description="$t('graduation.common.empty')"
         />
         <NDataTable
-          v-else
+          v-else-if="unassignedDetail.length > 0"
           :columns="unassignedColumns"
           :data="unassignedDetail"
           :row-key="dashboardRowKey"
