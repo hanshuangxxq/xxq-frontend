@@ -63,6 +63,17 @@ export default defineConfig({
       },
     },
   },
+  // Web Worker(文件分片上传的整文件 SHA-256)单独走一份输出配置,
+  // 否则它不会继承上面的 entryFileNames,会被丢到 assets/ 根下 ——
+  // 虽然仍在 /assets/ 长缓存规则内,但与「JS 统一入 assets/js/」的约定不符
+  worker: {
+    rolldownOptions: {
+      output: {
+        entryFileNames: 'assets/js/[name]-[hash].js',
+        chunkFileNames: 'assets/js/[name]-[hash].js',
+      },
+    },
+  },
   server: {
     proxy: {
       '/api': {
