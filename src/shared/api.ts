@@ -31,9 +31,15 @@ export class HttpError extends Error {
 /** 业务错误(后端返回 code !== 200),消息已在 api 层弹出 */
 export class BusinessError extends Error {
   readonly reported = true
-  constructor(message: string) {
+  /**
+   * 后端业务码。业务异常是 HTTP 200 + body.code,所以 HTTP status 给不出任何信息,
+   * 这是区分 429(限流)/409(已合并)/404(会话过期)的唯一途径(接口文档 §2.2)。
+   */
+  readonly code: number
+  constructor(message: string, code = 0) {
     super(message)
     this.name = 'BusinessError'
+    this.code = code
   }
 }
 
@@ -162,7 +168,7 @@ async function request<T>(url: string, options?: RequestInit & RequestOptions): 
     if (body.code !== 200) {
       const text = body.message || i18n.global.t('common.error.requestFailed')
       if (!silent) message.error(text)
-      throw new BusinessError(text)
+      throw new BusinessError(text, body.code)
     }
     return body as T
   })
@@ -199,6 +205,152 @@ async function requestBlob(
   })
 }
 
+// ---- 二进制上传管线:全项目唯一允许使用 XMLHttpRequest 的地方 ----
+
+/**
+ * 二进制上传请求选项。分片上传必须能报告进度,而 fetch 没有上传进度事件,
+ * 故上传单独走 XHR;鉴权、401 刷新重试、错误分类与 JSON 管线保持同一语义。
+ */
+export interface BinaryRequestOptions {
+  /** 附加请求头(分片场景:X-Chunk-SHA256) */
+  headers?: Record<string, string>
+  /** 上传进度回调;仅传输阶段触发,lengthComputable 为 false 时不回调 */
+  onProgress?: (loaded: number, total: number) => void
+  /** 取消信号;abort 时以 RequestCancelledError 拒绝 */
+  signal?: AbortSignal
+  /** 为 true 时错误消息不在 api 层弹出(上传引擎自行决定重试时机与最终提示) */
+  silent?: boolean
+}
+
+/** 单次 XHR 发送结果。不抛错,由调用方按 HTTP status 与 body 共同判定 */
+interface XhrOutcome {
+  status: number
+  text: string
+}
+
+/**
+ * 发送一次裸二进制 PUT,不重试(401 刷新后的重试由 putBinary 负责)。
+ * 请求体是 Blob 而非 FormData:分片契约要求 Content-Type: application/octet-stream,
+ * 且不经 multipart 解析(接口文档 §3.5)。
+ */
+function xhrSend(
+  url: string,
+  body: Blob,
+  headers: Record<string, string>,
+  options: BinaryRequestOptions,
+): Promise<XhrOutcome> {
+  const { onProgress, signal } = options
+
+  return new Promise<XhrOutcome>((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('PUT', `${API_BASE_URL}${url}`)
+    xhr.responseType = 'text'
+    xhr.setRequestHeader('Content-Type', 'application/octet-stream')
+    for (const [key, value] of Object.entries(headers)) {
+      xhr.setRequestHeader(key, value)
+    }
+
+    if (onProgress) {
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable && e.total > 0) onProgress(e.loaded, e.total)
+      }
+    }
+
+    // 已中止的信号不会再触发 abort 事件,必须先判一次,否则请求会照常发出
+    if (signal?.aborted) {
+      reject(new RequestCancelledError())
+      return
+    }
+
+    const onAbort = () => xhr.abort()
+    signal?.addEventListener('abort', onAbort, { once: true })
+    const cleanup = () => signal?.removeEventListener('abort', onAbort)
+
+    xhr.onload = () => {
+      cleanup()
+      resolve({ status: xhr.status, text: xhr.responseText })
+    }
+    xhr.onerror = () => {
+      cleanup()
+      reject(new ApiNetworkError('上传请求失败'))
+    }
+    xhr.onabort = () => {
+      cleanup()
+      reject(new RequestCancelledError())
+    }
+
+    xhr.send(body)
+  })
+}
+
+/** 容错解析 Result 包装;响应不是 JSON(网关 HTML 错误页等)时返回 null */
+function parseResult(text: string): { code: number; message?: string; data: unknown } | null {
+  try {
+    const parsed = JSON.parse(text) as { code?: unknown; message?: unknown }
+    return typeof parsed.code === 'number'
+      ? (parsed as { code: number; message?: string; data: unknown })
+      : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * PUT 裸二进制体并解包 Result<T>。成功**必须同时满足 HTTP 2xx 与 body.code === 200**
+ * —— 业务异常同样是 HTTP 200,只看 HTTP status 会把失败当成功(接口文档 §2.2、§10)。
+ *
+ * accessToken 只有 30 分钟,大文件传输中途必然过期:401 时刷新后**只重试这一个请求**,
+ * 不是整个文件(接口文档 §2.1)。Blob 可重复读取,重发同一 body 安全,且同序号分片重传
+ * 在服务端是幂等覆盖。
+ *
+ * 与 JSON 管线不同,此函数**不接入全局加载管理**:分片上传的进度由上传面板自行展示,
+ * 且「取消全局加载」不应中断用户主动发起的上传。
+ */
+async function putBinary<T>(
+  url: string,
+  body: Blob,
+  options: BinaryRequestOptions = {},
+): Promise<T> {
+  const { headers = {}, silent = false } = options
+  // 每次发送都重建请求头,保证 401 刷新后用的是新 token
+  const buildHeaders = (): Record<string, string> =>
+    accessToken.value
+      ? { ...headers, Authorization: `Bearer ${accessToken.value}` }
+      : { ...headers }
+
+  let outcome = await xhrSend(url, body, buildHeaders(), options)
+
+  if (outcome.status === 401) {
+    const refreshOutcome = await refreshAccessToken()
+    if (refreshOutcome === 'success') {
+      outcome = await xhrSend(url, body, buildHeaders(), options)
+    } else if (refreshOutcome === 'network_error') {
+      // 后端暂时不可达(如重启中):保留登录态,不跳转登录页
+      if (!silent) message.error(i18n.global.t('common.error.network'))
+      throw new ApiNetworkError('刷新登录状态失败,请检查网络连接')
+    } else {
+      window.location.replace('/login')
+      throw new Error('Session expired')
+    }
+  }
+
+  const parsed = parseResult(outcome.text)
+
+  if (outcome.status < 200 || outcome.status >= 300) {
+    const text = parsed?.message || i18n.global.t('common.error.server', { status: outcome.status })
+    if (!silent) message.error(text)
+    throw new HttpError(outcome.status, text)
+  }
+
+  if (parsed === null || parsed.code !== 200) {
+    const text = parsed?.message || i18n.global.t('common.error.requestFailed')
+    if (!silent) message.error(text)
+    throw new BusinessError(text, parsed?.code ?? 0)
+  }
+
+  return parsed as T
+}
+
 /**
  * 全项目唯一的后端访问入口。任何模块需要后端数据都必须经由这里,
  * 不得直接调用 fetch 访问后端(静态资源、外部 URL 除外)。
@@ -231,6 +383,14 @@ export const api = {
 
   delete<T>(url: string, options?: RequestOptions): Promise<T> {
     return request<T>(url, { ...options, method: 'DELETE' })
+  },
+
+  /**
+   * PUT 裸二进制体(application/octet-stream),带上传进度与 401 刷新重试。
+   * 分片上传专用 —— 普通 JSON 请求请用 put,文件整传请用 postForm。
+   */
+  putBinary<T>(url: string, body: Blob, options?: BinaryRequestOptions): Promise<T> {
+    return putBinary<T>(url, body, options)
   },
 
   /** 获取二进制数据(如头像图片),与 JSON 接口共用认证/刷新/错误处理管线 */
