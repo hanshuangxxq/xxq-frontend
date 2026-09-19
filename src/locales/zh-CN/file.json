@@ -1,0 +1,49 @@
+{
+  "panel": {
+    "title": "文件上传",
+    "titleCount": "文件上传（{count} 个进行中）",
+    "minimize": "收起",
+    "expand": "展开",
+    "clearFinished": "清除已完成",
+    "bytesOf": "{done} / {total}",
+    "remaining": "剩余 {time}",
+    "seconds": "{n} 秒",
+    "minutes": "{m} 分 {s} 秒"
+  },
+  "status": {
+    "idle": "等待中",
+    "hashing": "校验文件中",
+    "initializing": "初始化中",
+    "uploading": "上传中",
+    "paused": "已暂停",
+    "merging": "合并中",
+    "done": "已完成",
+    "instant": "秒传完成",
+    "failed": "上传失败",
+    "cancelled": "已取消"
+  },
+  "action": {
+    "pause": "暂停",
+    "resume": "继续",
+    "cancel": "取消",
+    "retry": "重试",
+    "remove": "移除"
+  },
+  "hint": {
+    "wholeLimit": "支持 {exts}，20MB 以内直接上传",
+    "willChunk": "该文件 {size}，将使用分片上传，可在右下角面板查看进度"
+  },
+  "error": {
+    "type": "不支持的文件格式",
+    "empty": "文件内容为空",
+    "tooLarge": "文件过大，分片上传最大允许 {size}",
+    "unknown": "上传失败，请重试",
+    "sessionCorrupt": "上传会话信息异常，请重新选择文件",
+    "sessionExpired": "上传会话已过期，请取消后重新上传",
+    "chunkSizeMismatch": "分片粒度与服务端不一致，请取消后重新上传",
+    "chunkRetrying": "分片上传失败，正在重试（{attempt}/{max}）",
+    "rateLimited": "上传过于频繁，正在排队重试",
+    "verifyRetry": "文件校验未通过，正在重传损坏分片",
+    "bizMismatch": "文件不属于该业务目录，请重新上传"
+  }
+}

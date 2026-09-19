@@ -1,0 +1,49 @@
+{
+  "panel": {
+    "title": "File uploads",
+    "titleCount": "File uploads ({count} in progress)",
+    "minimize": "Collapse",
+    "expand": "Expand",
+    "clearFinished": "Clear finished",
+    "bytesOf": "{done} / {total}",
+    "remaining": "{time} left",
+    "seconds": "{n}s",
+    "minutes": "{m}m {s}s"
+  },
+  "status": {
+    "idle": "Queued",
+    "hashing": "Verifying file",
+    "initializing": "Preparing",
+    "uploading": "Uploading",
+    "paused": "Paused",
+    "merging": "Merging",
+    "done": "Completed",
+    "instant": "Instant upload",
+    "failed": "Upload failed",
+    "cancelled": "Cancelled"
+  },
+  "action": {
+    "pause": "Pause",
+    "resume": "Resume",
+    "cancel": "Cancel",
+    "retry": "Retry",
+    "remove": "Remove"
+  },
+  "hint": {
+    "wholeLimit": "Supports {exts}, files under 20MB upload directly",
+    "willChunk": "This file is {size} and will upload in chunks; track progress in the bottom-right panel"
+  },
+  "error": {
+    "type": "Unsupported file format",
+    "empty": "The file is empty",
+    "tooLarge": "File too large; chunked upload allows up to {size}",
+    "unknown": "Upload failed, please retry",
+    "sessionCorrupt": "Upload session is invalid, please pick the file again",
+    "sessionExpired": "Upload session expired, please cancel and upload again",
+    "chunkSizeMismatch": "Chunk size differs from the server, please cancel and upload again",
+    "chunkRetrying": "Chunk upload failed, retrying ({attempt}/{max})",
+    "rateLimited": "Too many uploads, queued for retry",
+    "verifyRetry": "File verification failed, re-uploading corrupted chunks",
+    "bizMismatch": "The file does not belong to this business category, please upload again"
+  }
+}
