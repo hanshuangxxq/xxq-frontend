@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** 学业预警页：学生查看本人预警卡片；教务/院系查看预警看板，教务配置三级阈值并手动触发全量扫描 */
-import { ref, computed, h, reactive, onMounted } from 'vue'
+import { ref, computed, h, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
@@ -305,15 +305,15 @@ const scanByLevel = computed(() =>
 
 const activeTab = ref<'dashboard' | 'config' | 'scan'>('dashboard')
 
-onMounted(() => {
-  if (isStudent.value) {
-    loadMyWarnings()
-  } else {
-    loadSemesters()
-    loadDashboard()
-    if (isAcademicAdmin.value) loadConfig()
-  }
-})
+// 首屏加载在 setup 内同步发起(而非等 onMounted):保证首帧渲染时 loading 已为 true,
+// 空状态不会在「首帧闪现 → 加载开始消失 → 加载结束复现」之间抖动造成闪屏
+if (isStudent.value) {
+  void loadMyWarnings()
+} else {
+  loadSemesters()
+  void loadDashboard()
+  if (isAcademicAdmin.value) loadConfig()
+}
 </script>
 
 <template>

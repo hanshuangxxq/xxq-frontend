@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** 评教中心页：教务侧管理指标库/模板/评教周期/课程覆盖；学生侧在开放周期内选课提交评教并查看历史评教 */
-import { ref, computed, h, onMounted } from 'vue'
+import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
@@ -268,13 +268,13 @@ const myColumns = computed<DataTableColumns<TeachingEvaluationView>>(() => [
   },
 ])
 
-onMounted(() => {
-  loadPeriod()
-  if (isStudent.value) {
-    loadCourses()
-    loadMyEvaluations()
-  }
-})
+// 首屏加载在 setup 内同步发起(而非等 onMounted):保证首帧渲染时 loading 已为 true,
+// 空状态不会在「首帧闪现 → 加载开始消失 → 加载结束复现」之间抖动造成闪屏
+void loadPeriod()
+if (isStudent.value) {
+  loadCourses()
+  void loadMyEvaluations()
+}
 </script>
 
 <template>

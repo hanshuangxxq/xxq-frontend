@@ -4,7 +4,7 @@
  * 我的报名(待审核可撤销)、我的结果(查看本人获奖,未获奖显示空态)。
  * 非学生角色展示 ForbiddenState。
  */
-import { ref, computed, h, onMounted } from 'vue'
+import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
@@ -297,11 +297,11 @@ const myResultColumns = computed<DataTableColumns<RegistrationResponse>>(() => [
 ])
 
 // 权限守卫:非学生不发起请求,模板侧以 ForbiddenState 兜底
-onMounted(() => {
-  if (!isStudent.value) return
-  loadAvailable()
-  loadMyRegistrations()
-})
+// 首屏加载在 setup 内同步发起(而非等 onMounted):保证首帧渲染时加载已开始,避免空状态闪屏
+if (isStudent.value) {
+  void loadAvailable()
+  void loadMyRegistrations()
+}
 </script>
 
 <template>

@@ -3,7 +3,7 @@
  * 课程表页面。学生：班级课程卡片、周课表网格、个人学习进度（学情分析）；
  * 教师：任课课程列表与所授课程的考试安排。按角色渲染不同 Tab 组。
  */
-import { ref, computed, h, watch, onMounted } from 'vue'
+import { ref, computed, h, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
@@ -493,7 +493,9 @@ watch(activeTab, (tab) => {
 })
 
 // ---- Init ----
-onMounted(async () => {
+// 首屏加载在 setup 内同步发起(而非等 onMounted):保证首帧渲染时 loading 已为 true,
+// 空状态不会在「首帧闪现 → 加载开始消失 → 加载结束复现」之间抖动造成闪屏
+async function init() {
   await loadTimes()
   await loadSemester()
   if (isStudent.value) {
@@ -502,7 +504,8 @@ onMounted(async () => {
   } else if (isTeacher.value) {
     await Promise.all([loadTeacherCourses(), loadTeacherExams()])
   }
-})
+}
+void init()
 </script>
 
 <template>

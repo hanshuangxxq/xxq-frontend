@@ -3,7 +3,7 @@
  * 补考/重修管理（教务）。查询课程不及格候选名单（含分数段分布图表）、创建补考/重修考试、录入补考/重修成绩。
  * 候选名单即建考的考生来源；成绩录入只提交填写了分数的学生行。
  */
-import { ref, computed, h, onMounted } from 'vue'
+import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
@@ -417,10 +417,10 @@ async function loadDropdowns() {
   }
 }
 
-onMounted(() => {
-  loadDropdowns()
-  loadMakeupExams()
-})
+// 首屏加载在 setup 内同步发起(而非等 onMounted):保证首帧渲染时 loading 已为 true,
+// 空状态不会在「首帧闪现 → 加载开始消失 → 加载结束复现」之间抖动造成闪屏
+loadDropdowns()
+void loadMakeupExams()
 </script>
 
 <template>

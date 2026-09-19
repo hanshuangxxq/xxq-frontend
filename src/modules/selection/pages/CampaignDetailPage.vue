@@ -3,7 +3,7 @@
  * 选课活动详情页（教务）：活动基础信息与按状态流转的操作（关闭/结束选课），
  * 活动结束后展示选课结果班级名单，并可逐个班级分配/更换/取消授课教师。
  */
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -195,7 +195,10 @@ async function handleUnassignTeacher(cls: SelectionClass) {
     if (!isReportedError(e)) message.error((e as Error).message || t('selection.assignTeacherFail'))
   }
 }
-onMounted(loadAll)
+
+// 首屏加载在 setup 内同步发起(而非等 onMounted):保证首帧渲染时 loading 已为 true,
+// 空状态不会在「首帧闪现 → 加载开始消失 → 加载结束复现」之间抖动造成闪屏
+void loadAll()
 </script>
 
 <template>

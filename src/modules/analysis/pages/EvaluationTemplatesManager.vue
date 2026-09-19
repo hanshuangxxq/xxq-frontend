@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** 评教模板管理页（教务）：模板 CRUD、设全局默认、启停，编辑模板内指标列表（增删/排序/必填） */
-import { ref, computed, h, onMounted } from 'vue'
+import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
@@ -316,10 +316,10 @@ async function loadItems() {
   }
 }
 
-onMounted(() => {
-  loadData()
-  loadItems()
-})
+// 首屏加载在 setup 内同步发起(而非等 onMounted):保证首帧渲染时 loading 已为 true,
+// 空状态不会在「首帧闪现 → 加载开始消失 → 加载结束复现」之间抖动造成闪屏
+void loadData()
+loadItems()
 </script>
 
 <template>

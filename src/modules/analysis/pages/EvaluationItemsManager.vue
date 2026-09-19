@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** 评教指标库管理页（教务）：维护评教指标的名称/描述/满分，列表展示被模板引用数 */
-import { ref, computed, h, onMounted } from 'vue'
+import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
@@ -168,7 +168,9 @@ async function handleDelete(id: number) {
   }
 }
 
-onMounted(loadData)
+// 首屏加载在 setup 内同步发起(而非等 onMounted):保证首帧渲染时 loading 已为 true,
+// 空状态不会在「首帧闪现 → 加载开始消失 → 加载结束复现」之间抖动造成闪屏
+void loadData()
 </script>
 
 <template>

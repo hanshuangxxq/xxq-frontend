@@ -4,7 +4,7 @@
  * (仅审核通过的项目可提交/重传,附件限 doc/docx/pdf/zip/rar,>20MB 自动走分片上传)、
  * 可报名培训(报名即占位,无审核)、我的培训(可取消报名)。非学生角色展示 ForbiddenState。
  */
-import { ref, computed, h, onMounted } from 'vue'
+import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
@@ -577,14 +577,14 @@ const myTrainColumns = computed<DataTableColumns<TrainingEnrollmentResponse>>(()
 ])
 
 // 权限守卫:非学生不发起请求,模板侧以 ForbiddenState 兜底
-onMounted(() => {
-  if (!isStudent.value) return
-  loadAvailable()
-  loadMyApplications()
-  loadMyReports()
-  loadAvailableTrainings()
-  loadMyTrainings()
-})
+// 首屏加载在 setup 内同步发起(而非等 onMounted):保证首帧渲染时 loading 已为 true,避免空状态闪屏
+if (isStudent.value) {
+  void loadAvailable()
+  void loadMyApplications()
+  void loadMyReports()
+  void loadAvailableTrainings()
+  void loadMyTrainings()
+}
 </script>
 
 <template>

@@ -3,7 +3,7 @@
  * 竞赛管理页(仅教务)。功能:竞赛 CRUD、状态流转(草稿/开放报名/报名关闭/已结束)、
  * 报名审核、获奖结果录入(同一报名重复保存即覆盖)。非教务角色展示 ForbiddenState。
  */
-import { ref, computed, h, onMounted } from 'vue'
+import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
@@ -568,10 +568,8 @@ const resultColumns = computed<DataTableColumns<CompetitionResultResponse>>(() =
 ])
 
 // 权限守卫:非教务不发起请求,模板侧以 ForbiddenState 兜底
-onMounted(() => {
-  if (!isAcademicAdmin.value) return
-  loadData()
-})
+// 首屏加载在 setup 内同步发起(而非等 onMounted):保证首帧渲染时加载已开始,避免空状态闪屏
+if (isAcademicAdmin.value) void loadData()
 </script>
 
 <template>

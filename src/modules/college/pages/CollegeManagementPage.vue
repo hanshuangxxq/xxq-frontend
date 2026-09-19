@@ -3,7 +3,7 @@
  * 院系管理页:院系列表展示与新建/编辑/删除;列表不分页(数据量小),空数据时展示空状态占位。
  * 新建按钮与操作列仅对教务管理员渲染,其余角色只读浏览。
  */
-import { ref, computed, h, onMounted } from 'vue'
+import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
@@ -170,7 +170,9 @@ async function handleDelete(id: number) {
     if (!isReportedError(e)) message.error((e as Error).message || t('college.deleteFail'))
   }
 }
-onMounted(loadData)
+// 首屏加载在 setup 内同步发起(而非等 onMounted):保证首帧渲染时 loading 已为 true,
+// 空状态不会在「首帧闪现 → 加载开始消失 → 加载结束复现」之间抖动造成闪屏
+void loadData()
 </script>
 
 <template>

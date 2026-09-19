@@ -4,7 +4,7 @@
  * 我的申报(待审核可撤销)、我的报告(仅审核通过的项目可提交/重传,
  * 重传为覆盖更新,已评审不可再改)。非学生角色展示 ForbiddenState。
  */
-import { ref, computed, h, onMounted } from 'vue'
+import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
@@ -444,12 +444,12 @@ const reportColumns = computed<DataTableColumns<SocialPracticeReportResponse>>((
 ])
 
 // 权限守卫:非学生不发起请求,模板侧以 ForbiddenState 兜底
-onMounted(() => {
-  if (!isStudent.value) return
-  loadAvailable()
-  loadMyApplications()
-  loadMyReports()
-})
+// 首屏加载在 setup 内同步发起(而非等 onMounted):保证首帧渲染时 loading 已为 true,避免空状态闪屏
+if (isStudent.value) {
+  void loadAvailable()
+  void loadMyApplications()
+  void loadMyReports()
+}
 </script>
 
 <template>

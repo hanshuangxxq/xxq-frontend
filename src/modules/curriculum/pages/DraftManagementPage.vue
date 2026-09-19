@@ -3,7 +3,7 @@
  * 排课草稿管理（院系）。院系按「班级 + 多条课程/教师/周次组合」批量提交排课草稿，
  * 并查看草稿、按班级或按条清理；草稿是正式排课（teach-info）前的暂存，提交后由后端转正式授课安排。
  */
-import { ref, onMounted, h } from 'vue'
+import { ref, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
@@ -282,10 +282,10 @@ async function handleDeleteSingle(row: DraftItem) {
   }
 }
 
-onMounted(() => {
-  loadData()
-  loadColleges()
-})
+// 首屏加载在 setup 内同步发起(而非等 onMounted):保证首帧渲染时 loading 已为 true,
+// 空状态不会在「首帧闪现 → 加载开始消失 → 加载结束复现」之间抖动造成闪屏
+void loadData()
+void loadColleges()
 </script>
 
 <template>

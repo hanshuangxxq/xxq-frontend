@@ -4,7 +4,7 @@
  * 学生提交复核申请、对教师回复可升级为教务处理；教师回复并可更正总评；
  * 教务对已升级复核终审（解决或驳回）。状态统计带可点击筛选。
  */
-import { ref, computed, h, reactive, onMounted, type VNode } from 'vue'
+import { ref, computed, h, reactive, type VNode } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
@@ -426,12 +426,12 @@ const rowProps = (row: ReviewView) => ({
   onClick: () => openDetail(row),
 })
 
-onMounted(() => {
-  // 教务默认只看「已升级教务」待办，学生预载成绩选项供申请复核选择
-  if (isAcademicAdmin.value) statusFilter.value = 'ESCALATED'
-  if (isStudent.value) loadMyScores()
-  loadData()
-})
+// 首屏加载在 setup 内同步发起(而非等 onMounted):保证首帧渲染时 loading 已为 true,
+// 空状态不会在「首帧闪现 → 加载开始消失 → 加载结束复现」之间抖动造成闪屏
+// 教务默认只看「已升级教务」待办，学生预载成绩选项供申请复核选择
+if (isAcademicAdmin.value) statusFilter.value = 'ESCALATED'
+if (isStudent.value) loadMyScores()
+void loadData()
 </script>
 
 <template>
