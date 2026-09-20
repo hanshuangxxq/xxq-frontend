@@ -8,6 +8,11 @@
   gap: 16px;
 }
 
+/* 班级筛选用 PagedSelect（根节点是 NSelect），与同排的课程筛选等宽 */
+.stat-filter-class {
+  width: 180px;
+}
+
 @media (max-width: 900px) {
   .stat-band {
     grid-template-columns: repeat(2, 1fr);

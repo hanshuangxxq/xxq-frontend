@@ -9,7 +9,6 @@ import {
   NCard,
   NSpace,
   NSelect,
-  NInput,
   NButton,
   NDataTable,
   NEmpty,
@@ -21,10 +20,12 @@ import BaseChart from '@/shared/components/BaseChart.vue'
 import StatCard from '@/shared/components/StatCard.vue'
 import { fetchScoreStatistics } from '../api'
 import { fetchCourses } from '@/modules/course/api'
+import { fetchClassNames } from '@/modules/class-names/api'
 import { fetchAllSemesters } from '@/modules/curriculum/api'
 import { courseKey, parseCourseKey, isPublicCourse } from '@/modules/course/utils'
 import PagedSelect from '@/shared/components/PagedSelect.vue'
 import type { Course } from '@/modules/course/types'
+import type { ClassName } from '@/modules/class-names/types'
 import type { Semester } from '@/modules/curriculum/types'
 import type { ScoreStatisticsDto } from '../types'
 import { levelColor } from '../utils'
@@ -54,6 +55,18 @@ const courseValueOf = (c: Course) => courseKey(c.id, c.source)
 
 function onFilterCourseChange(v: string | number | null | Array<string | number>) {
   filterCourseKey.value = (v as string) ?? null
+}
+
+const fetchClassNamesPage = (page: number, pageSize: number) => fetchClassNames(page, pageSize)
+
+const classNameLabelOf = (c: ClassName) => c.className
+const classNameValueOf = (c: ClassName) => c.className
+
+// 服务端 className 是精确匹配（不是模糊匹配），手输差一个字就整表为空，
+// 故选自下拉；值可能是 number，而查询参数要求名称字符串
+function onFilterClassNameChange(v: string | number | null | Array<string | number>) {
+  const picked = Array.isArray(v) ? v[0] : v
+  filterClassName.value = picked == null ? '' : String(picked)
 }
 
 async function loadDropdowns() {
@@ -311,11 +324,15 @@ void loadData()
             style="width: 220px"
             @update:model-value="onFilterCourseChange"
           />
-          <NInput
-            v-model:value="filterClassName"
+          <PagedSelect
+            :model-value="filterClassName || null"
+            :fetch-page="fetchClassNamesPage"
+            :label-of="classNameLabelOf"
+            :value-of="classNameValueOf"
             :placeholder="$t('score.statClassNamePlaceholder')"
             clearable
-            style="width: 180px"
+            class="stat-filter-class"
+            @update:model-value="onFilterClassNameChange"
           />
           <NSelect
             v-model:value="filterSemesterId"
