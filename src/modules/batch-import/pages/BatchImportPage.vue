@@ -13,6 +13,7 @@ import {
   NSelect,
   NDataTable,
   NTag,
+  NText,
   useMessage,
   type DataTableColumns,
 } from 'naive-ui'
@@ -42,10 +43,13 @@ interface RowData {
   username: string
   password: string
   userType: 'student' | 'teacher'
+  /** 学号（学生）或工号（教师） */
   identifier: string
-  className: string
+  /** 年级名，仅学生用。后端 JSON 字段名为历史遗留的 className，实为年级 */
+  gradeName: string
   gender: string
-  department: string
+  /** 学生填班级名、教师填院系名。后端 JSON 字段名为历史遗留的 department */
+  classOrCollege: string
 }
 
 // 行主键自增;用独立 key 而非数组下标,删除中间行后剩余行的 key 保持稳定
@@ -58,9 +62,9 @@ function createRow(): RowData {
     password: '',
     userType: 'student',
     identifier: '',
-    className: '',
+    gradeName: '',
     gender: '未知',
-    department: '',
+    classOrCollege: '',
   }
 }
 
@@ -98,7 +102,7 @@ function validateRows(): string | null {
   return null
 }
 
-// 逐行 trim 后组装请求体:可选字段为空则整字段省略,班级仅学生类型携带,性别"未知"不传
+// 逐行 trim 后组装请求体:可选字段为空则整字段省略,年级仅学生类型携带,性别"未知"不传
 function handleSubmit() {
   const validationError = validateRows()
   if (validationError) {
@@ -113,10 +117,12 @@ function handleSubmit() {
         password: row.password,
         userType: row.userType,
         ...(row.identifier.trim() && { identifier: row.identifier.trim() }),
+        // 后端 UserImportItem.className 存的是年级名（历史字段命名），仅学生携带
         ...(row.userType === 'student' &&
-          row.className.trim() && { className: row.className.trim() }),
+          row.gradeName.trim() && { className: row.gradeName.trim() }),
         ...(row.gender !== '未知' && { gender: row.gender }),
-        ...(row.department.trim() && { department: row.department.trim() }),
+        // 后端 UserImportItem.department 对学生是班级名、对教师是院系名
+        ...(row.classOrCollege.trim() && { department: row.classOrCollege.trim() }),
       }))
 
       const result = await batchImportUsers({ users })
@@ -152,8 +158,10 @@ function getIdentifierPlaceholder(userType: 'student' | 'teacher'): string {
   return userType === 'student' ? t('batch-import.identifierStudent') : t('batch-import.identifierTeacher')
 }
 
-function getDepartmentLabel(userType: 'student' | 'teacher'): string {
-  return userType === 'student' ? t('batch-import.departmentStudent') : t('batch-import.departmentTeacher')
+function getClassOrCollegePlaceholder(userType: 'student' | 'teacher'): string {
+  return userType === 'student'
+    ? t('batch-import.classNameStudent')
+    : t('batch-import.collegeTeacher')
 }
 </script>
 
@@ -169,6 +177,7 @@ function getDepartmentLabel(userType: 'student' | 'teacher'): string {
 
         <div class="bi-toolbar">
           <NButton size="small" @click="addRow">{{ $t('batch-import.addRow') }}</NButton>
+          <NText depth="3">{{ $t('batch-import.chainHint') }}</NText>
         </div>
 
         <div class="bi-table-wrapper">
@@ -180,9 +189,9 @@ function getDepartmentLabel(userType: 'student' | 'teacher'): string {
                 <th class="bi-col-password">{{ $t('batch-import.password') }} *</th>
                 <th class="bi-col-type">{{ $t('batch-import.userType') }}</th>
                 <th class="bi-col-identifier">{{ $t('batch-import.identifier') }}</th>
-                <th class="bi-col-class">{{ $t('batch-import.className') }}</th>
+                <th class="bi-col-class">{{ $t('batch-import.grade') }}</th>
                 <th class="bi-col-gender">{{ $t('batch-import.gender') }}</th>
-                <th class="bi-col-department">{{ $t('batch-import.department') }}</th>
+                <th class="bi-col-department">{{ $t('batch-import.classOrCollege') }}</th>
                 <th class="bi-col-action">{{ $t('batch-import.removeRow') }}</th>
               </tr>
             </thead>
@@ -202,14 +211,14 @@ function getDepartmentLabel(userType: 'student' | 'teacher'): string {
                   <NInput v-model:value="row.identifier" size="small" :placeholder="getIdentifierPlaceholder(row.userType)" />
                 </td>
                 <td class="bi-col-class">
-                  <NInput v-if="row.userType === 'student'" v-model:value="row.className" size="small" :placeholder="$t('batch-import.className')" />
+                  <NInput v-if="row.userType === 'student'" v-model:value="row.gradeName" size="small" :placeholder="$t('batch-import.grade')" />
                   <span v-else class="bi-na">—</span>
                 </td>
                 <td class="bi-col-gender">
                   <NSelect v-model:value="row.gender" :options="genderOptions" size="small" />
                 </td>
                 <td class="bi-col-department">
-                  <NInput v-model:value="row.department" size="small" :placeholder="getDepartmentLabel(row.userType)" />
+                  <NInput v-model:value="row.classOrCollege" size="small" :placeholder="getClassOrCollegePlaceholder(row.userType)" />
                 </td>
                 <td class="bi-col-action">
                   <NButton size="tiny" :disabled="rows.length <= 1" @click="removeRow(row.key)">
