@@ -25,6 +25,7 @@ import { useLocaleStore } from '@/stores/useLocaleStore'
 import { useLoading } from '@/shared/composables/useLoading'
 import { isReportedError } from '@/shared/api'
 import PagedSelect from '@/shared/components/PagedSelect.vue'
+import SelectionScopeFields from './SelectionScopeFields.vue'
 import type { CampaignForm, SelectionGroup } from '../types'
 import type { Semester } from '@/modules/curriculum/types'
 
@@ -55,7 +56,7 @@ const semesterOptions = computed<SelectOption[]>(() =>
   props.semesters.map((s) => ({ label: s.name, value: s.id })),
 )
 
-/** 表单初值：默认 1-16 周、容量 30、课程类型固定公选 */
+/** 表单初值：默认 1-16 周、容量 30、课程类型固定公选、选课范围不限 */
 function emptyForm(): CampaignForm {
   return {
     name: '',
@@ -70,6 +71,9 @@ function emptyForm(): CampaignForm {
     courseHour: null,
     description: '',
     courseType: PUBLIC_ELECTIVE_COURSE_TYPE,
+    allowedGradeIds: [],
+    allowedMajors: [],
+    timeRestrictionIds: [],
     capacity: 30,
   }
 }
@@ -148,6 +152,9 @@ function handleSubmit() {
         courseHour: form.value.courseHour,
         description: form.value.description,
         courseType: PUBLIC_ELECTIVE_COURSE_TYPE,
+        allowedGradeIds: form.value.allowedGradeIds,
+        allowedMajors: form.value.allowedMajors,
+        timeRestrictionIds: form.value.timeRestrictionIds,
         capacity: form.value.capacity,
       })
       message.success(t('selection.saveSuccess'))
@@ -261,6 +268,12 @@ function handleSubmit() {
           />
         </NFormItemGi>
       </NGrid>
+
+      <SelectionScopeFields
+        v-model:grade-ids="form.allowedGradeIds"
+        v-model:major-ids="form.allowedMajors"
+        v-model:time-restriction-ids="form.timeRestrictionIds"
+      />
 
       <NDivider title-placement="left">{{ $t('selection.section.binding') }}</NDivider>
       <NGrid :cols="2" :x-gap="16" :y-gap="0">

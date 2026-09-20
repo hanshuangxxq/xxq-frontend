@@ -152,9 +152,18 @@
   "groupProgress": "本组累计已选 {selected} / {max} 门",
   "groupMaxReached": "本组已达选课上限（{n} 门）",
   "groupCoursesEmpty": "本组暂无可选课程",
+  "allowedGrades": "可选年级",
+  "allowedGradesPlaceholder": "不选则不限制年级",
+  "allowedMajors": "可选专业",
+  "allowedMajorsPlaceholder": "不选则不限制专业",
+  "timeRestrictions": "预留时段",
+  "timeRestrictionsPlaceholder": "不选则不预留时段",
+  "timeRestrictionsEmpty": "暂无可绑定的预留时段（需为 RESERVED 类型且未被其他课程或活动占用）",
+  "timeRestrictionsHint": "仅列出无人认领的 RESERVED 时段；保存后即归属本活动，取消勾选会连同该时段限制一并删除",
   "section": {
     "basicInfo": "活动信息",
     "courseInfo": "课程信息",
+    "scope": "选课范围",
     "scheduling": "排课时段",
     "binding": "选课组绑定"
   }

@@ -46,6 +46,7 @@ import type { Campaign, CampaignForm, CampaignStatus, SelectionGroup } from '../
 import type { Semester } from '@/modules/curriculum/types'
 import CampaignCreateModal from '../components/CampaignCreateModal.vue'
 import GroupManagementModal from '../components/GroupManagementModal.vue'
+import SelectionScopeFields from '../components/SelectionScopeFields.vue'
 
 /**
  * 教务管理员创建/修改的选课活动固定为「公选」类型。
@@ -231,6 +232,9 @@ const emptyForm = (): CampaignForm => ({
   courseHour: null,
   description: '',
   courseType: PUBLIC_ELECTIVE_COURSE_TYPE,
+  allowedGradeIds: [],
+  allowedMajors: [],
+  timeRestrictionIds: [],
   capacity: 30,
 })
 
@@ -265,6 +269,9 @@ function startEdit(row: Campaign) {
     courseHour: row.courseHour,
     description: row.description,
     courseType: PUBLIC_ELECTIVE_COURSE_TYPE,
+    allowedGradeIds: row.allowedGradeIds ?? [],
+    allowedMajors: row.allowedMajors ?? [],
+    timeRestrictionIds: row.timeRestrictionIds ?? [],
     capacity: row.capacity,
   }
   showForm.value = true
@@ -329,6 +336,11 @@ function handleSave() {
         courseHour: form.value.courseHour,
         description: form.value.description,
         courseType: PUBLIC_ELECTIVE_COURSE_TYPE,
+        // 后端对这三个字段是「传了才改」：空数组才能清空既有范围/解绑全部预留时段，
+        // 省略字段等于保持原值，所以必须原样带上。
+        allowedGradeIds: form.value.allowedGradeIds ?? [],
+        allowedMajors: form.value.allowedMajors ?? [],
+        timeRestrictionIds: form.value.timeRestrictionIds ?? [],
         capacity: form.value.capacity,
       }
       // groupId 为 null 时不传，避免误触发换绑；
@@ -521,6 +533,13 @@ onMounted(loadData)
             />
           </NFormItemGi>
         </NGrid>
+
+        <SelectionScopeFields
+          v-model:grade-ids="form.allowedGradeIds"
+          v-model:major-ids="form.allowedMajors"
+          v-model:time-restriction-ids="form.timeRestrictionIds"
+          :campaign-id="editingId"
+        />
 
         <NDivider title-placement="left">{{ $t('selection.section.binding') }}</NDivider>
         <NGrid :cols="2" :x-gap="16" :y-gap="0">

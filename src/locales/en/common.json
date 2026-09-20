@@ -15,6 +15,15 @@
     "loading": "Loading…",
     "empty": "No data"
   },
+  "weekday": {
+    "1": "Mon",
+    "2": "Tue",
+    "3": "Wed",
+    "4": "Thu",
+    "5": "Fri",
+    "6": "Sat",
+    "7": "Sun"
+  },
   "publicTag": "Public",
   "loading": "Loading data…",
   "cancelLoading": "Cancel",

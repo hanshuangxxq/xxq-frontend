@@ -32,11 +32,18 @@ import {
   finalizeCampaign,
   assignClassTeacher,
 } from '../api'
-import { fetchTeachers } from '@/modules/curriculum/api'
+import { fetchAllTimes, fetchTeachers } from '@/modules/curriculum/api'
+import { fetchGrades } from '@/modules/grades/api'
+import { fetchMajors } from '@/modules/majors/api'
+import { fetchTimeRestrictions } from '@/modules/time-restrictions/api'
 import { useLoading } from '@/shared/composables/useLoading'
 import { isReportedError } from '@/shared/api'
 import PagedSelect from '@/shared/components/PagedSelect.vue'
-import type { Teacher } from '@/modules/curriculum/types'
+import { restrictionLabel, timeSlotLabels, weekdayLabels } from '../utils'
+import type { Teacher, TimeSlot } from '@/modules/curriculum/types'
+import type { Grade } from '@/modules/grades/types'
+import type { Major } from '@/modules/majors/types'
+import type { TimeRestriction } from '@/modules/time-restrictions/types'
 import type { Campaign, CampaignStatus, SelectionClass, StudentSelectionMember } from '../types'
 
 const { t } = useI18n()
@@ -49,6 +56,15 @@ const campaignId = computed(() => Number(route.params.id))
 const { loading, withLoading } = useLoading()
 const campaign = ref<Campaign | null>(null)
 const classes = ref<SelectionClass[]>([])
+
+/**
+ * 选课范围的字典：详情里只展示 id，须翻译成名称。
+ * 失败时保持空表，`*Names` 会退化成 #id，不影响其余信息展示。
+ */
+const grades = ref<Grade[]>([])
+const majors = ref<Major[]>([])
+const timeSlots = ref<TimeSlot[]>([])
+const restrictions = ref<TimeRestriction[]>([])
 
 const statusTagType: Record<CampaignStatus, 'default' | 'info' | 'warning' | 'success'> = {
   DRAFT: 'default',
@@ -85,15 +101,64 @@ async function loadClasses() {
   }
 }
 
+/** 拉一次选课范围字典（年级/专业/节次/时段限制），翻译上面三组 id 用 */
+async function loadScopeDicts() {
+  try {
+    const [gradeRes, majorRes, slotRes, restrictionRes] = await Promise.all([
+      fetchGrades(),
+      fetchMajors(),
+      fetchAllTimes(),
+      fetchTimeRestrictions(),
+    ])
+    grades.value = gradeRes.data ?? []
+    majors.value = majorRes.data ?? []
+    timeSlots.value = slotRes.data ?? []
+    restrictions.value = restrictionRes.data ?? []
+  } catch (e) {
+    if (!isReportedError(e)) message.error((e as Error).message || t('selection.loadFail'))
+  }
+}
+
 function loadAll() {
   return withLoading(async () => {
-    await loadCampaign()
+    await Promise.all([loadCampaign(), loadScopeDicts()])
     // 班级名单仅活动结束后生成，非结束态不发请求
     if (campaign.value?.status === 'FINALIZED') {
       await loadClasses()
     }
   })
 }
+
+/** id -> 显示名；字典缺失（如字典里已删、拉取失败）时退化成 #id */
+function namesOf(ids: number[] | undefined, labels: Map<number, string>): string {
+  if (!ids?.length) return ''
+  return ids.map((id) => labels.get(id) ?? `#${id}`).join('、')
+}
+
+const gradeLabels = computed(() => new Map(grades.value.map((g) => [g.id, g.name])))
+const majorLabels = computed(() => new Map(majors.value.map((m) => [m.id, m.majorName])))
+const weekdays = computed(() => weekdayLabels(t))
+const slotLabels = computed(() => timeSlotLabels(timeSlots.value))
+
+/**
+ * 范围/时段为空表示不限，展示成「-」；此处**不做** bindableRestrictions 过滤
+ * ——活动已绑定的时段即便后来被别人占用也要照原样显示出来。
+ */
+const allowedGradeNames = computed(() =>
+  namesOf(campaign.value?.allowedGradeIds, gradeLabels.value),
+)
+const allowedMajorNames = computed(() => namesOf(campaign.value?.allowedMajors, majorLabels.value))
+const restrictionNames = computed(() => {
+  const ids = campaign.value?.timeRestrictionIds
+  if (!ids?.length) return ''
+  const byId = new Map(restrictions.value.map((r) => [r.id, r]))
+  return ids
+    .map((id) => {
+      const r = byId.get(id)
+      return r ? restrictionLabel(r, weekdays.value, slotLabels.value) : `#${id}`
+    })
+    .join('、')
+})
 
 const memberColumns: DataTableColumns<StudentSelectionMember> = [
   { title: t('selection.studentNo'), key: 'studentNo', width: 120 },
@@ -272,6 +337,15 @@ void loadAll()
           </NDescriptionsItem>
           <NDescriptionsItem :label="$t('selection.group')">
             {{ campaign.groupName ?? '-' }}
+          </NDescriptionsItem>
+          <NDescriptionsItem :label="$t('selection.allowedGrades')">
+            {{ allowedGradeNames || '-' }}
+          </NDescriptionsItem>
+          <NDescriptionsItem :label="$t('selection.allowedMajors')">
+            {{ allowedMajorNames || '-' }}
+          </NDescriptionsItem>
+          <NDescriptionsItem :label="$t('selection.timeRestrictions')">
+            {{ restrictionNames || '-' }}
           </NDescriptionsItem>
           <NDescriptionsItem :label="$t('selection.createTime')">
             {{ formatDateTime(campaign.createTime) }}

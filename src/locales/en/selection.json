@@ -152,9 +152,18 @@
   "groupProgress": "Selected {selected} / {max} in this group (cumulative)",
   "groupMaxReached": "Group limit reached ({n})",
   "groupCoursesEmpty": "No courses in this group",
+  "allowedGrades": "Eligible Grades",
+  "allowedGradesPlaceholder": "No grade restriction",
+  "allowedMajors": "Eligible Majors",
+  "allowedMajorsPlaceholder": "No major restriction",
+  "timeRestrictions": "Reserved Time Slots",
+  "timeRestrictionsPlaceholder": "No reserved time slots",
+  "timeRestrictionsEmpty": "No bindable reserved slots (must be RESERVED and not taken by another course or campaign)",
+  "timeRestrictionsHint": "Only unclaimed RESERVED slots are listed; saving claims them, unchecking deletes the slot record itself",
   "section": {
     "basicInfo": "Basic Info",
     "courseInfo": "Course Info",
+    "scope": "Selection Scope",
     "scheduling": "Schedule Time Slots",
     "binding": "Group Binding"
   }

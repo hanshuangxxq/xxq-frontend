@@ -11,6 +11,12 @@ export interface TimeRestriction {
   restrictionType: RestrictionType
   /** 预留课程 id，仅 RESERVED 时有意义；BLOCKED 为 null */
   courseId: number | null
+  /**
+   * 认领该时段的选课活动 id（仅 RESERVED 时有意义）。
+   * courseId 与 campaignId 至多一个非空：谁先绑定谁占用，选课活动字段组据此
+   * 排除已被别的课程/活动占用的时段。
+   */
+  campaignId: number | null
   /** 限制原因说明 */
   reason: string
 }
