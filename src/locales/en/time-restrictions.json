@@ -8,6 +8,7 @@
   "dayOfWeek": "Day",
   "restrictionType": "Type",
   "courseId": "Course ID",
+  "course": "Course",
   "reason": "Reason",
   "blocked": "Blocked",
   "reserved": "Reserved",

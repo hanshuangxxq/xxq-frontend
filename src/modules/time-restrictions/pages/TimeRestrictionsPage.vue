@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/** 时段限制管理页：教务维护禁排/预留时段（预留需填课程 id），其他角色只读查看 */
+/** 时段限制管理页：教务维护禁排/预留时段（预留需从课程下拉中选课程），其他角色只读查看 */
 import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -25,11 +25,14 @@ import {
   deleteTimeRestriction,
 } from '../api'
 import { fetchAllTimes } from '@/modules/curriculum/api'
+import { fetchCourses } from '@/modules/course/api'
+import PagedSelect from '@/shared/components/PagedSelect.vue'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import { useLoading } from '@/shared/composables/useLoading'
 import { isReportedError } from '@/shared/api'
 import type { TimeRestriction, RestrictionType, TimeRestrictionForm } from '../types'
 import type { TimeSlot } from '@/modules/curriculum/types'
+import type { Course } from '@/modules/course/types'
 
 const { t } = useI18n()
 const message = useMessage()
@@ -161,9 +164,22 @@ const emptyForm = (): TimeRestrictionForm => ({
 
 const form = ref<TimeRestrictionForm>(emptyForm())
 
-// 课程 id 输入为纯文本，空串表示清空（null）
-function onCourseIdChange(v: string) {
-  form.value.courseId = v ? parseInt(v, 10) : null
+/**
+ * 预留课程下拉只列常规课（source=MANUAL）：courseId 是 course 表的外键，
+ * 而公选课由后端按选课活动合成、没有真实 course 记录，选了必然校验失败。
+ * 过滤由服务端完成，保证 total/pages 与实际可选条数一致。
+ */
+function fetchRegularCoursesPage(page: number, pageSize: number) {
+  return fetchCourses(page, pageSize, 'MANUAL')
+}
+
+const courseLabelOf = (c: Course) => c.courseName
+const courseValueOf = (c: Course) => c.id
+
+// 预留课程的选择结果可能是 number，而 courseId 需要 number | null
+function onCourseChange(v: string | number | null | Array<string | number>) {
+  const picked = Array.isArray(v) ? v[0] : v
+  form.value.courseId = picked == null ? null : Number(picked)
 }
 
 function startCreate() {
@@ -286,13 +302,18 @@ void loadData()
         </NFormItem>
         <NFormItem
           v-if="form.restrictionType === 'RESERVED'"
-          :label="$t('time-restrictions.courseId')"
+          :label="$t('time-restrictions.course')"
           required
         >
-          <NInput
-            :value="form.courseId !== null ? String(form.courseId) : ''"
-            :placeholder="$t('time-restrictions.courseId')"
-            @update:value="onCourseIdChange"
+          <PagedSelect
+            :model-value="form.courseId"
+            :fetch-page="fetchRegularCoursesPage"
+            :label-of="courseLabelOf"
+            :value-of="courseValueOf"
+            :placeholder="$t('time-restrictions.course')"
+            clearable
+            filterable
+            @update:model-value="onCourseChange"
           />
         </NFormItem>
         <NFormItem :label="$t('time-restrictions.reason')">

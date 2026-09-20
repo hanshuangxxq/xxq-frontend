@@ -8,6 +8,7 @@
   "dayOfWeek": "星期",
   "restrictionType": "限制类型",
   "courseId": "课程ID",
+  "course": "课程",
   "reason": "限制原因",
   "blocked": "禁止排课",
   "reserved": "保留排课",
