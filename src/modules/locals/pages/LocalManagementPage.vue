@@ -21,6 +21,7 @@ import {
 } from 'naive-ui'
 import { fetchLocals, createLocal, updateLocal, deleteLocal } from '../api'
 import { fetchTeachers } from '@/modules/curriculum/api'
+import { fetchAllPages } from '@/shared/pagination'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import { useRemotePagination } from '@/shared/composables/useRemotePagination'
 import { useLoading } from '@/shared/composables/useLoading'
@@ -132,6 +133,26 @@ function onMaxChange(v: string) {
   form.value.max = v ? parseInt(v, 10) : null
 }
 
+// 后端没有楼栋字典接口，候选从已有的教室里归集去重；
+// 开 tag 允许新建楼栋 —— 否则一个新楼的第一间教室永远建不出来
+const buildingOptions = ref<Array<{ label: string; value: string }>>([])
+let buildingOptionsLoaded = false
+
+/** 首次打开表单时按需拉取（不放在首屏，避免为此多拉一遍全量教室） */
+async function loadBuildingOptions(): Promise<void> {
+  if (buildingOptionsLoaded) return
+  buildingOptionsLoaded = true
+  try {
+    const all = await fetchAllPages((page, pageSize) => fetchLocals({ page, pageSize }))
+    buildingOptions.value = [...new Set(all.map((l) => l.building).filter((b) => b !== ''))]
+      .sort()
+      .map((b) => ({ label: b, value: b }))
+  } catch {
+    // 候选加载失败不阻塞：下拉可手输（tag），照常能保存
+    buildingOptionsLoaded = false
+  }
+}
+
 const fetchTeachersPage = (page: number, pageSize: number) => fetchTeachers(page, pageSize)
 
 const teacherLabelOf = (tch: Teacher) => `${tch.name} (${tch.title})`
@@ -147,12 +168,14 @@ function startCreate() {
   editingId.value = null
   form.value = emptyForm()
   managerInitialLabel.value = undefined
+  void loadBuildingOptions()
   showForm.value = true
 }
 
 function startEdit(row: Local) {
   formMode.value = 'edit'
   editingId.value = row.id
+  void loadBuildingOptions()
   form.value = {
     building: row.building,
     classRoom: row.classRoom,
@@ -241,7 +264,13 @@ onMounted(() => {
     >
       <NForm :model="form">
         <NFormItem :label="$t('locals.building')">
-          <NInput v-model:value="form.building" />
+          <NSelect
+            v-model:value="form.building"
+            :options="buildingOptions"
+            :placeholder="$t('locals.buildingHint')"
+            filterable
+            tag
+          />
         </NFormItem>
         <NFormItem :label="$t('locals.classroom')">
           <NInput v-model:value="form.classRoom" />

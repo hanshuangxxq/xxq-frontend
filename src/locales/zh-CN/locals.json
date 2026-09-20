@@ -5,6 +5,7 @@
   "delete": "删除",
   "deleteConfirm": "确定删除此地点吗？",
   "building": "教学楼",
+  "buildingHint": "选择或输入教学楼",
   "classroom": "教室",
   "max": "容量",
   "actions": "操作",

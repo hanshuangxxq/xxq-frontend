@@ -5,6 +5,7 @@
   "delete": "Delete",
   "deleteConfirm": "Delete this location?",
   "building": "Building",
+  "buildingHint": "Select or enter a building",
   "classroom": "Room",
   "max": "Capacity",
   "actions": "Actions",
