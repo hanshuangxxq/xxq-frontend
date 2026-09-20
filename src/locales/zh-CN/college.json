@@ -10,7 +10,7 @@
   "editTitle": "编辑院系",
   "edit": "编辑",
   "delete": "删除",
-  "deleteConfirm": "确定删除该院系吗？",
+  "deleteConfirm": "确定删除该院系吗？该院系下的专业、班级与学生将一并失去院系归属，且服务端不会拦截。",
   "save": "保存",
   "cancel": "取消",
   "empty": "暂无院系",

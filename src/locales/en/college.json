@@ -10,7 +10,7 @@
   "editTitle": "Edit College",
   "edit": "Edit",
   "delete": "Delete",
-  "deleteConfirm": "Delete this college?",
+  "deleteConfirm": "Delete this college? Its majors, classes and students will lose their college affiliation, and the server does not block this.",
   "save": "Save",
   "cancel": "Cancel",
   "empty": "No colleges",

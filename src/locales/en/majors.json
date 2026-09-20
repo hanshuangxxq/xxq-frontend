@@ -10,12 +10,13 @@
   "actions": "Actions",
   "addTitle": "Add Major",
   "editTitle": "Edit Major",
-  "deleteConfirm": "Are you sure you want to delete this major?",
+  "deleteConfirm": "Delete this major? Majors that still have classes cannot be deleted.",
   "saveSuccess": "Saved successfully",
   "saveFail": "Failed to save",
   "deleteSuccess": "Deleted successfully",
   "deleteFail": "Failed to delete",
   "loadFail": "Failed to load majors",
   "empty": "No majors",
-  "nameRequired": "Please enter the major name"
+  "nameRequired": "Please enter the major name",
+  "collegeRequired": "Please select a college"
 }

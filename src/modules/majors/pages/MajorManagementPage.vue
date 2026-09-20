@@ -130,6 +130,15 @@ function startEdit(row: Major) {
 }
 
 function handleSave() {
+  // 院系必填(服务端 400 同款校验):专业不挂院系会让其下所有班级与学生一起失去院系归属
+  if (!form.value.majorName.trim()) {
+    message.warning(t('majors.nameRequired'))
+    return
+  }
+  if (form.value.collegeId == null) {
+    message.warning(t('majors.collegeRequired'))
+    return
+  }
   return withSaving(async () => {
     try {
       if (formMode.value === 'create') {
@@ -188,15 +197,15 @@ void loadColleges()
       class="major-form-modal"
     >
       <NForm :model="form">
-        <NFormItem :label="$t('majors.majorName')">
+        <NFormItem :label="$t('majors.majorName')" required>
           <NInput v-model:value="form.majorName" />
         </NFormItem>
-        <NFormItem :label="$t('majors.college')">
+        <NFormItem :label="$t('majors.college')" required>
           <NSelect
             v-model:value="form.collegeId"
             :options="collegeOptions"
-            clearable
             :placeholder="$t('majors.college')"
+            filterable
           />
         </NFormItem>
       </NForm>
