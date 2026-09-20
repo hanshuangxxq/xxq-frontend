@@ -248,6 +248,7 @@
     "groupName": "分组名称",
     "defenseTimeField": "答辩时间",
     "location": "答辩地点",
+    "locationPlaceholder": "选择或输入答辩地点",
     "reviewer": "评阅教师",
     "defenseTeacherGroup": "答辩教师组（多选）",
     "notDuplicatePassedArrange": "未查重通过，不可安排答辩",

@@ -22,6 +22,8 @@ import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import CampaignContextSelector from '../../components/CampaignContextSelector.vue'
 import { fetchDefenseList, arrangeDefense, fetchDashboard } from '../../api'
 import { fetchTeachers } from '@/modules/curriculum/api'
+import { fetchLocals } from '@/modules/locals/api'
+import { fetchAllPages } from '@/shared/pagination'
 import PagedSelect from '@/shared/components/PagedSelect.vue'
 import { tsToIso, formatDateTime } from '@/modules/practice/utils'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
@@ -41,14 +43,17 @@ const { loading, withLoading } = useLoading()
 
 function loadData(): Promise<void> {
   return withLoading(async () => {
-    if (campaignId.value == null) return
+    const id = campaignId.value
+    if (id == null) return
     try {
-      const [dRes, rowsRes] = await Promise.all([
-        fetchDefenseList(campaignId.value),
-        fetchDashboard(campaignId.value, { page: 1, pageSize: 100 }),
+      // 看板后端单页上限 100 且超出是截断而非报错，这里必须拉全量：
+      // 学生下拉漏人会让第 101 名以后的学生根本无法被安排答辩
+      const [dRes, rows] = await Promise.all([
+        fetchDefenseList(id),
+        fetchAllPages((page, pageSize) => fetchDashboard(id, { page, pageSize })),
       ])
       list.value = dRes.data ?? []
-      studentRows.value = rowsRes.data.records
+      studentRows.value = rows
     } catch (e) {
       if (!isReportedError(e))
         message.error((e as Error).message || t('graduation.common.loadFail'))
@@ -81,7 +86,7 @@ const form = ref<{
   reviewerId: number | null
   reviewerLabel: string | undefined
   panelIds: Array<string | number>
-  panelLabel: string | undefined
+  panelLabels: Record<string, string> | undefined
 }>({
   studentId: null,
   groupName: '',
@@ -90,7 +95,7 @@ const form = ref<{
   reviewerId: null,
   reviewerLabel: undefined,
   panelIds: [],
-  panelLabel: undefined,
+  panelLabels: undefined,
 })
 const { loading: saving, withLoading: withSaving } = useLoading()
 
@@ -108,6 +113,41 @@ function onPanelChange(v: string | number | null | Array<string | number>): void
   form.value.panelIds = (v as Array<string | number>) ?? []
 }
 
+/**
+ * 答辩地点候选来自教学场地。后端 location 是自由字符串（无外键），
+ * 故下拉开 tag：既可选已登记教室，也兼容历史自由文本与场地表里还没录的教室。
+ * 首次打开弹窗时按需拉取，不占页面首屏。
+ */
+const locationOptions = ref<Array<{ label: string; value: string }>>([])
+let locationOptionsLoaded = false
+
+async function loadLocationOptions(): Promise<void> {
+  if (locationOptionsLoaded) return
+  locationOptionsLoaded = true
+  try {
+    const all = await fetchAllPages((page, pageSize) => fetchLocals({ page, pageSize }))
+    // 场地表无 (building, classRoom) 唯一约束，同名教室去重
+    const labels = new Set(all.map((l) => `${l.building} ${l.classRoom}`))
+    locationOptions.value = [...labels].sort().map((l) => ({ label: l, value: l }))
+  } catch {
+    // 候选加载失败不阻塞：下拉开着 tag，手输照常能保存
+    locationOptionsLoaded = false
+  }
+}
+
+/**
+ * 答辩组教师的预选文案表：多选下拉没有单一 initialLabel，
+ * 不预填 id->姓名 就只能在框里看到一串裸 id。
+ */
+function panelLabelsOf(row: DefenseResponse): Record<string, string> {
+  const labels: Record<string, string> = {}
+  row.defenseTeacherIds.forEach((id, i) => {
+    const name = row.defenseTeacherNames[i]
+    if (name) labels[String(id)] = name
+  })
+  return labels
+}
+
 function startArrange(): void {
   editMode.value = false
   form.value = {
@@ -118,14 +158,16 @@ function startArrange(): void {
     reviewerId: null,
     reviewerLabel: undefined,
     panelIds: [],
-    panelLabel: undefined,
+    panelLabels: undefined,
   }
+  void loadLocationOptions()
   showForm.value = true
 }
 
 /** 修改安排：进入时回填已有数据（F-R-31） */
 function startEdit(row: DefenseResponse): void {
   editMode.value = true
+  void loadLocationOptions()
   form.value = {
     studentId: row.studentId,
     groupName: row.groupName ?? '',
@@ -134,7 +176,7 @@ function startEdit(row: DefenseResponse): void {
     reviewerId: row.reviewerId,
     reviewerLabel: row.reviewerName ?? undefined,
     panelIds: row.defenseTeacherIds,
-    panelLabel: undefined,
+    panelLabels: panelLabelsOf(row),
   }
   showForm.value = true
 }
@@ -278,7 +320,13 @@ const columns = computed<DataTableColumns<DefenseResponse>>(() => [
               <NDatePicker v-model:value="form.defenseTs" type="datetime" style="width: 100%" />
             </NFormItem>
             <NFormItem :label="$t('graduation.dept.location')" style="width: 220px">
-              <NInput v-model:value="form.location" />
+              <NSelect
+                v-model:value="form.location"
+                :options="locationOptions"
+                :placeholder="$t('graduation.dept.locationPlaceholder')"
+                filterable
+                tag
+              />
             </NFormItem>
           </NSpace>
           <NSpace :size="12" wrap>
@@ -300,7 +348,7 @@ const columns = computed<DataTableColumns<DefenseResponse>>(() => [
                 :fetch-page="fetchTeachersPage"
                 :label-of="panelLabelOf"
                 :value-of="teacherValueOf"
-                :initial-label="form.panelLabel"
+                :initial-labels="form.panelLabels"
                 multiple
                 filterable
                 @update:model-value="onPanelChange"

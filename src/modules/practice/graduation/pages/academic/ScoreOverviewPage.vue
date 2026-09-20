@@ -16,6 +16,8 @@ import {
 import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import CampaignContextSelector from '../../components/CampaignContextSelector.vue'
 import { fetchScores, exportScores, fetchDashboard } from '../../api'
+import { fetchColleges } from '@/modules/college/api'
+import { fetchAllPages } from '@/shared/pagination'
 import { scoreStatusTagType, formatDateTime } from '@/modules/practice/utils'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import { useLoading } from '@/shared/composables/useLoading'
@@ -30,36 +32,44 @@ const campaignId = ref<number | null>(null)
 const list = ref<ScoreResponse[]>([])
 const { loading, withLoading } = useLoading()
 const { loading: exporting, withLoading: withExporting } = useLoading()
-const collegeFilter = ref<string | null>(null)
+/** 院系筛选按 collegeId 过滤（院系名可能重名，且院系字典是权威来源） */
+const collegeFilter = ref<number | null>(null)
+const colleges = ref<{ id: number; name: string }[]>([])
 
 /** 学号/院系来自看板行合并（ScoreResponse 不含学号/院系） */
-const studentMeta = ref(new Map<number, { studentNo: string; collegeName: string }>())
+const studentMeta = ref(
+  new Map<number, { studentNo: string; collegeId: number; collegeName: string }>(),
+)
 
-const collegeOptions = computed(() => {
-  const names = new Set<string>()
-  for (const meta of studentMeta.value.values()) names.add(meta.collegeName)
-  return [...names].map((n) => ({ label: n, value: n }))
-})
+// 院系下拉取院系字典本身，不从看板行里 Set 出来——
+// 后者只能覆盖看板返回的那些学生，选项会随数据残缺而缺项、随数据变化而漂移
+const collegeOptions = computed(() => colleges.value.map((c) => ({ label: c.name, value: c.id })))
 
 const filteredRows = computed(() => {
-  if (!collegeFilter.value) return list.value
+  if (collegeFilter.value == null) return list.value
   return list.value.filter(
-    (s) => studentMeta.value.get(s.studentId)?.collegeName === collegeFilter.value,
+    (s) => studentMeta.value.get(s.studentId)?.collegeId === collegeFilter.value,
   )
 })
 
 function loadData(): Promise<void> {
   return withLoading(async () => {
-    if (campaignId.value == null) return
+    const id = campaignId.value
+    if (id == null) return
     try {
-      const [sRes, dRes] = await Promise.all([
-        fetchScores(campaignId.value),
-        fetchDashboard(campaignId.value, { page: 1, pageSize: 100 }),
+      // 看板必须拉全量:只取前 100 行会让后段学生的学号/院系显示成「-」
+      const [sRes, allRows] = await Promise.all([
+        fetchScores(id),
+        fetchAllPages((page, pageSize) => fetchDashboard(id, { page, pageSize })),
       ])
       list.value = sRes.data ?? []
-      const meta = new Map<number, { studentNo: string; collegeName: string }>()
-      for (const r of dRes.data.records) {
-        meta.set(r.studentId, { studentNo: r.studentNo, collegeName: r.collegeName })
+      const meta = new Map<number, { studentNo: string; collegeId: number; collegeName: string }>()
+      for (const r of allRows) {
+        meta.set(r.studentId, {
+          studentNo: r.studentNo,
+          collegeId: r.collegeId,
+          collegeName: r.collegeName,
+        })
       }
       studentMeta.value = meta
     } catch (e) {
@@ -74,7 +84,14 @@ function onCampaignChange(id: number | null): void {
   list.value = []
   studentMeta.value = new Map()
   collegeFilter.value = null
-  if (id != null) void loadData()
+  if (id != null) {
+    void loadData()
+    if (!colleges.value.length) {
+      void fetchColleges().then((res) => {
+        colleges.value = (res.data ?? []).map((c) => ({ id: c.id, name: c.collegeName }))
+      })
+    }
+  }
 }
 
 function handleExport(): Promise<void> {

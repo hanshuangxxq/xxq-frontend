@@ -248,6 +248,7 @@
     "groupName": "Group name",
     "defenseTimeField": "Defense time",
     "location": "Location",
+    "locationPlaceholder": "Select or enter a room",
     "reviewer": "Reviewer",
     "defenseTeacherGroup": "Defense panel (multi)",
     "notDuplicatePassedArrange": "Duplicate check not passed; cannot arrange",
