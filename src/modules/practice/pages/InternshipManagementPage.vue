@@ -114,11 +114,13 @@ function projectStatusCodeOf(status: string): string {
 const internships = ref<InternshipResponse[]>([])
 const { pagination: intPagination, reset: resetInt } = useRemotePagination(loadInternships)
 const filterIntStatus = ref<InternshipStatusCode | null>(null)
+const filterIntSupervisorId = ref<number | null>(null)
 
 async function loadInternships() {
   try {
     const res = await fetchInternships({
       status: filterIntStatus.value ?? undefined,
+      supervisorId: filterIntSupervisorId.value ?? undefined,
       page: intPagination.page,
       pageSize: intPagination.pageSize,
     })
@@ -132,6 +134,20 @@ async function loadInternships() {
 function handleIntFilterChange() {
   resetInt()
   loadInternships()
+}
+
+/** 重置：清空两个筛选条件后回到第一页重新查询 */
+function handleIntReset() {
+  filterIntStatus.value = null
+  filterIntSupervisorId.value = null
+  handleIntFilterChange()
+}
+
+// 清空时 NSelect 给 null/undefined，统一归一成 null 再查询
+function onIntSupervisorFilterChange(v: string | number | null | Array<string | number>): void {
+  const picked = Array.isArray(v) ? v[0] : v
+  filterIntSupervisorId.value = picked == null ? null : Number(picked)
+  handleIntFilterChange()
 }
 
 async function handleIntStatusChange(row: InternshipResponse, code: string) {
@@ -160,6 +176,7 @@ interface IntForm {
   title: string
   company: string
   description: string
+  supervisorId: number | null
   startTs: number | null
   endTs: number | null
   capacity: number | null
@@ -169,15 +186,32 @@ const intFormMode = ref<'create' | 'edit'>('create')
 const editingIntId = ref<number | null>(null)
 const { loading: savingInt, withLoading: withSavingInt } = useLoading()
 const intForm = ref<IntForm>(emptyIntForm())
+/** 负责教师编辑回显文案（选中项不在已加载页时 PagedSelect 兜底显示） */
+const intSupervisorLabel = ref<string | undefined>(undefined)
+
+const intSupervisorLabelOf = (tch: Teacher) => `${tch.name} (${tch.title})`
+
+function onIntSupervisorChange(v: string | number | null | Array<string | number>): void {
+  intForm.value.supervisorId = v as number | null
+}
 
 function emptyIntForm(): IntForm {
-  return { title: '', company: '', description: '', startTs: null, endTs: null, capacity: null }
+  return {
+    title: '',
+    company: '',
+    description: '',
+    supervisorId: null,
+    startTs: null,
+    endTs: null,
+    capacity: null,
+  }
 }
 
 function startCreateInt() {
   intFormMode.value = 'create'
   editingIntId.value = null
   intForm.value = emptyIntForm()
+  intSupervisorLabel.value = undefined
   showIntForm.value = true
 }
 
@@ -188,10 +222,12 @@ function startEditInt(row: InternshipResponse) {
     title: row.title,
     company: row.company ?? '',
     description: row.description ?? '',
+    supervisorId: row.supervisorId ?? null,
     startTs: row.startTime ? new Date(row.startTime).getTime() : null,
     endTs: row.endTime ? new Date(row.endTime).getTime() : null,
     capacity: row.capacity,
   }
+  intSupervisorLabel.value = row.supervisorName ?? undefined
   showIntForm.value = true
 }
 
@@ -204,6 +240,8 @@ function handleSaveInt() {
     title: f.title.trim(),
     company: f.company || undefined,
     description: f.description || undefined,
+    // 后端语义：null 表示「不改动」——新建时落到创建者，编辑时保留原负责人
+    supervisorId: f.supervisorId,
     startTime: f.startTs != null ? tsToIso(f.startTs) : null,
     endTime: f.endTs != null ? tsToIso(f.endTs) : null,
     capacity: f.capacity,
@@ -217,6 +255,7 @@ function handleSaveInt() {
           title: body.title,
           company: body.company,
           description: body.description,
+          supervisorId: body.supervisorId,
           startTime: body.startTime,
           endTime: body.endTime,
           capacity: body.capacity,
@@ -885,10 +924,21 @@ onMounted(() => {
                   style="width: 150px"
                   @update:value="handleIntFilterChange"
                 />
+                <PagedSelect
+                  :model-value="filterIntSupervisorId"
+                  :fetch-page="fetchTeachersPage"
+                  :label-of="intSupervisorLabelOf"
+                  :value-of="teacherValueOf"
+                  :placeholder="$t('practice.internship.supervisor')"
+                  clearable
+                  filterable
+                  class="int-filter-supervisor"
+                  @update:model-value="onIntSupervisorFilterChange"
+                />
                 <NButton type="primary" @click="loadInternships">{{
                   $t('practice.common.query')
                 }}</NButton>
-                <NButton @click="handleIntFilterChange">{{ $t('practice.common.reset') }}</NButton>
+                <NButton @click="handleIntReset">{{ $t('practice.common.reset') }}</NButton>
                 <NButton v-if="isDepartment" type="primary" @click="startCreateInt">
                   {{ $t('practice.internship.addInternship') }}
                 </NButton>
@@ -1005,6 +1055,17 @@ onMounted(() => {
         <NForm :model="intForm" label-placement="top">
           <NFormItem :label="$t('practice.internship.internshipTitle')" required>
             <NInput v-model:value="intForm.title" />
+          </NFormItem>
+          <NFormItem :label="$t('practice.internship.supervisor')">
+            <PagedSelect
+              :model-value="intForm.supervisorId"
+              :fetch-page="fetchTeachersPage"
+              :label-of="intSupervisorLabelOf"
+              :value-of="teacherValueOf"
+              :initial-label="intSupervisorLabel"
+              filterable
+              @update:model-value="onIntSupervisorChange"
+            />
           </NFormItem>
           <NSpace :size="12" wrap>
             <NFormItem :label="$t('practice.common.company')" style="width: 240px">

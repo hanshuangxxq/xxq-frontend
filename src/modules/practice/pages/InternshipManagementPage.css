@@ -1,3 +1,8 @@
 .practice-page {
   padding: 24px;
 }
+
+/* 负责教师筛选用 PagedSelect（根节点是 NSelect），与相邻状态下拉等宽 */
+.int-filter-supervisor {
+  width: 200px;
+}
