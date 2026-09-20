@@ -16,6 +16,7 @@ import {
   NForm,
   NFormItem,
   NInput,
+  NSelect,
   NPopconfirm,
   useMessage,
   type DataTableColumns,
@@ -95,6 +96,17 @@ const showForm = ref(false)
 const formMode = ref<'create' | 'edit'>('create')
 const editingId = ref<number | null>(null)
 const { loading: saving, withLoading: withSaving } = useLoading()
+
+/**
+ * 课程类型是后端 CurseEnum 的 4 个固定值，且以 @JsonValue 序列化成中文描述，
+ * 故 option 的 value 必须与中文描述逐字一致 —— 手输「必修课」之类会被后端反序列化拒绝。
+ */
+const courseTypeOptions = computed(() => [
+  { label: t('course-management.typeRequired'), value: '必修' },
+  { label: t('course-management.typeElective'), value: '选修' },
+  { label: t('course-management.typePublic'), value: '公选' },
+  { label: t('course-management.typePractice'), value: '实践' },
+])
 
 const emptyForm = (): CourseForm => ({
   courseName: '',
@@ -220,7 +232,11 @@ onMounted(loadData)
           />
         </NFormItem>
         <NFormItem :label="$t('course-management.courseType')">
-          <NInput v-model:value="form.courseType" />
+          <NSelect
+            v-model:value="form.courseType"
+            :options="courseTypeOptions"
+            :placeholder="$t('course-management.courseType')"
+          />
         </NFormItem>
       </NForm>
       <template #footer>
