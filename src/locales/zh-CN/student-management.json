@@ -5,6 +5,8 @@
   "className": "班级",
   "grade": "年级",
   "major": "专业",
+  "majorUnset": "未设置",
+  "majorFollowsClass": "专业随班级，需调整请在班级管理中修改该班专业",
   "classId": "班级ID",
   "enrollmentYear": "入学年份",
   "unassigned": "未分班",

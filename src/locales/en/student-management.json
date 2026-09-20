@@ -5,6 +5,8 @@
   "className": "Class",
   "grade": "Grade",
   "major": "Major",
+  "majorUnset": "Not set",
+  "majorFollowsClass": "The major follows the class; change it in Class Management.",
   "classId": "Class ID",
   "enrollmentYear": "Enrollment Year",
   "unassigned": "Unassigned",
