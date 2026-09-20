@@ -6,6 +6,11 @@
   margin-bottom: 4px;
 }
 
+/* 班级筛选用 PagedSelect（根节点是 NSelect），与相邻筛选控件等宽 */
+.sm-filter-class {
+  width: 140px;
+}
+
 .sm-form-modal {
   width: 420px;
   max-width: 85vw;

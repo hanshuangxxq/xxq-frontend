@@ -158,26 +158,32 @@ const fetchClassNamesPage = (page: number, pageSize: number) => fetchClassNames(
 
 /**
  * 班级下拉只列已挂专业的班：选到未挂专业的班会被服务端 400 拒绝，
- * 且该生会因链断而失去专业与院系。累积全部班级（含被滤掉的）供按名反查。
+ * 且该生会因链断而失去专业与院系。过滤由服务端完成（hasMajor），
+ * 保证 total/pages 与实际可选条数一致；顺带累积本次所见的班供按名反查。
  */
 function fetchSelectableClasses(page: number, pageSize: number) {
-  return fetchClassNamesPage(page, pageSize).then((res) => {
+  return fetchClassNames(page, pageSize, true).then((res) => {
     for (const c of res.data.records) classByName.value[c.className] = c
-    return {
-      ...res,
-      data: {
-        ...res.data,
-        records: res.data.records.filter((c: ClassName) => c.majorId != null),
-      },
-    }
+    return res
   })
 }
 
 const classNameLabelOf = (c: ClassName) => c.className
 const classNameValueOf = (c: ClassName) => c.className
 
+/** 专业筛选下拉：选项取自已加载的专业字典，value 用专业名（服务端 major 参数按名模糊匹配） */
+const majorFilterOptions = computed(() =>
+  majors.value.map((m) => ({ label: m.majorName, value: m.majorName })),
+)
+
 function onClassNameChange(v: string | number | null | Array<string | number>) {
   form.value.className = (v as string) ?? ''
+}
+
+// 筛选栏的班级值可能是 number，而查询参数要求名称字符串
+function onFilterClassNameChange(v: string | number | null | Array<string | number>) {
+  const picked = Array.isArray(v) ? v[0] : v
+  filterClassName.value = picked == null ? '' : String(picked)
 }
 
 /** 选了班级则按所选班级推导专业，未改班级时回退该生当前专业 */
@@ -262,17 +268,23 @@ onMounted(() => {
             clearable
             style="width: 140px"
           />
-          <NInput
-            v-model:value="filterClassName"
+          <PagedSelect
+            :model-value="filterClassName || null"
+            :fetch-page="fetchClassNamesPage"
+            :label-of="classNameLabelOf"
+            :value-of="classNameValueOf"
             :placeholder="$t('student-management.className')"
             clearable
-            style="width: 140px"
+            class="sm-filter-class"
+            @update:model-value="onFilterClassNameChange"
           />
-          <NInput
+          <NSelect
             v-model:value="filterMajor"
             :placeholder="$t('student-management.major')"
+            :options="majorFilterOptions"
             :disabled="filterUnassigned !== null"
             clearable
+            filterable
             style="width: 160px"
           />
           <NSelect
