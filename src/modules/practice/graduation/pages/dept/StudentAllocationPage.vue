@@ -24,6 +24,7 @@ import {
   reassignStudent,
 } from '../../api'
 import { fetchTeachers } from '@/modules/curriculum/api'
+import { fetchAllPages } from '@/shared/pagination'
 import PagedSelect from '@/shared/components/PagedSelect.vue'
 import { formatDateTime } from '@/modules/practice/utils'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
@@ -79,13 +80,16 @@ const supervisorCapacity = ref<number | null>(null)
 
 function loadData(): Promise<void> {
   return withLoading(async () => {
-    if (campaignId.value == null) return
+    const id = campaignId.value
+    if (id == null) return
     try {
-      const [dRes, uRes] = await Promise.all([
-        fetchDashboard(campaignId.value, { page: 1, pageSize: 100 }),
-        fetchUnassignedStudentIds(campaignId.value),
+      // 看板必须拉全量：unassigned 接口返回的是全量 id 列表，只拿前 100 行看板去
+      // 过滤会让未分配清单静默丢人，教师「已占/上限」统计也会偏小
+      const [allRows, uRes] = await Promise.all([
+        fetchAllPages((page, pageSize) => fetchDashboard(id, { page, pageSize })),
+        fetchUnassignedStudentIds(id),
       ])
-      rows.value = dRes.data.records
+      rows.value = allRows
       unassignedIds.value = uRes.data ?? []
     } catch (e) {
       if (!isReportedError(e))

@@ -18,6 +18,7 @@ import ForbiddenState from '@/shared/components/ForbiddenState.vue'
 import CampaignContextSelector from '../../components/CampaignContextSelector.vue'
 import { fetchAssignmentOverview, fetchUnassignedStudentIds, fetchDashboard } from '../../api'
 import { fetchColleges } from '@/modules/college/api'
+import { fetchAllPages } from '@/shared/pagination'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import { useLoading } from '@/shared/composables/useLoading'
 import { isReportedError } from '@/shared/api'
@@ -62,18 +63,20 @@ const unassignedColumns = computed<DataTableColumns<DashboardRow>>(() => [
 
 function loadData(): Promise<void> {
   return withLoading(async () => {
-    if (campaignId.value == null) return
+    const id = campaignId.value
+    if (id == null) return
     try {
-      // 未分配接口只返回学生 id,需拉看板行补全姓名/班级/院系等展示字段
-      const [oRes, uRes, dRes] = await Promise.all([
-        fetchAssignmentOverview(campaignId.value),
-        fetchUnassignedStudentIds(campaignId.value, collegeId.value),
-        fetchDashboard(campaignId.value, { page: 1, pageSize: 100 }),
+      // 未分配接口只返回学生 id,需拉看板行补全姓名/班级/院系等展示字段。
+      // 看板必须拉全量:否则清单只含前 100 名里命中的学生,与「数字」对不上
+      const [oRes, uRes, allRows] = await Promise.all([
+        fetchAssignmentOverview(id),
+        fetchUnassignedStudentIds(id, collegeId.value),
+        fetchAllPages((page, pageSize) => fetchDashboard(id, { page, pageSize })),
       ])
       rows.value = oRes.data ?? []
       unassignedIds.value = uRes.data ?? []
       unassignedCount.value = unassignedIds.value.length
-      dashboardRows.value = dRes.data.records
+      dashboardRows.value = allRows
     } catch (e) {
       if (!isReportedError(e))
         message.error((e as Error).message || t('graduation.common.loadFail'))
