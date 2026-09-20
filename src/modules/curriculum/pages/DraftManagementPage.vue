@@ -3,7 +3,7 @@
  * 排课草稿管理（院系）。院系按「班级 + 多条课程/教师/周次组合」批量提交排课草稿，
  * 并查看草稿、按班级或按条清理；草稿是正式排课（teach-info）前的暂存，提交后由后端转正式授课安排。
  */
-import { ref, h } from 'vue'
+import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
@@ -31,7 +31,8 @@ import {
   fetchCurrentSemester,
 } from '../api'
 import { fetchClassNames } from '@/modules/class-names/api'
-import { fetchColleges } from '@/modules/college/api'
+import { indexMajors, classNameLabel } from '@/modules/class-names/chain'
+import { fetchMajors } from '@/modules/majors/api'
 import { fetchCourses } from '@/modules/course/api'
 import { isPublicCourse } from '@/modules/course/utils'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
@@ -40,7 +41,7 @@ import { isReportedError } from '@/shared/api'
 import PagedSelect from '@/shared/components/PagedSelect.vue'
 import type { DraftItem, DraftClassSummary, Semester } from '../types'
 import type { ClassName } from '@/modules/class-names/types'
-import type { College } from '@/modules/college/types'
+import type { Major } from '@/modules/majors/types'
 import type { Course } from '@/modules/course/types'
 import type { Teacher } from '@/modules/curriculum/types'
 
@@ -57,26 +58,23 @@ const { loading, withLoading } = useLoading()
 const drafts = ref<DraftItem[]>([])
 const summary = ref<DraftClassSummary | null>(null)
 
-const colleges = ref<College[]>([])
+const majors = ref<Major[]>([])
 
-async function loadColleges() {
+// 专业 id -> 专业；班级只有 majorId，展示名在本地映射，不逐行发请求
+const majorById = computed(() => indexMajors(majors.value))
+
+async function loadMajors() {
   try {
-    const res = await fetchColleges()
-    colleges.value = res.data
+    const res = await fetchMajors()
+    majors.value = res.data
   } catch {
-    colleges.value = []
+    majors.value = []
   }
 }
 
-/** 班级下拉展示：班级名（院系名），院系缺失时仅班级名 */
-function classNameLabel(c: ClassName): string {
-  const name =
-    c.collegeId != null ? colleges.value.find((x) => x.id === c.collegeId)?.collegeName : null
-  return name ? `${c.className} (${name})` : c.className
-}
-
 const fetchClassNamesPage = (page: number, pageSize: number) => fetchClassNames(page, pageSize)
-const classNameLabelOf = (c: ClassName) => classNameLabel(c)
+/** 班级下拉展示：班级名（专业名），未挂专业时仅班级名 */
+const classNameLabelOf = (c: ClassName) => classNameLabel(c, majorById.value)
 const classNameValueOf = (c: ClassName) => c.className
 
 const selectedClasses = ref<string[]>([])
@@ -285,7 +283,7 @@ async function handleDeleteSingle(row: DraftItem) {
 // 首屏加载在 setup 内同步发起(而非等 onMounted):保证首帧渲染时 loading 已为 true,
 // 空状态不会在「首帧闪现 → 加载开始消失 → 加载结束复现」之间抖动造成闪屏
 void loadData()
-void loadColleges()
+void loadMajors()
 </script>
 
 <template>

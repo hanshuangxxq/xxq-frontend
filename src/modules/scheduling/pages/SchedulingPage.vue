@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** 排课页（教务）：触发求解器自动排课并按 3s 轮询结果，维护授课草稿（新增/删除/按班清空），预览待排输入数据 */
-import { ref, h, onUnmounted } from 'vue'
+import { ref, computed, h, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NCard,
@@ -41,7 +41,8 @@ import type {
   Teacher,
 } from '@/modules/curriculum/types'
 import { fetchClassNames } from '@/modules/class-names/api'
-import { fetchColleges } from '@/modules/college/api'
+import { indexMajors, classNameLabel } from '@/modules/class-names/chain'
+import { fetchMajors } from '@/modules/majors/api'
 import { fetchCourses } from '@/modules/course/api'
 import { isPublicCourse } from '@/modules/course/utils'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
@@ -49,7 +50,7 @@ import { useLoading } from '@/shared/composables/useLoading'
 import { BusinessError, HttpError, isReportedError } from '@/shared/api'
 import PagedSelect from '@/shared/components/PagedSelect.vue'
 import type { ClassName } from '@/modules/class-names/types'
-import type { College } from '@/modules/college/types'
+import type { Major } from '@/modules/majors/types'
 import type { Course } from '@/modules/course/types'
 import type { ScheduledLesson } from '../types'
 
@@ -377,26 +378,23 @@ function toggleData() {
 }
 
 // ---- Draft management ----
-const colleges = ref<College[]>([])
+const majors = ref<Major[]>([])
 
-async function loadColleges() {
+// 专业 id -> 专业；班级只有 majorId，展示名在本地映射，不逐行发请求
+const majorById = computed(() => indexMajors(majors.value))
+
+async function loadMajors() {
   try {
-    const res = await fetchColleges()
-    colleges.value = res.data
+    const res = await fetchMajors()
+    majors.value = res.data
   } catch {
-    colleges.value = []
+    majors.value = []
   }
 }
 
-/** 班级下拉展示：班级名（院系名），院系缺失时仅班级名 */
-function classNameLabel(c: ClassName): string {
-  const name =
-    c.collegeId != null ? colleges.value.find((x) => x.id === c.collegeId)?.collegeName : null
-  return name ? `${c.className} (${name})` : c.className
-}
-
 const fetchClassNamesPage = (page: number, pageSize: number) => fetchClassNames(page, pageSize)
-const classNameLabelOf = (c: ClassName) => classNameLabel(c)
+/** 班级下拉展示：班级名（专业名），未挂专业时仅班级名 */
+const classNameLabelOf = (c: ClassName) => classNameLabel(c, majorById.value)
 const classNameValueOf = (c: ClassName) => c.className
 
 function onSelectedClassesChange(v: string | number | null | Array<string | number>) {
@@ -449,7 +447,7 @@ function toggleDrafts() {
   if (showDrafts.value) {
     if (drafts.value.length === 0) loadDraftData()
     if (semesterOptions.value.length === 0) loadSemesters()
-    if (colleges.value.length === 0) loadColleges()
+    if (majors.value.length === 0) loadMajors()
   }
 }
 
