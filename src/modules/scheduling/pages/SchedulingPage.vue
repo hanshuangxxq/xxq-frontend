@@ -44,7 +44,6 @@ import { fetchClassNames } from '@/modules/class-names/api'
 import { indexMajors, classNameLabel } from '@/modules/class-names/chain'
 import { fetchMajors } from '@/modules/majors/api'
 import { fetchCourses } from '@/modules/course/api'
-import { isPublicCourse } from '@/modules/course/utils'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import { useLoading } from '@/shared/composables/useLoading'
 import { BusinessError, HttpError, isReportedError } from '@/shared/api'
@@ -91,12 +90,9 @@ const entries = ref<DraftEntry[]>([
 ])
 const { loading: submitting, withLoading: withSubmitting } = useLoading()
 
-/** 排课草稿仅用常规课（排除公选课）；端点不支持按 source 过滤，故按页客户端过滤 */
+/** 排课草稿仅用常规课（source=MANUAL，排除合成的公选课）：公选课 id 实为 campaignId，选了必然校验失败 */
 function fetchRegularCourses(page: number, pageSize: number) {
-  return fetchCourses(page, pageSize).then((res) => ({
-    ...res,
-    data: { ...res.data, records: res.data.records.filter((c) => !isPublicCourse(c)) },
-  }))
+  return fetchCourses(page, pageSize, 'MANUAL')
 }
 
 // ---- Semester ----

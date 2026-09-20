@@ -53,12 +53,9 @@ const message = useMessage()
 
 const semesterOptions = ref<Array<{ label: string; value: number }>>([])
 
-/** 建补考/重修考试仅支持常规课（公选课无 course.id）；端点不支持按 source 过滤，故按页客户端过滤 */
+/** 建补考/重修考试仅支持常规课（source=MANUAL）：公选课没有真实 course.id，选了必然校验失败 */
 function fetchRegularCourses(page: number, pageSize: number) {
-  return fetchCourses(page, pageSize).then((res) => ({
-    ...res,
-    data: { ...res.data, records: res.data.records.filter((c) => !isPublicCourse(c)) },
-  }))
+  return fetchCourses(page, pageSize, 'MANUAL')
 }
 
 // ---- 候选名单 ----

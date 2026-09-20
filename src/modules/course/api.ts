@@ -2,14 +2,23 @@ import { api } from '@/shared/api'
 import type { PageResult, Result } from '@/shared/types'
 import type { Course, CourseForm, CourseSource } from './types'
 
-/** 分页查询课程列表 GET /courses,返回 PageResult;常规课与公选课同表混排,公选课以 source 标识 */
+/**
+ * 分页查询课程列表 GET /courses,返回 PageResult;常规课与公选课同表混排,公选课以 source 标识。
+ *
+ * 传 `source: 'MANUAL'` 只返回 course 表常规课,不追加合成的公选课条目 ——
+ * 任何会把 course.id 当外键写入的场景(排课草稿/补考考试/时段预留)都必须用它:
+ * 公选课 id 实为 campaignId,选了必然校验失败。过滤交给服务端做,total/pages
+ * 才与实际可选条数一致;客户端按页过滤会让页码与内容脱节。
+ */
 export function fetchCourses(
   page?: number,
   pageSize?: number,
+  source?: CourseSource,
 ): Promise<Result<PageResult<Course>>> {
   const params = new URLSearchParams()
   if (page != null) params.set('page', String(page))
   if (pageSize != null) params.set('pageSize', String(pageSize))
+  if (source) params.set('source', source)
   const qs = params.toString()
   return api.get(`/courses${qs ? `?${qs}` : ''}`)
 }
