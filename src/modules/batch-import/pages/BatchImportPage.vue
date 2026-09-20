@@ -21,6 +21,14 @@ import { batchImportUsers } from '../api'
 import { isReportedError } from '@/shared/api'
 import { useLoading } from '@/shared/composables/useLoading'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
+import PagedSelect from '@/shared/components/PagedSelect.vue'
+import { fetchGrades } from '@/modules/grades/api'
+import { fetchColleges } from '@/modules/college/api'
+import { fetchMajors } from '@/modules/majors/api'
+import { fetchClassNames } from '@/modules/class-names/api'
+import { classNameLabel, indexMajors, type MajorById } from '@/modules/class-names/chain'
+import type { ClassName } from '@/modules/class-names/types'
+import type { PageResult, Result } from '@/shared/types'
 import type { BatchImportUser, BatchImportDetail } from '../types'
 
 const { t } = useI18n()
@@ -37,6 +45,74 @@ const genderOptions = computed(() => [
   { label: t('batch-import.female'), value: '女' },
   { label: t('batch-import.unknown'), value: '未知' },
 ])
+
+// 年级 / 院系是「不分页的全量字典」,一次拉完直接喂 NSelect
+const gradeOptions = ref<Array<{ label: string; value: string }>>([])
+const collegeOptions = ref<Array<{ label: string; value: string }>>([])
+// 班级是分页接口且总量大,用 PagedSelect 小窗口翻页;文案拼上专业名做同名区分
+const majorById = ref<MajorById>(new Map())
+
+/**
+ * 班级下拉的 PagedSelect 数据源,只列已挂专业的班。
+ * 后端要求学生的班级必须已挂专业,否则该行导入失败(学籍归属链 §4);
+ * 提前过滤是为了让用户根本选不到必错的选项。过滤由服务端完成(hasMajor),
+ * 保证 total/pages 与实际可选条数一致 —— 客户端按页过滤会让翻页出现空白页。
+ */
+function fetchSelectableClassesPage(
+  page: number,
+  pageSize: number,
+): Promise<Result<PageResult<ClassName>>> {
+  return fetchClassNames(page, pageSize, true)
+}
+
+// 班级表无唯一约束,同名班靠专业名区分
+function classNameLabelOf(cls: ClassName): string {
+  return classNameLabel(cls, majorById.value)
+}
+
+// 后端 UserImportItem.department / className 收的都是「名称」而非 id
+function classNameValueOf(cls: ClassName): string {
+  return cls.className
+}
+
+// 切换用户类型后「班级/院系」语义随之改变(学生填班级名、教师填院系名),
+// 旧值必须清掉,否则会把班级名当院系名提交
+function onUserTypeChange(row: RowData, value: string | number | null): void {
+  const next = value === 'teacher' ? 'teacher' : 'student'
+  if (row.userType !== next) row.classOrCollege = ''
+  row.userType = next
+}
+
+// PagedSelect 的 update:modelValue 是含多选数组的宽联合,本页只做单选,数组分支不会出现;
+// 值可能是 number,而本页对外始终传名称字符串
+function onClassOrCollegeChange(
+  row: RowData,
+  value: string | number | Array<string | number> | null,
+): void {
+  const picked = Array.isArray(value) ? value[0] : value
+  row.classOrCollege = picked == null ? '' : String(picked)
+}
+
+async function loadOptions(): Promise<void> {
+  // 各字典互不依赖,单个失败不影响其余下拉(allSettled)
+  const [grades, colleges, majors] = await Promise.allSettled([
+    fetchGrades(),
+    fetchColleges(),
+    fetchMajors(),
+  ])
+  if (grades.status === 'fulfilled') {
+    gradeOptions.value = grades.value.data.map((g) => ({ label: g.name, value: g.name }))
+  }
+  if (colleges.status === 'fulfilled') {
+    collegeOptions.value = colleges.value.data.map((c) => ({
+      label: c.collegeName,
+      value: c.collegeName,
+    }))
+  }
+  if (majors.status === 'fulfilled') {
+    majorById.value = indexMajors(majors.value.data)
+  }
+}
 
 interface RowData {
   key: number
@@ -158,11 +234,8 @@ function getIdentifierPlaceholder(userType: 'student' | 'teacher'): string {
   return userType === 'student' ? t('batch-import.identifierStudent') : t('batch-import.identifierTeacher')
 }
 
-function getClassOrCollegePlaceholder(userType: 'student' | 'teacher'): string {
-  return userType === 'student'
-    ? t('batch-import.classNameStudent')
-    : t('batch-import.collegeTeacher')
-}
+// 首屏同步发起(而非等 onMounted):下拉数据要先于用户开始填表就绪
+void loadOptions()
 </script>
 
 <template>
@@ -205,20 +278,53 @@ function getClassOrCollegePlaceholder(userType: 'student' | 'teacher'): string {
                   <NInput v-model:value="row.password" type="password" size="small" :placeholder="$t('batch-import.password')" />
                 </td>
                 <td class="bi-col-type">
-                  <NSelect v-model:value="row.userType" :options="userTypeOptions" size="small" />
+                  <NSelect
+                    :value="row.userType"
+                    :options="userTypeOptions"
+                    size="small"
+                    @update:value="(v) => onUserTypeChange(row, v)"
+                  />
                 </td>
                 <td class="bi-col-identifier">
                   <NInput v-model:value="row.identifier" size="small" :placeholder="getIdentifierPlaceholder(row.userType)" />
                 </td>
                 <td class="bi-col-class">
-                  <NInput v-if="row.userType === 'student'" v-model:value="row.gradeName" size="small" :placeholder="$t('batch-import.grade')" />
+                  <NSelect
+                    v-if="row.userType === 'student'"
+                    v-model:value="row.gradeName"
+                    :options="gradeOptions"
+                    size="small"
+                    clearable
+                    :placeholder="$t('batch-import.grade')"
+                  />
                   <span v-else class="bi-na">—</span>
                 </td>
                 <td class="bi-col-gender">
                   <NSelect v-model:value="row.gender" :options="genderOptions" size="small" />
                 </td>
                 <td class="bi-col-department">
-                  <NInput v-model:value="row.classOrCollege" size="small" :placeholder="getClassOrCollegePlaceholder(row.userType)" />
+                  <!-- 学生选班级（仅列已挂专业的班）；教师选院系。二者都传名称给后端 -->
+                  <PagedSelect
+                    v-if="row.userType === 'student'"
+                    :model-value="row.classOrCollege || null"
+                    :fetch-page="fetchSelectableClassesPage"
+                    :label-of="classNameLabelOf"
+                    :value-of="classNameValueOf"
+                    size="small"
+                    clearable
+                    filterable
+                    :placeholder="$t('batch-import.classNameStudent')"
+                    @update:model-value="(v) => onClassOrCollegeChange(row, v)"
+                  />
+                  <NSelect
+                    v-else
+                    v-model:value="row.classOrCollege"
+                    :options="collegeOptions"
+                    size="small"
+                    clearable
+                    filterable
+                    :placeholder="$t('batch-import.collegeTeacher')"
+                  />
                 </td>
                 <td class="bi-col-action">
                   <NButton size="tiny" :disabled="rows.length <= 1" @click="removeRow(row.key)">

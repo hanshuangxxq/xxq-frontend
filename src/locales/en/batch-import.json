@@ -16,7 +16,7 @@
   "classOrCollege": "Class / College",
   "classNameStudent": "Class name",
   "collegeTeacher": "College name",
-  "chainHint": "Students enter a class name (the class must have a major assigned); major and college are derived from the class. Teachers enter a college name.",
+  "chainHint": "Students pick a class from the list (only classes with a major assigned are shown); major and college are derived from the class. Teachers pick a college from the list.",
   "gender": "Gender",
   "male": "Male",
   "female": "Female",

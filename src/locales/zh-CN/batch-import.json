@@ -16,7 +16,7 @@
   "classOrCollege": "班级/院系",
   "classNameStudent": "班级名称",
   "collegeTeacher": "院系名称",
-  "chainHint": "学生填班级名称（该班须已指定专业），专业与院系由班级推导；教师填院系名称。",
+  "chainHint": "学生从下拉中选择班级（只列出已指定专业的班级），专业与院系由班级推导；教师从下拉中选择院系。",
   "gender": "性别",
   "male": "男",
   "female": "女",
