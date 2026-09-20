@@ -45,12 +45,12 @@ export interface RefreshResult {
   refreshToken: string
 }
 
-/** 班级信息 */
+/** 班级信息（个人资料里的嵌套对象，字段与班级实体一致） */
 export interface ClassNameInfo {
   id: number
   className: string
-  /** 所属院系 id（-> college.id） */
-  collegeId: number | null
+  /** 所属专业 id（-> major.id）；院系经 major.collegeId 两跳推导 */
+  majorId: number | null
 }
 
 /** 用户完整信息 */
