@@ -2,13 +2,13 @@
 import { useRouter } from 'vue-router'
 import { NButton } from 'naive-ui'
 import ForbiddenState from '@/shared/components/ForbiddenState.vue'
-import { getLastVisitedPath } from '@/shared/utils/lastVisitedPage'
+import { goBackOrFallback } from '@/shared/utils/lastVisitedPage'
 
 const router = useRouter()
 
-/** 返回进入 403 之前访问的页面;无记录(如新开标签页直接输入地址)时回首页兜底 */
+/** 返回上一页:优先回退浏览器历史(可回到静态落地页等站外来源),无历史时回应用内来源页/首页 */
 function goBack() {
-  router.push(getLastVisitedPath() ?? '/')
+  goBackOrFallback(router)
 }
 </script>
 
