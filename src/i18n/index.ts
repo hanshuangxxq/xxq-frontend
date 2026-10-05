@@ -26,6 +26,7 @@ import zhCNPractice from '@/locales/zh-CN/practice.json'
 import zhCNGraduation from '@/locales/zh-CN/graduation.json'
 import zhCNNotFound from '@/locales/zh-CN/not-found.json'
 import zhCNFile from '@/locales/zh-CN/file.json'
+import zhCNCoursework from '@/locales/zh-CN/coursework.json'
 import enCommon from '@/locales/en/common.json'
 import enAuth from '@/locales/en/auth.json'
 import enProfile from '@/locales/en/profile.json'
@@ -53,6 +54,7 @@ import enPractice from '@/locales/en/practice.json'
 import enGraduation from '@/locales/en/graduation.json'
 import enNotFound from '@/locales/en/not-found.json'
 import enFile from '@/locales/en/file.json'
+import enCoursework from '@/locales/en/coursework.json'
 
 /** 支持的语言:简体中文(默认)与英文 */
 export type SupportedLocale = 'zh-CN' | 'en'
@@ -98,6 +100,7 @@ const i18n = createI18n({
       graduation: zhCNGraduation,
       'not-found': zhCNNotFound,
       file: zhCNFile,
+      coursework: zhCNCoursework,
     },
     en: {
       common: enCommon,
@@ -127,6 +130,7 @@ const i18n = createI18n({
       graduation: enGraduation,
       'not-found': enNotFound,
       file: enFile,
+      coursework: enCoursework,
     },
   },
 })

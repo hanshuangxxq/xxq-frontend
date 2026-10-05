@@ -26,10 +26,17 @@ export function fetchCourses(
 /**
  * 课程详情。公选课的 id 实为 campaignId，查询时须传 `source=SELECTION_CAMPAIGN`，
  * 否则按 course.id 查会 404 或命中错误的常规课。
+ *
+ * `options.loading: false` 用于纯回显/回填名称的后台查询（如把 id 还原成课程名的下拉回显），
+ * 不该占用全局加载指示。
  */
-export function fetchCourse(id: number, source?: CourseSource): Promise<Result<Course>> {
+export function fetchCourse(
+  id: number,
+  source?: CourseSource,
+  options?: { loading?: boolean },
+): Promise<Result<Course>> {
   const qs = source ? `?source=${source}` : ''
-  return api.get(`/courses/${id}${qs}`)
+  return api.get(`/courses/${id}${qs}`, options)
 }
 
 /** 创建常规课 POST /courses(公选课由选课活动模块创建,不走此接口) */

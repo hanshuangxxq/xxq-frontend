@@ -1,0 +1,12 @@
+.course-context-selector {
+  width: 100%;
+}
+
+.course-select {
+  width: 320px;
+  max-width: 100%;
+}
+
+.course-meta {
+  font-size: 13px;
+}

@@ -212,6 +212,19 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/modules/practice/pages/SocialPracticeStudentPage.vue'),
         meta: { titleKey: 'practice.socialPractice.myTitle', roles: ['student'] },
       },
+      // ===== 课程课业(教师工作台 / 学生工作台) =====
+      {
+        path: 'coursework',
+        name: 'Coursework',
+        component: () => import('@/modules/coursework/pages/CourseworkPage.vue'),
+        meta: { titleKey: 'coursework.mgTitle', roles: ['teacher'] },
+      },
+      {
+        path: 'coursework/my',
+        name: 'MyCoursework',
+        component: () => import('@/modules/coursework/pages/MyCourseworkPage.vue'),
+        meta: { titleKey: 'coursework.myTitle', roles: ['student'] },
+      },
       {
         path: 'colleges',
         name: 'CollegeManagement',

@@ -1,0 +1,22 @@
+/* 逐题批改弹窗 */
+
+.grade-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.grade-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.grade-score-input {
+  width: 120px;
+  flex-shrink: 0;
+}
+
+.grade-loading {
+  min-height: 160px;
+}

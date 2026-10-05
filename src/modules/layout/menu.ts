@@ -76,6 +76,16 @@ export const MENU_GROUPS: MenuGroup[] = [
     ],
   },
   {
+    // 课业单独成组:教师与学生各见其中一项,放在「教学管理」里对学生不合适
+    key: 'coursework',
+    labelKey: 'layout.groupCoursework',
+    icon: courseSvg,
+    children: [
+      { key: '/coursework', labelKey: 'coursework.mgTitle', roles: ['teacher'] },
+      { key: '/coursework/my', labelKey: 'coursework.myTitle', roles: ['student'] },
+    ],
+  },
+  {
     key: 'score',
     labelKey: 'layout.groupScore',
     icon: scoreStatisticsSvg,

@@ -1,0 +1,16 @@
+.tab-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tab-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tab-hint {
+  font-size: 13px;
+}

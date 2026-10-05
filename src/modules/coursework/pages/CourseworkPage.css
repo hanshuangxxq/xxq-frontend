@@ -1,0 +1,11 @@
+.coursework-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+}
+
+.context-card,
+.tabs-card {
+  width: 100%;
+}

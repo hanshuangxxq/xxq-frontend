@@ -32,6 +32,7 @@ import {
 } from '../api'
 import { fetchTeacherExams } from '@/modules/exam/api'
 import type { ExamView } from '@/modules/exam/types'
+import RegularScoreSyncButton from '@/modules/coursework/components/RegularScoreSyncButton.vue'
 import type { ScoreView, ScoreConfig, ScoreRosterDto, ScoreEntryRequest } from '../types'
 import { computeTotal, levelOf, levelTagType } from '../utils'
 
@@ -347,6 +348,8 @@ onMounted(loadExamOptions)
             <NButton type="primary" :loading="ratioSaving" @click="handleSetRatio">
               {{ $t('score.mgConfirmRatio') }}
             </NButton>
+            <!-- 按作业成绩重算平时分（课程课业模块）：覆盖式重算，锁定成绩的学生会被跳过 -->
+            <RegularScoreSyncButton :teach-info-id="selectedTeachInfoId" @synced="loadConfigAndRoster" />
           </NSpace>
           <NAlert v-if="!hasConfig" type="info" :show-icon="true" class="mg-alert">
             {{ $t('score.mgRatioDefaultHint') }}

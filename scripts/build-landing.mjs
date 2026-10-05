@@ -28,7 +28,7 @@ const RESERVED_ROUTE_NAMES = new Set([
   'course-management', 'class-names', 'locals', 'teach-drafts', 'batch-import',
   'student-management', 'majors', 'semester', 'grades', 'scores', 'score-statistics',
   'my-scores', 'score-review', 'exams', 'makeup-exams', 'my-exams', 'analysis',
-  'practice', 'colleges', 'login', 'register', '403',
+  'practice', 'colleges', 'coursework', 'login', 'register', '403',
 ])
 
 /** 中文页面 description 的长度区间(汉字计)。百度结果页约展示 78 字,

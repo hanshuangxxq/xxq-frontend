@@ -1,0 +1,45 @@
+/* 题目编辑弹窗:选项/填空编辑器布局 */
+
+.question-type-select {
+  width: 240px;
+}
+
+.question-score-input {
+  width: 160px;
+}
+
+.option-list,
+.blank-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.option-row,
+.acceptable-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.option-key {
+  flex-shrink: 0;
+  min-width: 28px;
+  justify-content: center;
+}
+
+.blank-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--n-border-color, #e0e0e6);
+  border-radius: 6px;
+}
+
+.blank-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}

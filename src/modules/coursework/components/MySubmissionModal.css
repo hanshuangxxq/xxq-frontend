@@ -1,0 +1,55 @@
+:deep(.n-descriptions-table-content) {
+  word-break: break-word;
+}
+
+/* 逐题作答卡片(与作答弹窗同款视觉) */
+
+.submission-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.question-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  border: 1px solid #e0e0e6;
+  border-radius: 8px;
+}
+
+.question-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.question-stem {
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+.answer-line {
+  display: flex;
+  gap: 4px;
+  align-items: baseline;
+}
+
+.essay-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.essay-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.essay-file-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}

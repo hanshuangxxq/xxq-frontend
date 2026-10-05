@@ -1,0 +1,58 @@
+/* 在线作答弹窗布局 */
+
+.answer-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.answer-alert {
+  margin-bottom: 4px;
+}
+
+.answer-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.answer-content {
+  white-space: pre-wrap;
+}
+
+.answer-loading {
+  min-height: 160px;
+}
+
+.question-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  border: 1px solid #e0e0e6;
+  border-radius: 8px;
+}
+
+.question-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.question-stem {
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+.answer-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.draft-status {
+  font-size: 12px;
+}

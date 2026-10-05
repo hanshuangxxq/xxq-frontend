@@ -1,0 +1,4 @@
+/* 名单表格由 NDataTable 自带样式，这里只留需要微调的部分 */
+:deep(.n-data-table) {
+  font-size: 13px;
+}

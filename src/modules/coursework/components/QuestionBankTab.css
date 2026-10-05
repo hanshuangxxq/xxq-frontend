@@ -1,0 +1,13 @@
+/* 题库 Tab:筛选区控件宽度 */
+
+.type-filter {
+  width: 140px;
+}
+
+.keyword-filter {
+  width: 220px;
+}
+
+.course-tag-filter {
+  width: 240px;
+}

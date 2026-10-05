@@ -1,0 +1,78 @@
+.full-width {
+  width: 100%;
+}
+
+.upload-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.upload-current {
+  font-size: 13px;
+}
+
+.upload-hint {
+  font-size: 12px;
+  color: #8a8f99;
+}
+
+.clone-tip {
+  font-size: 12px;
+  color: #8a8f99;
+}
+
+/* 题目配置区 */
+
+.question-config {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.question-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid #e0e0e6;
+  border-radius: 6px;
+}
+
+.question-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.question-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.question-item-stem {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.question-item-score {
+  width: 110px;
+  flex-shrink: 0;
+}
+
+.question-empty {
+  font-size: 12px;
+  color: #8a8f99;
+}
+
+.question-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
