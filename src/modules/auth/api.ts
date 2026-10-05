@@ -30,12 +30,17 @@ export const authApi = {
     return result.data
   },
 
-  /** 用 refreshToken 换取新令牌对 POST /login/refresh;静默请求,失败不弹错误提示 */
+  /**
+   * 用 refreshToken 换取新令牌对 POST /login/refresh;静默请求,失败不弹错误提示。
+   * 不接入全局加载:换 token 是认证管线内部的自动动作(401 重试、WS 建连前刷新),
+   * 不是用户发起的操作 —— 既不该在页面挂机时凭空闪出加载药丸,更不能被「取消全局加载」
+   * 中断(请求被中断会落到 auth_failed 分支,把整个会话清掉)。
+   */
   async refresh(refreshToken: string): Promise<RefreshResult> {
     const result = await api.post<Result<RefreshResult>>(
       `/login/refresh?refreshToken=${encodeURIComponent(refreshToken)}`,
       undefined,
-      { silent: true },
+      { silent: true, loading: false },
     )
     return result.data
   },
