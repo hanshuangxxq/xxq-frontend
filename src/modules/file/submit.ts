@@ -2,8 +2,9 @@ import { BusinessError } from '@/shared/api'
 import { message } from '@/shared/discrete'
 import i18n from '@/i18n'
 import { WHOLE_MAX_SIZE } from './constants'
+import { uploadWholeFile } from './api'
 import { useUploadStore } from './store'
-import type { BizCode, PreparedSubmitFile } from './types'
+import type { BizCode, PreparedSubmitFile, StoredFileRef } from './types'
 
 /**
  * 按文件大小二选一,返回可交给业务提交接口的载体:
@@ -23,6 +24,27 @@ export async function prepareSubmitFile(
   if (!file) return { file: null, filePath: null, fileOriginal: null }
   if (file.size <= WHOLE_MAX_SIZE) return { file, filePath: null, fileOriginal: null }
 
+  const ref = await uploadChunked(file, biz)
+  return { file: null, filePath: ref.storedPath, fileOriginal: ref.originalName }
+}
+
+/**
+ * 纯 JSON 业务提交的文件前置上传(如在线作答的大题附件):不管大小都先存成文件产物,
+ * 业务请求体里只带 {path, original}。
+ * - ≤20MB:POST /file/whole 整传;
+ * - >20MB:走分片上传,进度见全局上传面板。
+ */
+export async function uploadForStoredRef(file: File, biz: BizCode): Promise<StoredFileRef> {
+  if (file.size <= WHOLE_MAX_SIZE) {
+    const res = await uploadWholeFile(biz, file)
+    return res.data
+  }
+  const ref = await uploadChunked(file, biz)
+  return ref
+}
+
+/** prepareSubmitFile 与 uploadForStoredRef 共用的分片上传路径(含 biz 归属防御) */
+async function uploadChunked(file: File, biz: BizCode): Promise<StoredFileRef> {
   const store = useUploadStore()
   const task = store.enqueue(file, biz)
   // 上传不绑定组件生命周期:即使用户切走路由,任务也会继续跑完
@@ -35,6 +57,5 @@ export async function prepareSubmitFile(
     message.error(text)
     throw new BusinessError(text, 403)
   }
-
-  return { file: null, filePath: ref.storedPath, fileOriginal: ref.originalName }
+  return ref
 }

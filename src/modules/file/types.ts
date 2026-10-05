@@ -3,7 +3,7 @@
  * 契约原文见 docs/文件传输接口总览.md §3(分片上传)与 §4.2(业务提交二选一)。
  */
 
-/** 业务目录白名单,与后端 FileBizEnum 的 9 个 code 一一对应,传其它值后端直接 400 */
+/** 业务目录白名单,与后端 FileBizEnum 的 13 个 code 一一对应,传其它值后端直接 400 */
 export type BizCode =
   | 'graduation-thesis'
   | 'graduation-opening-report'
@@ -14,6 +14,10 @@ export type BizCode =
   | 'graduation-campaign-material'
   | 'graduation-defense-material'
   | 'competition-certificate'
+  | 'course-assignment'
+  | 'course-assignment-submission'
+  | 'course-video'
+  | 'course-material'
 
 /** 初始化/恢复上传会话的请求体 POST /file/uploads */
 export interface UploadInitRequest {
@@ -85,4 +89,14 @@ export interface PreparedSubmitFile {
   filePath: string | null
   /** 展示文件名,配合 filePath 使用 */
   fileOriginal: string | null
+}
+
+/** 预览元信息 GET /file/preview/info 的 data(README-API §11.6.1):拉内容前先调,零内容传输 */
+export interface PreviewInfoView {
+  /** 字节数;大文件提示与超大拦截用 */
+  size: number
+  /** 按存储文件扩展名推断的 Content-Type(内容寻址产物扩展名即真实类型) */
+  contentType: string
+  /** GET /file/preview 是否放行(pdf/jpg/png/mp4 白名单);false 时前端回退下载或客户端渲染 */
+  previewable: boolean
 }

@@ -135,6 +135,18 @@ function parseFilename(disposition: string | null): string | null {
   return plain?.[1] ?? null
 }
 
+/** 把二进制内容作为下载保存到本地:临时 objectURL 挂一个隐藏 <a> 点一下,随后立即回收 */
+export function saveBlob(blob: Blob, filename: string): void {
+  const objectUrl = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = objectUrl
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(objectUrl)
+}
+
 /**
  * 将请求注册到全局加载管理器(自动显示/隐藏加载指示、支持用户取消),
  * 并在结束后注销。loading 为 false 或调用方自带 AbortSignal 时不注册。
@@ -174,16 +186,20 @@ async function request<T>(url: string, options?: RequestInit & RequestOptions): 
   })
 }
 
-/** 二进制请求:文件流等非 Result 响应;错误时尝试读取后端 JSON 错误消息 */
+/**
+ * 二进制请求:文件流等非 Result 响应;错误时尝试读取后端 JSON 错误消息。
+ * init 承载 method/body,供 POST 下载复用同一条管线(认证/401 刷新/错误分类)。
+ */
 async function requestBlob(
   url: string,
   options?: RequestOptions,
+  init?: RequestInit,
 ): Promise<{ blob: Blob; filename: string | null }> {
   const { silent = false, loading = true, headers } = options ?? {}
-  const init: RequestInit = { headers }
+  const requestInit: RequestInit = { ...init, headers }
 
-  return managed(loading, init, async () => {
-    const res = await sendWithAuth(url, init, silent)
+  return managed(loading, requestInit, async () => {
+    const res = await sendWithAuth(url, requestInit, silent)
 
     if (!res.ok) {
       let text = ''
@@ -403,14 +419,38 @@ export const api = {
   async download(url: string, options?: RequestOptions & { fallbackName?: string }): Promise<void> {
     const { fallbackName = 'download', ...rest } = options ?? {}
     const { blob, filename } = await requestBlob(url, rest)
+    saveBlob(blob, filename ?? fallbackName)
+  },
 
-    const objectUrl = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = objectUrl
-    a.download = filename ?? fallbackName
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(objectUrl)
+  /**
+   * POST JSON 后下载文件,与 download 共用认证/刷新/错误处理管线。
+   * 存储路径不进 URL/浏览器历史/网关日志,故后端用 POST 承载 —— 通用文件下载走这条。
+   */
+  async downloadPost(
+    url: string,
+    body: unknown,
+    options?: RequestOptions & { fallbackName?: string },
+  ): Promise<void> {
+    const { fallbackName = 'download', ...rest } = options ?? {}
+    const { blob, filename } = await requestBlob(url, rest, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    })
+    saveBlob(blob, filename ?? fallbackName)
+  },
+
+  /**
+   * POST JSON 后返回二进制数据(不保存) —— 在线预览等「要内容不要落盘」的场景用,
+   * 与 downloadPost 共用同一条管线(认证/401 刷新/错误分类/全局加载)。
+   */
+  postBlob(
+    url: string,
+    body: unknown,
+    options?: RequestOptions,
+  ): Promise<{ blob: Blob; filename: string | null }> {
+    return requestBlob(url, options, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    })
   },
 }

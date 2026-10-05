@@ -38,8 +38,36 @@ export const HASH_SLICE_SIZE = 4 * 1024 * 1024
 
 /** 文档类业务目录的扩展名白名单,镜像后端 FileBizEnum */
 const DOC_EXTENSIONS = ['.doc', '.docx', '.pdf', '.zip', '.rar'] as const
+/** 作业作答附件:文档 + 图片(拍照作答),镜像后端 FileBizEnum 的 Ext.SUBMISSION */
+const SUBMISSION_EXTENSIONS = [
+  '.doc',
+  '.docx',
+  '.pdf',
+  '.zip',
+  '.rar',
+  '.jpg',
+  '.jpeg',
+  '.png',
+] as const
 /** 证书类额外放行图片(常为扫描件/照片),镜像后端 FileBizEnum */
 const CERT_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.pdf'] as const
+/** 教学视频:只放行 .mp4(MSE 兼容性考虑),镜像后端 FileBizEnum 的 Ext.VIDEO */
+const VIDEO_EXTENSIONS = ['.mp4'] as const
+/** 课程资料:文档 + 表格 + 演示 + 压缩 + 图片,镜像后端 FileBizEnum 的 Ext.MATERIAL */
+const MATERIAL_EXTENSIONS = [
+  '.doc',
+  '.docx',
+  '.ppt',
+  '.pptx',
+  '.xls',
+  '.xlsx',
+  '.pdf',
+  '.zip',
+  '.rar',
+  '.jpg',
+  '.jpeg',
+  '.png',
+] as const
 
 /**
  * biz -> 允许的扩展名(小写,含点)。必须与后端 FileBizEnum 保持一致 ——
@@ -55,4 +83,8 @@ export const BIZ_EXTENSIONS: Record<BizCode, readonly string[]> = {
   'graduation-campaign-material': DOC_EXTENSIONS,
   'graduation-defense-material': DOC_EXTENSIONS,
   'competition-certificate': CERT_EXTENSIONS,
+  'course-assignment': DOC_EXTENSIONS,
+  'course-assignment-submission': SUBMISSION_EXTENSIONS,
+  'course-video': VIDEO_EXTENSIONS,
+  'course-material': MATERIAL_EXTENSIONS,
 }

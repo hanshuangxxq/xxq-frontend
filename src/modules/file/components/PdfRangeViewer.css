@@ -1,0 +1,38 @@
+.pdf-viewer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.pdf-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.pdf-page-indicator {
+  font-size: 12px;
+  min-width: 48px;
+  text-align: center;
+}
+
+.pdf-canvas-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: #f5f5f5;
+  border-radius: 4px;
+  padding: 16px;
+}
+
+/* 画布的宽高与 style 尺寸由组件按 viewport/DPR 动态计算(与 ECharts resize 同类的运行时布局),
+   这里只管阴影与居中 */
+.pdf-canvas {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}

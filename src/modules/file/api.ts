@@ -1,7 +1,9 @@
 import { api } from '@/shared/api'
 import type { Result } from '@/shared/types'
 import type {
+  BizCode,
   ChunkSavedView,
+  PreviewInfoView,
   StoredFileRef,
   UploadInitRequest,
   UploadSessionView,
@@ -13,11 +15,30 @@ const BASE = '/file'
 /**
  * 文件模块接口(docs/文件传输接口总览.md §3)。
  *
- * 全部传 { loading: false, silent: true }:
+ * 分片四件套全部传 { loading: false, silent: true }:
  * - loading:分片上传的进度由全局上传面板展示,不能再让全局加载药丸出现第二个指示器;
  * - silent:失败与否由上传引擎按退避策略决定,引擎自行决定何时、以什么文案提示,
  *   api 层每次重试都弹一次提示会造成刷屏。
+ *
+ * uploadWholeFile 是小文件整传(≤20MB),没有进度面,行为与普通业务请求一致(默认挂全局加载)。
  */
+
+/** 小文件整传(multipart,biz + file) POST /file/whole —— 超 20MB 请走分片四件套 */
+export function uploadWholeFile(biz: BizCode, file: File): Promise<Result<StoredFileRef>> {
+  const fd = new FormData()
+  fd.append('biz', biz)
+  fd.append('file', file)
+  return api.postForm(`${BASE}/whole`, fd)
+}
+
+/**
+ * 预览元信息(零内容传输) GET /file/preview/info(README-API §11.6.1)。
+ * FilePreviewModal 打开时先调它:previewable=false 回退客户端渲染/下载,size 做超大拦截,
+ * contentType 选 viewer。文件不存在等业务错误走统一错误管线(404 → toast)。
+ */
+export function fetchPreviewInfo(filePath: string): Promise<Result<PreviewInfoView>> {
+  return api.get(`${BASE}/preview/info?filePath=${encodeURIComponent(filePath)}`)
+}
 
 /** 初始化/恢复上传会话(幂等,可秒传) POST /file/uploads */
 export function initUpload(body: UploadInitRequest): Promise<Result<UploadSessionView>> {

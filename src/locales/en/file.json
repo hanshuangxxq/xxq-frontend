@@ -33,6 +33,22 @@
     "wholeLimit": "Supports {exts}, files under 20MB upload directly",
     "willChunk": "This file is {size} and will upload in chunks; track progress in the bottom-right panel"
   },
+  "preview": {
+    "title": "File preview",
+    "parsing": "Loading and parsing file…",
+    "notSupported": "This file type cannot be previewed online; please download it instead",
+    "tooLarge": "The file is too large to preview online; please download it instead",
+    "broken": "Failed to parse the file; please download it instead",
+    "loadFail": "Failed to load file",
+    "downloadFail": "Failed to download",
+    "lazyHint": "Large file ({size}); pages load on demand",
+    "prevPage": "Previous",
+    "nextPage": "Next",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "download": "Download",
+    "close": "Close"
+  },
   "error": {
     "type": "Unsupported file format",
     "empty": "The file is empty",

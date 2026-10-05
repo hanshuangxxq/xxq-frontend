@@ -33,6 +33,22 @@
     "wholeLimit": "支持 {exts}，20MB 以内直接上传",
     "willChunk": "该文件 {size}，将使用分片上传，可在右下角面板查看进度"
   },
+  "preview": {
+    "title": "文件预览",
+    "parsing": "正在加载解析文件…",
+    "notSupported": "该文件类型暂不支持在线预览，请下载后查看",
+    "tooLarge": "文件过大，暂不支持在线预览，请下载后查看",
+    "broken": "文件解析失败，请下载后查看",
+    "loadFail": "文件加载失败",
+    "downloadFail": "下载失败",
+    "lazyHint": "文件较大（{size}），将按需分段加载",
+    "prevPage": "上一页",
+    "nextPage": "下一页",
+    "zoomIn": "放大",
+    "zoomOut": "缩小",
+    "download": "下载",
+    "close": "关闭"
+  },
   "error": {
     "type": "不支持的文件格式",
     "empty": "文件内容为空",
