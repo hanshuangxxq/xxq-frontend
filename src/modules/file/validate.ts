@@ -1,4 +1,4 @@
-import { BIZ_EXTENSIONS, CHUNK_MAX_SIZE, WHOLE_MAX_SIZE } from './constants'
+import { BIZ_EXTENSIONS, CHUNK_MAX_SIZE } from './constants'
 import type { BizCode } from './types'
 
 /** 校验失败原因:'type' 扩展名不在白名单 / 'empty' 空文件 / 'tooLarge' 超 2GB */
@@ -21,17 +21,7 @@ export function validateFileForBiz(file: File, biz: BizCode): FileValidationErro
   return null
 }
 
-/** 该大小是否需要走分片上传(>20MB 时整传会被后端业务层拒绝) */
-export function needsChunkedUpload(size: number): boolean {
-  return size > WHOLE_MAX_SIZE
-}
-
 /** NUpload 的 accept 属性值,由 biz 的扩展名白名单派生 */
 export function bizAccept(biz: BizCode): string {
   return BIZ_EXTENSIONS[biz].join(',')
-}
-
-/** 提示文案用的扩展名列表,如 '.doc/.docx/.pdf' */
-export function bizExtensionHint(biz: BizCode): string {
-  return BIZ_EXTENSIONS[biz].join('/')
 }

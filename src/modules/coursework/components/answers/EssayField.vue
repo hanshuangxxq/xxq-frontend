@@ -9,9 +9,8 @@
  */
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { NInput, NUpload, NButton, NTag, NText, NSpace, type UploadFileInfo } from 'naive-ui'
-import { formatBytes } from '@/shared/utils/format'
-import { bizAccept, bizExtensionHint, needsChunkedUpload } from '@/modules/file/validate'
+import { NInput, NUpload, NButton, NTag, NSpace, type UploadFileInfo } from 'naive-ui'
+import { bizAccept } from '@/modules/file/validate'
 import { SUBMISSION_BIZ } from '../../constants'
 import type { AssignmentQuestionView, EssayAnswerFile } from '../../types'
 
@@ -32,14 +31,6 @@ const { t } = useI18n()
 
 /** 后端每题附件 ≤3,新选上限随已保留数收缩 */
 const maxNew = computed(() => Math.max(0, 3 - props.keptFiles.length))
-
-const uploadHint = computed(() => {
-  const big = props.fileList.find((f) => f.file && needsChunkedUpload(f.file.size))
-  if (big?.file) {
-    return t('file.hint.willChunk', { size: formatBytes(big.file.size) })
-  }
-  return t('file.hint.wholeLimit', { exts: bizExtensionHint(SUBMISSION_BIZ) })
-})
 
 function removeKept(index: number): void {
   emit(
@@ -87,7 +78,6 @@ function handleFileListUpdate(value: UploadFileInfo[]): void {
       >
         <NButton size="small">{{ t('coursework.common.selectFile') }}</NButton>
       </NUpload>
-      <NText depth="3" class="essay-hint">{{ uploadHint }}</NText>
     </NSpace>
   </div>
 </template>
@@ -103,9 +93,5 @@ function handleFileListUpdate(value: UploadFileInfo[]): void {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-}
-
-.essay-hint {
-  font-size: 12px;
 }
 </style>

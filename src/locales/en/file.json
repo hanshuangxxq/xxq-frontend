@@ -29,10 +29,6 @@
     "retry": "Retry",
     "remove": "Remove"
   },
-  "hint": {
-    "wholeLimit": "Supports {exts}, files under 20MB upload directly",
-    "willChunk": "This file is {size} and will upload in chunks; track progress in the bottom-right panel"
-  },
   "preview": {
     "title": "File preview",
     "parsing": "Loading and parsing file…",

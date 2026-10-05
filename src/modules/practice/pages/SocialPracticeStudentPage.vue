@@ -45,7 +45,6 @@ import { fetchStudents } from '@/modules/student-management/api'
 import PagedSelect from '@/shared/components/PagedSelect.vue'
 import { prepareSubmitFile } from '@/modules/file/submit'
 import { bizAccept, validateFileForBiz } from '@/modules/file/validate'
-import { useUploadHint } from '@/modules/file/hint'
 import {
   auditStatusTagType,
   reportStatusTagType,
@@ -302,7 +301,6 @@ const reportForm = ref<{ practiceId: number | null; title: string; summary: stri
   summary: '',
 })
 const fileList = ref<UploadFileInfo[]>([])
-const reportUploadHint = useUploadHint(fileList, 'social-practice-report')
 const { loading: savingReport, withLoading: withSavingReport } = useLoading()
 
 function startSubmitReport() {
@@ -613,7 +611,6 @@ if (isStudent.value) {
             >
               <NButton>{{ $t('practice.common.selectFile') }}</NButton>
             </NUpload>
-            <span class="file-hint">{{ reportUploadHint }}</span>
           </NFormItem>
         </NForm>
         <template #footer>

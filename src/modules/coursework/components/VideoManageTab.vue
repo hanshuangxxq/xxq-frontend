@@ -168,7 +168,7 @@ const rowKey = (row: VideoView) => row.id
 <template>
   <div class="tab-body">
     <div class="tab-toolbar">
-      <NText depth="3" class="tab-hint">{{ t('coursework.video.fileHint') }}</NText>
+      <NText depth="3" class="tab-hint">{{ t('coursework.video.tab') }}</NText>
       <NButton type="primary" :disabled="courseId == null" @click="openCreate">
         {{ t('coursework.video.addTitle') }}
       </NButton>

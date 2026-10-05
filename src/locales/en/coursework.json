@@ -191,7 +191,6 @@
     "editTitle": "Edit video",
     "titleRequired": "Please enter a video title",
     "fileRequired": "Please select a video file",
-    "fileHint": "Only .mp4 is supported; files over 20MB are uploaded in chunks",
     "uploadSuccess": "Video registered",
     "editSuccess": "Updated",
     "deleteConfirm": "Delete this video? Students will no longer be able to watch it.",

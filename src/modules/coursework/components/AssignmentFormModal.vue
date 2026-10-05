@@ -38,7 +38,6 @@ import { useLoading } from '@/shared/composables/useLoading'
 import { useLocaleStore } from '@/stores/useLocaleStore'
 import { prepareSubmitFile } from '@/modules/file/submit'
 import { bizAccept, validateFileForBiz } from '@/modules/file/validate'
-import { useUploadHint } from '@/modules/file/hint'
 import {
   createAssignment,
   fetchAssignmentDetail,
@@ -88,7 +87,6 @@ const form = ref<{
 }>({ title: '', content: '', deadline: null, publish: false, answerVisible: 'SUBMIT' })
 
 const fileList = ref<UploadFileInfo[]>([])
-const uploadHint = useUploadHint(fileList, ASSIGNMENT_BIZ)
 const { loading: saving, withLoading: withSaving } = useLoading()
 
 // ---- 题目配置 ----
@@ -473,7 +471,6 @@ function handleSave() {
           >
             <NButton>{{ t('coursework.common.selectFile') }}</NButton>
           </NUpload>
-          <NText depth="3" class="upload-hint">{{ uploadHint }}</NText>
         </div>
       </NFormItem>
       <NFormItem v-if="!isEdit">

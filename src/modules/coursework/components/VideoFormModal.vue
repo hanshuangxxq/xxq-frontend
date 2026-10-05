@@ -27,7 +27,6 @@ import { isReportedError } from '@/shared/api'
 import { useLoading } from '@/shared/composables/useLoading'
 import { prepareSubmitFile } from '@/modules/file/submit'
 import { bizAccept, validateFileForBiz } from '@/modules/file/validate'
-import { useUploadHint } from '@/modules/file/hint'
 import { registerVideo, updateVideo } from '../api'
 import { VIDEO_BIZ } from '../constants'
 import type { VideoView } from '../types'
@@ -59,7 +58,6 @@ const form = ref({
   durationSec: null as number | null,
 })
 const fileList = ref<UploadFileInfo[]>([])
-const uploadHint = useUploadHint(fileList, VIDEO_BIZ)
 const { loading: saving, withLoading: withSaving } = useLoading()
 
 watch(
@@ -198,7 +196,6 @@ function handleSave() {
           >
             <NButton>{{ t('coursework.common.selectFile') }}</NButton>
           </NUpload>
-          <NText depth="3" class="form-hint">{{ uploadHint }}</NText>
         </div>
       </NFormItem>
     </NForm>

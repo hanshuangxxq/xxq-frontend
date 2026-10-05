@@ -23,7 +23,6 @@ import { fetchMyMidterm, submitMidterm, downloadMidterm, fetchMyOpeningReport } 
 import { midtermConclusionTagType, formatDateTime } from '@/modules/practice/utils'
 import { prepareSubmitFile } from '@/modules/file/submit'
 import { bizAccept, validateFileForBiz } from '@/modules/file/validate'
-import { useUploadHint } from '@/modules/file/hint'
 import { useLoading } from '@/shared/composables/useLoading'
 import { useRoleCheck } from '@/shared/composables/useRoleCheck'
 import type { MidtermResponse, CampaignResponse } from '../../types'
@@ -92,7 +91,6 @@ function onCampaignChange(id: number | null): void {
 const showForm = ref(false)
 const form = ref({ content: '' })
 const fileList = ref<UploadFileInfo[]>([])
-const uploadHint = useUploadHint(fileList, 'graduation-midterm')
 const { loading: saving, withLoading: withSaving } = useLoading()
 
 function startSubmit(): void {
@@ -258,7 +256,6 @@ async function handleDownload(): Promise<void> {
             >
               <NButton>{{ $t('graduation.common.selectFile') }}</NButton>
             </NUpload>
-            <span class="file-hint">{{ uploadHint }}</span>
           </NFormItem>
         </NForm>
         <template #footer>

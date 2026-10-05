@@ -191,7 +191,6 @@
     "editTitle": "编辑视频",
     "titleRequired": "请填写视频标题",
     "fileRequired": "请选择视频文件",
-    "fileHint": "仅支持 .mp4；超过 20MB 将自动分片上传",
     "uploadSuccess": "登记成功",
     "editSuccess": "修改成功",
     "deleteConfirm": "确定删除该视频？删除后学生将无法观看。",
