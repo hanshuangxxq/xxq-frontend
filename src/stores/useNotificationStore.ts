@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import { accessToken, refreshAccessToken } from '@/shared/tokenManager'
+import { accessToken } from '@/shared/tokenManager'
 import { notificationApi } from '@/modules/notification/api'
 import { buildNotificationWsUrl, NotificationSocket } from '@/modules/notification/ws'
 import type { NotificationFilter, NotificationResponse } from '@/modules/notification/types'
@@ -62,7 +62,6 @@ export const useNotificationStore = defineStore('notification', () => {
         }
       },
       shouldReconnect: () => !!accessToken.value,
-      refreshToken: () => refreshAccessToken(),
     })
     socket.connect()
   }

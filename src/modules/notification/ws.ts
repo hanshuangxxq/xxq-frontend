@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '@/config'
-import type { RefreshOutcome } from '@/shared/tokenManager'
+import { ensureFreshAccessToken } from '@/shared/tokenManager'
 import type { NotificationResponse, WsPushMessage } from './types'
 
 /** 通知 WebSocket 的回调集合，由调用方（store）注入，连接各生命周期事件 */
@@ -16,8 +16,6 @@ export interface NotificationSocketHandlers {
   onNotification: (data: NotificationResponse) => void
   /** 是否还应重连（通常判断是否仍处于登录态） */
   shouldReconnect: () => boolean
-  /** 重连前刷新 token:'success' 立即重连,'network_error' 稍后重试,'auth_failed' 停止 */
-  refreshToken: () => Promise<RefreshOutcome>
 }
 
 const HEARTBEAT_INTERVAL = 30_000 // 心跳间隔，到点发 ping 兼作保活
@@ -41,9 +39,10 @@ export function buildNotificationWsUrl(token: string): string {
 
 /**
  * 消息提醒 WebSocket 客户端。
+ * - 每次建连（含断线重连）前先确保 token 未临近过期，再用它握手
  * - 建连后服务端立即推送未读数
  * - 每 30s 发送 `ping` 兼作心跳
- * - 断线后指数退避重连，重连前刷新 token（失效则停止）
+ * - 断线后指数退避重连
  */
 export class NotificationSocket {
   private ws: WebSocket | null = null
@@ -51,16 +50,58 @@ export class NotificationSocket {
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null
   private backoff = INITIAL_BACKOFF
   private manualClose = false
+  /** 建连中（刷新 token 的往返期间），使 connect() 幂等 */
+  private connecting = false
+  /** 建连世代：disconnect() 与新的 connect() 都令其自增，使在途建连作废 */
+  private epoch = 0
   private readonly handlers: NotificationSocketHandlers
 
   constructor(handlers: NotificationSocketHandlers) {
     this.handlers = handlers
   }
 
-  /** 建立连接（已有连接时幂等跳过）；建连失败或断线走指数退避重连 */
+  /** 建立连接（已有连接或正在建连时幂等跳过）；建连失败或断线走指数退避重连 */
   connect(): void {
-    if (this.ws) return
+    if (this.ws || this.connecting) return
+    const epoch = ++this.epoch
     this.manualClose = false
+    this.connecting = true
+    void this.openWithFreshToken(epoch)
+  }
+
+  /** 主动断开（登出/布局卸载时调用）：置 manualClose 阻止后续自动重连 */
+  disconnect(): void {
+    this.manualClose = true
+    this.epoch += 1
+    this.connecting = false
+    this.stopHeartbeat()
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer)
+      this.reconnectTimer = null
+    }
+    if (this.ws) {
+      this.ws.close()
+      this.ws = null
+    }
+  }
+
+  /**
+   * 握手前先确保 token 未临近过期（需要时才换新）。access token 只有 30 分钟，页面挂机
+   * 久了手里的 token 早已过期，直接握手会被服务端 401 拒绝（服务端只留下「token 无效 -
+   * JWT expired」的告警），而浏览器 WebSocket API 读不到失败握手的状态码，事后无从补救。
+   * 刷新失败不阻断握手：沿用旧 token 试一次，连不上由退避重连兜底。
+   */
+  private async openWithFreshToken(epoch: number): Promise<void> {
+    await ensureFreshAccessToken()
+    // 期间被 disconnect() 或新的 connect() 取代：本次建连作废
+    if (epoch !== this.epoch) return
+    this.connecting = false
+    if (this.manualClose || !this.handlers.shouldReconnect()) return
+    this.open()
+  }
+
+  /** 打开连接并挂上事件；建连失败或断线统一在 onclose 里退避重连 */
+  private open(): void {
     let ws: WebSocket
     try {
       ws = new WebSocket(this.handlers.getUrl())
@@ -85,26 +126,14 @@ export class NotificationSocket {
     }
 
     ws.onclose = () => {
-      this.stopHeartbeat()
+      // 已被新连接取代（disconnect 后重连）时忽略迟到的关闭事件，别把新连接的状态清掉
+      if (this.ws !== ws) return
       this.ws = null
+      this.stopHeartbeat()
       this.handlers.onClose()
       if (!this.manualClose) {
         this.scheduleReconnect()
       }
-    }
-  }
-
-  /** 主动断开（登出时调用）：置 manualClose 阻止后续自动重连 */
-  disconnect(): void {
-    this.manualClose = true
-    this.stopHeartbeat()
-    if (this.reconnectTimer) {
-      clearTimeout(this.reconnectTimer)
-      this.reconnectTimer = null
-    }
-    if (this.ws) {
-      this.ws.close()
-      this.ws = null
     }
   }
 
@@ -147,22 +176,8 @@ export class NotificationSocket {
     this.backoff = Math.min(this.backoff * 2, MAX_BACKOFF)
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null
-      void this.reconnect()
-    }, delay)
-  }
-
-  private async reconnect(): Promise<void> {
-    if (!this.handlers.shouldReconnect()) return
-    // 重连前刷新 token
-    const outcome = await this.handlers.refreshToken()
-    if (outcome === 'success') {
+      // 重连同样先确保 token 未临近过期（connect() 内部统一处理）
       this.connect()
-      return
-    }
-    // 'network_error':后端暂时不可达(如重启中),保留登录态继续退避重试
-    // 'auth_failed':已登出(shouldReconnect 为 false),不再重连
-    if (outcome === 'network_error' && this.handlers.shouldReconnect()) {
-      this.scheduleReconnect()
-    }
+    }, delay)
   }
 }

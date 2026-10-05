@@ -10,6 +10,8 @@ import { ref } from 'vue'
 const ACCESS_KEY = 'xxq-access-token'
 const REFRESH_KEY = 'xxq-refresh-token'
 const USER_ID_KEY = 'xxq-user-id'
+/** 本次 access token 的取得时刻(本地时钟);landing.js 直写会话时不写它,视为未知 */
+const ISSUED_AT_KEY = 'xxq-token-issued-at'
 
 /** 读 localStorage;隐私模式等禁用场景返回 null 而不是抛错 */
 function loadStr(key: string): string | null {
@@ -50,6 +52,8 @@ export const accessToken = ref<string | null>(loadStr(ACCESS_KEY))
 export const refreshToken = ref<string | null>(loadStr(REFRESH_KEY))
 /** 当前登录用户 id */
 export const currentUserId = ref<number | null>(loadNum(USER_ID_KEY))
+/** 当前 access token 的取得时刻(本地时钟);0 表示未知 */
+let tokenIssuedAt = loadNum(ISSUED_AT_KEY) ?? 0
 
 /** 刷新结果:成功 / 认证失败(需登出) / 网络或服务器错误(保留会话稍后重试) */
 export type RefreshOutcome = 'success' | 'auth_failed' | 'network_error'
@@ -68,9 +72,11 @@ export function setTokens(access: string, refresh: string, userId: number) {
   accessToken.value = access
   refreshToken.value = refresh
   currentUserId.value = userId
+  tokenIssuedAt = Date.now()
   saveStr(ACCESS_KEY, access)
   saveStr(REFRESH_KEY, refresh)
   saveNum(USER_ID_KEY, userId)
+  saveNum(ISSUED_AT_KEY, tokenIssuedAt)
 }
 
 /** 清空全部会话状态(token、用户 id、缓存的用户信息) */
@@ -78,9 +84,11 @@ export function clearTokens() {
   accessToken.value = null
   refreshToken.value = null
   currentUserId.value = null
+  tokenIssuedAt = 0
   saveStr(ACCESS_KEY, null)
   saveStr(REFRESH_KEY, null)
   saveNum(USER_ID_KEY, null)
+  saveNum(ISSUED_AT_KEY, null)
   clearUser()
 }
 
@@ -130,4 +138,25 @@ export async function refreshAccessToken(): Promise<RefreshOutcome> {
     })
   }
   return _refreshPromise
+}
+
+/** access token 有效期(后端 jwt.access-token-expiration = 30m) */
+const ACCESS_TOKEN_TTL_MS = 30 * 60 * 1000
+/** 提前量:只剩这么久就换新,别让 token 在握手途中过期 */
+const ACCESS_TOKEN_REFRESH_MARGIN_MS = 5 * 60 * 1000
+
+/**
+ * 保证手里的 access token 还有足够有效期(临近过期、或取得时刻未知时先换新),
+ * 供**只在握手时用一次 token** 的长连接调用:WebSocket 的 token 走 query 传一次,
+ * 没有普通请求那样的 401 重试机会,而浏览器 WebSocket API 又读不到失败握手的状态码
+ * (只表现为连接立即关闭),token 过期了就无从补救 —— 服务端只留下一条握手失败日志。
+ * 时长按本地时钟差算:两次读之间时钟不跳的话,差值就是真实流逝时长,与服务端时钟
+ * 是否同步无关(故不解析 JWT exp —— 客户端时钟偏移会让它给出错误结论)。
+ * 刷新失败不抛错:沿用旧 token 尽力试连,由调用方的重连兜底。
+ */
+export async function ensureFreshAccessToken(): Promise<void> {
+  if (!accessToken.value) return
+  const age = Date.now() - tokenIssuedAt
+  if (tokenIssuedAt && age < ACCESS_TOKEN_TTL_MS - ACCESS_TOKEN_REFRESH_MARGIN_MS) return
+  await refreshAccessToken()
 }
