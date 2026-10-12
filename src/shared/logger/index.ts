@@ -71,12 +71,14 @@ function write(
   type: LogType,
   message: string,
   extras: { stack?: string; api?: ApiLogContext },
+  err?: unknown,
 ) {
-  // console 输出保留:开发期与远程协助排障直接可见
+  // console 输出保留:开发期与远程协助排障直接可见;有原始错误时一并输出,保留可点击堆栈
   const line = `[xxq:${type}] ${message}`
-  if (level === 'error') console.error(line)
-  else if (level === 'warn') console.warn(line)
-  else console.info(line)
+  const args: unknown[] = err !== undefined ? [line, err] : [line]
+  if (level === 'error') console.error(...args)
+  else if (level === 'warn') console.warn(...args)
+  else console.info(...args)
   enqueue(buildEntry(level, type, message, extras))
 }
 
@@ -96,7 +98,7 @@ export const logger = {
     const errMsg = error instanceof Error ? `${message}: ${error.message}` : message
     write('error', 'manual', errMsg + serializeData(data), {
       stack: error instanceof Error ? (error.stack ?? undefined) : undefined,
-    })
+    }, error)
   },
 }
 
@@ -105,11 +107,16 @@ export interface InitLoggerOptions {
   transport: LogTransport
 }
 
+/** 单例守卫:initLogger 带全局副作用(监听/定时器),重复调用会叠加,只初始化一次 */
+let initialized = false
+
 /**
  * 初始化日志:注册全局错误捕获、点击面包屑、路由面包屑与页面访问上报。
  * main.ts 在 createApp 之前调用(启动期异常也能经 window.onerror 捕获)。
  */
 export function initLogger(options: InitLoggerOptions) {
+  if (initialized) return
+  initialized = true
   initReporter(options.transport)
   currentPath = () => options.router.currentRoute.value.fullPath
 
@@ -131,7 +138,7 @@ export function attachVueErrorHandler(app: App) {
     const where = comp ? `${info}, 组件:${comp}` : info
     write('error', 'vue-error', `Vue 错误(${where}): ${err instanceof Error ? err.message : String(err)}`, {
       stack: err instanceof Error ? (err.stack ?? undefined) : undefined,
-    })
+    }, err)
   }
 }
 
@@ -139,7 +146,7 @@ function onWindowError(event: ErrorEvent) {
   // 跨域脚本错误只有 "Script error." 无细节,仍记录(带来源文件),便于发现 CSP/资源加载问题
   write('error', 'js-error', `${event.message} @${event.filename}:${event.lineno}`, {
     stack: event.error instanceof Error ? (event.error.stack ?? undefined) : undefined,
-  })
+  }, event.error)
 }
 
 function onUnhandledRejection(event: PromiseRejectionEvent) {
@@ -147,9 +154,24 @@ function onUnhandledRejection(event: PromiseRejectionEvent) {
   // api 层错误已在请求管线带上下文上报(见 reportApiError),跳过避免重复;
   // 鸭子类型判断 reported:logger 不能 import api 模块(循环引用)
   if (reason instanceof Error && 'reported' in reason && reason.reported === true) return
-  write('error', 'unhandled-rejection', reason instanceof Error ? reason.message : String(reason), {
-    stack: reason instanceof Error ? (reason.stack ?? undefined) : undefined,
-  })
+  write(
+    'error',
+    'unhandled-rejection',
+    reason instanceof Error ? reason.message : stringifyReason(reason),
+    { stack: reason instanceof Error ? (reason.stack ?? undefined) : undefined },
+    reason instanceof Error ? reason : undefined,
+  )
+}
+
+/** 非 Error 的 rejection 原因:同 serializeData 的防御式序列化,失败回退 String(reason) */
+function stringifyReason(reason: unknown): string {
+  try {
+    // JSON.stringify 对 undefined/function/symbol 返回 undefined,回退 String(...)
+    const serialized: unknown = JSON.stringify(reason)
+    return typeof serialized === 'string' ? truncate(serialized, MESSAGE_MAX) : String(reason)
+  } catch {
+    return String(reason)
+  }
 }
 
 // ---- 点击面包屑:只记可交互元素,同一元素 500ms 内连击去重 ----
@@ -166,7 +188,10 @@ function describeElement(el: Element): string {
 
 function onDocumentClick(event: MouseEvent) {
   if (!(event.target instanceof Element)) return
-  const el = event.target.closest('button, a, input, [role="button"]') ?? event.target
+  const el =
+    event.target.closest(
+      'button, a, input, [role="button"], [role="menuitem"], [role="option"], [role="tab"]',
+    ) ?? event.target
   const desc = describeElement(el)
   const now = Date.now()
   if (desc === lastClickDesc && now - lastClickAt < 500) return
