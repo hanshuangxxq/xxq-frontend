@@ -340,7 +340,7 @@ function renderFooter(page, nav) {
   if (page.lang !== 'zh-CN') {
     return `<footer class="site-footer">
   <p>
-    <small>© 2026 ${nav.brandFullEn} · <a href="/" hreflang="zh-CN" lang="zh-CN">中文</a></small>
+    <small>© 2026 ${nav.brandFullEn} · <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">湘ICP备2026010511号</a> · <a href="/" hreflang="zh-CN" lang="zh-CN">中文</a></small>
   </p>
 </footer>`
   }
@@ -359,9 +359,9 @@ ${indentBlock(links, 4)}
     })
     .join('\n')
 
-  // 备案状态:申请中,未批复前页脚不挂备案号。ICP 备案号拿到后把下面一行的
-  // 「ICP 备案申请中」换成指向 beian.miit.gov.cn 的真实备案号链接,
-  // 并同步改写 /filing/ 页内容(scripts/landing/pages.zh.mjs)
+  // ICP 备案号按《非经营性互联网信息服务备案管理办法》第十三条置于页脚显著位置,
+  // 并链接至工信部备案管理系统;备案信息变更时同步更新此处与 /filing/ 页内容
+  // (scripts/landing/pages.zh.mjs 的 filing 页)
   return `<footer class="site-footer">
   <div class="container footer-grid">
 ${indentBlock(columns, 4)}
@@ -371,7 +371,7 @@ ${indentBlock(columns, 4)}
       <small>© 2026 ${nav.brandFullZh} · <a href="/en/" hreflang="en" lang="en">English</a></small>
     </p>
     <p>
-      <small>ICP 备案申请中 · <a href="/filing/">备案信息</a></small>
+      <small><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">湘ICP备2026010511号</a> · <a href="/filing/">备案信息</a></small>
     </p>
   </div>
 </footer>`
