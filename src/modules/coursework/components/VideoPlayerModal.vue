@@ -335,6 +335,7 @@ function displayDuration(): string {
   <NModal
     :show="show"
     preset="card"
+    :mask-closable="false"
     class="coursework-modal coursework-player-modal"
     :title="
       video ? `${t('coursework.player.title')} - ${video.title}` : t('coursework.player.title')
