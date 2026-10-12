@@ -9,6 +9,8 @@ import { ensureLatestVersion, startVersionCheck } from '@/shared/utils/versionCh
 import { refreshToken } from '@/shared/tokenManager'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { usePreferenceStore } from '@/stores/usePreferenceStore'
+import { api } from '@/shared/api'
+import { attachVueErrorHandler, initLogger, logger } from '@/shared/logger'
 
 /**
  * 移除 index.html 中的启动 splash:应用已挂载,首帧就位后淡出并删除节点。
@@ -24,7 +26,7 @@ function dismissBootSplash() {
 }
 
 /**
- * 应用启动流程:版本校验 -> 创建应用 -> 预拉偏好 -> 挂载 -> 淡出 splash。
+ * 应用启动流程:版本校验 -> 初始化日志 -> 创建应用 -> 预拉偏好 -> 挂载 -> 淡出 splash。
  * 任何一步失败都会向上抛出,启动 splash 停留在屏幕上提示加载中。
  */
 async function bootstrap() {
@@ -32,7 +34,21 @@ async function bootstrap() {
   // 在此检测到新版本并自动强制刷新;返回 true 表示即将刷新,不再继续启动旧版应用
   if (await ensureLatestVersion()) return
 
+  // 日志初始化尽量靠前:启动期异常(偏好拉取失败等)与 createApp 之前的 window 错误也能捕获。
+  // transport 注入 api.post(logger 不反向依赖 api,防循环引用);
+  // silent 不弹 toast、loading:false 不进全局加载;keepalive 供 pagehide 兜底发送
+  initLogger({
+    router,
+    transport: (payload, options) =>
+      api.post('/front-logs', payload, {
+        silent: true,
+        loading: false,
+        keepalive: options?.keepalive,
+      }),
+  })
+
   const app = createApp(App)
+  attachVueErrorHandler(app)
 
   app.use(createPinia())
 
@@ -54,4 +70,7 @@ async function bootstrap() {
   startVersionCheck()
 }
 
-void bootstrap()
+bootstrap().catch((e) => {
+  // 启动失败:splash 停留;错误经 logger 上报,不再抛出(unhandledrejection 会重复上报同一件事)
+  logger.error('应用启动失败', e)
+})
