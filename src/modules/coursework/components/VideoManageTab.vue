@@ -1,198 +1,247 @@
 <script setup lang="ts">
 /**
- * 教师：教学视频管理（登记 / 改元数据 / 预览播放 / 删除）。
- * 列表接口不分页，按 sortNo 升序、id 升序返回。
+ * 教师:教学视频管理(建章 / 建节 / 上传 / 改元数据与挂载点 / 预览播放 / 删除)。
+ *
+ * 列表不再是平铺的:整棵树由 `useChapterTree` 一次拉齐(章 → 节 → 视频 + 公共区),
+ * 增删改后统一重拉 —— 服务端的创建顺序(id 升序)就是展示顺序,前端不维护排序。
  */
-import { computed, h, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import {
-  NDataTable,
-  NButton,
-  NSpace,
-  NPopconfirm,
-  NText,
-  useMessage,
-  type DataTableColumns,
-} from 'naive-ui'
+import { NButton, NText, useMessage } from 'naive-ui'
 import { isReportedError } from '@/shared/api'
-import { formatDateTime } from '@/shared/utils/format'
 import { useLoading } from '@/shared/composables/useLoading'
 import EmptyState from '@/shared/components/EmptyState.vue'
-import { deleteVideo, fetchVideos } from '../api'
-import { formatDuration, formatFileSize } from '../utils'
+import {
+  createChapter,
+  createSection,
+  deleteChapter,
+  deleteSection,
+  deleteVideo,
+  renameChapter,
+  renameSection,
+} from '../api'
+import { useChapterTree } from '../useChapterTree'
+import VideoChapterTree from './VideoChapterTree.vue'
 import VideoFormModal from './VideoFormModal.vue'
+import VideoNodeTitleModal from './VideoNodeTitleModal.vue'
 import VideoPlayerModal from './VideoPlayerModal.vue'
-import type { VideoView } from '../types'
-import { useCourseAnchor } from '../useCourseAnchor'
+import type { ChapterView, SectionView, VideoView } from '../types'
 
 const props = defineProps<{ courseId: number | null }>()
-
-/** 请求一律用锚点 id(文档 §1.6):服务端回带的 teachInfoId 才回写进 anchorId */
-const { anchorId, adopt } = useCourseAnchor(() => props.courseId)
 
 const { t } = useI18n()
 const message = useMessage()
 
-const rows = ref<VideoView[]>([])
-const { loading, withLoading } = useLoading()
+const { tree, visibleTree, loading, reload } = useChapterTree(() => props.courseId)
+const { loading: mutating, withLoading: withMutation } = useLoading()
+
+/** 正在增删改的节点/视频 id:树上对应按钮转圈,避免连点 */
+const busyId = ref<number | null>(null)
 
 const showForm = ref(false)
 const editing = ref<VideoView | null>(null)
-const deletingId = ref<number | null>(null)
+/** 从某个节「上传视频」进来时的预选挂载点 */
+const defaultNodeId = ref<number | null>(null)
+
 const playing = ref<VideoView | null>(null)
 const showPlayer = ref(false)
 
-function loadData(): Promise<void> {
-  const id = anchorId.value
-  if (id == null) {
-    rows.value = []
-    return Promise.resolve()
-  }
-  return withLoading(async () => {
+type NodeDialogKind = 'createChapter' | 'renameChapter' | 'createSection' | 'renameSection'
+
+/** 章/节弹窗的上下文:改名的目标是 chapter/section,新建节要带父章 */
+interface NodeDialog {
+  kind: NodeDialogKind
+  chapter: ChapterView | null
+  section: SectionView | null
+}
+
+const nodeDialog = ref<NodeDialog | null>(null)
+const showNodeModal = ref(false)
+
+/** 登记弹窗的「所属小节」级联数据源 */
+const chapters = computed(() => tree.value?.chapters ?? [])
+
+/**
+ * 所有增删改的唯一入口:按钮 loading + 失败提示 + 成功后重拉整棵树。
+ * 一律重拉而不是本地改树 —— 删除是级联软删,返回体也没有统计字段,本地维护只会越改越偏。
+ */
+async function mutate(
+  id: number | null,
+  action: () => Promise<unknown>,
+  successKey: string,
+): Promise<boolean> {
+  return withMutation(async () => {
+    busyId.value = id
     try {
-      const res = await fetchVideos(id)
-      rows.value = res.data
-      // 列表回带的是锚点行 id,采纳后登记/删除等后续请求都用它
-      adopt(res.data[0]?.teachInfoId)
+      await action()
+      message.success(t(successKey))
+      await reload()
+      return true
     } catch (e) {
       if (!isReportedError(e)) {
-        message.error((e as Error).message || t('coursework.common.loadFail'))
+        message.error((e as Error).message || t('coursework.common.operationFail'))
       }
-      rows.value = []
+      return false
+    } finally {
+      busyId.value = null
     }
   })
 }
 
-watch(() => props.courseId, () => void loadData(), { immediate: true })
+// ---- 视频 ----
 
-function openCreate() {
+function handleAddVideo(section: SectionView) {
   editing.value = null
+  defaultNodeId.value = section.id
   showForm.value = true
 }
 
-function openEdit(row: VideoView): void {
-  editing.value = row
+function handleEditVideo(video: VideoView) {
+  editing.value = video
+  defaultNodeId.value = null
   showForm.value = true
 }
 
-function openPlayer(row: VideoView): void {
-  playing.value = row
+function handleRemoveVideo(video: VideoView) {
+  return mutate(video.id, () => deleteVideo(video.id), 'coursework.common.deleteSuccess')
+}
+
+function openPlayer(video: VideoView): void {
+  playing.value = video
   showPlayer.value = true
 }
 
-function handleDelete(row: VideoView) {
-  return withLoading(async () => {
-    deletingId.value = row.id
-    try {
-      await deleteVideo(row.id)
-      message.success(t('coursework.common.deleteSuccess'))
-      await loadData()
-    } catch (e) {
-      if (!isReportedError(e)) {
-        message.error((e as Error).message || t('coursework.common.deleteFail'))
-      }
-    } finally {
-      deletingId.value = null
-    }
-  })
+// ---- 章 / 节 ----
+
+function openNodeDialog(kind: NodeDialogKind, chapter: ChapterView | null = null) {
+  nodeDialog.value = { kind, chapter, section: null }
+  showNodeModal.value = true
 }
 
-const columns = computed<DataTableColumns<VideoView>>(() => [
-  { title: t('coursework.video.sortNo'), key: 'sortNo', width: 80, align: 'center' },
-  {
-    title: t('coursework.video.title'),
-    key: 'title',
-    minWidth: 200,
-    ellipsis: { tooltip: true },
-  },
-  {
-    title: t('coursework.video.description'),
-    key: 'description',
-    minWidth: 160,
-    ellipsis: { tooltip: true },
-    render: (row) => row.description || '-',
-  },
-  {
-    title: t('coursework.video.playDuration'),
-    key: 'durationSec',
-    width: 110,
-    align: 'center',
-    render: (row) => formatDuration(row.durationSec),
-  },
-  {
-    title: t('coursework.video.size'),
-    key: 'sizeBytes',
-    width: 110,
-    align: 'center',
-    render: (row) => formatFileSize(row.sizeBytes),
-  },
-  {
-    title: t('coursework.video.uploadTime'),
-    key: 'createTime',
-    width: 150,
-    render: (row) => formatDateTime(row.createTime),
-  },
-  {
-    title: t('coursework.common.actions'),
-    key: 'actions',
-    width: 210,
-    fixed: 'right',
-    render: (row) =>
-      h(NSpace, { size: 8, wrap: false }, () => [
-        h(NButton, { size: 'small', onClick: () => openPlayer(row) }, () =>
-          t('coursework.video.play'),
-        ),
-        h(NButton, { size: 'small', onClick: () => openEdit(row) }, () =>
-          t('coursework.common.edit'),
-        ),
-        h(
-          NPopconfirm,
-          { onPositiveClick: () => handleDelete(row) },
-          {
-            default: () => t('coursework.video.deleteConfirm'),
-            trigger: () =>
-              h(
-                NButton,
-                { size: 'small', type: 'error', loading: deletingId.value === row.id },
-                () => t('coursework.common.delete'),
-              ),
-          },
-        ),
-      ]),
-  },
-])
+function handleAddSection(chapter: ChapterView) {
+  openNodeDialog('createSection', chapter)
+}
 
-const rowKey = (row: VideoView) => row.id
+function handleRenameChapter(chapter: ChapterView) {
+  openNodeDialog('renameChapter', chapter)
+}
+
+function handleRemoveChapter(chapter: ChapterView) {
+  return mutate(chapter.id, () => deleteChapter(chapter.id), 'coursework.common.deleteSuccess')
+}
+
+function handleRenameSection(section: SectionView) {
+  nodeDialog.value = { kind: 'renameSection', chapter: null, section }
+  showNodeModal.value = true
+}
+
+function handleRemoveSection(section: SectionView) {
+  return mutate(section.id, () => deleteSection(section.id), 'coursework.common.deleteSuccess')
+}
+
+const nodeModalTitle = computed(() => {
+  switch (nodeDialog.value?.kind) {
+    case 'createChapter':
+      return t('coursework.video.addChapterTitle')
+    case 'renameChapter':
+      return t('coursework.video.renameChapterTitle')
+    case 'createSection':
+      return t('coursework.video.addSectionTitle')
+    case 'renameSection':
+      return t('coursework.video.renameSectionTitle')
+    default:
+      return ''
+  }
+})
+
+/** 新建给空串(要的是新标题),改名给原名 */
+const nodeModalValue = computed(() => {
+  const dialog = nodeDialog.value
+  if (dialog?.kind === 'renameChapter') return dialog.chapter?.title ?? ''
+  if (dialog?.kind === 'renameSection') return dialog.section?.title ?? ''
+  return ''
+})
+
+async function handleNodeSubmit(title: string) {
+  const dialog = nodeDialog.value
+  if (!dialog) return
+  const courseId = props.courseId
+  const successKey = 'coursework.common.operationSuccess'
+  let ok = false
+
+  switch (dialog.kind) {
+    case 'createChapter': {
+      if (courseId == null) return
+      ok = await mutate(null, () => createChapter({ teachInfoId: courseId, title }), successKey)
+      break
+    }
+    case 'renameChapter': {
+      const chapter = dialog.chapter
+      if (!chapter) return
+      ok = await mutate(chapter.id, () => renameChapter(chapter.id, { title }), successKey)
+      break
+    }
+    case 'createSection': {
+      const chapter = dialog.chapter
+      if (!chapter) return
+      ok = await mutate(null, () => createSection({ chapterId: chapter.id, title }), successKey)
+      break
+    }
+    case 'renameSection': {
+      const section = dialog.section
+      if (!section) return
+      ok = await mutate(section.id, () => renameSection(section.id, { title }), successKey)
+      break
+    }
+  }
+
+  // 失败时留着弹窗让人改完重试;成功才关(树已重拉)
+  if (ok) showNodeModal.value = false
+}
 </script>
 
 <template>
   <div class="tab-body">
     <div class="tab-toolbar">
-      <NText depth="3" class="tab-hint">{{ t('coursework.video.tab') }}</NText>
-      <NButton type="primary" :disabled="courseId == null" @click="openCreate">
-        {{ t('coursework.video.addTitle') }}
+      <NText depth="3" class="tab-hint">{{ t('coursework.video.manageHint') }}</NText>
+      <NButton type="primary" :disabled="courseId == null" @click="openNodeDialog('createChapter')">
+        {{ t('coursework.video.newChapter') }}
       </NButton>
     </div>
+
     <EmptyState
-      v-if="!loading && courseId != null && !rows.length"
+      v-if="!loading && courseId != null && !visibleTree"
       :description="t('coursework.common.empty')"
     />
-    <NDataTable
-      v-else-if="rows.length"
-      :columns="columns"
-      :data="rows"
-      :row-key="rowKey"
-      :pagination="false"
-      :single-line="false"
-      :bordered="false"
-      :scroll-x="1020"
+    <VideoChapterTree
+      v-else-if="visibleTree"
+      editable
+      :tree="visibleTree"
+      :busy-id="busyId"
+      @play="openPlayer"
+      @edit="handleEditVideo"
+      @remove-video="handleRemoveVideo"
+      @add-section="handleAddSection"
+      @rename-chapter="handleRenameChapter"
+      @remove-chapter="handleRemoveChapter"
+      @add-video="handleAddVideo"
+      @rename-section="handleRenameSection"
+      @remove-section="handleRemoveSection"
     />
 
     <VideoFormModal
       v-model:show="showForm"
-      :course-id="anchorId ?? 0"
+      :chapters="chapters"
       :video="editing"
-      @saved="loadData"
+      :default-node-id="defaultNodeId"
+      @saved="reload"
+    />
+    <VideoNodeTitleModal
+      v-model:show="showNodeModal"
+      :title="nodeModalTitle"
+      :initial-value="nodeModalValue"
+      :loading="mutating"
+      @submit="handleNodeSubmit"
     />
     <VideoPlayerModal v-model:show="showPlayer" :video="playing" />
   </div>
