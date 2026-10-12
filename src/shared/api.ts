@@ -3,6 +3,7 @@ import { accessToken, refreshAccessToken } from '@/shared/tokenManager'
 import { beginManagedRequest, endManagedRequest } from '@/shared/loading'
 import { message } from '@/shared/discrete'
 import i18n from '@/i18n'
+import { addApiBreadcrumb, reportApiError } from '@/shared/logger'
 
 const AUTH_WHITELIST = ['/login', '/login/refresh']
 
@@ -53,6 +54,27 @@ export class RequestCancelledError extends Error {
   }
 }
 
+/** 日志上报请求自身不做日志捕获,防「上报失败→记日志→再上报」循环 */
+function isLogIngest(url: string): boolean {
+  return url.startsWith('/front-logs')
+}
+
+/** 请求失败时统一上报 + 记面包屑(取消/会话过期等用户主动行为除外) */
+function logRequestFailure(method: string, url: string, start: number, e: unknown) {
+  if (isLogIngest(url)) return
+  const durationMs = performance.now() - start
+  if (e instanceof ApiNetworkError) {
+    addApiBreadcrumb(method, url, null, null, durationMs)
+    reportApiError('network', method, url, null, null, durationMs, e.message)
+  } else if (e instanceof HttpError) {
+    addApiBreadcrumb(method, url, e.status, null, durationMs)
+    reportApiError('http', method, url, e.status, null, durationMs, e.message)
+  } else if (e instanceof BusinessError) {
+    addApiBreadcrumb(method, url, 200, e.code, durationMs)
+    reportApiError('business', method, url, 200, e.code, durationMs, e.message)
+  }
+}
+
 /**
  * 错误是否已在 api 层弹出过提示(含用户取消)。
  * 页面 catch 后应先判断,避免重复弹出:
@@ -69,6 +91,8 @@ export interface RequestOptions {
   loading?: boolean
   /** 附加请求头(如登录请求携带的客户端私网 IP) */
   headers?: Record<string, string>
+  /** 透传给 fetch:页面卸载后请求仍能完成,仅日志上报兜底发送使用 */
+  keepalive?: boolean
 }
 
 // ---- 统一请求管线:请求头 -> fetch -> 401 刷新重试,JSON 与二进制共用 ----
@@ -166,24 +190,32 @@ async function managed<T>(loading: boolean, init: RequestInit, task: () => Promi
 /** JSON 请求:Result 包装,业务错误(code !== 200)统一弹出并抛 BusinessError */
 async function request<T>(url: string, options?: RequestInit & RequestOptions): Promise<T> {
   const { silent = false, loading = true, ...init } = options ?? {}
+  const method = init.method ?? 'GET'
+  const start = performance.now()
 
-  return managed(loading, init, async () => {
-    const res = await sendWithAuth(url, init, silent)
+  try {
+    return await managed(loading, init, async () => {
+      const res = await sendWithAuth(url, init, silent)
 
-    if (!res.ok) {
-      if (!silent) message.error(i18n.global.t('common.error.server', { status: res.status }))
-      const body = await res.text()
-      throw new HttpError(res.status, `HTTP ${res.status}: ${body}`)
-    }
+      if (!res.ok) {
+        if (!silent) message.error(i18n.global.t('common.error.server', { status: res.status }))
+        const body = await res.text()
+        throw new HttpError(res.status, `HTTP ${res.status}: ${body}`)
+      }
 
-    const body = (await res.json()) as { code: number; message: string; data: unknown }
-    if (body.code !== 200) {
-      const text = body.message || i18n.global.t('common.error.requestFailed')
-      if (!silent) message.error(text)
-      throw new BusinessError(text, body.code)
-    }
-    return body as T
-  })
+      const body = (await res.json()) as { code: number; message: string; data: unknown }
+      if (body.code !== 200) {
+        const text = body.message || i18n.global.t('common.error.requestFailed')
+        if (!silent) message.error(text)
+        throw new BusinessError(text, body.code)
+      }
+      if (!isLogIngest(url)) addApiBreadcrumb(method, url, res.status, 200, performance.now() - start)
+      return body as T
+    })
+  } catch (e) {
+    logRequestFailure(method, url, start, e)
+    throw e
+  }
 }
 
 /**
@@ -197,28 +229,37 @@ async function requestBlob(
 ): Promise<{ blob: Blob; filename: string | null }> {
   const { silent = false, loading = true, headers } = options ?? {}
   const requestInit: RequestInit = { ...init, headers }
+  const method = requestInit.method ?? 'GET'
+  const start = performance.now()
 
-  return managed(loading, requestInit, async () => {
-    const res = await sendWithAuth(url, requestInit, silent)
+  try {
+    return await managed(loading, requestInit, async () => {
+      const res = await sendWithAuth(url, requestInit, silent)
 
-    if (!res.ok) {
-      let text = ''
-      try {
-        const body = (await res.json()) as { message?: string }
-        text = body.message ?? ''
-      } catch {
-        // 非 JSON 错误体,使用通用提示
+      if (!res.ok) {
+        let text = ''
+        try {
+          const body = (await res.json()) as { message?: string }
+          text = body.message ?? ''
+        } catch {
+          // 非 JSON 错误体,使用通用提示
+        }
+        const msg = text || i18n.global.t('common.error.server', { status: res.status })
+        if (!silent) message.error(msg)
+        throw new HttpError(res.status, msg)
       }
-      const msg = text || i18n.global.t('common.error.server', { status: res.status })
-      if (!silent) message.error(msg)
-      throw new HttpError(res.status, msg)
-    }
 
-    return {
-      blob: await res.blob(),
-      filename: parseFilename(res.headers.get('Content-Disposition')),
-    }
-  })
+      const result = {
+        blob: await res.blob(),
+        filename: parseFilename(res.headers.get('Content-Disposition')),
+      }
+      if (!isLogIngest(url)) addApiBreadcrumb(method, url, res.status, null, performance.now() - start)
+      return result
+    })
+  } catch (e) {
+    logRequestFailure(method, url, start, e)
+    throw e
+  }
 }
 
 // ---- 二进制上传管线:全项目唯一允许使用 XMLHttpRequest 的地方 ----
@@ -328,43 +369,51 @@ async function putBinary<T>(
   options: BinaryRequestOptions = {},
 ): Promise<T> {
   const { headers = {}, silent = false } = options
-  // 每次发送都重建请求头,保证 401 刷新后用的是新 token
-  const buildHeaders = (): Record<string, string> =>
-    accessToken.value
-      ? { ...headers, Authorization: `Bearer ${accessToken.value}` }
-      : { ...headers }
+  const start = performance.now()
 
-  let outcome = await xhrSend(url, body, buildHeaders(), options)
+  try {
+    // 每次发送都重建请求头,保证 401 刷新后用的是新 token
+    const buildHeaders = (): Record<string, string> =>
+      accessToken.value
+        ? { ...headers, Authorization: `Bearer ${accessToken.value}` }
+        : { ...headers }
 
-  if (outcome.status === 401) {
-    const refreshOutcome = await refreshAccessToken()
-    if (refreshOutcome === 'success') {
-      outcome = await xhrSend(url, body, buildHeaders(), options)
-    } else if (refreshOutcome === 'network_error') {
-      // 后端暂时不可达(如重启中):保留登录态,不跳转登录页
-      if (!silent) message.error(i18n.global.t('common.error.network'))
-      throw new ApiNetworkError('刷新登录状态失败,请检查网络连接')
-    } else {
-      window.location.replace('/login')
-      throw new Error('Session expired')
+    let outcome = await xhrSend(url, body, buildHeaders(), options)
+
+    if (outcome.status === 401) {
+      const refreshOutcome = await refreshAccessToken()
+      if (refreshOutcome === 'success') {
+        outcome = await xhrSend(url, body, buildHeaders(), options)
+      } else if (refreshOutcome === 'network_error') {
+        // 后端暂时不可达(如重启中):保留登录态,不跳转登录页
+        if (!silent) message.error(i18n.global.t('common.error.network'))
+        throw new ApiNetworkError('刷新登录状态失败,请检查网络连接')
+      } else {
+        window.location.replace('/login')
+        throw new Error('Session expired')
+      }
     }
+
+    const parsed = parseResult(outcome.text)
+
+    if (outcome.status < 200 || outcome.status >= 300) {
+      const text = parsed?.message || i18n.global.t('common.error.server', { status: outcome.status })
+      if (!silent) message.error(text)
+      throw new HttpError(outcome.status, text)
+    }
+
+    if (parsed === null || parsed.code !== 200) {
+      const text = parsed?.message || i18n.global.t('common.error.requestFailed')
+      if (!silent) message.error(text)
+      throw new BusinessError(text, parsed?.code ?? 0)
+    }
+
+    if (!isLogIngest(url)) addApiBreadcrumb('PUT', url, outcome.status, 200, performance.now() - start)
+    return parsed as T
+  } catch (e) {
+    logRequestFailure('PUT', url, start, e)
+    throw e
   }
-
-  const parsed = parseResult(outcome.text)
-
-  if (outcome.status < 200 || outcome.status >= 300) {
-    const text = parsed?.message || i18n.global.t('common.error.server', { status: outcome.status })
-    if (!silent) message.error(text)
-    throw new HttpError(outcome.status, text)
-  }
-
-  if (parsed === null || parsed.code !== 200) {
-    const text = parsed?.message || i18n.global.t('common.error.requestFailed')
-    if (!silent) message.error(text)
-    throw new BusinessError(text, parsed?.code ?? 0)
-  }
-
-  return parsed as T
 }
 
 /**
