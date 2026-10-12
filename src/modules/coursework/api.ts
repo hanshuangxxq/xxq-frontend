@@ -7,6 +7,9 @@ import type {
   AnnouncementView,
   AssignmentSaveRequest,
   AssignmentView,
+  ChapterSaveRequest,
+  ChapterTreeView,
+  ChapterView,
   CloneAssignmentRequest,
   DraftSaveRequest,
   FileDownloadRequest,
@@ -14,10 +17,13 @@ import type {
   MaterialSaveRequest,
   MaterialUpdateRequest,
   MaterialView,
+  NodeRenameRequest,
   QuestionBankQuery,
   QuestionSaveRequest,
   QuestionView,
   RegularScoreSyncView,
+  SectionSaveRequest,
+  SectionView,
   SubmissionRowView,
   SubmissionView,
   SubmitAnswersRequest,
@@ -215,9 +221,49 @@ export function deleteBankQuestion(id: number): Promise<Result<null>> {
   return api.delete(`${BASE}/question-bank/${id}`)
 }
 
-// ---- 教学视频 ----
+// ---- 教学视频:章节树(章 → 节 → 视频) ----
 
-/** 登记视频 POST /coursework/videos [multipart] */
+/**
+ * 章节树 GET /coursework/chapters/tree?teachInfoId=(教师/学生同构)。
+ * **旧的平铺 `GET /coursework/videos?teachInfoId=` 已下线**,列表一律走这里一次拉全树。
+ */
+export function fetchChapterTree(teachInfoId: number): Promise<Result<ChapterTreeView>> {
+  return api.get(`${BASE}/chapters/tree?teachInfoId=${teachInfoId}`)
+}
+
+/** 建章 POST /coursework/chapters(教师) */
+export function createChapter(data: ChapterSaveRequest): Promise<Result<ChapterView>> {
+  return api.post(`${BASE}/chapters`, data)
+}
+
+/** 改章名 PUT /coursework/chapters/{id}(教师) */
+export function renameChapter(id: number, data: NodeRenameRequest): Promise<Result<null>> {
+  return api.put(`${BASE}/chapters/${id}`, data)
+}
+
+/** 删章 DELETE /coursework/chapters/{id} —— **级联软删其下所有节与视频**,不可恢复 */
+export function deleteChapter(id: number): Promise<Result<null>> {
+  return api.delete(`${BASE}/chapters/${id}`)
+}
+
+/** 建节 POST /coursework/sections(教师;授课组由 chapterId 反查,不需传 teachInfoId) */
+export function createSection(data: SectionSaveRequest): Promise<Result<SectionView>> {
+  return api.post(`${BASE}/sections`, data)
+}
+
+/** 改节名 PUT /coursework/sections/{id}(教师;节不可换父章,只能改名/删除) */
+export function renameSection(id: number, data: NodeRenameRequest): Promise<Result<null>> {
+  return api.put(`${BASE}/sections/${id}`, data)
+}
+
+/** 删节 DELETE /coursework/sections/{id} —— **级联软删其下所有视频**,不可恢复 */
+export function deleteSection(id: number): Promise<Result<null>> {
+  return api.delete(`${BASE}/sections/${id}`)
+}
+
+// ---- 教学视频:视频本体 ----
+
+/** 登记视频 POST /coursework/videos [multipart];data.nodeId 必填(挂节),授课组由节反推 */
 export function registerVideo(
   data: VideoSaveRequest,
   file: PreparedSubmitFile,
@@ -225,7 +271,7 @@ export function registerVideo(
   return postMultipart(`${BASE}/videos`, data, file)
 }
 
-/** 改视频元数据(JSON;文件本体不可换) PUT /coursework/videos/{id} */
+/** 改视频元数据 / 改挂节(JSON;文件本体不可换) PUT /coursework/videos/{id} */
 export function updateVideo(id: number, data: VideoUpdateRequest): Promise<Result<VideoView>> {
   return api.put(`${BASE}/videos/${id}`, data)
 }
@@ -233,11 +279,6 @@ export function updateVideo(id: number, data: VideoUpdateRequest): Promise<Resul
 /** 删除视频 DELETE /coursework/videos/{id} */
 export function deleteVideo(id: number): Promise<Result<null>> {
   return api.delete(`${BASE}/videos/${id}`)
-}
-
-/** 视频列表(不分页,按 sortNo 升序、id 升序) GET /coursework/videos?teachInfoId= */
-export function fetchVideos(teachInfoId: number): Promise<Result<VideoView[]>> {
-  return api.get(`${BASE}/videos?teachInfoId=${teachInfoId}`)
 }
 
 /**

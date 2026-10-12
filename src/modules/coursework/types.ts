@@ -341,12 +341,16 @@ export interface SubmissionRowView {
   submitTime: string | null
 }
 
-// ---- 教学视频 ----
+// ---- 教学视频:章节树 ----
 
-/** 视频视图 */
+/**
+ * 视频视图。**sortNo 已下线**(一律按 id 升序 = 创建顺序),改为 nodeId 定位挂载点。
+ */
 export interface VideoView {
   id: number
   teachInfoId: number
+  /** 挂载的节 node id;null = 公共区(未挂节)视频,只会出现在 ChapterTreeView.commonVideos */
+  nodeId: number | null
   title: string
   description: string | null
   /** 存储相对路径 objects/course-video/{sha256}.mp4 */
@@ -357,27 +361,81 @@ export interface VideoView {
   sizeBytes: number
   /** 服务端不解码视频,由前端解析后回传;未回传则为 null */
   durationSec: number | null
-  sortNo: number
   createTime: string
 }
 
-/** 视频登记请求(multipart 的 data 部分) POST /coursework/videos */
-export interface VideoSaveRequest {
+/** 节(挂在章下,视频挂在节下);videos 按 id 升序 */
+export interface SectionView {
+  id: number
+  title: string
+  videos: VideoView[]
+}
+
+/** 章;sections 按 id 升序,空章为 [] */
+export interface ChapterView {
+  id: number
+  title: string
+  sections: SectionView[]
+}
+
+/**
+ * 章节树 GET /coursework/chapters/tree?teachInfoId= —— **取代旧的平铺视频列表**。
+ * 教师与学生同一接口同一结构,无差异字段;教师须为本授课组教师、学生须已选该课(403)。
+ *
+ * ★ 节不可换父章(只能改名/删除);章/节/视频一律按 id 升序(= 创建顺序);
+ *   删章连带软删其下所有节与视频,删节连带软删其下所有视频(前端需二次确认)。
+ */
+export interface ChapterTreeView {
+  chapters: ChapterView[]
+  /** 公共区:未挂节的视频(全部存量 + 孤儿兜底),不属于任何章/节 */
+  commonVideos: VideoView[]
+}
+
+/** 建章 POST /coursework/chapters(教师) */
+export interface ChapterSaveRequest {
+  /** 授课组任意一行 id 均可,服务端归一到锚点行 */
   teachInfoId: number
+  title: string
+}
+
+/** 建节 POST /coursework/sections(教师)—— 不带 teachInfoId,授课组由 chapterId 反查 */
+export interface SectionSaveRequest {
+  chapterId: number
+  title: string
+}
+
+/** 章/节改名共用的请求体 PUT /coursework/chapters|sections/{id}(教师) */
+export interface NodeRenameRequest {
+  title: string
+}
+
+/**
+ * 视频登记请求(multipart 的 data 部分) POST /coursework/videos。
+ * ★ 挂载目标由旧的 teachInfoId 换成 nodeId(节 id,**必填**):视频必须挂节,
+ *   授课组由节反推;公共区只存存量视频。
+ */
+export interface VideoSaveRequest {
+  nodeId: number
   title: string
   description?: string
   /** 与 multipart 的 file 部分二选一(视频一般走分片) */
   filePath?: string
   fileOriginal?: string
   durationSec?: number
-  sortNo?: number
 }
 
-/** 视频元数据修改(JSON;文件本体不可换 = 删除重传) PUT /coursework/videos/{id} */
+/**
+ * 视频元数据修改 / 改挂节 PUT /coursework/videos/{id}(JSON;教师)。
+ * 四字段全部可选,传谁改谁;**文件本体不可换**(换文件 = 删除重传)。
+ */
 export interface VideoUpdateRequest {
   title?: string
   description?: string
-  sortNo?: number
+  /**
+   * 非空即改挂到目标节(限同一授课组,跨组 400「不能跨授课组移动视频」);
+   * 传 null/不传 = 不改挂,也**不支持移回公共区**。
+   */
+  nodeId?: number
   durationSec?: number
 }
 
