@@ -143,7 +143,7 @@ function failureMessageKey(kind: VideoStreamFailure['kind']): string {
 async function classifyFailure(videoId: number): Promise<VideoStreamFailure> {
   try {
     // 探测要静默:失败原因由播放器自己展示,别让 api 层再弹一次、也别白闪全局加载药丸
-    await fetchVideoDetail(videoId, { silent: true, loading: false })
+    await fetchVideoDetail(videoId, { silent: true, loading: false, breadcrumb: false })
     // 详情拿得到说明权限与文件都在，那握手失败多半是网络层
     return { kind: 'network' }
   } catch (e) {

@@ -47,7 +47,7 @@ async function resolveLabel(key: string): Promise<void> {
   const { id, source } = parseCourseKey(key)
   if (!Number.isFinite(id)) return
   try {
-    const res = await fetchCourse(id, source, { loading: false })
+    const res = await fetchCourse(id, source, { loading: false, breadcrumb: false })
     labelCache.value = { ...labelCache.value, [key]: labelOf(res.data) }
   } catch {
     // 静默:回显失败不影响标签值本身

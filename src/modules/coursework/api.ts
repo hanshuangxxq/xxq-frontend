@@ -1,4 +1,5 @@
 import { api } from '@/shared/api'
+import type { RequestOptions } from '@/shared/api'
 import type { PageResult, Result } from '@/shared/types'
 import type { PreparedSubmitFile } from '@/modules/file/types'
 import type {
@@ -140,7 +141,11 @@ export function submitAssignment(
  * 按题防抖调用,属后台请求:不挂全局加载,失败由调用方自行提示。
  */
 export function saveAssignmentDraft(id: number, data: DraftSaveRequest): Promise<Result<null>> {
-  return api.put(`${BASE}/assignments/${id}/draft`, data, { loading: false, silent: true })
+  return api.put(`${BASE}/assignments/${id}/draft`, data, {
+    loading: false,
+    silent: true,
+    breadcrumb: false,
+  })
 }
 
 /** 我的提交 GET /coursework/assignments/{id}/my-submission —— **未提交时 data 为 null**,不是 404 */
@@ -243,7 +248,7 @@ export function fetchVideos(teachInfoId: number): Promise<Result<VideoView[]>> {
  */
 export function fetchVideoDetail(
   id: number,
-  options?: { silent?: boolean; loading?: boolean },
+  options?: RequestOptions,
 ): Promise<Result<VideoView>> {
   return api.get(`${BASE}/videos/${id}`, options)
 }

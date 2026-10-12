@@ -1,4 +1,5 @@
 import { api } from '@/shared/api'
+import type { RequestOptions } from '@/shared/api'
 import type { PageResult, Result } from '@/shared/types'
 import type { Course, CourseForm, CourseSource } from './types'
 
@@ -28,12 +29,12 @@ export function fetchCourses(
  * 否则按 course.id 查会 404 或命中错误的常规课。
  *
  * `options.loading: false` 用于纯回显/回填名称的后台查询（如把 id 还原成课程名的下拉回显），
- * 不该占用全局加载指示。
+ * 不该占用全局加载指示;这类回显查询通常同时传 `breadcrumb: false`,避免列表刷屏时刷掉行为面包屑。
  */
 export function fetchCourse(
   id: number,
   source?: CourseSource,
-  options?: { loading?: boolean },
+  options?: RequestOptions,
 ): Promise<Result<Course>> {
   const qs = source ? `?source=${source}` : ''
   return api.get(`/courses/${id}${qs}`, options)

@@ -59,19 +59,32 @@ function isLogIngest(url: string): boolean {
   return url.startsWith('/front-logs')
 }
 
-/** 请求失败时统一上报 + 记面包屑(取消/会话过期等用户主动行为除外) */
-function logRequestFailure(method: string, url: string, start: number, e: unknown) {
+/** 请求失败时统一上报 + 记面包屑(取消/会话过期等用户主动行为除外);breadcrumb 为 false 时只上报不记面包屑 */
+function logRequestFailure(
+  method: string,
+  url: string,
+  start: number,
+  e: unknown,
+  breadcrumb: boolean,
+) {
   if (isLogIngest(url)) return
   const durationMs = performance.now() - start
   if (e instanceof ApiNetworkError) {
-    addApiBreadcrumb(method, url, null, null, durationMs)
+    if (breadcrumb) addApiBreadcrumb(method, url, null, null, durationMs)
     reportApiError('network', method, url, null, null, durationMs, e.message)
   } else if (e instanceof HttpError) {
-    addApiBreadcrumb(method, url, e.status, null, durationMs)
+    if (breadcrumb) addApiBreadcrumb(method, url, e.status, null, durationMs)
     reportApiError('http', method, url, e.status, null, durationMs, e.message)
   } else if (e instanceof BusinessError) {
-    addApiBreadcrumb(method, url, 200, e.code, durationMs)
+    if (breadcrumb) addApiBreadcrumb(method, url, 200, e.code, durationMs)
     reportApiError('business', method, url, 200, e.code, durationMs, e.message)
+  } else if (e instanceof RequestCancelledError) {
+    // 用户主动取消,不记
+  } else if (e instanceof Error && e.message !== 'Session expired') {
+    // 未分类错误(如 2xx 响应体非 JSON 的 SyntaxError):兜底记一条,会话过期跳转除外
+    // ('Session expired' 是同文件 sendWithAuth/putBinary 抛出的纯 Error,字符串匹配在同文件内闭环)
+    if (breadcrumb) addApiBreadcrumb(method, url, null, null, durationMs)
+    reportApiError('http', method, url, null, null, durationMs, `未分类请求错误: ${e.message}`)
   }
 }
 
@@ -93,6 +106,8 @@ export interface RequestOptions {
   headers?: Record<string, string>
   /** 透传给 fetch:页面卸载后请求仍能完成,仅日志上报兜底发送使用 */
   keepalive?: boolean
+  /** 为 false 时不计入行为面包屑(轮询/分片上传/头像等后台请求);错误仍照常上报 */
+  breadcrumb?: boolean
 }
 
 // ---- 统一请求管线:请求头 -> fetch -> 401 刷新重试,JSON 与二进制共用 ----
@@ -189,7 +204,7 @@ async function managed<T>(loading: boolean, init: RequestInit, task: () => Promi
 
 /** JSON 请求:Result 包装,业务错误(code !== 200)统一弹出并抛 BusinessError */
 async function request<T>(url: string, options?: RequestInit & RequestOptions): Promise<T> {
-  const { silent = false, loading = true, ...init } = options ?? {}
+  const { silent = false, loading = true, breadcrumb = true, ...init } = options ?? {}
   const method = init.method ?? 'GET'
   const start = performance.now()
 
@@ -209,11 +224,12 @@ async function request<T>(url: string, options?: RequestInit & RequestOptions): 
         if (!silent) message.error(text)
         throw new BusinessError(text, body.code)
       }
-      if (!isLogIngest(url)) addApiBreadcrumb(method, url, res.status, 200, performance.now() - start)
+      if (breadcrumb && !isLogIngest(url))
+        addApiBreadcrumb(method, url, res.status, 200, performance.now() - start)
       return body as T
     })
   } catch (e) {
-    logRequestFailure(method, url, start, e)
+    logRequestFailure(method, url, start, e, breadcrumb)
     throw e
   }
 }
@@ -227,7 +243,7 @@ async function requestBlob(
   options?: RequestOptions,
   init?: RequestInit,
 ): Promise<{ blob: Blob; filename: string | null }> {
-  const { silent = false, loading = true, headers } = options ?? {}
+  const { silent = false, loading = true, breadcrumb = true, headers } = options ?? {}
   const requestInit: RequestInit = { ...init, headers }
   const method = requestInit.method ?? 'GET'
   const start = performance.now()
@@ -253,11 +269,12 @@ async function requestBlob(
         blob: await res.blob(),
         filename: parseFilename(res.headers.get('Content-Disposition')),
       }
-      if (!isLogIngest(url)) addApiBreadcrumb(method, url, res.status, null, performance.now() - start)
+      if (breadcrumb && !isLogIngest(url))
+        addApiBreadcrumb(method, url, res.status, null, performance.now() - start)
       return result
     })
   } catch (e) {
-    logRequestFailure(method, url, start, e)
+    logRequestFailure(method, url, start, e, breadcrumb)
     throw e
   }
 }
@@ -277,6 +294,8 @@ export interface BinaryRequestOptions {
   signal?: AbortSignal
   /** 为 true 时错误消息不在 api 层弹出(上传引擎自行决定重试时机与最终提示) */
   silent?: boolean
+  /** 为 false 时不计入行为面包屑(分片上传等后台请求);错误仍照常上报 */
+  breadcrumb?: boolean
 }
 
 /** 单次 XHR 发送结果。不抛错,由调用方按 HTTP status 与 body 共同判定 */
@@ -368,7 +387,7 @@ async function putBinary<T>(
   body: Blob,
   options: BinaryRequestOptions = {},
 ): Promise<T> {
-  const { headers = {}, silent = false } = options
+  const { headers = {}, silent = false, breadcrumb = true } = options
   const start = performance.now()
 
   try {
@@ -408,10 +427,11 @@ async function putBinary<T>(
       throw new BusinessError(text, parsed?.code ?? 0)
     }
 
-    if (!isLogIngest(url)) addApiBreadcrumb('PUT', url, outcome.status, 200, performance.now() - start)
+    if (breadcrumb && !isLogIngest(url))
+      addApiBreadcrumb('PUT', url, outcome.status, 200, performance.now() - start)
     return parsed as T
   } catch (e) {
-    logRequestFailure('PUT', url, start, e)
+    logRequestFailure('PUT', url, start, e, breadcrumb)
     throw e
   }
 }

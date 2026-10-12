@@ -15,10 +15,11 @@ const BASE = '/file'
 /**
  * 文件模块接口(docs/文件传输接口总览.md §3)。
  *
- * 分片四件套全部传 { loading: false, silent: true }:
+ * 分片四件套全部传 { loading: false, silent: true, breadcrumb: false }:
  * - loading:分片上传的进度由全局上传面板展示,不能再让全局加载药丸出现第二个指示器;
  * - silent:失败与否由上传引擎按退避策略决定,引擎自行决定何时、以什么文案提示,
  *   api 层每次重试都弹一次提示会造成刷屏。
+ * - breadcrumb:分片数量大,成功不计入行为面包屑,避免刷掉路由/点击历史(错误仍照常上报)。
  *
  * uploadWholeFile 是小文件整传(≤20MB),没有进度面,行为与普通业务请求一致(默认挂全局加载)。
  */
@@ -42,7 +43,7 @@ export function fetchPreviewInfo(filePath: string): Promise<Result<PreviewInfoVi
 
 /** 初始化/恢复上传会话(幂等,可秒传) POST /file/uploads */
 export function initUpload(body: UploadInitRequest): Promise<Result<UploadSessionView>> {
-  return api.post(`${BASE}/uploads`, body, { loading: false, silent: true })
+  return api.post(`${BASE}/uploads`, body, { loading: false, silent: true, breadcrumb: false })
 }
 
 /** 查询上传进度(只读,不创建会话;会话不存在时 404) GET /file/uploads/{uploadId} */
@@ -50,6 +51,7 @@ export function fetchUploadProgress(uploadId: string): Promise<Result<UploadSess
   return api.get(`${BASE}/uploads/${encodeURIComponent(uploadId)}`, {
     loading: false,
     silent: true,
+    breadcrumb: false,
   })
 }
 
@@ -66,6 +68,7 @@ export function putChunk(
     blob,
     {
       silent: true,
+      breadcrumb: false,
       onProgress: options.onProgress,
       signal: options.signal,
       headers: { 'X-Chunk-SHA256': chunkSha256 },
@@ -81,6 +84,7 @@ export function completeUpload(uploadId: string): Promise<Result<StoredFileRef>>
   return api.post(`${BASE}/uploads/${encodeURIComponent(uploadId)}/complete`, undefined, {
     loading: false,
     silent: true,
+    breadcrumb: false,
   })
 }
 
@@ -89,6 +93,7 @@ export function verifyUpload(uploadId: string): Promise<Result<VerifyResult>> {
   return api.post(`${BASE}/uploads/${encodeURIComponent(uploadId)}/verify`, undefined, {
     loading: false,
     silent: true,
+    breadcrumb: false,
   })
 }
 
@@ -100,5 +105,6 @@ export function abortUpload(uploadId: string): Promise<Result<null>> {
   return api.delete(`${BASE}/uploads/${encodeURIComponent(uploadId)}`, {
     loading: false,
     silent: true,
+    breadcrumb: false,
   })
 }

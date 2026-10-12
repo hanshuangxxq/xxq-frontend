@@ -36,7 +36,11 @@ export function useAvatar(
       } else {
         // 后端头像接口(/api/avatar/...):去掉 /api 前缀后走统一 api 管线(认证、401 刷新)。
         // 头像加载失败不弹错误提示、不触发全局加载条
-        blob = await api.getBlob(url.replace(/^\/api/, ''), { silent: true, loading: false })
+        blob = await api.getBlob(url.replace(/^\/api/, ''), {
+          silent: true,
+          loading: false,
+          breadcrumb: false,
+        })
       }
       const old = blobUrl.value
       blobUrl.value = URL.createObjectURL(blob)

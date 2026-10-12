@@ -529,7 +529,11 @@ function startPolling() {
   pollTimer = setInterval(async () => {
     try {
       // 求解轮询:不触发全局加载条、错误不自动弹窗(求解期间每 3s 一次,失败统一由下方处理)
-      const res = await getSolution(scheduleId.value!, { loading: false, silent: true })
+      const res = await getSolution(scheduleId.value!, {
+        loading: false,
+        silent: true,
+        breadcrumb: false,
+      })
       pollFailCount = 0
       const data = res.data
       status.value = data.solverStatus
