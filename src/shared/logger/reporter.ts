@@ -12,6 +12,7 @@ const BATCH_MAX = 20
 const KEEPALIVE_BATCH_MAX = 5
 const KEEPALIVE_STACK_MAX = 2_000
 const KEEPALIVE_BREADCRUMB_MAX = 10
+const KEEPALIVE_MESSAGE_MAX = 500
 /** 发送失败的重试上限,超过丢弃(日志是尽力而为,不影响业务) */
 const RETRY_MAX = 3
 /** 被限流(429)后的冷却时间:期间只入队不发送 */
@@ -80,6 +81,10 @@ function onVisibilityChange() {
 function compact(entry: LogEntry): LogEntry {
   return {
     ...entry,
+    message:
+      entry.message.length > KEEPALIVE_MESSAGE_MAX
+        ? entry.message.slice(0, KEEPALIVE_MESSAGE_MAX)
+        : entry.message,
     stack:
       entry.stack && entry.stack.length > KEEPALIVE_STACK_MAX
         ? entry.stack.slice(0, KEEPALIVE_STACK_MAX)
@@ -89,7 +94,7 @@ function compact(entry: LogEntry): LogEntry {
 }
 
 async function flush(reason: 'timer' | 'pagehide') {
-  if (flushing || !transport || pending.size === 0) return
+  if ((flushing && reason === 'timer') || !transport || pending.size === 0) return
   if (Date.now() < cooldownUntil) return
 
   const keepalive = reason === 'pagehide'
@@ -116,8 +121,12 @@ async function flush(reason: 'timer' | 'pagehide') {
 
 function handleFailure(batch: PendingEntry[], e: unknown) {
   // 被限流:进入冷却期,批次不计失败次数直接回队(解除后自然发出)。
-  // 鸭子类型判断 code === 429:reporter 不能 import api 模块的 BusinessError(循环引用)
-  if (e instanceof Error && 'code' in e && (e as { code: unknown }).code === 429) {
+  // 鸭子类型判断 code/status === 429:reporter 不能 import api 模块的 BusinessError/HttpError(循环引用);
+  // instanceof 守卫先行,transport 若异常地 reject 非 Error 也不会在这里再抛错
+  if (
+    e instanceof Error &&
+    ((e as { code?: unknown }).code === 429 || (e as { status?: unknown }).status === 429)
+  ) {
     cooldownUntil = Date.now() + RATE_LIMIT_COOLDOWN_MS
     requeue(batch)
     return
@@ -127,8 +136,16 @@ function handleFailure(batch: PendingEntry[], e: unknown) {
 
 function requeue(batch: PendingEntry[]) {
   for (const p of batch) {
+    const sig = signatureOf(p.entry)
+    const current = pending.get(sig)
+    if (current) {
+      // 同签名条目已在队列中(在途期间新到的):合并计数,保留较新的上下文
+      current.entry.count += p.entry.count
+      current.retries = Math.max(current.retries, p.retries)
+      continue
+    }
     // 队列满时直接丢弃,不再挤掉其他条目
     if (pending.size >= QUEUE_MAX) return
-    pending.set(signatureOf(p.entry), p)
+    pending.set(sig, p)
   }
 }
