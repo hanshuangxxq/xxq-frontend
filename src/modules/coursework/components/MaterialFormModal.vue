@@ -68,6 +68,9 @@ const folderTouched = ref(false)
 const folderOptions = ref<TreeSelectOption[]>([])
 const folderExpandedKeys = ref<number[]>([])
 
+/** 打开时初始化的代次:跨重开时旧在途初始化完成后不得覆盖新会话的状态 */
+let initGen = 0
+
 function toFolderOption(f: MaterialFolderView): TreeSelectOption {
   // children 缺省 = 未加载,NTreeSelect 展开时走 onLoad(懒加载)
   return { key: f.id, label: f.title, isLeaf: false }
@@ -86,7 +89,9 @@ async function handleFolderLoad(node: TreeSelectOption): Promise<void> {
 
 /** 打开时:拉根层,并沿 folderPath 逐层加载展开到当前文件夹 */
 async function initFolderOptions(): Promise<void> {
+  const gen = ++initGen
   const rootChildren = await loadFolderLevel(null)
+  if (gen !== initGen) return
   folderOptions.value = [
     { key: ROOT_KEY, label: t('coursework.material.rootFolder'), isLeaf: true },
     ...rootChildren,
@@ -98,10 +103,12 @@ async function initFolderOptions(): Promise<void> {
     const opt = siblings.find((o) => o.key === folder.id)
     if (!opt) break
     const children = await loadFolderLevel(folder.id)
+    if (gen !== initGen) return
     opt.children = children
     expanded.push(folder.id)
     siblings = children
   }
+  if (gen !== initGen) return
   folderExpandedKeys.value = expanded
   folderValue.value = props.material?.folderId ?? props.currentFolderId ?? ROOT_KEY
   folderTouched.value = false
@@ -114,6 +121,11 @@ watch(
     const m = props.material
     form.value = { title: m?.title ?? '', description: m?.description ?? '' }
     fileList.value = []
+    // 同步清空文件夹选择:初始化失败或在途时,不留上一会话的陈旧选中值
+    folderValue.value = ROOT_KEY
+    folderTouched.value = false
+    folderOptions.value = []
+    folderExpandedKeys.value = []
     // 文件夹树加载失败由 api 层 toast(静默类不重复弹),不阻塞弹窗其余部分
     void initFolderOptions().catch((e: unknown) => {
       if (!isReportedError(e)) {

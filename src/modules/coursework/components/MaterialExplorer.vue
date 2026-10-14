@@ -308,7 +308,10 @@ function openPlayer(video: VideoView): void {
   showPlayer.value = true
 }
 
-/** 节级联数据源:首次编辑未挂节视频才拉(懒加载,不随页面加载) */
+/**
+ * 节级联数据源:首次编辑未挂节视频才拉(懒加载,不随页面加载)。
+ * 拉取后缓存不失效 —— 教师期间新建的章/节要组件重挂载才可见(已知取舍,影响面小)。
+ */
 const videoChapters = ref<ChapterView[] | null>(null)
 const showVideoForm = ref(false)
 const editingVideo = ref<VideoView | null>(null)
@@ -378,7 +381,7 @@ async function handleVideoSaved(): Promise<void> {
 
     <template v-else-if="!inVideos && browse">
       <!-- 「教学视频」虚拟节点入口(根层、有未挂节视频时) -->
-      <div v-if="showVideoArea" class="folder-row folder-row--videos" @click="enterVideos">
+      <div v-if="showVideoArea" class="folder-row" @click="enterVideos">
         <span class="folder-name folder-name--videos">{{ t('coursework.material.videoArea') }}</span>
         <NText depth="3" class="folder-hint">{{ t('coursework.material.videoAreaHint') }}</NText>
       </div>

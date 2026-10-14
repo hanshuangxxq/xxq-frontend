@@ -36,6 +36,8 @@ watch(
 )
 
 function handleSubmit() {
+  // 提交在途时忽略重复触发(连按 Enter 可能建出两个同名文件夹)
+  if (props.loading) return
   const title = value.value.trim()
   if (!title) {
     message.warning(t('coursework.material.folderNameRequired'))
