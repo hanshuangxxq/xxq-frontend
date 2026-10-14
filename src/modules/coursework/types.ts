@@ -349,7 +349,7 @@ export interface SubmissionRowView {
 export interface VideoView {
   id: number
   teachInfoId: number
-  /** 挂载的节 node id;null = 公共区(未挂节)视频,只会出现在 ChapterTreeView.commonVideos */
+  /** 挂载的节 node id;null = 未挂节(公共区)视频,不在章节树里,走 GET /coursework/videos/common */
   nodeId: number | null
   title: string
   description: string | null
@@ -379,16 +379,15 @@ export interface ChapterView {
 }
 
 /**
- * 章节树 GET /coursework/chapters/tree?teachInfoId= —— **取代旧的平铺视频列表**。
- * 教师与学生同一接口同一结构,无差异字段;教师须为本授课组教师、学生须已选该课(403)。
+ * 章节树 GET /coursework/chapters/tree?teachInfoId= 。
+ * 教师与学生同一接口同一结构;教师须为本授课组教师、学生须已选该课(403)。
  *
- * ★ 节不可换父章(只能改名/删除);章/节/视频一律按 id 升序(= 创建顺序);
- *   删章连带软删其下所有节与视频,删节连带软删其下所有视频(前端需二次确认)。
+ * ★ 节不可换父章;章/节/视频一律按 id 升序;删章连带软删其下节与视频,删节连带软删其下视频。
+ * ★ 未挂节视频(公共区)不在树里 —— 走 GET /coursework/videos/common,
+ *   展示在「课程资料 -> 教学视频」节点。
  */
 export interface ChapterTreeView {
   chapters: ChapterView[]
-  /** 公共区:未挂节的视频(全部存量 + 孤儿兜底),不属于任何章/节 */
-  commonVideos: VideoView[]
 }
 
 /** 建章 POST /coursework/chapters(教师) */

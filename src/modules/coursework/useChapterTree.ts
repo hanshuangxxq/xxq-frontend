@@ -9,7 +9,7 @@ import type { ChapterTreeView } from './types'
 /**
  * 章节树数据(教师/学生共用)。
  *
- * 视频子域**不再有平铺列表接口**,整棵树一次拉齐(章 → 节 → 视频 + 公共区),
+ * 视频子域**不再有平铺列表接口**,整棵树一次拉齐(章 → 节 → 视频),
  * 增删改后统一 `reload()` 重拉 —— 服务端的创建顺序(id 升序)即展示顺序,
  * 没有需要前端维护的本地排序。
  *
@@ -28,13 +28,13 @@ export function useChapterTree(courseId: () => number | null) {
   const { loading, withLoading } = useLoading()
 
   /**
-   * 真正有内容的树。空树(null 或章与公共区视频都为空)一律交给空状态 ——
+   * 真正有内容的树。空树(null 或章为空)一律交给空状态 ——
    * 否则加载中/空数据这两段会先渲染出空壳的树再塌缩,来回闪屏。
    */
   const visibleTree = computed<ChapterTreeView | null>(() => {
     const data = tree.value
     if (!data) return null
-    return data.chapters.length === 0 && data.commonVideos.length === 0 ? null : data
+    return data.chapters.length === 0 ? null : data
   })
 
   /** 拉整棵树 */

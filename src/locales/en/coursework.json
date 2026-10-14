@@ -181,7 +181,7 @@
   },
   "video": {
     "tab": "Videos",
-    "hint": "Videos are organized as chapter → section; legacy videos without a section are listed under \"Unfiled videos\" at the bottom.",
+    "hint": "Videos are organized as chapter → section; unfiled videos live under \"Course videos\" in the Materials tab.",
     "manageHint": "Create a chapter, add sections inside it, then upload videos onto a section — every video must belong to one.",
     "title": "Title",
     "description": "Description",
@@ -215,10 +215,7 @@
     "sectionNodeRequired": "Please select a section",
     "noSectionTip": "No section to attach to yet — create a chapter and a section in the tree first.",
     "chapterEmpty": "No sections in this chapter yet",
-    "sectionEmpty": "No videos in this section yet",
-    "treeEmpty": "No chapters or sections yet",
-    "commonArea": "Unfiled videos",
-    "commonAreaHint": "Videos not attached to any section. Students can still watch them — click \"Edit\" and pick a section to file them."
+    "sectionEmpty": "No videos in this section yet"
   },
   "material": {
     "tab": "Materials",

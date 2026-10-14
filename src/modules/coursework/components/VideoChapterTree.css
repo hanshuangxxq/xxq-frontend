@@ -21,10 +21,6 @@
   gap: 4px;
 }
 
-.node-hint {
-  font-size: 12px;
-}
-
 .node-empty {
   display: block;
   padding: 8px 0;
@@ -33,21 +29,4 @@
 
 .section-collapse {
   padding-left: 8px;
-}
-
-.tree-divider {
-  margin: 4px 0;
-}
-
-.common-block {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.common-header {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
 }
