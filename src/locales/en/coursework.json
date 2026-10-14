@@ -233,6 +233,7 @@
     "deleteConfirm": "Delete this material? This cannot be undone.",
     "noFileTip": "The file itself cannot be replaced; delete and upload again instead",
     "location": "Folder",
+    "folder": "Folder",
     "rootFolder": "Root",
     "newFolder": "New folder",
     "addFolderTitle": "New folder",

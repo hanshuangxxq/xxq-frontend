@@ -1,0 +1,48 @@
+/* 资料资源管理器:文件夹行与面包屑 */
+
+.explorer-breadcrumb {
+  flex: 1;
+  min-width: 0;
+}
+
+.explorer-breadcrumb :deep(.n-breadcrumb-item:not(:last-child)) {
+  cursor: pointer;
+}
+
+.folder-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.folder-row:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.folder-name {
+  font-weight: 500;
+}
+
+/* 项目当前仅亮色主题,主色同 TeacherQualityPage 等scoped样式取 naive-ui 亮色主色值 */
+.folder-name--videos {
+  color: #2080f0;
+}
+
+.folder-hint {
+  font-size: 12px;
+}
+
+.folder-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.level-empty {
+  display: block;
+  padding: 12px;
+}

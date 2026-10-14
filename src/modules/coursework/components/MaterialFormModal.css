@@ -1,3 +1,7 @@
+.full-width {
+  width: 100%;
+}
+
 .upload-block {
   display: flex;
   flex-direction: column;
