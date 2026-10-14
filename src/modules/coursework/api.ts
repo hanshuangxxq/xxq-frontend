@@ -14,6 +14,9 @@ import type {
   DraftSaveRequest,
   FileDownloadRequest,
   GradeRequest,
+  MaterialBrowseView,
+  MaterialFolderSaveRequest,
+  MaterialFolderView,
   MaterialSaveRequest,
   MaterialUpdateRequest,
   MaterialView,
@@ -294,6 +297,14 @@ export function fetchVideoDetail(
   return api.get(`${BASE}/videos/${id}`, options)
 }
 
+/**
+ * 未挂节视频列表 GET /coursework/videos/common?teachInfoId=(教师/学生同构)。
+ * 「公共区」是授课组内部"未挂节"的分组 —— 服务端按归一锚点过滤,含挂了已删节的孤儿兜底。
+ */
+export function fetchCommonVideos(teachInfoId: number): Promise<Result<VideoView[]>> {
+  return api.get(`${BASE}/videos/common?teachInfoId=${teachInfoId}`)
+}
+
 // ---- 课程资料 ----
 
 /** 上传资料 POST /coursework/materials [multipart] */
@@ -320,6 +331,54 @@ export function deleteMaterial(id: number): Promise<Result<null>> {
 /** 资料列表(不分页,createTime 倒序) GET /coursework/materials?teachInfoId= */
 export function fetchMaterials(teachInfoId: number): Promise<Result<MaterialView[]>> {
   return api.get(`${BASE}/materials?teachInfoId=${teachInfoId}`)
+}
+
+/**
+ * 逐层浏览资料(folderId 缺省=根层) GET /coursework/materials/browse。
+ * 响应带锚点 teachInfoId 与面包屑 path;folderId 失效(并发删除)→ code 404。
+ */
+export function browseMaterials(
+  teachInfoId: number,
+  folderId?: number | null,
+): Promise<Result<MaterialBrowseView>> {
+  const params = new URLSearchParams({ teachInfoId: String(teachInfoId) })
+  if (folderId != null) params.set('folderId', String(folderId))
+  return api.get(`${BASE}/materials/browse?${params.toString()}`)
+}
+
+/** 单层子文件夹(parentId 缺省=根层),移动选择器逐层懒展开用 GET /coursework/material-folders */
+export function fetchMaterialFolderLevel(
+  teachInfoId: number,
+  parentId?: number | null,
+): Promise<Result<MaterialFolderView[]>> {
+  const params = new URLSearchParams({ teachInfoId: String(teachInfoId) })
+  if (parentId != null) params.set('parentId', String(parentId))
+  return api.get(`${BASE}/material-folders?${params.toString()}`)
+}
+
+/** 建文件夹 POST /coursework/material-folders(教师) */
+export function createMaterialFolder(
+  data: MaterialFolderSaveRequest,
+): Promise<Result<MaterialFolderView>> {
+  return api.post(`${BASE}/material-folders`, data)
+}
+
+/** 文件夹改名 PUT /coursework/material-folders/{id}(教师;不可换父级) */
+export function renameMaterialFolder(
+  id: number,
+  data: NodeRenameRequest,
+): Promise<Result<null>> {
+  return api.put(`${BASE}/material-folders/${id}`, data)
+}
+
+/** 删文件夹 DELETE /coursework/material-folders/{id} —— 级联软删整棵子树,前端须二次确认 */
+export function deleteMaterialFolder(id: number): Promise<Result<null>> {
+  return api.delete(`${BASE}/material-folders/${id}`)
+}
+
+/** 移动资料 PUT /coursework/materials/{id}/folder(folderId null=根目录;跨组 404) */
+export function moveMaterial(id: number, folderId: number | null): Promise<Result<MaterialView>> {
+  return api.put(`${BASE}/materials/${id}/folder`, { folderId })
 }
 
 // ---- 课程公告 ----

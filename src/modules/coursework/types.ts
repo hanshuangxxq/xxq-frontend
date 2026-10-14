@@ -454,6 +454,8 @@ export interface VideoMeta {
 export interface MaterialView {
   id: number
   teachInfoId: number
+  /** 所在文件夹 id;null = 根目录 */
+  folderId: number | null
   title: string
   description: string | null
   /** 存储相对路径,下载时作为 filePath 传回 */
@@ -464,13 +466,49 @@ export interface MaterialView {
   createTime: string
 }
 
+/** 资料文件夹视图(单层列表 / 面包屑 path / 移动选择器共用) */
+export interface MaterialFolderView {
+  id: number
+  /** null = 根层文件夹 */
+  parentId: number | null
+  title: string
+  createTime: string
+}
+
+/**
+ * 资料逐层浏览 GET /coursework/materials/browse?teachInfoId=&folderId=(folderId 缺省=根层)。
+ * 教师与学生同一接口同一结构;folderId 不存在/不属该授课组 → code 404。
+ */
+export interface MaterialBrowseView {
+  /** 归一后的锚点行 id(前端据此 adopt 锚点,后续请求用它) */
+  teachInfoId: number
+  /** 根 → 当前层的文件夹链(根层为 []),面包屑直接用它 */
+  path: MaterialFolderView[]
+  /** 当前层子文件夹(id 升序 = 创建序,无人工排序) */
+  folders: MaterialFolderView[]
+  /** 当前层资料(createTime 倒序) */
+  materials: MaterialView[]
+  /** 未挂节视频数,仅根层非 null —— 决定「教学视频」虚拟节点显隐 */
+  commonVideoCount: number | null
+}
+
 /** 资料上传请求(multipart 的 data 部分) POST /coursework/materials */
 export interface MaterialSaveRequest {
   teachInfoId: number
+  /** 所在文件夹;空 = 根目录 */
+  folderId?: number
   title: string
   description?: string
   filePath?: string
   fileOriginal?: string
+}
+
+/** 建文件夹 POST /coursework/material-folders(教师) */
+export interface MaterialFolderSaveRequest {
+  teachInfoId: number
+  /** 空 = 根层 */
+  parentId?: number
+  title: string
 }
 
 /** 资料元数据修改(JSON;文件本体不可替换) PUT /coursework/materials/{id} */
