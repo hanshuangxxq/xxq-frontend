@@ -328,11 +328,6 @@ export function deleteMaterial(id: number): Promise<Result<null>> {
   return api.delete(`${BASE}/materials/${id}`)
 }
 
-/** 资料列表(不分页,createTime 倒序) GET /coursework/materials?teachInfoId= */
-export function fetchMaterials(teachInfoId: number): Promise<Result<MaterialView[]>> {
-  return api.get(`${BASE}/materials?teachInfoId=${teachInfoId}`)
-}
-
 /**
  * 逐层浏览资料(folderId 缺省=根层) GET /coursework/materials/browse。
  * 响应带锚点 teachInfoId 与面包屑 path;folderId 失效(并发删除)→ code 404。
