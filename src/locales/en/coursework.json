@@ -234,7 +234,20 @@
     "uploadSuccess": "Uploaded",
     "editSuccess": "Updated",
     "deleteConfirm": "Delete this material? This cannot be undone.",
-    "noFileTip": "The file itself cannot be replaced; delete and upload again instead"
+    "noFileTip": "The file itself cannot be replaced; delete and upload again instead",
+    "location": "Folder",
+    "rootFolder": "Root",
+    "newFolder": "New folder",
+    "addFolderTitle": "New folder",
+    "renameFolderTitle": "Rename folder",
+    "folderNamePlaceholder": "Enter a folder name",
+    "folderNameRequired": "Please enter a folder name",
+    "folderDeleteConfirm": "Deleting this folder also deletes every subfolder and material under it. This cannot be undone. Delete it?",
+    "folderEmpty": "This folder is empty",
+    "rename": "Rename",
+    "videoArea": "Course videos",
+    "videoAreaHint": "Videos not attached to any section; once filed into a section they no longer appear here",
+    "videoAreaEmpty": "No unfiled videos"
   },
   "announcement": {
     "tab": "Announcements",
