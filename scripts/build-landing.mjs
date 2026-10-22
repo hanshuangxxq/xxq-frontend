@@ -1,6 +1,6 @@
 // 落地页生成器:把 scripts/landing/ 下的内容数据渲染成 public/ 下的静态 HTML 与 sitemap。
 //
-// 为什么用生成器:收录面有 14 个页面,head/canonical/hreflang/og/JSON-LD/页头/页脚
+// 为什么用生成器:收录面有 12 个页面,head/canonical/hreflang/og/JSON-LD/页头/页脚
 // 全部重复;手写必然漏改(改一次导航要同步 14 个文件),站点地图也会忘记更新。
 //
 // 用法:

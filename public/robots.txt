@@ -10,8 +10,7 @@
 #   /                                   中文首页
 #   /en/                                英文首页
 #   /features/*/                        6 个功能详情页
-#   /about/ /contact/ /faq/             关于、联系、常见问题
-#   /privacy/ /terms/ /filing/          隐私政策、服务条款、备案信息
+#   /about/ /contact/ /faq/ /filing/    关于、联系、常见问题、备案信息
 # 这些页面由 scripts/build-landing.mjs 从 scripts/landing/ 的内容数据生成。
 User-agent: *
 Allow: /
